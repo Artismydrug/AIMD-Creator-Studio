@@ -1,0 +1,112 @@
+import React, { useState } from 'react';
+import { 
+  Flame, 
+  GraduationCap, 
+  Timer, 
+  Briefcase, 
+  Calendar, 
+  Award, 
+  MapPin, 
+  HeartHandshake 
+} from 'lucide-react';
+
+export const Sidebar = () => {
+  const [activeItem, setActiveItem] = useState('feed');
+
+  const navSections = [
+    {
+      title: 'DAILY STUDIO',
+      items: [
+        { id: 'feed', label: 'Studio Feed', icon: Flame },
+        { id: 'tracker', label: 'Habit Tracker & Timer', icon: Timer },
+        { id: 'events', label: 'Community Events', icon: Calendar },
+      ],
+    },
+    {
+      title: 'ACADEMY & EDUCATION',
+      items: [
+        { id: 'workshops', label: 'Active Workshops', icon: GraduationCap },
+        { id: 'badges', label: 'Certifications & Badges', icon: Award },
+      ],
+    },
+    {
+      title: 'CAREER & PLACEMENT',
+      items: [
+        { id: 'chairs', label: 'Open Chairs & Resident Board', icon: Briefcase },
+        { id: 'directory', label: 'Studio Directory & Map', icon: MapPin },
+      ],
+    },
+    {
+      title: 'NON-PROFIT & MOVEMENT',
+      items: [
+        { id: 'sponsor', label: 'Sponsor a Creator', icon: HeartHandshake, highlight: true },
+      ],
+    },
+  ];
+
+  return (
+    <aside className="hidden md:flex flex-col w-64 h-screen bg-zinc-950 border-r border-zinc-800/80 p-4 justify-between sticky top-0">
+      <div>
+        {/* AIMD Brand Header */}
+        <div className="mb-8 px-2">
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-black tracking-wider text-white">AIMD</h1>
+            <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+              501(c)(3)
+            </span>
+          </div>
+          <p className="text-xs text-zinc-500 uppercase font-semibold tracking-widest mt-0.5">
+            Art Is My Drug
+          </p>
+        </div>
+
+        {/* Navigation Sections */}
+        <div className="space-y-6">
+          {navSections.map((section, idx) => (
+            <div key={idx}>
+              <h3 className="text-[10px] font-bold text-zinc-500 tracking-wider mb-2 px-2">
+                {section.title}
+              </h3>
+              <div className="space-y-1">
+                {section.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeItem === item.id;
+
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveItem(item.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                        item.highlight
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
+                          : isActive
+                          ? 'bg-zinc-800 text-white'
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 ${isActive || item.highlight ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* User Footer Profile Card */}
+      <div className="border-t border-zinc-800/80 pt-3 px-2 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-xs font-bold text-emerald-400">
+            ED
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs font-bold text-white leading-none">Edward Davila</span>
+            <span className="text-[10px] text-zinc-500 mt-0.5">Master Artist</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+};

@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/aimd-academy/"
+title = "AIMD Academy & Studio Portal"
+description = "AIMD Academy & Studio Portal — the official digital platform for Art Is My Drug (AIMD), a 501(c)(3) non-profit. Transforms the AIMD community ecosystem into a full creator pipeline: daily artistic discipline tracking, structured workshop and apprenticeship education, Sponsor a Creator donations, and studio career placement for certified artists. Serves youth, emerging creators, and professional apprentices across tattooing, fine art, spatial design, and media."
+version = "1.0.0"
+id = "artifacts/aimd-academy"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/aimd-academy/" ]
+localPort = 18439
+
+[services.development]
+run = "pnpm --filter @workspace/aimd-academy run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aimd-academy", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/aimd-academy/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18439"
+BASE_PATH = "/aimd-academy/"

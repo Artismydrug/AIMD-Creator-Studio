@@ -1,0 +1,1 @@
+- [Stripe setup quirks](stripe-setup-quirks.md) — settings.secret not secret_key; runMigrations needs manual SQL; syncBackfill needs {object:"all"}

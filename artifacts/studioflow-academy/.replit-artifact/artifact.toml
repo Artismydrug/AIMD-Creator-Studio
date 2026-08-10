@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "StudioFlow Academy"
+description = "StudioFlow Academy is a creator habit tracker, educational workshop platform, and studio placement marketplace. Artists and creators build daily discipline through habit tracking, earn certifications through interactive skill workshops, and unlock professional studio chair placements. Three-tier subscription model: Free (habits + previews), Workshop Pass ($39/mo), and Pro Creator ($99/mo). Dark-mode UI with emerald green styling."
+version = "1.0.0"
+id = "artifacts/studioflow-academy"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23928
+
+[services.development]
+run = "pnpm --filter @workspace/studioflow-academy run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/studioflow-academy", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/studioflow-academy/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23928"
+BASE_PATH = "/"

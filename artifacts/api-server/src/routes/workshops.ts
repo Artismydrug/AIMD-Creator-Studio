@@ -1,0 +1,211 @@
+import { Router, type IRouter } from "express";
+import { eq, and, desc } from "drizzle-orm";
+import { db, workshopsTable, workshopModulesTable, enrollmentsTable, completedModulesTable } from "@workspace/db";
+import {
+  ListWorkshopsQueryParams,
+  ListWorkshopsResponse,
+  GetWorkshopParams,
+  GetWorkshopResponse,
+  EnrollInWorkshopParams,
+  EnrollInWorkshopResponse,
+  CompleteWorkshopModuleParams,
+  CompleteWorkshopModuleResponse,
+} from "@workspace/api-zod";
+
+const router: IRouter = Router();
+const CURRENT_USER_ID = 1;
+
+router.get("/workshops", async (req, res): Promise<void> => {
+  const parsed = ListWorkshopsQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  let workshops = await db.select().from(workshopsTable).orderBy(desc(workshopsTable.createdAt));
+
+  if (parsed.data.tier) {
+    workshops = workshops.filter((w) => w.tier === parsed.data.tier);
+  }
+  if (parsed.data.category) {
+    workshops = workshops.filter((w) =>
+      w.category.toLowerCase().includes((parsed.data.category as string).toLowerCase())
+    );
+  }
+
+  const enrollments = await db
+    .select()
+    .from(enrollmentsTable)
+    .where(eq(enrollmentsTable.userId, CURRENT_USER_ID));
+  const enrolledSet = new Set(enrollments.map((e) => e.workshopId));
+
+  const result = workshops.map((w) => ({ ...w, isEnrolled: enrolledSet.has(w.id) }));
+  res.json(ListWorkshopsResponse.parse(result));
+});
+
+router.get("/workshops/:id", async (req, res): Promise<void> => {
+  const params = GetWorkshopParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [workshop] = await db.select().from(workshopsTable).where(eq(workshopsTable.id, params.data.id));
+  if (!workshop) {
+    res.status(404).json({ error: "Workshop not found" });
+    return;
+  }
+
+  const modules = await db
+    .select()
+    .from(workshopModulesTable)
+    .where(eq(workshopModulesTable.workshopId, workshop.id))
+    .orderBy(workshopModulesTable.order);
+
+  const [enrollment] = await db
+    .select()
+    .from(enrollmentsTable)
+    .where(and(eq(enrollmentsTable.workshopId, workshop.id), eq(enrollmentsTable.userId, CURRENT_USER_ID)));
+
+  let completedSet = new Set<number>();
+  if (enrollment) {
+    const completed = await db
+      .select()
+      .from(completedModulesTable)
+      .where(eq(completedModulesTable.enrollmentId, enrollment.id));
+    completedSet = new Set(completed.map((c) => c.moduleId));
+  }
+
+  const modulesWithStatus = modules.map((m) => ({ ...m, isCompleted: completedSet.has(m.id) }));
+
+  res.json(
+    GetWorkshopResponse.parse({
+      ...workshop,
+      modules: modulesWithStatus,
+      isEnrolled: !!enrollment,
+    })
+  );
+});
+
+router.post("/workshops/:id/enroll", async (req, res): Promise<void> => {
+  const params = EnrollInWorkshopParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [workshop] = await db.select().from(workshopsTable).where(eq(workshopsTable.id, params.data.id));
+  if (!workshop) {
+    res.status(404).json({ error: "Workshop not found" });
+    return;
+  }
+
+  const [existing] = await db
+    .select()
+    .from(enrollmentsTable)
+    .where(and(eq(enrollmentsTable.workshopId, params.data.id), eq(enrollmentsTable.userId, CURRENT_USER_ID)));
+
+  if (existing) {
+    res.status(201).json(
+      EnrollInWorkshopResponse.parse({
+        ...existing,
+        workshopTitle: workshop.title,
+        workshopThumbnailUrl: workshop.thumbnailUrl,
+        totalModules: workshop.totalModules,
+        progressPercent: workshop.totalModules > 0 ? (existing.completedModules / workshop.totalModules) * 100 : 0,
+      })
+    );
+    return;
+  }
+
+  const [enrollment] = await db
+    .insert(enrollmentsTable)
+    .values({ userId: CURRENT_USER_ID, workshopId: params.data.id, completedModules: 0, status: "active" })
+    .returning();
+
+  // bump enrolled count
+  await db
+    .update(workshopsTable)
+    .set({ enrolledCount: workshop.enrolledCount + 1 })
+    .where(eq(workshopsTable.id, params.data.id));
+
+  res.status(201).json(
+    EnrollInWorkshopResponse.parse({
+      ...enrollment,
+      workshopTitle: workshop.title,
+      workshopThumbnailUrl: workshop.thumbnailUrl,
+      totalModules: workshop.totalModules,
+      progressPercent: 0,
+    })
+  );
+});
+
+router.post("/workshops/:id/modules/:moduleId/complete", async (req, res): Promise<void> => {
+  const params = CompleteWorkshopModuleParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [enrollment] = await db
+    .select()
+    .from(enrollmentsTable)
+    .where(and(eq(enrollmentsTable.workshopId, params.data.id), eq(enrollmentsTable.userId, CURRENT_USER_ID)));
+  if (!enrollment) {
+    res.status(404).json({ error: "Enrollment not found — enroll first" });
+    return;
+  }
+
+  const [workshop] = await db.select().from(workshopsTable).where(eq(workshopsTable.id, params.data.id));
+
+  const [alreadyDone] = await db
+    .select()
+    .from(completedModulesTable)
+    .where(
+      and(
+        eq(completedModulesTable.enrollmentId, enrollment.id),
+        eq(completedModulesTable.moduleId, params.data.moduleId)
+      )
+    );
+
+  if (!alreadyDone) {
+    await db.insert(completedModulesTable).values({
+      enrollmentId: enrollment.id,
+      moduleId: params.data.moduleId,
+    });
+    const newCompleted = enrollment.completedModules + 1;
+    const totalModules = workshop?.totalModules ?? 1;
+    const progressPercent = (newCompleted / totalModules) * 100;
+    const status = newCompleted >= totalModules ? "completed" : "active";
+
+    const [updated] = await db
+      .update(enrollmentsTable)
+      .set({ completedModules: newCompleted, status })
+      .where(eq(enrollmentsTable.id, enrollment.id))
+      .returning();
+
+    res.json(
+      CompleteWorkshopModuleResponse.parse({
+        ...updated,
+        workshopTitle: workshop?.title ?? "",
+        workshopThumbnailUrl: workshop?.thumbnailUrl ?? null,
+        totalModules,
+        progressPercent,
+      })
+    );
+    return;
+  }
+
+  const totalModules = workshop?.totalModules ?? 1;
+  res.json(
+    CompleteWorkshopModuleResponse.parse({
+      ...enrollment,
+      workshopTitle: workshop?.title ?? "",
+      workshopThumbnailUrl: workshop?.thumbnailUrl ?? null,
+      totalModules,
+      progressPercent: totalModules > 0 ? (enrollment.completedModules / totalModules) * 100 : 0,
+    })
+  );
+});
+
+export default router;

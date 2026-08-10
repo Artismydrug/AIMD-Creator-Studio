@@ -1,0 +1,25 @@
+Build a full-stack social network and educational platform called "AIMD Network" — powered by the Art Is My Drug (AIMD) 501(c)(3) non-profit. It serves as our owned social media home for artists and creators, combining daily habit tracking, community feeds, workshop education, event organizing, and studio career pipelines.
+
+### Key Functional Hubs & Social Features:
+
+1. Owned Social Feed & Community Hub ("The Studio Feed"):
+   - Creator Profiles: Custom portfolio showcases, current art mediums, skill badges, and active daily habit streaks.
+   - Studio Feed: Members post daily artwork/progress shots, WIP (work-in-progress) videos, and studio session logs.
+   - Critique & Peer Review: Specialized comment sections optimized for constructive feedback (e.g., line work, composition, shading).
+   - Direct & Group Messaging: Private chats and group channels for local pop-up organizing, workshop groups, and studio projects.
+
+2. Community Events & Activation Manager:
+   - Event Feed & RSVP: Display upcoming AIMD live workshops, pop-up events, gallery shows, and community activations.
+   - Interactive Map / Directory: Discover local creators, alumni, and AIMD partner studio locations.
+
+3. Phase 1 to Phase 3 Pipeline (Habits -> Workshops -> Career Placement):
+   - Daily Habit Tracker with focus timers and visual momentum heatmaps.
+   - Workshop Portal: Video masterclasses, assignment uploads, instructor feedback, and milestone certification badges.
+   - Studio Chair & Opportunity Board: Direct application portal for certified apprentices and artists to book guest spots or fill open resident chairs at AIMD and partner studios.
+
+4. Non-Profit & Sponsorship Engine:
+   - Integrated Stripe donation and membership system allowing patrons/donors to "Sponsor a Creator" or fund community workshops.
+
+### Technical & Design Specifications:
+- Tech Stack: React (frontend), Tailwind CSS, Express (backend), PostgreSQL with Drizzle ORM (database), Stripe Sandbox integration.
+- UI/UX Aesthetic: High-contrast, dark-mode studio interface with bold streetwear-inspired typography, neon emerald accents, and a fast, app-like mobile experience.

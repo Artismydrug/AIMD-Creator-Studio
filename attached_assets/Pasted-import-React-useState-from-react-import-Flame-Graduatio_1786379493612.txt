@@ -1,0 +1,55 @@
+import React, { useState } from 'react';
+import { Flame, GraduationCap, Timer, Briefcase, User } from 'lucide-react';
+
+export const BottomNav = () => {
+  const [activeTab, setActiveTab] = useState('feed');
+
+  const navItems = [
+    { id: 'feed', label: 'Feed', icon: Flame },
+    { id: 'workshops', label: 'Workshops', icon: GraduationCap },
+    { id: 'log', label: 'Log', icon: Timer, isPrimary: true },
+    { id: 'chairs', label: 'Chairs', icon: Briefcase },
+    { id: 'profile', label: 'Profile', icon: User },
+  ];
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-zinc-950/85 backdrop-blur-md border-t border-zinc-800/80 px-3 py-2">
+      <div className="flex items-center justify-around max-w-md mx-auto">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeTab === item.id;
+
+          // Elevated Center Action Button (+ Studio Timer / Log)
+          if (item.isPrimary) {
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className="relative -top-4 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 p-3.5 rounded-full shadow-lg shadow-emerald-500/30 transition-transform active:scale-95 border-2 border-zinc-950 flex items-center justify-center"
+                aria-label="Start Studio Session"
+              >
+                <Icon className="w-6 h-6 stroke-[2.5]" />
+              </button>
+            );
+          }
+
+          return (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`flex flex-col items-center gap-1 transition-colors ${
+                isActive ? 'text-emerald-400' : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              <Icon className="w-5 h-5" />
+              <span className="text-[10px] font-medium tracking-wide">{item.label}</span>
+              {isActive && (
+                <span className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+};

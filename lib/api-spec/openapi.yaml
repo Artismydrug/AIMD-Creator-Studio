@@ -2,14 +2,41 @@ openapi: 3.1.0
 info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
-  description: API specification
+  version: 0.2.0
+  description: AIMD Academy & Studio Portal API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: dashboard
+    description: Dashboard summary and activity
+  - name: habits
+    description: Habit tracking operations
+  - name: studio-posts
+    description: Public studio log posts
+  - name: workshops
+    description: Workshop and course operations
+  - name: enrollments
+    description: User enrollment operations
+  - name: assignments
+    description: Assignment submission and review
+  - name: badges
+    description: Badge and achievement operations
+  - name: job-listings
+    description: Studio job board
+  - name: applications
+    description: Job applications
+  - name: skill-tracks
+    description: Skill certification tracks
+  - name: events
+    description: Community events and pop-ups
+  - name: sponsorships
+    description: Sponsor a Creator donations
+  - name: payments
+    description: Stripe payment and subscription operations
+
 paths:
   /healthz:
     get:
@@ -24,6 +51,813 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Dashboard ────────────────────────────────────────────────────────────────
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary stats
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/activity-feed:
+    get:
+      operationId: getActivityFeed
+      tags: [dashboard]
+      summary: Recent activity feed (posts + habit logs)
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Activity feed items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  # ── Habits ────────────────────────────────────────────────────────────────
+  /habits:
+    get:
+      operationId: listHabits
+      tags: [habits]
+      summary: List user habits
+      responses:
+        "200":
+          description: List of habits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Habit"
+    post:
+      operationId: createHabit
+      tags: [habits]
+      summary: Create a new habit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HabitInput"
+      responses:
+        "201":
+          description: Created habit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Habit"
+
+  /habits/heatmap:
+    get:
+      operationId: getHabitHeatmap
+      tags: [habits]
+      summary: Get activity heatmap data for the past year
+      responses:
+        "200":
+          description: Heatmap data points
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HeatmapDay"
+
+  /habits/{id}:
+    get:
+      operationId: getHabit
+      tags: [habits]
+      summary: Get a habit by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Habit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Habit"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateHabit
+      tags: [habits]
+      summary: Update a habit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HabitUpdate"
+      responses:
+        "200":
+          description: Updated habit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Habit"
+    delete:
+      operationId: deleteHabit
+      tags: [habits]
+      summary: Delete a habit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /habits/{id}/log:
+    post:
+      operationId: logHabitSession
+      tags: [habits]
+      summary: Log a completed habit session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HabitLogInput"
+      responses:
+        "201":
+          description: Created log entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HabitLog"
+
+  /habit-logs:
+    get:
+      operationId: listHabitLogs
+      tags: [habits]
+      summary: Get log history for a habit
+      parameters:
+        - name: habitId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: Habit logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HabitLog"
+
+  # ── Studio Posts ──────────────────────────────────────────────────────────
+  /studio-posts:
+    get:
+      operationId: listStudioPosts
+      tags: [studio-posts]
+      summary: List public studio log posts
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: userId
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Studio posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudioPost"
+    post:
+      operationId: createStudioPost
+      tags: [studio-posts]
+      summary: Create a studio log post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudioPostInput"
+      responses:
+        "201":
+          description: Created post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudioPost"
+
+  /studio-posts/{id}:
+    get:
+      operationId: getStudioPost
+      tags: [studio-posts]
+      summary: Get a studio post by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Studio post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudioPost"
+    delete:
+      operationId: deleteStudioPost
+      tags: [studio-posts]
+      summary: Delete a studio post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /studio-posts/{id}/like:
+    post:
+      operationId: likeStudioPost
+      tags: [studio-posts]
+      summary: Toggle like on a studio post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated like count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudioPost"
+
+  # ── Workshops ─────────────────────────────────────────────────────────────
+  /workshops:
+    get:
+      operationId: listWorkshops
+      tags: [workshops]
+      summary: List available workshops
+      parameters:
+        - name: tier
+          in: query
+          schema:
+            type: ["string", "null"]
+            enum: ["free", "workshop", "pro", null]
+        - name: category
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Workshops
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workshop"
+
+  /workshops/{id}:
+    get:
+      operationId: getWorkshop
+      tags: [workshops]
+      summary: Get workshop details with modules
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Workshop with modules
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkshopDetail"
+
+  /workshops/{id}/enroll:
+    post:
+      operationId: enrollInWorkshop
+      tags: [workshops]
+      summary: Enroll current user in a workshop
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Enrollment record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Enrollment"
+
+  /workshops/{id}/modules/{moduleId}/complete:
+    post:
+      operationId: completeWorkshopModule
+      tags: [workshops]
+      summary: Mark a module as complete
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: moduleId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated enrollment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Enrollment"
+
+  # ── Enrollments ───────────────────────────────────────────────────────────
+  /enrollments:
+    get:
+      operationId: listEnrollments
+      tags: [enrollments]
+      summary: List current user enrollments
+      responses:
+        "200":
+          description: Enrollments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Enrollment"
+
+  # ── Assignments ───────────────────────────────────────────────────────────
+  /assignments:
+    get:
+      operationId: listAssignments
+      tags: [assignments]
+      summary: List user assignments
+      responses:
+        "200":
+          description: Assignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Assignment"
+    post:
+      operationId: submitAssignment
+      tags: [assignments]
+      summary: Submit an assignment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentInput"
+      responses:
+        "201":
+          description: Submitted assignment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assignment"
+
+  /assignments/{id}:
+    get:
+      operationId: getAssignment
+      tags: [assignments]
+      summary: Get assignment by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Assignment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assignment"
+
+  # ── Badges ────────────────────────────────────────────────────────────────
+  /badges:
+    get:
+      operationId: listBadges
+      tags: [badges]
+      summary: List badges earned by the current user
+      responses:
+        "200":
+          description: Badges
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Badge"
+
+  # ── Skill Tracks ──────────────────────────────────────────────────────────
+  /skill-tracks:
+    get:
+      operationId: listSkillTracks
+      tags: [skill-tracks]
+      summary: List current user skill tracks
+      responses:
+        "200":
+          description: Skill tracks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SkillTrack"
+    post:
+      operationId: createSkillTrack
+      tags: [skill-tracks]
+      summary: Start a skill track
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SkillTrackInput"
+      responses:
+        "201":
+          description: Created skill track
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkillTrack"
+
+  /skill-tracks/{id}:
+    patch:
+      operationId: updateSkillTrack
+      tags: [skill-tracks]
+      summary: Update skill track progress
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SkillTrackUpdate"
+      responses:
+        "200":
+          description: Updated skill track
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkillTrack"
+
+  # ── Job Listings ──────────────────────────────────────────────────────────
+  /job-listings:
+    get:
+      operationId: listJobListings
+      tags: [job-listings]
+      summary: List open studio job listings
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: ["string", "null"]
+            enum: ["resident", "guest", "apprenticeship", null]
+        - name: open
+          in: query
+          schema:
+            type: ["boolean", "null"]
+      responses:
+        "200":
+          description: Job listings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JobListing"
+
+  /job-listings/{id}:
+    get:
+      operationId: getJobListing
+      tags: [job-listings]
+      summary: Get a job listing by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job listing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobListing"
+
+  /job-listings/{id}/apply:
+    post:
+      operationId: applyForJob
+      tags: [job-listings]
+      summary: Apply for a studio position
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobApplicationInput"
+      responses:
+        "201":
+          description: Job application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobApplication"
+
+  # ── Applications ──────────────────────────────────────────────────────────
+  /applications:
+    get:
+      operationId: listApplications
+      tags: [applications]
+      summary: List current user's job applications
+      responses:
+        "200":
+          description: Applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JobApplication"
+
+  # ── Community Events ───────────────────────────────────────────────────────
+  /events:
+    get:
+      operationId: listEvents
+      tags: [events]
+      summary: List AIMD community events and pop-ups
+      parameters:
+        - name: upcoming
+          in: query
+          schema:
+            type: ["boolean", "null"]
+        - name: category
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Community events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CommunityEvent"
+    post:
+      operationId: createEvent
+      tags: [events]
+      summary: Create a community event (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommunityEventInput"
+      responses:
+        "201":
+          description: Created event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommunityEvent"
+
+  /events/{id}:
+    get:
+      operationId: getEvent
+      tags: [events]
+      summary: Get a community event by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Community event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommunityEvent"
+
+  /events/{id}/rsvp:
+    post:
+      operationId: rsvpToEvent
+      tags: [events]
+      summary: Toggle RSVP to a community event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated RSVP state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommunityEvent"
+
+  /events/my-rsvps:
+    get:
+      operationId: listMyRsvps
+      tags: [events]
+      summary: List events the current user has RSVPed to
+      responses:
+        "200":
+          description: RSVPed events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CommunityEvent"
+
+  # ── Sponsorships ───────────────────────────────────────────────────────────
+  /sponsorships:
+    get:
+      operationId: listSponsorships
+      tags: [sponsorships]
+      summary: List sponsorships / leaderboard
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Sponsorships
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Sponsorship"
+    post:
+      operationId: createSponsorship
+      tags: [sponsorships]
+      summary: Sponsor a creator — initiates Stripe checkout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SponsorshipInput"
+      responses:
+        "201":
+          description: Sponsorship with Stripe checkout URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SponsorshipCheckout"
+
+  # ── Payments ───────────────────────────────────────────────────────────────
+  /payments/plans:
+    get:
+      operationId: listPlans
+      tags: [payments]
+      summary: List available subscription plans
+      responses:
+        "200":
+          description: Subscription plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Plan"
+
+  /payments/create-checkout-session:
+    post:
+      operationId: createCheckoutSession
+      tags: [payments]
+      summary: Create a Stripe checkout session for a subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutSessionInput"
+      responses:
+        "200":
+          description: Checkout session with redirect URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutSession"
+
+  # ── Users ─────────────────────────────────────────────────────────────────
+  /users/me:
+    get:
+      operationId: getCurrentUser
+      tags: [users]
+      summary: Get the current demo user profile
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    patch:
+      operationId: updateCurrentUser
+      tags: [users]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +868,674 @@ components:
       required:
         - status
 
+    # ── Users ─────────────────────────────────────────────────────────────
+    User:
+      type: object
+      required: [id, username, email, tier, createdAt]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        tier:
+          type: string
+          enum: ["free", "workshop", "pro"]
+        studioReadyBadge:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    UserUpdate:
+      type: object
+      properties:
+        username:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        tier:
+          type: string
+          enum: ["free", "workshop", "pro"]
+
+    # ── Dashboard ─────────────────────────────────────────────────────────
+    DashboardSummary:
+      type: object
+      required: [totalHabits, currentStreakDays, longestStreakDays, totalPostsThisMonth, workshopsEnrolled, badgesEarned, completionRate, skillTracksActive]
+      properties:
+        totalHabits:
+          type: integer
+        currentStreakDays:
+          type: integer
+        longestStreakDays:
+          type: integer
+        totalPostsThisMonth:
+          type: integer
+        workshopsEnrolled:
+          type: integer
+        badgesEarned:
+          type: integer
+        completionRate:
+          type: number
+        skillTracksActive:
+          type: integer
+        studioReadyStatus:
+          type: boolean
+
+    ActivityItem:
+      type: object
+      required: [id, type, description, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: ["habit_log", "studio_post", "badge_earned", "module_complete", "enrollment"]
+        description:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── Habits ────────────────────────────────────────────────────────────
+    Habit:
+      type: object
+      required: [id, userId, name, category, targetMinutes, currentStreak, longestStreak, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+        targetMinutes:
+          type: integer
+        currentStreak:
+          type: integer
+        longestStreak:
+          type: integer
+        completedToday:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    HabitInput:
+      type: object
+      required: [name, category, targetMinutes]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        category:
+          type: string
+        targetMinutes:
+          type: integer
+          minimum: 1
+
+    HabitUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        targetMinutes:
+          type: integer
+
+    HabitLog:
+      type: object
+      required: [id, habitId, userId, date, minutesSpent, completed, createdAt]
+      properties:
+        id:
+          type: integer
+        habitId:
+          type: integer
+        userId:
+          type: integer
+        date:
+          type: string
+          format: date
+        minutesSpent:
+          type: integer
+        completed:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    HabitLogInput:
+      type: object
+      required: [minutesSpent]
+      properties:
+        minutesSpent:
+          type: integer
+          minimum: 1
+        date:
+          type: string
+          format: date
+
+    HeatmapDay:
+      type: object
+      required: [date, count, level]
+      properties:
+        date:
+          type: string
+          format: date
+        count:
+          type: integer
+        level:
+          type: integer
+          description: "0=none, 1=low, 2=medium, 3=high, 4=max"
+
+    # ── Studio Posts ──────────────────────────────────────────────────────
+    StudioPost:
+      type: object
+      required: [id, userId, caption, likes, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        username:
+          type: string
+        userAvatarUrl:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        caption:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        likes:
+          type: integer
+        likedByMe:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    StudioPostInput:
+      type: object
+      required: [caption]
+      properties:
+        imageUrl:
+          type: ["string", "null"]
+        caption:
+          type: string
+          minLength: 1
+        tags:
+          type: array
+          items:
+            type: string
+
+    # ── Workshops ─────────────────────────────────────────────────────────
+    Workshop:
+      type: object
+      required: [id, title, description, tier, category, totalModules, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        instructorName:
+          type: ["string", "null"]
+        thumbnailUrl:
+          type: ["string", "null"]
+        tier:
+          type: string
+          enum: ["free", "workshop", "pro"]
+        category:
+          type: string
+        totalModules:
+          type: integer
+        durationMinutes:
+          type: integer
+        enrolledCount:
+          type: integer
+        isEnrolled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    WorkshopModule:
+      type: object
+      required: [id, workshopId, title, order, durationMinutes]
+      properties:
+        id:
+          type: integer
+        workshopId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        videoUrl:
+          type: ["string", "null"]
+        order:
+          type: integer
+        durationMinutes:
+          type: integer
+        isCompleted:
+          type: boolean
+
+    WorkshopDetail:
+      type: object
+      required: [id, title, description, tier, category, totalModules, modules, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        instructorName:
+          type: ["string", "null"]
+        thumbnailUrl:
+          type: ["string", "null"]
+        tier:
+          type: string
+          enum: ["free", "workshop", "pro"]
+        category:
+          type: string
+        totalModules:
+          type: integer
+        durationMinutes:
+          type: integer
+        enrolledCount:
+          type: integer
+        isEnrolled:
+          type: boolean
+        modules:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkshopModule"
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── Enrollments ───────────────────────────────────────────────────────
+    Enrollment:
+      type: object
+      required: [id, userId, workshopId, completedModules, totalModules, status, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        workshopId:
+          type: integer
+        workshopTitle:
+          type: string
+        workshopThumbnailUrl:
+          type: ["string", "null"]
+        completedModules:
+          type: integer
+        totalModules:
+          type: integer
+        progressPercent:
+          type: number
+        status:
+          type: string
+          enum: ["active", "completed", "paused"]
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── Assignments ───────────────────────────────────────────────────────
+    Assignment:
+      type: object
+      required: [id, userId, workshopId, moduleId, status, submittedAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        workshopId:
+          type: integer
+        moduleId:
+          type: integer
+        workshopTitle:
+          type: ["string", "null"]
+        submissionUrl:
+          type: ["string", "null"]
+        submissionNote:
+          type: ["string", "null"]
+        feedback:
+          type: ["string", "null"]
+        grade:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: ["pending", "reviewed", "approved", "revision_requested"]
+        submittedAt:
+          type: string
+          format: date-time
+
+    AssignmentInput:
+      type: object
+      required: [workshopId, moduleId]
+      properties:
+        workshopId:
+          type: integer
+        moduleId:
+          type: integer
+        submissionUrl:
+          type: ["string", "null"]
+        submissionNote:
+          type: ["string", "null"]
+
+    # ── Badges ────────────────────────────────────────────────────────────
+    Badge:
+      type: object
+      required: [id, userId, name, description, earnedAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        workshopId:
+          type: ["integer", "null"]
+        workshopTitle:
+          type: ["string", "null"]
+        earnedAt:
+          type: string
+          format: date-time
+
+    # ── Skill Tracks ──────────────────────────────────────────────────────
+    SkillTrack:
+      type: object
+      required: [id, userId, artForm, totalMilestones, completedMilestones, percentComplete, status, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        artForm:
+          type: string
+        totalMilestones:
+          type: integer
+        completedMilestones:
+          type: integer
+        percentComplete:
+          type: number
+        status:
+          type: string
+          enum: ["in_progress", "certified", "paused"]
+        milestones:
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillMilestone"
+        createdAt:
+          type: string
+          format: date-time
+
+    SkillMilestone:
+      type: object
+      required: [id, label, completed]
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        completed:
+          type: boolean
+
+    SkillTrackInput:
+      type: object
+      required: [artForm]
+      properties:
+        artForm:
+          type: string
+
+    SkillTrackUpdate:
+      type: object
+      properties:
+        completedMilestones:
+          type: integer
+        status:
+          type: string
+          enum: ["in_progress", "certified", "paused"]
+
+    # ── Job Board ─────────────────────────────────────────────────────────
+    JobListing:
+      type: object
+      required: [id, studioName, title, type, location, description, isOpen, createdAt]
+      properties:
+        id:
+          type: integer
+        studioName:
+          type: string
+        title:
+          type: string
+        type:
+          type: string
+          enum: ["resident", "guest", "apprenticeship"]
+        location:
+          type: string
+        description:
+          type: string
+        requirements:
+          type: ["string", "null"]
+        compensation:
+          type: ["string", "null"]
+        isOpen:
+          type: boolean
+        applicantCount:
+          type: integer
+        hasApplied:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── Applications ──────────────────────────────────────────────────────
+    JobApplication:
+      type: object
+      required: [id, userId, jobListingId, status, appliedAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        jobListingId:
+          type: integer
+        jobTitle:
+          type: string
+        studioName:
+          type: string
+        coverLetter:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: ["pending", "reviewing", "accepted", "rejected"]
+        appliedAt:
+          type: string
+          format: date-time
+
+    JobApplicationInput:
+      type: object
+      properties:
+        coverLetter:
+          type: ["string", "null"]
+
+    # ── Community Events ──────────────────────────────────────────────────
+    CommunityEvent:
+      type: object
+      required: [id, title, description, category, eventType, location, startsAt, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: ["workshop", "pop-up", "gallery", "activation", "community"]
+        eventType:
+          type: string
+          enum: ["free", "ticketed", "members-only"]
+        location:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        startsAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: ["string", "null"]
+          format: date-time
+        rsvpCount:
+          type: integer
+        hasRsvped:
+          type: boolean
+        maxCapacity:
+          type: ["integer", "null"]
+        isFeatured:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    CommunityEventInput:
+      type: object
+      required: [title, description, category, eventType, location, startsAt]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        category:
+          type: string
+          enum: ["workshop", "pop-up", "gallery", "activation", "community"]
+        eventType:
+          type: string
+          enum: ["free", "ticketed", "members-only"]
+        location:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        startsAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: ["string", "null"]
+          format: date-time
+        maxCapacity:
+          type: ["integer", "null"]
+        isFeatured:
+          type: boolean
+
+    # ── Sponsorships ──────────────────────────────────────────────────────
+    Sponsorship:
+      type: object
+      required: [id, sponsorName, creatorName, amount, message, createdAt]
+      properties:
+        id:
+          type: integer
+        sponsorName:
+          type: string
+        sponsorAvatarUrl:
+          type: ["string", "null"]
+        creatorId:
+          type: ["integer", "null"]
+        creatorName:
+          type: string
+        amount:
+          type: number
+          description: Amount in USD
+        message:
+          type: ["string", "null"]
+        tier:
+          type: string
+          enum: ["kit", "tuition", "full-ride"]
+        status:
+          type: string
+          enum: ["pending", "active", "completed"]
+        createdAt:
+          type: string
+          format: date-time
+
+    SponsorshipInput:
+      type: object
+      required: [creatorId, tier]
+      properties:
+        creatorId:
+          type: integer
+        tier:
+          type: string
+          enum: ["kit", "tuition", "full-ride"]
+        message:
+          type: ["string", "null"]
+        anonymous:
+          type: boolean
+
+    SponsorshipCheckout:
+      type: object
+      required: [sponsorship, checkoutUrl]
+      properties:
+        sponsorship:
+          $ref: "#/components/schemas/Sponsorship"
+        checkoutUrl:
+          type: string
+
+    # ── Payments ──────────────────────────────────────────────────────────
+    Plan:
+      type: object
+      required: [id, name, tier, priceMonthly, description, features]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        tier:
+          type: string
+          enum: ["community", "academy", "pro"]
+        priceMonthly:
+          type: number
+        description:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
+
+    CheckoutSessionInput:
+      type: object
+      required: [planId]
+      properties:
+        planId:
+          type: string
+        successUrl:
+          type: ["string", "null"]
+        cancelUrl:
+          type: ["string", "null"]
+
+    CheckoutSession:
+      type: object
+      required: [sessionId, checkoutUrl]
+      properties:
+        sessionId:
+          type: string
+        checkoutUrl:
+          type: string
