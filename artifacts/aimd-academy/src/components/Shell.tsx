@@ -59,7 +59,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { href: '/job-board',   label: 'Open Chairs & Resident Board', icon: Briefcase },
       { href: '/directory',   label: 'Creator Directory',        icon: Users },
-      { href: '/map',         label: 'Studio Directory & Map',   icon: MapPin },
+      { href: '/directory',   label: 'Studio Directory & Map',   icon: MapPin },
     ],
   },
   {
