@@ -36,6 +36,10 @@ tags:
     description: Sponsor a Creator donations
   - name: payments
     description: Stripe payment and subscription operations
+  - name: users
+    description: User profile and creator directory
+  - name: conversations
+    description: Messaging and conversations
 
 paths:
   /healthz:
@@ -753,6 +757,71 @@ paths:
                 items:
                   $ref: "#/components/schemas/CommunityEvent"
 
+  /events/check-in:
+    post:
+      operationId: checkInToEvent
+      tags: [events]
+      summary: Verify a signed QR token and record event attendance
+      description: |
+        Accepts the raw QR token string produced by GET /events/{id}/qr-token.
+        Verifies the HMAC signature and token expiry before recording attendance
+        in a dedicated table (separate from RSVPs). Idempotent on duplicate scan.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventCheckInInput"
+      responses:
+        "200":
+          description: Check-in result (success or validation failure details)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventCheckInResult"
+        "404":
+          description: Event not found
+
+  /events/{id}/qr-token:
+    get:
+      operationId: getEventQrToken
+      tags: [events]
+      summary: Generate a server-signed QR check-in token for an event
+      description: |
+        Returns a signed HMAC-SHA256 token (valid 24 hours) that encodes into the
+        event QR code. Restricted to event organizers — callers must supply the
+        shared organizer key in the `X-Organizer-Key` request header. The key is
+        derived server-side from `SESSION_SECRET`; a missing or wrong key returns
+        403. The mobile app scans the QR code and posts the token to
+        `POST /events/check-in`.
+      security:
+        - OrganizerKey: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: X-Organizer-Key
+          in: header
+          required: true
+          description: >
+            HMAC-SHA256 key derived from SESSION_SECRET, scoped to organizer
+            access. Obtain from the server admin — do not expose to attendees.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Signed check-in token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventQrToken"
+        "403":
+          description: Missing or invalid X-Organizer-Key header
+        "404":
+          description: Event not found
+
   # ── Sponsorships ───────────────────────────────────────────────────────────
   /sponsorships:
     get:
@@ -858,7 +927,174 @@ paths:
               schema:
                 $ref: "#/components/schemas/User"
 
+  /directory:
+    get:
+      operationId: listDirectory
+      tags: [users]
+      summary: List creator directory (studio-ready creators)
+      responses:
+        "200":
+          description: Creator directory
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DirectoryCreator"
+
+  /users/{id}/profile:
+    get:
+      operationId: getUserProfile
+      tags: [users]
+      summary: Get a creator's public profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Creator profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DirectoryCreator"
+        "404":
+          description: Not found
+
+  # ── Conversations ─────────────────────────────────────────────────────────
+  /conversations:
+    get:
+      operationId: listConversations
+      tags: [conversations]
+      summary: List conversations for the current user
+      responses:
+        "200":
+          description: Conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Conversation"
+    post:
+      operationId: createConversation
+      tags: [conversations]
+      summary: Start a new conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConversationInput"
+      responses:
+        "201":
+          description: Created or existing conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationResult"
+
+  /conversations/{id}/messages:
+    get:
+      operationId: listMessages
+      tags: [conversations]
+      summary: List messages in a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConversationMessage"
+    post:
+      operationId: sendMessage
+      tags: [conversations]
+      summary: Send a message in a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageInput"
+      responses:
+        "201":
+          description: Sent message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationMessage"
+
+  # ── Post Comments ─────────────────────────────────────────────────────────
+  /studio-posts/{id}/comments:
+    get:
+      operationId: listPostComments
+      tags: [studio-posts]
+      summary: List comments on a studio post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+    post:
+      operationId: addPostComment
+      tags: [studio-posts]
+      summary: Add a comment (critique) to a studio post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "201":
+          description: Created comment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+
 components:
+  securitySchemes:
+    OrganizerKey:
+      type: apiKey
+      in: header
+      name: X-Organizer-Key
+      description: >
+        HMAC-SHA256 key derived from SESSION_SECRET, required to issue QR
+        check-in tokens. Must be supplied by event organizers only.
+
   schemas:
     HealthStatus:
       type: object
@@ -1446,6 +1682,44 @@ components:
         isFeatured:
           type: boolean
 
+    EventCheckInInput:
+      type: object
+      required: [qrData]
+      properties:
+        qrData:
+          type: string
+          description: Signed token string from GET /events/{id}/qr-token, encoded in the event QR code
+
+    EventQrToken:
+      type: object
+      required: [token, expiresAt, eventId, eventTitle]
+      properties:
+        token:
+          type: string
+          description: HMAC-signed token to encode into the event QR code
+        expiresAt:
+          type: string
+          format: date-time
+        eventId:
+          type: integer
+        eventTitle:
+          type: string
+
+    EventCheckInResult:
+      type: object
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+        eventId:
+          type: ["integer", "null"]
+        eventTitle:
+          type: ["string", "null"]
+        message:
+          type: string
+        alreadyCheckedIn:
+          type: boolean
+
     # ── Sponsorships ──────────────────────────────────────────────────────
     Sponsorship:
       type: object
@@ -1539,3 +1813,162 @@ components:
           type: string
         checkoutUrl:
           type: string
+
+    # ── Directory ─────────────────────────────────────────────────────────
+    DirectoryCreator:
+      type: object
+      required: [id, username, tier, bookingOpen, badgeCount, postCount]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        tier:
+          type: string
+        discipline:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        bookingOpen:
+          type: boolean
+        portfolioUrl:
+          type: ["string", "null"]
+        badgeCount:
+          type: integer
+        postCount:
+          type: integer
+
+    # ── Conversations ─────────────────────────────────────────────────────
+    ConversationParticipant:
+      type: object
+      required: [userId, username]
+      properties:
+        userId:
+          type: integer
+        username:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        tier:
+          type: string
+
+    ConversationLastMessage:
+      type: object
+      required: [id, content, senderId, senderName, createdAt]
+      properties:
+        id:
+          type: integer
+        content:
+          type: string
+        senderId:
+          type: integer
+        senderName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    Conversation:
+      type: object
+      required: [id, createdAt, unreadCount]
+      properties:
+        id:
+          type: integer
+        name:
+          type: ["string", "null"]
+        isGroup:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        lastMessage:
+          oneOf:
+            - $ref: "#/components/schemas/ConversationLastMessage"
+            - type: "null"
+        participants:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConversationParticipant"
+        unreadCount:
+          type: integer
+
+    ConversationMessage:
+      type: object
+      required: [id, conversationId, senderId, content, createdAt, senderName]
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        senderId:
+          type: integer
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        senderName:
+          type: string
+        senderAvatar:
+          type: ["string", "null"]
+
+    ConversationInput:
+      type: object
+      required: [participantIds]
+      properties:
+        participantIds:
+          type: array
+          items:
+            type: integer
+        name:
+          type: ["string", "null"]
+
+    ConversationResult:
+      type: object
+      required: [id, existing]
+      properties:
+        id:
+          type: integer
+        existing:
+          type: boolean
+
+    MessageInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          minLength: 1
+
+    # ── Comments ──────────────────────────────────────────────────────────
+    Comment:
+      type: object
+      required: [id, postId, userId, content, createdAt, username]
+      properties:
+        id:
+          type: integer
+        postId:
+          type: integer
+        userId:
+          type: integer
+        username:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    CommentInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          minLength: 1

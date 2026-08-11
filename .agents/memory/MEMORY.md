@@ -1,1 +1,2 @@
 - [Stripe setup quirks](stripe-setup-quirks.md) — settings.secret not secret_key; runMigrations needs manual SQL; syncBackfill needs {object:"all"}
+- [AIMD Network mobile app](aimd-network-mobile.md) — DM Sans font, dark-first tokens, camera pinning, CORS needs API Server running, hardcoded userId=1

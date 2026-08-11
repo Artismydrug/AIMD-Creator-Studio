@@ -814,6 +814,50 @@ export const ListMyRsvpsResponse = zod.array(ListMyRsvpsResponseItem)
 
 
 /**
+ * Accepts the raw QR token string produced by GET /events/{id}/qr-token.
+ * Verifies the HMAC signature and token expiry before recording attendance
+ * in a dedicated table (separate from RSVPs). Idempotent on duplicate scan.
+ * @summary Verify a signed QR token and record event attendance
+ */
+export const CheckInToEventBody = zod.object({
+  "qrData": zod.string().describe('Signed token string from GET \/events\/{id}\/qr-token, encoded in the event QR code')
+})
+
+export const CheckInToEventResponse = zod.object({
+  "success": zod.boolean(),
+  "eventId": zod.int().nullish(),
+  "eventTitle": zod.string().nullish(),
+  "message": zod.string(),
+  "alreadyCheckedIn": zod.boolean().optional()
+})
+
+
+/**
+ * Returns a signed HMAC-SHA256 token (valid 24 hours) that encodes into the
+ * event QR code. Restricted to event organizers — callers must supply the
+ * shared organizer key in the `X-Organizer-Key` request header. The key is
+ * derived server-side from `SESSION_SECRET`; a missing or wrong key returns
+ * 403. The mobile app scans the QR code and posts the token to
+ * `POST /events/check-in`.
+ * @summary Generate a server-signed QR check-in token for an event
+ */
+export const GetEventQrTokenParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const GetEventQrTokenHeader = zod.object({
+  "X-Organizer-Key": zod.string().describe('HMAC-SHA256 key derived from SESSION_SECRET, scoped to organizer access. Obtain from the server admin — do not expose to attendees.\n')
+})
+
+export const GetEventQrTokenResponse = zod.object({
+  "token": zod.string().describe('HMAC-signed token to encode into the event QR code'),
+  "expiresAt": zod.coerce.date(),
+  "eventId": zod.int(),
+  "eventTitle": zod.string()
+})
+
+
+/**
  * @summary List sponsorships / leaderboard
  */
 export const listSponsorshipsQueryLimitDefault = 20;
@@ -901,7 +945,7 @@ export const GetCurrentUserResponse = zod.object({
   "username": zod.string(),
   "email": zod.string(),
   "avatarUrl": zod.string().nullish(),
-  "tier": zod.enum(['free', 'academy', 'pro']),
+  "tier": zod.enum(['free', 'workshop', 'pro']),
   "studioReadyBadge": zod.boolean().optional(),
   "createdAt": zod.coerce.date()
 })
@@ -913,7 +957,7 @@ export const GetCurrentUserResponse = zod.object({
 export const UpdateCurrentUserBody = zod.object({
   "username": zod.string().optional(),
   "avatarUrl": zod.string().nullish(),
-  "tier": zod.enum(['free', 'academy', 'pro']).optional()
+  "tier": zod.enum(['free', 'workshop', 'pro']).optional()
 })
 
 export const UpdateCurrentUserResponse = zod.object({
@@ -921,8 +965,177 @@ export const UpdateCurrentUserResponse = zod.object({
   "username": zod.string(),
   "email": zod.string(),
   "avatarUrl": zod.string().nullish(),
-  "tier": zod.enum(['free', 'academy', 'pro']),
+  "tier": zod.enum(['free', 'workshop', 'pro']),
   "studioReadyBadge": zod.boolean().optional(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List creator directory (studio-ready creators)
+ */
+export const ListDirectoryResponseItem = zod.object({
+  "id": zod.int(),
+  "username": zod.string(),
+  "avatarUrl": zod.string().nullish(),
+  "tier": zod.string(),
+  "discipline": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "location": zod.string().nullish(),
+  "bookingOpen": zod.boolean(),
+  "portfolioUrl": zod.string().nullish(),
+  "badgeCount": zod.int(),
+  "postCount": zod.int()
+})
+export const ListDirectoryResponse = zod.array(ListDirectoryResponseItem)
+
+
+/**
+ * @summary Get a creator's public profile
+ */
+export const GetUserProfileParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const GetUserProfileResponse = zod.object({
+  "id": zod.int(),
+  "username": zod.string(),
+  "avatarUrl": zod.string().nullish(),
+  "tier": zod.string(),
+  "discipline": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "location": zod.string().nullish(),
+  "bookingOpen": zod.boolean(),
+  "portfolioUrl": zod.string().nullish(),
+  "badgeCount": zod.int(),
+  "postCount": zod.int()
+})
+
+
+/**
+ * @summary List conversations for the current user
+ */
+export const ListConversationsResponseItem = zod.object({
+  "id": zod.int(),
+  "name": zod.string().nullish(),
+  "isGroup": zod.boolean().optional(),
+  "createdAt": zod.coerce.date(),
+  "lastMessage": zod.union([zod.object({
+  "id": zod.int(),
+  "content": zod.string(),
+  "senderId": zod.int(),
+  "senderName": zod.string(),
+  "createdAt": zod.coerce.date()
+}),zod.null()]).optional(),
+  "participants": zod.array(zod.object({
+  "userId": zod.int(),
+  "username": zod.string(),
+  "avatarUrl": zod.string().nullish(),
+  "tier": zod.string().optional()
+})).optional(),
+  "unreadCount": zod.int()
+})
+export const ListConversationsResponse = zod.array(ListConversationsResponseItem)
+
+
+/**
+ * @summary Start a new conversation
+ */
+export const CreateConversationBody = zod.object({
+  "participantIds": zod.array(zod.int()),
+  "name": zod.string().nullish()
+})
+
+export const CreateConversationResponse = zod.object({
+  "id": zod.int(),
+  "existing": zod.boolean()
+})
+
+
+/**
+ * @summary List messages in a conversation
+ */
+export const ListMessagesParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const ListMessagesResponseItem = zod.object({
+  "id": zod.int(),
+  "conversationId": zod.int(),
+  "senderId": zod.int(),
+  "content": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "senderName": zod.string(),
+  "senderAvatar": zod.string().nullish()
+})
+export const ListMessagesResponse = zod.array(ListMessagesResponseItem)
+
+
+/**
+ * @summary Send a message in a conversation
+ */
+export const SendMessageParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+
+
+
+export const SendMessageBody = zod.object({
+  "content": zod.string().min(1)
+})
+
+export const SendMessageResponse = zod.object({
+  "id": zod.int(),
+  "conversationId": zod.int(),
+  "senderId": zod.int(),
+  "content": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "senderName": zod.string(),
+  "senderAvatar": zod.string().nullish()
+})
+
+
+/**
+ * @summary List comments on a studio post
+ */
+export const ListPostCommentsParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const ListPostCommentsResponseItem = zod.object({
+  "id": zod.int(),
+  "postId": zod.int(),
+  "userId": zod.int(),
+  "username": zod.string(),
+  "avatarUrl": zod.string().nullish(),
+  "content": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListPostCommentsResponse = zod.array(ListPostCommentsResponseItem)
+
+
+/**
+ * @summary Add a comment (critique) to a studio post
+ */
+export const AddPostCommentParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+
+
+
+export const AddPostCommentBody = zod.object({
+  "content": zod.string().min(1)
+})
+
+export const AddPostCommentResponse = zod.object({
+  "id": zod.int(),
+  "postId": zod.int(),
+  "userId": zod.int(),
+  "username": zod.string(),
+  "avatarUrl": zod.string().nullish(),
+  "content": zod.string(),
   "createdAt": zod.coerce.date()
 })
 

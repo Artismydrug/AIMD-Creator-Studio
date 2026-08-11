@@ -26,10 +26,20 @@ import type {
   Badge,
   CheckoutSession,
   CheckoutSessionInput,
+  Comment,
+  CommentInput,
   CommunityEvent,
   CommunityEventInput,
+  Conversation,
+  ConversationInput,
+  ConversationMessage,
+  ConversationResult,
   DashboardSummary,
+  DirectoryCreator,
   Enrollment,
+  EventCheckInInput,
+  EventCheckInResult,
+  EventQrToken,
   GetActivityFeedParams,
   Habit,
   HabitInput,
@@ -47,6 +57,7 @@ import type {
   ListSponsorshipsParams,
   ListStudioPostsParams,
   ListWorkshopsParams,
+  MessageInput,
   Plan,
   SkillTrack,
   SkillTrackInput,
@@ -2897,6 +2908,163 @@ export function useListMyRsvps<TData = Awaited<ReturnType<typeof listMyRsvps>>, 
 
 
 
+export const getCheckInToEventUrl = () => {
+
+
+
+
+  return `/api/events/check-in`
+}
+
+/**
+ * Accepts the raw QR token string produced by GET /events/{id}/qr-token.
+ * Verifies the HMAC signature and token expiry before recording attendance
+ * in a dedicated table (separate from RSVPs). Idempotent on duplicate scan.
+ * @summary Verify a signed QR token and record event attendance
+ */
+export const checkInToEvent = async (eventCheckInInput: EventCheckInInput, options?: Parameters<typeof customFetch>[1]): Promise<EventCheckInResult> => {
+
+  return customFetch<EventCheckInResult>(getCheckInToEventUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(eventCheckInInput)
+  }
+);}
+
+
+
+
+
+export const getCheckInToEventMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkInToEvent>>, TError,{data: BodyType<EventCheckInInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof checkInToEvent>>, TError,{data: BodyType<EventCheckInInput>}, TContext> => {
+
+const mutationKey = ['checkInToEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkInToEvent>>, {data: BodyType<EventCheckInInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  checkInToEvent(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CheckInToEventMutationResult = NonNullable<Awaited<ReturnType<typeof checkInToEvent>>>
+    export type CheckInToEventMutationBody = BodyType<EventCheckInInput>
+    export type CheckInToEventMutationError = ErrorType<void>
+
+    /**
+ * @summary Verify a signed QR token and record event attendance
+ */
+export const useCheckInToEvent = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkInToEvent>>, TError,{data: BodyType<EventCheckInInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof checkInToEvent>>,
+        TError,
+        {data: BodyType<EventCheckInInput>},
+        TContext
+      > => {
+      return useMutation(getCheckInToEventMutationOptions(options));
+    }
+
+export const getGetEventQrTokenUrl = (id: number,) => {
+
+
+
+
+  return `/api/events/${id}/qr-token`
+}
+
+/**
+ * Returns a signed HMAC-SHA256 token (valid 24 hours) that encodes into the
+ * event QR code. Restricted to event organizers — callers must supply the
+ * shared organizer key in the `X-Organizer-Key` request header. The key is
+ * derived server-side from `SESSION_SECRET`; a missing or wrong key returns
+ * 403. The mobile app scans the QR code and posts the token to
+ * `POST /events/check-in`.
+ * @summary Generate a server-signed QR check-in token for an event
+ */
+export const getEventQrToken = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<EventQrToken> => {
+
+  return customFetch<EventQrToken>(getGetEventQrTokenUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEventQrTokenQueryKey = (id: number,) => {
+    return [
+    `/api/events/${id}/qr-token`
+    ] as const;
+    }
+
+
+export const getGetEventQrTokenQueryOptions = <TData = Awaited<ReturnType<typeof getEventQrToken>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEventQrToken>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEventQrTokenQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEventQrToken>>> = ({ signal }) => getEventQrToken(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEventQrToken>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetEventQrTokenQueryResult = NonNullable<Awaited<ReturnType<typeof getEventQrToken>>>
+export type GetEventQrTokenQueryError = ErrorType<void>
+
+
+/**
+ * @summary Generate a server-signed QR check-in token for an event
+ */
+
+export function useGetEventQrToken<TData = Awaited<ReturnType<typeof getEventQrToken>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEventQrToken>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetEventQrTokenQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getListSponsorshipsUrl = (params?: ListSponsorshipsParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -3346,5 +3514,605 @@ export const useUpdateCurrentUser = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpdateCurrentUserMutationOptions(options));
+    }
+
+export const getListDirectoryUrl = () => {
+
+
+
+
+  return `/api/directory`
+}
+
+/**
+ * @summary List creator directory (studio-ready creators)
+ */
+export const listDirectory = async ( options?: Parameters<typeof customFetch>[1]): Promise<DirectoryCreator[]> => {
+
+  return customFetch<DirectoryCreator[]>(getListDirectoryUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListDirectoryQueryKey = () => {
+    return [
+    `/api/directory`
+    ] as const;
+    }
+
+
+export const getListDirectoryQueryOptions = <TData = Awaited<ReturnType<typeof listDirectory>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDirectory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDirectoryQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDirectory>>> = ({ signal }) => listDirectory({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDirectory>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListDirectoryQueryResult = NonNullable<Awaited<ReturnType<typeof listDirectory>>>
+export type ListDirectoryQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List creator directory (studio-ready creators)
+ */
+
+export function useListDirectory<TData = Awaited<ReturnType<typeof listDirectory>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDirectory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListDirectoryQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetUserProfileUrl = (id: number,) => {
+
+
+
+
+  return `/api/users/${id}/profile`
+}
+
+/**
+ * @summary Get a creator's public profile
+ */
+export const getUserProfile = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<DirectoryCreator> => {
+
+  return customFetch<DirectoryCreator>(getGetUserProfileUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUserProfileQueryKey = (id: number,) => {
+    return [
+    `/api/users/${id}/profile`
+    ] as const;
+    }
+
+
+export const getGetUserProfileQueryOptions = <TData = Awaited<ReturnType<typeof getUserProfile>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUserProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUserProfileQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserProfile>>> = ({ signal }) => getUserProfile(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUserProfile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetUserProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getUserProfile>>>
+export type GetUserProfileQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get a creator's public profile
+ */
+
+export function useGetUserProfile<TData = Awaited<ReturnType<typeof getUserProfile>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUserProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetUserProfileQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListConversationsUrl = () => {
+
+
+
+
+  return `/api/conversations`
+}
+
+/**
+ * @summary List conversations for the current user
+ */
+export const listConversations = async ( options?: Parameters<typeof customFetch>[1]): Promise<Conversation[]> => {
+
+  return customFetch<Conversation[]>(getListConversationsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListConversationsQueryKey = () => {
+    return [
+    `/api/conversations`
+    ] as const;
+    }
+
+
+export const getListConversationsQueryOptions = <TData = Awaited<ReturnType<typeof listConversations>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listConversations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListConversationsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listConversations>>> = ({ signal }) => listConversations({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listConversations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListConversationsQueryResult = NonNullable<Awaited<ReturnType<typeof listConversations>>>
+export type ListConversationsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List conversations for the current user
+ */
+
+export function useListConversations<TData = Awaited<ReturnType<typeof listConversations>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listConversations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListConversationsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateConversationUrl = () => {
+
+
+
+
+  return `/api/conversations`
+}
+
+/**
+ * @summary Start a new conversation
+ */
+export const createConversation = async (conversationInput: ConversationInput, options?: Parameters<typeof customFetch>[1]): Promise<ConversationResult> => {
+
+  return customFetch<ConversationResult>(getCreateConversationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(conversationInput)
+  }
+);}
+
+
+
+
+
+export const getCreateConversationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createConversation>>, TError,{data: BodyType<ConversationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createConversation>>, TError,{data: BodyType<ConversationInput>}, TContext> => {
+
+const mutationKey = ['createConversation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createConversation>>, {data: BodyType<ConversationInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createConversation(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateConversationMutationResult = NonNullable<Awaited<ReturnType<typeof createConversation>>>
+    export type CreateConversationMutationBody = BodyType<ConversationInput>
+    export type CreateConversationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Start a new conversation
+ */
+export const useCreateConversation = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createConversation>>, TError,{data: BodyType<ConversationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createConversation>>,
+        TError,
+        {data: BodyType<ConversationInput>},
+        TContext
+      > => {
+      return useMutation(getCreateConversationMutationOptions(options));
+    }
+
+export const getListMessagesUrl = (id: number,) => {
+
+
+
+
+  return `/api/conversations/${id}/messages`
+}
+
+/**
+ * @summary List messages in a conversation
+ */
+export const listMessages = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<ConversationMessage[]> => {
+
+  return customFetch<ConversationMessage[]>(getListMessagesUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMessagesQueryKey = (id: number,) => {
+    return [
+    `/api/conversations/${id}/messages`
+    ] as const;
+    }
+
+
+export const getListMessagesQueryOptions = <TData = Awaited<ReturnType<typeof listMessages>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMessagesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMessages>>> = ({ signal }) => listMessages(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof listMessages>>>
+export type ListMessagesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List messages in a conversation
+ */
+
+export function useListMessages<TData = Awaited<ReturnType<typeof listMessages>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMessagesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSendMessageUrl = (id: number,) => {
+
+
+
+
+  return `/api/conversations/${id}/messages`
+}
+
+/**
+ * @summary Send a message in a conversation
+ */
+export const sendMessage = async (id: number,
+    messageInput: MessageInput, options?: Parameters<typeof customFetch>[1]): Promise<ConversationMessage> => {
+
+  return customFetch<ConversationMessage>(getSendMessageUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(messageInput)
+  }
+);}
+
+
+
+
+
+export const getSendMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendMessage>>, TError,{id: number;data: BodyType<MessageInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendMessage>>, TError,{id: number;data: BodyType<MessageInput>}, TContext> => {
+
+const mutationKey = ['sendMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendMessage>>, {id: number;data: BodyType<MessageInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  sendMessage(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendMessageMutationResult = NonNullable<Awaited<ReturnType<typeof sendMessage>>>
+    export type SendMessageMutationBody = BodyType<MessageInput>
+    export type SendMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Send a message in a conversation
+ */
+export const useSendMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendMessage>>, TError,{id: number;data: BodyType<MessageInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendMessage>>,
+        TError,
+        {id: number;data: BodyType<MessageInput>},
+        TContext
+      > => {
+      return useMutation(getSendMessageMutationOptions(options));
+    }
+
+export const getListPostCommentsUrl = (id: number,) => {
+
+
+
+
+  return `/api/studio-posts/${id}/comments`
+}
+
+/**
+ * @summary List comments on a studio post
+ */
+export const listPostComments = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<Comment[]> => {
+
+  return customFetch<Comment[]>(getListPostCommentsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPostCommentsQueryKey = (id: number,) => {
+    return [
+    `/api/studio-posts/${id}/comments`
+    ] as const;
+    }
+
+
+export const getListPostCommentsQueryOptions = <TData = Awaited<ReturnType<typeof listPostComments>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPostComments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPostCommentsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPostComments>>> = ({ signal }) => listPostComments(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPostComments>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPostCommentsQueryResult = NonNullable<Awaited<ReturnType<typeof listPostComments>>>
+export type ListPostCommentsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List comments on a studio post
+ */
+
+export function useListPostComments<TData = Awaited<ReturnType<typeof listPostComments>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPostComments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPostCommentsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getAddPostCommentUrl = (id: number,) => {
+
+
+
+
+  return `/api/studio-posts/${id}/comments`
+}
+
+/**
+ * @summary Add a comment (critique) to a studio post
+ */
+export const addPostComment = async (id: number,
+    commentInput: CommentInput, options?: Parameters<typeof customFetch>[1]): Promise<Comment> => {
+
+  return customFetch<Comment>(getAddPostCommentUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(commentInput)
+  }
+);}
+
+
+
+
+
+export const getAddPostCommentMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addPostComment>>, TError,{id: number;data: BodyType<CommentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addPostComment>>, TError,{id: number;data: BodyType<CommentInput>}, TContext> => {
+
+const mutationKey = ['addPostComment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addPostComment>>, {id: number;data: BodyType<CommentInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  addPostComment(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddPostCommentMutationResult = NonNullable<Awaited<ReturnType<typeof addPostComment>>>
+    export type AddPostCommentMutationBody = BodyType<CommentInput>
+    export type AddPostCommentMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add a comment (critique) to a studio post
+ */
+export const useAddPostComment = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addPostComment>>, TError,{id: number;data: BodyType<CommentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addPostComment>>,
+        TError,
+        {id: number;data: BodyType<CommentInput>},
+        TContext
+      > => {
+      return useMutation(getAddPostCommentMutationOptions(options));
     }
 

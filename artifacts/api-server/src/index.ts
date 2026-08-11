@@ -1,5 +1,6 @@
 import { runMigrations } from 'stripe-replit-sync';
 import { getStripeSync } from './stripeClient';
+import { ensureEventTables } from './lib/ensureEventTables';
 import app from "./app";
 import { logger } from "./lib/logger";
 
@@ -26,17 +27,19 @@ async function initStripe() {
 
   try {
     logger.info('Initializing Stripe schema…');
-    await runMigrations({ databaseUrl, schema: 'stripe' });
+    // MigrationConfig only accepts { databaseUrl, ssl?, logger? } — no `schema` key
+    await runMigrations({ databaseUrl });
     logger.info('Stripe schema ready');
 
     const stripeSync = await getStripeSync();
 
     const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
     logger.info({ url: `${webhookBaseUrl}/api/stripe/webhook` }, 'Setting up managed webhook…');
-    const { webhook } = await stripeSync.findOrCreateManagedWebhook(
+    // findOrCreateManagedWebhook returns Stripe.WebhookEndpoint directly (not { webhook })
+    const webhookEndpoint = await stripeSync.findOrCreateManagedWebhook(
       `${webhookBaseUrl}/api/stripe/webhook`
     );
-    logger.info({ webhookUrl: webhook?.url }, 'Webhook configured');
+    logger.info({ webhookUrl: webhookEndpoint?.url }, 'Webhook configured');
 
     // Backfill runs in the background — don't block server startup.
     // Must pass { object: "all" } — calling with no args defaults to a function
@@ -50,6 +53,11 @@ async function initStripe() {
     throw error;
   }
 }
+
+// Ensure event_attendances table exists (idempotent — safe across restarts).
+// This is a hard prerequisite for the check-in feature; crash if it fails.
+await ensureEventTables();
+logger.info('Event tables verified');
 
 // Stripe init is non-fatal — the server must start even if Stripe is unavailable
 try {

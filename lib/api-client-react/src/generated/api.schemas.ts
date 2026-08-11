@@ -14,7 +14,7 @@ export type UserTier = typeof UserTier[keyof typeof UserTier];
 
 export const UserTier = {
   free: 'free',
-  academy: 'academy',
+  workshop: 'workshop',
   pro: 'pro',
 } as const;
 
@@ -34,7 +34,7 @@ export type UserUpdateTier = typeof UserUpdateTier[keyof typeof UserUpdateTier];
 
 export const UserUpdateTier = {
   free: 'free',
-  academy: 'academy',
+  workshop: 'workshop',
   pro: 'pro',
 } as const;
 
@@ -465,6 +465,29 @@ export interface CommunityEventInput {
   isFeatured?: boolean;
 }
 
+export interface EventCheckInInput {
+  /** Signed token string from GET /events/{id}/qr-token, encoded in the event QR code */
+  qrData: string;
+}
+
+export interface EventQrToken {
+  /** HMAC-signed token to encode into the event QR code */
+  token: string;
+  expiresAt: string;
+  eventId: number;
+  eventTitle: string;
+}
+
+export interface EventCheckInResult {
+  success: boolean;
+  /** @nullable */
+  eventId?: number | null;
+  /** @nullable */
+  eventTitle?: string | null;
+  message: string;
+  alreadyCheckedIn?: boolean;
+}
+
 export type SponsorshipTier = typeof SponsorshipTier[keyof typeof SponsorshipTier];
 
 
@@ -551,6 +574,95 @@ export interface CheckoutSessionInput {
 export interface CheckoutSession {
   sessionId: string;
   checkoutUrl: string;
+}
+
+export interface DirectoryCreator {
+  id: number;
+  username: string;
+  /** @nullable */
+  avatarUrl?: string | null;
+  tier: string;
+  /** @nullable */
+  discipline?: string | null;
+  /** @nullable */
+  bio?: string | null;
+  /** @nullable */
+  location?: string | null;
+  bookingOpen: boolean;
+  /** @nullable */
+  portfolioUrl?: string | null;
+  badgeCount: number;
+  postCount: number;
+}
+
+export interface ConversationParticipant {
+  userId: number;
+  username: string;
+  /** @nullable */
+  avatarUrl?: string | null;
+  tier?: string;
+}
+
+export interface ConversationLastMessage {
+  id: number;
+  content: string;
+  senderId: number;
+  senderName: string;
+  createdAt: string;
+}
+
+export interface Conversation {
+  id: number;
+  /** @nullable */
+  name?: string | null;
+  isGroup?: boolean;
+  createdAt: string;
+  lastMessage?: ConversationLastMessage | null;
+  participants?: ConversationParticipant[];
+  unreadCount: number;
+}
+
+export interface ConversationMessage {
+  id: number;
+  conversationId: number;
+  senderId: number;
+  content: string;
+  createdAt: string;
+  senderName: string;
+  /** @nullable */
+  senderAvatar?: string | null;
+}
+
+export interface ConversationInput {
+  participantIds: number[];
+  /** @nullable */
+  name?: string | null;
+}
+
+export interface ConversationResult {
+  id: number;
+  existing: boolean;
+}
+
+export interface MessageInput {
+  /** @minLength 1 */
+  content: string;
+}
+
+export interface Comment {
+  id: number;
+  postId: number;
+  userId: number;
+  username: string;
+  /** @nullable */
+  avatarUrl?: string | null;
+  content: string;
+  createdAt: string;
+}
+
+export interface CommentInput {
+  /** @minLength 1 */
+  content: string;
 }
 
 export type GetActivityFeedParams = {

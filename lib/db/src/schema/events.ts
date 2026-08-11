@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, boolean, timestamp, unique } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
 
 export const communityEventsTable = pgTable("community_events", {
@@ -23,3 +23,19 @@ export const eventRsvpsTable = pgTable("event_rsvps", {
   eventId: integer("event_id").references(() => communityEventsTable.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+/**
+ * Records actual in-person attendance via QR scan.
+ * Separate from RSVPs — a creator can RSVP without attending, and can check in without RSVPing.
+ * Unique per (userId, eventId) so scanning twice is idempotent.
+ */
+export const eventAttendancesTable = pgTable(
+  "event_attendances",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").references(() => usersTable.id).notNull(),
+    eventId: integer("event_id").references(() => communityEventsTable.id).notNull(),
+    checkedInAt: timestamp("checked_in_at").defaultNow().notNull(),
+  },
+  (t) => [unique("uq_event_attendance_user_event").on(t.userId, t.eventId)],
+);

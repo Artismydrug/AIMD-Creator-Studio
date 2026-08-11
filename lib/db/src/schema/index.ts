@@ -6,5 +6,5 @@ export * from "./assignments";
 export * from "./badges";
 export * from "./skill-tracks";
 export * from "./jobs";
-export * from "./events";
+export * from "./events"; // exports communityEventsTable, eventRsvpsTable, eventAttendancesTable
 export * from "./sponsorships";

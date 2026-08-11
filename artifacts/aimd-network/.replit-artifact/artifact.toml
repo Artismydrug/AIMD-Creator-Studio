@@ -1,0 +1,24 @@
+kind = "mobile"
+previewPath = "/aimd-network/"
+title = "AIMD Network"
+description = "A mobile companion app for the AIMD Network creator community. Lets creators browse the Studio Feed, track creative habits, send messages, discover other creators, and check into events via QR scan — all from their phone."
+version = "1.0.0"
+id = "artifacts/aimd-network"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/aimd-network/" ]
+localPort = 20059
+
+[services.development]
+run = "pnpm --filter @workspace/aimd-network run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aimd-network", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/aimd-network", "run", "serve" ]
+
+[services.env]
+PORT = "20059"
+BASE_PATH = "/aimd-network/"

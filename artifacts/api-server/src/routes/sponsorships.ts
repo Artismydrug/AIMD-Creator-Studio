@@ -48,7 +48,7 @@ router.get("/", async (req, res) => {
 });
 
 // POST /sponsorships
-router.post("/", async (req, res) => {
+router.post("/", async (req, res): Promise<void> => {
   try {
     const body = CreateSponsorshipBody.parse(req.body);
 
@@ -64,7 +64,10 @@ router.post("/", async (req, res) => {
       .from(usersTable)
       .where(eq(usersTable.id, body.creatorId));
 
-    if (!creator) return res.status(404).json({ error: "Creator not found" });
+    if (!creator) {
+      res.status(404).json({ error: "Creator not found" });
+      return;
+    }
 
     const amount = SPONSORSHIP_AMOUNTS[body.tier] ?? 49;
 
