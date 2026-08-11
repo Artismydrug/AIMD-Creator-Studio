@@ -40,8 +40,8 @@ function PlanCard({
   return (
     <div className={`relative flex flex-col border transition-all duration-200 ${
       plan.featured
-        ? 'border-emerald-500/60 bg-zinc-900 shadow-[0_0_40px_rgba(16,185,129,0.08)]'
-        : 'border-zinc-800 bg-zinc-900/50'
+        ? 'border-primary/50 bg-muted/40 shadow-[0_0_40px_rgba(16,185,129,0.08)]'
+        : 'border-border bg-muted/40/50'
     }`}>
       {/* Top accent line */}
       {plan.featured && (
@@ -51,7 +51,7 @@ function PlanCard({
       {/* Most Popular badge */}
       {plan.featured && (
         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-          <span className="bg-emerald-500 text-zinc-950 font-mono text-[11px] font-bold uppercase tracking-widest px-3 py-0.5">
+          <span className="bg-primary text-zinc-950 font-mono text-[11px] font-bold uppercase tracking-widest px-3 py-0.5">
             Most Popular
           </span>
         </div>
@@ -65,12 +65,12 @@ function PlanCard({
               {plan.name}
             </h3>
             {isCurrentPlan && (
-              <span className="font-mono text-[10px] uppercase tracking-widest text-emerald-400 border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-primary border border-primary/30 bg-primary/10 px-2 py-0.5">
                 Current
               </span>
             )}
           </div>
-          <p className="text-zinc-400 text-sm leading-relaxed">{plan.description}</p>
+          <p className="text-muted-foreground text-sm leading-relaxed">{plan.description}</p>
         </div>
 
         {/* Price */}
@@ -79,12 +79,12 @@ function PlanCard({
             <span className="text-5xl font-black font-display leading-none text-white">
               ${displayPrice}
             </span>
-            <span className="text-zinc-500 font-mono text-sm pb-1.5">
+            <span className="text-muted-foreground font-mono text-sm pb-1.5">
               {plan.priceMonthly === 0 ? 'forever' : annual && plan.priceAnnual ? '/mo, billed annually' : '/mo'}
             </span>
           </div>
           {annual && annualSavings > 0 && (
-            <p className="font-mono text-xs text-emerald-400 mt-1.5">
+            <p className="font-mono text-xs text-primary mt-1.5">
               Save ${annualSavings}/year vs monthly
             </p>
           )}
@@ -94,17 +94,17 @@ function PlanCard({
         <ul className="space-y-3 mb-8 flex-1">
           {plan.features.map((f: string, i: number) => (
             <li key={i} className="flex items-start gap-3">
-              <Check className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-              <span className="text-sm text-zinc-300">{f}</span>
+              <Check className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+              <span className="text-sm text-foreground/80">{f}</span>
             </li>
           ))}
         </ul>
 
         {/* Limits note for free tier */}
         {plan.tier === 'free' && (
-          <div className="flex items-center gap-2 mb-6 px-3 py-2 bg-zinc-800 border border-zinc-700">
-            <Lock className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
-            <span className="font-mono text-xs text-zinc-500">
+          <div className="flex items-center gap-2 mb-6 px-3 py-2 bg-muted border border-border">
+            <Lock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+            <span className="font-mono text-xs text-muted-foreground">
               3 habit limit · Module 1 only
             </span>
           </div>
@@ -120,7 +120,7 @@ function PlanCard({
             <Button
               asChild
               variant="outline"
-              className="w-full h-12 rounded-none font-mono font-bold uppercase tracking-wider border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+              className="w-full h-12 rounded-none font-mono font-bold uppercase tracking-wider border-border text-foreground/80 hover:bg-muted hover:text-white"
             >
               <Link href="/studio-log">Start Free</Link>
             </Button>
@@ -133,7 +133,7 @@ function PlanCard({
           <Button
             variant="outline"
             disabled
-            className="w-full h-12 rounded-none font-mono font-bold uppercase tracking-wider border-zinc-700 text-zinc-500 opacity-50"
+            className="w-full h-12 rounded-none font-mono font-bold uppercase tracking-wider border-border text-muted-foreground opacity-50"
           >
             Downgrade
           </Button>
@@ -143,7 +143,7 @@ function PlanCard({
             disabled={isPending}
             className={`w-full h-12 rounded-none font-mono font-bold uppercase tracking-wider ${
               plan.featured
-                ? 'bg-emerald-500 hover:bg-emerald-400 text-zinc-950'
+                ? 'bg-primary hover:bg-primary/90 text-zinc-950'
                 : 'bg-white hover:bg-zinc-100 text-zinc-950'
             }`}
           >
@@ -178,43 +178,43 @@ function SponsorSection() {
   }
 
   return (
-    <section className="border border-zinc-800 bg-zinc-900/50 p-8 md:p-10">
+    <section className="border border-border bg-muted/40/50 p-8 md:p-10">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center gap-3 mb-2">
-          <HeartHandshake className="w-6 h-6 text-emerald-400" />
-          <span className="font-mono text-[11px] uppercase tracking-widest text-emerald-400">
+          <HeartHandshake className="w-6 h-6 text-primary" />
+          <span className="font-mono text-[11px] uppercase tracking-widest text-primary">
             501(c)(3) Tax-Deductible Donation
           </span>
         </div>
         <h2 className="font-display font-black text-3xl uppercase tracking-tight text-white mb-3">
           Sponsor a Creator
         </h2>
-        <p className="text-zinc-400 text-sm leading-relaxed mb-8 max-w-xl">
+        <p className="text-muted-foreground text-sm leading-relaxed mb-8 max-w-xl">
           Gift an Academy Pass or Pro / Career membership to a deserving Free-tier artist. 100% goes directly to the creator's access. You'll receive a donation receipt.
         </p>
 
         {/* Optional fields */}
         <div className="grid sm:grid-cols-2 gap-4 mb-8">
           <div>
-            <label className="font-mono text-[11px] uppercase tracking-widest text-zinc-500 block mb-1.5">
+            <label className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground block mb-1.5">
               Creator Name (Optional)
             </label>
             <input
               value={creator}
               onChange={(e) => setCreator(e.target.value)}
               placeholder="Name or @handle"
-              className="w-full h-10 px-3 bg-zinc-950 border border-zinc-700 text-white text-sm font-mono focus:outline-none focus:border-emerald-500/60 placeholder:text-zinc-600"
+              className="w-full h-10 px-3 bg-background border border-border text-white text-sm font-mono focus:outline-none focus:border-primary/50 placeholder:text-muted-foreground"
             />
           </div>
           <div>
-            <label className="font-mono text-[11px] uppercase tracking-widest text-zinc-500 block mb-1.5">
+            <label className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground block mb-1.5">
               Message (Optional)
             </label>
             <input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="A note to the artist..."
-              className="w-full h-10 px-3 bg-zinc-950 border border-zinc-700 text-white text-sm font-mono focus:outline-none focus:border-emerald-500/60 placeholder:text-zinc-600"
+              className="w-full h-10 px-3 bg-background border border-border text-white text-sm font-mono focus:outline-none focus:border-primary/50 placeholder:text-muted-foreground"
             />
           </div>
         </div>
@@ -226,7 +226,7 @@ function SponsorSection() {
               amount: '39' as const,
               label: 'Academy Pass',
               desc: 'Unlimited habits, full workshop access, certification path — 1 month.',
-              color: 'border-emerald-500/30 hover:border-emerald-500/60',
+              color: 'border-primary/30 hover:border-primary/50',
             },
             {
               amount: '99' as const,
@@ -239,14 +239,14 @@ function SponsorSection() {
               key={amount}
               onClick={() => startCheckout(amount)}
               disabled={!!loading}
-              className={`text-left p-5 border ${color} bg-zinc-950 transition-all group`}
+              className={`text-left p-5 border ${color} bg-background transition-all group`}
             >
               <div className="flex items-start justify-between gap-2 mb-2">
                 <span className="font-display font-black text-lg uppercase text-white">{label}</span>
                 <span className="font-mono font-bold text-2xl text-white">${amount}</span>
               </div>
-              <p className="text-xs text-zinc-500 leading-relaxed mb-4">{desc}</p>
-              <div className="flex items-center gap-1.5 font-mono text-xs text-emerald-400 group-hover:gap-2 transition-all">
+              <p className="text-xs text-muted-foreground leading-relaxed mb-4">{desc}</p>
+              <div className="flex items-center gap-1.5 font-mono text-xs text-primary group-hover:gap-2 transition-all">
                 <Sparkles className="w-3.5 h-3.5" />
                 {loading === amount ? 'Redirecting…' : 'Donate & Sponsor →'}
               </div>
@@ -277,31 +277,31 @@ export default function Plans() {
     );
   };
 
-  if (isLoading) return <div className="p-8 font-mono animate-pulse text-zinc-500">Loading membership tiers…</div>;
+  if (isLoading) return <div className="p-8 font-mono animate-pulse text-muted-foreground">Loading membership tiers…</div>;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className="min-h-screen bg-background text-white">
       <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-16 py-16">
 
         {/* Header */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[11px] uppercase tracking-widest mb-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/30 text-primary font-mono text-[11px] uppercase tracking-widest mb-2">
             <Zap className="w-3.5 h-3.5" />
             AIMD Membership
           </div>
           <h1 className="text-5xl md:text-7xl font-black font-display uppercase tracking-tight">
             Invest in the Grind
           </h1>
-          <p className="text-xl text-zinc-400 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Select your tier. Access the academy. Build your career.
           </p>
 
           {/* Billing toggle */}
-          <div className="inline-flex items-center gap-3 mt-4 p-1 border border-zinc-800 bg-zinc-900">
+          <div className="inline-flex items-center gap-3 mt-4 p-1 border border-border bg-muted/40">
             <button
               onClick={() => setAnnual(false)}
               className={`px-4 py-1.5 font-mono text-xs uppercase tracking-wider transition-colors ${
-                !annual ? 'bg-emerald-500 text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'
+                !annual ? 'bg-primary text-zinc-950 font-bold' : 'text-muted-foreground hover:text-white'
               }`}
             >
               Monthly
@@ -309,11 +309,11 @@ export default function Plans() {
             <button
               onClick={() => setAnnual(true)}
               className={`px-4 py-1.5 font-mono text-xs uppercase tracking-wider transition-colors ${
-                annual ? 'bg-emerald-500 text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'
+                annual ? 'bg-primary text-zinc-950 font-bold' : 'text-muted-foreground hover:text-white'
               }`}
             >
               Annual
-              <span className="ml-1.5 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1 py-0.5">
+              <span className="ml-1.5 text-[10px] bg-primary/15 text-primary border border-primary/30 px-1 py-0.5">
                 Save $69
               </span>
             </button>
@@ -335,11 +335,11 @@ export default function Plans() {
         </div>
 
         {/* Feature comparison note */}
-        <div className="text-center text-xs font-mono text-zinc-600 space-y-1">
+        <div className="text-center text-xs font-mono text-muted-foreground space-y-1">
           <p>All plans include access to the AIMD community. Cancel anytime.</p>
           <p>
             Academy Pass annual billing: $399/year (equivalent to ~$33/mo).{' '}
-            <Link href="/mission" className="text-emerald-400 underline">Learn about our mission →</Link>
+            <Link href="/mission" className="text-primary underline">Learn about our mission →</Link>
           </p>
         </div>
 

@@ -23,15 +23,15 @@ function TierLimitBanner({ habitCount, limit }: { habitCount: number; limit: num
     <div className={`flex items-center justify-between gap-4 px-5 py-4 border ${
       isAtLimit
         ? 'border-amber-500/40 bg-amber-500/5'
-        : 'border-zinc-800 bg-zinc-900/50'
+        : 'border-border bg-muted/40/50'
     }`}>
       <div className="flex items-center gap-3">
-        <Lock className={`w-4 h-4 flex-shrink-0 ${isAtLimit ? 'text-amber-400' : 'text-zinc-500'}`} />
+        <Lock className={`w-4 h-4 flex-shrink-0 ${isAtLimit ? 'text-amber-400' : 'text-muted-foreground'}`} />
         <div>
-          <p className={`font-mono text-xs font-bold uppercase tracking-wider ${isAtLimit ? 'text-amber-400' : 'text-zinc-400'}`}>
+          <p className={`font-mono text-xs font-bold uppercase tracking-wider ${isAtLimit ? 'text-amber-400' : 'text-muted-foreground'}`}>
             Studio Starter Pass — {habitCount}/{limit} Habits
           </p>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-muted-foreground">
             {isAtLimit
               ? 'Habit limit reached. Upgrade to Academy Pass for unlimited habit tracking.'
               : `${limit - habitCount} habit slot${limit - habitCount !== 1 ? 's' : ''} remaining on your free plan.`}
@@ -39,7 +39,7 @@ function TierLimitBanner({ habitCount, limit }: { habitCount: number; limit: num
         </div>
       </div>
       {isAtLimit && (
-        <Button asChild className="flex-shrink-0 rounded-none bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs uppercase tracking-wider h-8 px-4">
+        <Button asChild className="flex-shrink-0 rounded-none bg-primary hover:bg-primary/90 text-zinc-950 font-bold text-xs uppercase tracking-wider h-8 px-4">
           <Link href="/plans">
             <Sparkles className="w-3 h-3 mr-1.5" />
             Upgrade
@@ -79,7 +79,7 @@ function HeatmapSection({ heatmap, tier }: { heatmap: any[] | undefined; tier: s
           </div>
           <p className="text-xs text-muted-foreground font-mono text-center">
             Visual heatmaps & session analytics unlock on Academy Pass.{' '}
-            <Link href="/plans" className="text-emerald-400 underline">Upgrade →</Link>
+            <Link href="/plans" className="text-primary underline">Upgrade →</Link>
           </p>
         </div>
       ) : heatmap && heatmap.length > 0 ? (
@@ -152,9 +152,9 @@ export default function Habits() {
 
         {/* Locked slot cards for free tier */}
         {meta?.habitLimit && habits && habits.length < meta.habitLimit && [...Array(meta.habitLimit - habits.length)].map((_, i) => (
-          <div key={`empty-${i}`} className="border border-dashed border-zinc-800 flex flex-col items-center justify-center py-10 opacity-40">
-            <Plus className="w-6 h-6 text-zinc-600 mb-2" />
-            <span className="font-mono text-xs text-zinc-600 uppercase">Empty Slot</span>
+          <div key={`empty-${i}`} className="border border-dashed border-border flex flex-col items-center justify-center py-10 opacity-40">
+            <Plus className="w-6 h-6 text-muted-foreground mb-2" />
+            <span className="font-mono text-xs text-muted-foreground uppercase">Empty Slot</span>
           </div>
         ))}
 
@@ -163,9 +163,9 @@ export default function Habits() {
             <Lock className="w-6 h-6 text-amber-400" />
             <div>
               <p className="font-display font-bold uppercase text-sm text-white mb-1">Habit Limit Reached</p>
-              <p className="font-mono text-xs text-zinc-500">Upgrade to Academy Pass for unlimited habits.</p>
+              <p className="font-mono text-xs text-muted-foreground">Upgrade to Academy Pass for unlimited habits.</p>
             </div>
-            <Button asChild className="rounded-none bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs uppercase h-8 px-4">
+            <Button asChild className="rounded-none bg-primary hover:bg-primary/90 text-zinc-950 font-bold text-xs uppercase h-8 px-4">
               <Link href="/plans">Upgrade →</Link>
             </Button>
           </div>
@@ -268,7 +268,7 @@ function HabitCard({ habit }: { habit: any }) {
           </Button>
         )}
         {elapsedSeconds > 0 && (
-          <Button size="sm" variant="outline" onClick={stopAndLog} className="flex-1 rounded-none font-mono uppercase text-xs border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10">
+          <Button size="sm" variant="outline" onClick={stopAndLog} className="flex-1 rounded-none font-mono uppercase text-xs border-primary/40 text-primary hover:bg-primary/10">
             <Square className="w-3 h-3 mr-1.5" /> Log
           </Button>
         )}

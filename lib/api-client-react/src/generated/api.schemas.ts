@@ -14,7 +14,7 @@ export type UserTier = typeof UserTier[keyof typeof UserTier];
 
 export const UserTier = {
   free: 'free',
-  workshop: 'workshop',
+  academy: 'academy',
   pro: 'pro',
 } as const;
 
@@ -34,7 +34,7 @@ export type UserUpdateTier = typeof UserUpdateTier[keyof typeof UserUpdateTier];
 
 export const UserUpdateTier = {
   free: 'free',
-  workshop: 'workshop',
+  academy: 'academy',
   pro: 'pro',
 } as const;
 
@@ -154,7 +154,7 @@ export type WorkshopTier = typeof WorkshopTier[keyof typeof WorkshopTier];
 
 export const WorkshopTier = {
   free: 'free',
-  workshop: 'workshop',
+  academy: 'academy',
   pro: 'pro',
 } as const;
 
@@ -193,7 +193,7 @@ export type WorkshopDetailTier = typeof WorkshopDetailTier[keyof typeof Workshop
 
 export const WorkshopDetailTier = {
   free: 'free',
-  workshop: 'workshop',
+  academy: 'academy',
   pro: 'pro',
 } as const;
 
@@ -392,7 +392,7 @@ export type CommunityEventCategory = typeof CommunityEventCategory[keyof typeof 
 
 
 export const CommunityEventCategory = {
-  workshop: 'workshop',
+  academy: 'academy',
   'pop-up': 'pop-up',
   gallery: 'gallery',
   activation: 'activation',
@@ -432,7 +432,7 @@ export type CommunityEventInputCategory = typeof CommunityEventInputCategory[key
 
 
 export const CommunityEventInputCategory = {
-  workshop: 'workshop',
+  academy: 'academy',
   'pop-up': 'pop-up',
   gallery: 'gallery',
   activation: 'activation',
@@ -699,7 +699,7 @@ export type ListWorkshopsTier = typeof ListWorkshopsTier[keyof typeof ListWorksh
 
 export const ListWorkshopsTier = {
   free: 'free',
-  workshop: 'workshop',
+  academy: 'academy',
   pro: 'pro',
 } as const;
 

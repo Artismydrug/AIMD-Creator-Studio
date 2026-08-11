@@ -58,8 +58,7 @@ const NAV_SECTIONS: NavSection[] = [
     heading: 'Career & Placement',
     items: [
       { href: '/job-board',   label: 'Open Chairs & Resident Board', icon: Briefcase },
-      { href: '/directory',   label: 'Creator Directory',        icon: Users },
-      { href: '/directory',   label: 'Studio Directory & Map',   icon: MapPin },
+      { href: '/directory',   label: 'Creator & Studio Directory', icon: Users },
     ],
   },
   {
@@ -188,20 +187,20 @@ function SidebarContent({
   onNav?: () => void;
 }) {
   return (
-    <div className="flex flex-col h-full bg-zinc-950">
+    <div className="flex flex-col h-full bg-sidebar">
       {/* Brand header */}
       <div className="mb-8 px-6 pt-6">
         <Link href="/" onClick={onNav}>
           <div className="flex items-center gap-2 cursor-pointer">
-            <h1 className="text-xl font-black tracking-wider text-white">AIMD</h1>
-            <span className="text-[10px] font-bold bg-zinc-800 text-zinc-400 border border-zinc-700 px-2 py-0.5 rounded-full">
+            <h1 className="text-xl font-black tracking-wider text-foreground">AIMD</h1>
+            <span className="text-[10px] font-bold bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full">
               NETWORK
             </span>
-            <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold bg-primary/10 text-primary border border-primary/25 px-2 py-0.5 rounded-full">
               501(c)(3)
             </span>
           </div>
-          <p className="text-xs text-zinc-500 uppercase font-semibold tracking-widest mt-0.5">
+          <p className="text-xs text-muted-foreground uppercase font-semibold tracking-widest mt-0.5">
             Art Is My Drug
           </p>
         </Link>
@@ -211,10 +210,10 @@ function SidebarContent({
       <div className="flex-1 overflow-y-auto px-4 space-y-6">
         {NAV_SECTIONS.map((section) => (
           <div key={section.heading}>
-            <h3 className="text-[10px] font-bold text-zinc-500 tracking-wider mb-2 px-2 uppercase">
+            <h3 className="text-[10px] font-bold text-muted-foreground tracking-wider mb-2 px-2 uppercase">
               {section.heading}
             </h3>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {section.items.map((item) => {
                 const Icon = item.icon;
                 const isActive =
@@ -226,15 +225,15 @@ function SidebarContent({
                     <div
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                         item.highlight
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
+                          ? 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15'
                           : isActive
-                          ? 'bg-zinc-800 text-white'
-                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+                          ? 'bg-[#F2ECE1] text-primary font-semibold'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-[#F2ECE1]'
                       }`}
                     >
                       <Icon
                         className={`w-4 h-4 flex-shrink-0 ${
-                          isActive || item.highlight ? 'text-emerald-400' : 'text-zinc-500'
+                          isActive || item.highlight ? 'text-primary' : 'text-muted-foreground'
                         }`}
                       />
                       <span className="truncate">{item.label}</span>
@@ -248,20 +247,20 @@ function SidebarContent({
       </div>
 
       {/* Profile footer */}
-      <div className="border-t border-zinc-800/80 pt-3 pb-4 px-6 flex items-center justify-between">
+      <div className="border-t border-border pt-3 pb-4 px-6 flex items-center justify-between">
         <Link href="/profile" onClick={onNav}>
-          <div className="flex items-center gap-3 cursor-pointer">
-            <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-xs font-bold text-emerald-400 flex-shrink-0 overflow-hidden">
+          <div className="flex items-center gap-3 cursor-pointer group">
+            <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0 overflow-hidden">
               {user?.avatarUrl
                 ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
                 : (user?.username?.slice(0, 2).toUpperCase() ?? 'CR')
               }
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-xs font-bold text-white leading-none truncate">
+              <span className="text-xs font-bold text-foreground leading-none truncate group-hover:text-primary transition-colors">
                 {user?.username ?? 'Creator'}
               </span>
-              <span className="text-[10px] text-zinc-500 mt-0.5 capitalize">
+              <span className="text-[10px] text-muted-foreground mt-0.5 capitalize">
                 {user?.tier ?? 'Community'}{user?.studioReadyBadge ? ' · Studio Ready' : ''}
               </span>
             </div>
@@ -325,7 +324,7 @@ function MobileBottomNav({
   onLogOpen: () => void;
 }) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[90] md:hidden bg-zinc-950/85 backdrop-blur-md border-t border-zinc-800/80 px-3 py-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-[90] md:hidden bg-sidebar/95 backdrop-blur-md border-t border-border px-3 py-2">
       <div className="flex items-center justify-around max-w-md mx-auto">
 
         {/* Feed */}
@@ -347,7 +346,7 @@ function MobileBottomNav({
         {/* FAB — elevated center */}
         <button
           onClick={onLogOpen}
-          className="relative -top-4 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 p-3.5 rounded-full shadow-lg shadow-emerald-500/30 transition-transform active:scale-95 border-2 border-zinc-950 flex items-center justify-center"
+          className="relative -top-4 bg-primary hover:bg-primary/90 text-white p-3.5 rounded-full shadow-lg shadow-primary/25 transition-transform active:scale-95 border-2 border-white flex items-center justify-center"
           aria-label="Start Studio Session"
         >
           <Timer className="w-6 h-6 stroke-[2.5]" />
@@ -388,13 +387,13 @@ function BottomTab({
     <Link href={href}>
       <div
         className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${
-          active ? 'text-emerald-400' : 'text-zinc-500 hover:text-zinc-300'
+          active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
         }`}
       >
         <Icon className="w-5 h-5" />
         <span className="text-[10px] font-medium tracking-wide">{label}</span>
         {active && (
-          <span className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse" />
+          <span className="w-1 h-1 bg-primary rounded-full animate-pulse" />
         )}
       </div>
     </Link>
@@ -432,7 +431,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <div className="min-h-screen bg-background flex flex-row">
 
         {/* Desktop sidebar — hidden on mobile */}
-        <aside className="hidden md:flex flex-col w-64 flex-shrink-0 sticky top-0 h-screen bg-zinc-950 border-r border-zinc-800/80 overflow-hidden">
+        <aside className="hidden md:flex flex-col w-64 flex-shrink-0 sticky top-0 h-screen bg-sidebar border-r border-border overflow-hidden shadow-sm">
           <SidebarContent location={location} user={user} />
         </aside>
 

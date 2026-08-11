@@ -23,8 +23,8 @@ const DROPS: Drop[] = [
     subtitle: '3 open resident spots at AIMD Miami. Studio Ready required.',
     dropsAt: new Date('2026-08-12T18:00:00'),
     href: '/job-board',
-    accent: 'text-emerald-400',
-    bgAccent: 'border-emerald-500/30 bg-emerald-500/5',
+    accent: 'text-primary',
+    bgAccent: 'border-primary/20 bg-primary/5',
   },
   {
     id: 'masterclass-voss',
@@ -33,8 +33,8 @@ const DROPS: Drop[] = [
     subtitle: 'Limited seats. Fine line & botanical deep-dive. 6-week cohort.',
     dropsAt: new Date('2026-08-15T12:00:00'),
     href: '/workshops',
-    accent: 'text-violet-400',
-    bgAccent: 'border-violet-500/30 bg-violet-500/5',
+    accent: 'text-violet-500',
+    bgAccent: 'border-violet-400/25 bg-violet-50',
   },
   {
     id: 'popup-atl',
@@ -43,8 +43,8 @@ const DROPS: Drop[] = [
     subtitle: 'Live tattooing, mural installation, and badge check-in.',
     dropsAt: new Date('2026-08-22T20:00:00'),
     href: '/events',
-    accent: 'text-amber-400',
-    bgAccent: 'border-amber-500/30 bg-amber-500/5',
+    accent: 'text-secondary',
+    bgAccent: 'border-secondary/25 bg-secondary/5',
   },
 ];
 
@@ -98,8 +98,8 @@ function DropCard({ drop }: { drop: Drop }) {
 
         {/* Text */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-white truncate">{drop.title}</p>
-          <p className="text-xs text-zinc-500 truncate hidden sm:block">{drop.subtitle}</p>
+          <p className="text-sm font-bold text-foreground truncate">{drop.title}</p>
+          <p className="text-xs text-muted-foreground truncate hidden sm:block">{drop.subtitle}</p>
         </div>
 
         {/* Countdown */}
@@ -116,7 +116,7 @@ function DropCard({ drop }: { drop: Drop }) {
           </span>
         </div>
 
-        <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-zinc-400 transition-colors flex-shrink-0" />
+        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
       </div>
     </Link>
   );
@@ -128,29 +128,29 @@ export function DropsCountdownBanner() {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <section className="border border-zinc-800 bg-zinc-900/50 overflow-hidden">
+    <section className="border border-border bg-card overflow-hidden rounded-xl shadow-sm">
       {/* Header */}
       <button
         onClick={() => setCollapsed((c) => !c)}
-        className="w-full flex items-center justify-between px-5 py-3 border-b border-zinc-800 hover:bg-zinc-800/40 transition-colors"
+        className="w-full flex items-center justify-between px-5 py-3 border-b border-border hover:bg-muted/50 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-emerald-400" />
-          <span className="font-mono text-xs uppercase tracking-widest text-zinc-300">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <span className="font-mono text-xs uppercase tracking-widest text-foreground/70">
             Upcoming Drops
           </span>
-          <span className="font-mono text-[10px] text-emerald-400 border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5">
+          <span className="font-mono text-[10px] text-primary border border-primary/30 bg-primary/10 px-1.5 py-0.5 rounded-full">
             {DROPS.length} Live
           </span>
         </div>
-        <span className="font-mono text-[10px] text-zinc-600 uppercase">
+        <span className="font-mono text-[10px] text-muted-foreground uppercase">
           {collapsed ? 'Show' : 'Hide'}
         </span>
       </button>
 
       {/* Drop list */}
       {!collapsed && (
-        <div className="divide-y divide-zinc-800/60">
+        <div className="divide-y divide-border">
           {DROPS.map((drop) => (
             <DropCard key={drop.id} drop={drop} />
           ))}

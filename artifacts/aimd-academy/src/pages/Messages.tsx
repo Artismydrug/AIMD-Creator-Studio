@@ -47,7 +47,7 @@ function initials(name: string) {
 }
 
 const AVATAR_COLORS = [
-  'bg-emerald-500/20 text-emerald-400',
+  'bg-primary/15 text-primary',
   'bg-violet-500/20 text-violet-400',
   'bg-amber-500/20 text-amber-400',
   'bg-sky-500/20 text-sky-400',
@@ -66,8 +66,8 @@ function ConvItem({ conv, active, onClick }: { conv: any; active: boolean; onCli
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left px-4 py-3.5 flex items-center gap-3 transition-colors border-b border-zinc-800/60 ${
-        active ? 'bg-zinc-800' : 'hover:bg-zinc-900'
+      className={`w-full text-left px-4 py-3.5 flex items-center gap-3 transition-colors border-b border-border/60 ${
+        active ? 'bg-muted' : 'hover:bg-muted/40'
       }`}
     >
       <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-sm ${colorClass}`}>
@@ -75,19 +75,19 @@ function ConvItem({ conv, active, onClick }: { conv: any; active: boolean; onCli
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <span className={`text-sm font-semibold truncate ${hasUnread ? 'text-white' : 'text-zinc-300'}`}>{name}</span>
+          <span className={`text-sm font-semibold truncate ${hasUnread ? 'text-white' : 'text-foreground/80'}`}>{name}</span>
           {conv.lastMessage && (
-            <span className="text-[10px] font-mono text-zinc-600 flex-shrink-0">
+            <span className="text-[10px] font-mono text-muted-foreground flex-shrink-0">
               {relTime(conv.lastMessage.createdAt)}
             </span>
           )}
         </div>
-        <p className="text-xs text-zinc-500 truncate mt-0.5">
+        <p className="text-xs text-muted-foreground truncate mt-0.5">
           {conv.lastMessage ? `${conv.lastMessage.senderName === 'Alex Rivera' ? 'You' : conv.lastMessage.senderName}: ${conv.lastMessage.content}` : 'No messages yet'}
         </p>
       </div>
       {hasUnread && (
-        <div className="flex-shrink-0 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+        <div className="flex-shrink-0 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
           <span className="text-[10px] font-bold text-zinc-950">{conv.unreadCount}</span>
         </div>
       )}
@@ -110,16 +110,16 @@ function MessageBubble({ msg, isMine }: { msg: any; isMine: boolean }) {
       )}
       <div className={`max-w-[70%] ${isMine ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
         {!isMine && (
-          <span className="font-mono text-[10px] text-zinc-500 ml-1">{msg.senderName}</span>
+          <span className="font-mono text-[10px] text-muted-foreground ml-1">{msg.senderName}</span>
         )}
         <div className={`px-4 py-2.5 text-sm leading-relaxed ${
           isMine
-            ? 'bg-emerald-500 text-zinc-950 font-medium rounded-2xl rounded-tr-sm'
-            : 'bg-zinc-800 text-zinc-100 rounded-2xl rounded-tl-sm'
+            ? 'bg-primary text-zinc-950 font-medium rounded-2xl rounded-tr-sm'
+            : 'bg-muted text-foreground rounded-2xl rounded-tl-sm'
         }`}>
           {msg.content}
         </div>
-        <span className="font-mono text-[10px] text-zinc-600 mx-1">{relTime(msg.createdAt)}</span>
+        <span className="font-mono text-[10px] text-muted-foreground mx-1">{relTime(msg.createdAt)}</span>
       </div>
     </div>
   );
@@ -162,8 +162,8 @@ function ThreadView({ convId, convName, onBack }: { convId: number; convName: st
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-800 bg-zinc-950 flex-shrink-0">
-        <button onClick={onBack} className="md:hidden p-1 text-zinc-400 hover:text-white">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-background flex-shrink-0">
+        <button onClick={onBack} className="md:hidden p-1 text-muted-foreground hover:text-white">
           <ChevronLeft className="w-5 h-5" />
         </button>
         <div className="font-display font-bold text-white uppercase tracking-tight">{convName}</div>
@@ -172,11 +172,11 @@ function ThreadView({ convId, convName, onBack }: { convId: number; convName: st
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 min-h-0">
         {isLoading ? (
-          <div className="font-mono text-xs text-zinc-600 text-center animate-pulse">Loading messages…</div>
+          <div className="font-mono text-xs text-muted-foreground text-center animate-pulse">Loading messages…</div>
         ) : messages.length === 0 ? (
           <div className="text-center py-12">
-            <MessageSquare className="w-8 h-8 text-zinc-700 mx-auto mb-3" />
-            <p className="font-mono text-xs text-zinc-600">No messages yet. Start the conversation.</p>
+            <MessageSquare className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+            <p className="font-mono text-xs text-muted-foreground">No messages yet. Start the conversation.</p>
           </div>
         ) : (
           messages.map((msg: any) => (
@@ -187,19 +187,19 @@ function ThreadView({ convId, convName, onBack }: { convId: number; convName: st
       </div>
 
       {/* Composer */}
-      <div className="px-4 py-3 border-t border-zinc-800 bg-zinc-950 flex-shrink-0">
+      <div className="px-4 py-3 border-t border-border bg-background flex-shrink-0">
         <div className="flex gap-2">
           <Input
             value={draft}
             onChange={e => setDraft(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
             placeholder="Write a message…"
-            className="flex-1 bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-600 rounded-full focus:border-emerald-500/60"
+            className="flex-1 bg-muted/40 border-border text-white placeholder:text-muted-foreground rounded-full focus:border-primary/50"
           />
           <Button
             onClick={handleSend}
             disabled={!draft.trim() || send.isPending}
-            className="rounded-full w-10 h-10 p-0 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 flex-shrink-0"
+            className="rounded-full w-10 h-10 p-0 bg-primary hover:bg-primary/90 text-zinc-950 flex-shrink-0"
           >
             <Send className="w-4 h-4" />
           </Button>
@@ -238,31 +238,31 @@ export default function Messages() {
   const totalUnread = conversations.reduce((n: number, c: any) => n + (c.unreadCount ?? 0), 0);
 
   return (
-    <div className="h-[calc(100vh-56px)] md:h-screen flex overflow-hidden bg-zinc-950">
+    <div className="h-[calc(100vh-56px)] md:h-screen flex overflow-hidden bg-background">
       {/* Sidebar — conversation list */}
-      <div className={`flex-shrink-0 w-full md:w-80 border-r border-zinc-800 flex flex-col ${activeConvId ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`flex-shrink-0 w-full md:w-80 border-r border-border flex flex-col ${activeConvId ? 'hidden md:flex' : 'flex'}`}>
         {/* Header */}
-        <div className="px-4 py-4 border-b border-zinc-800 flex-shrink-0">
+        <div className="px-4 py-4 border-b border-border flex-shrink-0">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <h1 className="font-display font-black text-xl uppercase tracking-tight text-white">Messages</h1>
               {totalUnread > 0 && (
-                <span className="bg-emerald-500 text-zinc-950 font-bold text-[10px] rounded-full px-1.5 py-0.5">
+                <span className="bg-primary text-zinc-950 font-bold text-[10px] rounded-full px-1.5 py-0.5">
                   {totalUnread}
                 </span>
               )}
             </div>
-            <button className="w-8 h-8 flex items-center justify-center border border-zinc-700 hover:border-emerald-500/60 hover:text-emerald-400 text-zinc-400 transition-colors">
+            <button className="w-8 h-8 flex items-center justify-center border border-border hover:border-primary/50 hover:text-primary text-muted-foreground transition-colors">
               <Plus className="w-4 h-4" />
             </button>
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search conversations…"
-              className="pl-8 h-8 bg-zinc-900 border-zinc-700 text-sm placeholder:text-zinc-600"
+              className="pl-8 h-8 bg-muted/40 border-border text-sm placeholder:text-muted-foreground"
             />
           </div>
         </div>
@@ -270,11 +270,11 @@ export default function Messages() {
         {/* List */}
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
-            <div className="p-6 font-mono text-xs text-zinc-600 animate-pulse text-center">Loading…</div>
+            <div className="p-6 font-mono text-xs text-muted-foreground animate-pulse text-center">Loading…</div>
           ) : filtered.length === 0 ? (
             <div className="p-8 text-center">
-              <MessageSquare className="w-8 h-8 text-zinc-700 mx-auto mb-3" />
-              <p className="font-mono text-xs text-zinc-600">No conversations yet.</p>
+              <MessageSquare className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+              <p className="font-mono text-xs text-muted-foreground">No conversations yet.</p>
             </div>
           ) : (
             filtered.map((conv: any) => (
@@ -299,12 +299,12 @@ export default function Messages() {
           />
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center p-8">
-            <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-              <MessageSquare className="w-7 h-7 text-zinc-600" />
+            <div className="w-16 h-16 rounded-full bg-muted/40 border border-border flex items-center justify-center">
+              <MessageSquare className="w-7 h-7 text-muted-foreground" />
             </div>
             <div>
               <h2 className="font-display font-black text-xl uppercase text-white mb-1">Your Inbox</h2>
-              <p className="text-sm text-zinc-500 max-w-xs">
+              <p className="text-sm text-muted-foreground max-w-xs">
                 Select a conversation to start messaging, or reach out to a creator from the directory.
               </p>
             </div>

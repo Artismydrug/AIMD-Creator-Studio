@@ -63,7 +63,7 @@ const EVENTS: Record<string, AimdEvent> = {
 
 const ACCENT: Record<string, { text: string; bg: string; border: string; glow: string }> = {
   amber:   { text: 'text-amber-400',  bg: 'bg-amber-500/10',  border: 'border-amber-500/40',  glow: 'shadow-amber-500/20' },
-  emerald: { text: 'text-emerald-400',bg: 'bg-emerald-500/10',border: 'border-emerald-500/40',glow: 'shadow-emerald-500/20' },
+  emerald: { text: 'text-primary',bg: 'bg-primary/10',border: 'border-primary/40',glow: 'shadow-emerald-500/20' },
   violet:  { text: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/40', glow: 'shadow-violet-500/20' },
 };
 
@@ -83,7 +83,7 @@ function EarnedBadge({ event, onReset }: { event: AimdEvent; onReset: () => void
           <span className="text-5xl leading-none">{event.badge.symbol}</span>
         </div>
         {/* Verified ring */}
-        <div className={`absolute -bottom-2 -right-2 w-9 h-9 rounded-full bg-zinc-950 border-2 ${ac.border} flex items-center justify-center`}>
+        <div className={`absolute -bottom-2 -right-2 w-9 h-9 rounded-full bg-background border-2 ${ac.border} flex items-center justify-center`}>
           <CheckCircle2 className={`w-5 h-5 ${ac.text}`} />
         </div>
       </div>
@@ -95,7 +95,7 @@ function EarnedBadge({ event, onReset }: { event: AimdEvent; onReset: () => void
         <h2 className="font-display font-black text-3xl uppercase tracking-tight text-white mb-1">
           {event.badge.name}
         </h2>
-        <p className="text-zinc-400 text-sm max-w-xs mx-auto">{event.badge.description}</p>
+        <p className="text-muted-foreground text-sm max-w-xs mx-auto">{event.badge.description}</p>
       </div>
 
       {/* Exclusive unlock */}
@@ -103,7 +103,7 @@ function EarnedBadge({ event, onReset }: { event: AimdEvent; onReset: () => void
         <div className="flex items-start gap-3">
           <Sparkles className={`w-4 h-4 ${ac.text} flex-shrink-0 mt-0.5`} />
           <div className="text-left">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-zinc-500 mb-0.5">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-0.5">
               Exclusive Unlocked
             </p>
             <p className="text-sm text-white">{event.exclusive}</p>
@@ -113,7 +113,7 @@ function EarnedBadge({ event, onReset }: { event: AimdEvent; onReset: () => void
 
       <Button
         variant="outline"
-        className="rounded-none border-zinc-700 text-zinc-400 hover:text-white font-mono text-xs uppercase tracking-wider"
+        className="rounded-none border-border text-muted-foreground hover:text-white font-mono text-xs uppercase tracking-wider"
         onClick={onReset}
       >
         Check in another code
@@ -150,19 +150,19 @@ export default function CheckIn() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white p-6 md:p-10">
+    <div className="min-h-screen bg-background text-white p-6 md:p-10">
       <div className="max-w-xl mx-auto">
 
         {/* Header */}
         <div className="mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[11px] uppercase tracking-widest mb-5">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/30 text-primary font-mono text-[11px] uppercase tracking-widest mb-5">
             <QrCode className="w-3.5 h-3.5" />
             Event Check-In · POAP Badge Claim
           </div>
           <h1 className="font-display font-black text-4xl md:text-5xl uppercase tracking-tight mb-3">
             Claim Your Badge
           </h1>
-          <p className="text-zinc-400 text-base">
+          <p className="text-muted-foreground text-base">
             Scan the QR code at any AIMD pop-up, drop, or live event — or enter your event code below to claim your limited-edition attendee badge and unlock exclusive content.
           </p>
         </div>
@@ -172,14 +172,14 @@ export default function CheckIn() {
         ) : (
           <>
             {/* QR scan prompt */}
-            <div className="relative w-full aspect-square max-w-xs mx-auto mb-8 border border-zinc-800 bg-zinc-900 flex flex-col items-center justify-center gap-4 overflow-hidden">
+            <div className="relative w-full aspect-square max-w-xs mx-auto mb-8 border border-border bg-muted/40 flex flex-col items-center justify-center gap-4 overflow-hidden">
               {/* Corner brackets */}
               {['top-3 left-3', 'top-3 right-3 rotate-90', 'bottom-3 right-3 rotate-180', 'bottom-3 left-3 -rotate-90'].map((pos, i) => (
-                <div key={i} className={`absolute ${pos} w-6 h-6 border-t-2 border-l-2 border-emerald-500/60`} />
+                <div key={i} className={`absolute ${pos} w-6 h-6 border-t-2 border-l-2 border-primary/50`} />
               ))}
 
-              <QrCode className="w-16 h-16 text-zinc-700" strokeWidth={1} />
-              <p className="font-mono text-xs text-zinc-600 uppercase tracking-widest text-center px-4">
+              <QrCode className="w-16 h-16 text-muted-foreground" strokeWidth={1} />
+              <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest text-center px-4">
                 Point camera at event QR code<br />or enter your code below
               </p>
             </div>
@@ -187,14 +187,14 @@ export default function CheckIn() {
             {/* Code entry */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <label className="font-mono text-[11px] uppercase tracking-widest text-zinc-500">
+                <label className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
                   Event Code
                 </label>
                 <Input
                   value={code}
                   onChange={(e) => { setCode(e.target.value); setStatus('idle'); }}
                   placeholder="AIMD-XXXXX"
-                  className="rounded-none bg-zinc-900 border-zinc-700 text-white font-mono text-base uppercase tracking-wider placeholder:text-zinc-600 focus-visible:ring-emerald-500/40 focus-visible:border-emerald-500/60 h-12"
+                  className="rounded-none bg-muted/40 border-border text-white font-mono text-base uppercase tracking-wider placeholder:text-muted-foreground focus-visible:ring-emerald-500/40 focus-visible:border-primary/50 h-12"
                   autoFocus
                 />
                 {status === 'error' && (
@@ -207,7 +207,7 @@ export default function CheckIn() {
 
               <Button
                 type="submit"
-                className="w-full h-12 rounded-none bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold uppercase tracking-wider"
+                className="w-full h-12 rounded-none bg-primary hover:bg-primary/90 text-zinc-950 font-bold uppercase tracking-wider"
                 disabled={!code.trim()}
               >
                 <Shield className="w-4 h-4 mr-2" />
@@ -216,8 +216,8 @@ export default function CheckIn() {
             </form>
 
             {/* Active events hint */}
-            <div className="mt-10 border-t border-zinc-800 pt-6">
-              <p className="font-mono text-[10px] uppercase tracking-widest text-zinc-600 mb-3">
+            <div className="mt-10 border-t border-border pt-6">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-3">
                 Active Event Codes
               </p>
               <div className="space-y-2">
@@ -225,17 +225,17 @@ export default function CheckIn() {
                   <button
                     key={ev.code}
                     onClick={() => { setCode(ev.code); setStatus('idle'); }}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors group text-left"
+                    className="w-full flex items-center justify-between px-4 py-3 bg-muted/40 border border-border hover:border-border transition-colors group text-left"
                   >
                     <div>
-                      <p className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
+                      <p className="text-xs font-bold text-white group-hover:text-primary transition-colors">
                         {ev.name}
                       </p>
-                      <p className="text-[11px] text-zinc-600 font-mono mt-0.5">
+                      <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
                         {ev.location} · {ev.date}
                       </p>
                     </div>
-                    <span className="font-mono text-[11px] text-zinc-600 group-hover:text-zinc-400">
+                    <span className="font-mono text-[11px] text-muted-foreground group-hover:text-muted-foreground">
                       {ev.code}
                     </span>
                   </button>

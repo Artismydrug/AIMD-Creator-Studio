@@ -319,7 +319,7 @@ export const LikeStudioPostResponse = zod.object({
  * @summary List available workshops
  */
 export const ListWorkshopsQueryParams = zod.object({
-  "tier": zod.union([zod.literal('free'),zod.literal('workshop'),zod.literal('pro'),zod.literal(null)]).nullish(),
+  "tier": zod.union([zod.literal('free'),zod.literal('academy'),zod.literal('pro'),zod.literal(null)]).nullish(),
   "category": zod.coerce.string().nullish()
 })
 
@@ -329,7 +329,7 @@ export const ListWorkshopsResponseItem = zod.object({
   "description": zod.string(),
   "instructorName": zod.string().nullish(),
   "thumbnailUrl": zod.string().nullish(),
-  "tier": zod.enum(['free', 'workshop', 'pro']),
+  "tier": zod.enum(['free', 'academy', 'pro']),
   "category": zod.string(),
   "totalModules": zod.int(),
   "durationMinutes": zod.int().optional(),
@@ -353,7 +353,7 @@ export const GetWorkshopResponse = zod.object({
   "description": zod.string(),
   "instructorName": zod.string().nullish(),
   "thumbnailUrl": zod.string().nullish(),
-  "tier": zod.enum(['free', 'workshop', 'pro']),
+  "tier": zod.enum(['free', 'academy', 'pro']),
   "category": zod.string(),
   "totalModules": zod.int(),
   "durationMinutes": zod.int().optional(),
@@ -945,7 +945,7 @@ export const GetCurrentUserResponse = zod.object({
   "username": zod.string(),
   "email": zod.string(),
   "avatarUrl": zod.string().nullish(),
-  "tier": zod.enum(['free', 'workshop', 'pro']),
+  "tier": zod.enum(['free', 'academy', 'pro']),
   "studioReadyBadge": zod.boolean().optional(),
   "createdAt": zod.coerce.date()
 })
@@ -957,7 +957,7 @@ export const GetCurrentUserResponse = zod.object({
 export const UpdateCurrentUserBody = zod.object({
   "username": zod.string().optional(),
   "avatarUrl": zod.string().nullish(),
-  "tier": zod.enum(['free', 'workshop', 'pro']).optional()
+  "tier": zod.enum(['free', 'academy', 'pro']).optional()
 })
 
 export const UpdateCurrentUserResponse = zod.object({
@@ -965,7 +965,7 @@ export const UpdateCurrentUserResponse = zod.object({
   "username": zod.string(),
   "email": zod.string(),
   "avatarUrl": zod.string().nullish(),
-  "tier": zod.enum(['free', 'workshop', 'pro']),
+  "tier": zod.enum(['free', 'academy', 'pro']),
   "studioReadyBadge": zod.boolean().optional(),
   "createdAt": zod.coerce.date()
 })
