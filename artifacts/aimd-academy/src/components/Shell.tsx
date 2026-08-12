@@ -12,6 +12,7 @@ import {
   Menu,
   MessageSquare,
   QrCode,
+  Sparkles,
   Timer,
   User,
   Users,
@@ -265,6 +266,16 @@ function SidebarContent({
               </span>
             </div>
           </div>
+        </Link>
+
+        {/* Welcome tour shortcut */}
+        <Link href="/onboarding" onClick={onNav}>
+          <button
+            title="Welcome Tour"
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+          </button>
         </Link>
       </div>
     </div>
