@@ -13,7 +13,6 @@ import {
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
-const CURRENT_USER_ID = 1;
 
 router.get("/workshops", async (req, res): Promise<void> => {
   const parsed = ListWorkshopsQueryParams.safeParse(req.query);
@@ -33,11 +32,14 @@ router.get("/workshops", async (req, res): Promise<void> => {
     );
   }
 
-  const enrollments = await db
-    .select()
-    .from(enrollmentsTable)
-    .where(eq(enrollmentsTable.userId, CURRENT_USER_ID));
-  const enrolledSet = new Set(enrollments.map((e) => e.workshopId));
+  const enrolledSet = new Set<number>();
+  if (req.isAuthenticated()) {
+    const enrollments = await db
+      .select()
+      .from(enrollmentsTable)
+      .where(eq(enrollmentsTable.userId, req.user.id));
+    enrollments.forEach((e) => enrolledSet.add(e.workshopId));
+  }
 
   const result = workshops.map((w) => ({ ...w, isEnrolled: enrolledSet.has(w.id) }));
   res.json(ListWorkshopsResponse.parse(result));
@@ -62,10 +64,12 @@ router.get("/workshops/:id", async (req, res): Promise<void> => {
     .where(eq(workshopModulesTable.workshopId, workshop.id))
     .orderBy(workshopModulesTable.order);
 
-  const [enrollment] = await db
-    .select()
-    .from(enrollmentsTable)
-    .where(and(eq(enrollmentsTable.workshopId, workshop.id), eq(enrollmentsTable.userId, CURRENT_USER_ID)));
+  const [enrollment] = req.isAuthenticated()
+    ? await db
+        .select()
+        .from(enrollmentsTable)
+        .where(and(eq(enrollmentsTable.workshopId, workshop.id), eq(enrollmentsTable.userId, req.user.id)))
+    : [undefined];
 
   let completedSet = new Set<number>();
   if (enrollment) {
@@ -88,6 +92,9 @@ router.get("/workshops/:id", async (req, res): Promise<void> => {
 });
 
 router.post("/workshops/:id/enroll", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const params = EnrollInWorkshopParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -103,7 +110,7 @@ router.post("/workshops/:id/enroll", async (req, res): Promise<void> => {
   const [existing] = await db
     .select()
     .from(enrollmentsTable)
-    .where(and(eq(enrollmentsTable.workshopId, params.data.id), eq(enrollmentsTable.userId, CURRENT_USER_ID)));
+    .where(and(eq(enrollmentsTable.workshopId, params.data.id), eq(enrollmentsTable.userId, userId)));
 
   if (existing) {
     res.status(201).json(
@@ -120,7 +127,7 @@ router.post("/workshops/:id/enroll", async (req, res): Promise<void> => {
 
   const [enrollment] = await db
     .insert(enrollmentsTable)
-    .values({ userId: CURRENT_USER_ID, workshopId: params.data.id, completedModules: 0, status: "active" })
+    .values({ userId, workshopId: params.data.id, completedModules: 0, status: "active" })
     .returning();
 
   // bump enrolled count
@@ -141,6 +148,9 @@ router.post("/workshops/:id/enroll", async (req, res): Promise<void> => {
 });
 
 router.post("/workshops/:id/modules/:moduleId/complete", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const params = CompleteWorkshopModuleParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -150,7 +160,7 @@ router.post("/workshops/:id/modules/:moduleId/complete", async (req, res): Promi
   const [enrollment] = await db
     .select()
     .from(enrollmentsTable)
-    .where(and(eq(enrollmentsTable.workshopId, params.data.id), eq(enrollmentsTable.userId, CURRENT_USER_ID)));
+    .where(and(eq(enrollmentsTable.workshopId, params.data.id), eq(enrollmentsTable.userId, userId)));
   if (!enrollment) {
     res.status(404).json({ error: "Enrollment not found — enroll first" });
     return;

@@ -5,6 +5,32 @@
  * AIMD Academy & Studio Portal API
  * OpenAPI spec version: 0.2.0
  */
+export interface AuthUser {
+  id: number;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  firstName?: string | null;
+  /** @nullable */
+  lastName?: string | null;
+  /** @nullable */
+  profileImageUrl?: string | null;
+}
+
+export interface MobileAuthBeginInput {
+  redirect_uri: string;
+}
+
+export interface MobileAuthBeginResult {
+  transactionToken: string;
+  authUrl: string;
+}
+
+export interface MobileAuthCodeInput {
+  code: string;
+  transactionToken: string;
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -14,7 +40,7 @@ export type UserTier = typeof UserTier[keyof typeof UserTier];
 
 export const UserTier = {
   free: 'free',
-  academy: 'academy',
+  workshop: 'workshop',
   pro: 'pro',
 } as const;
 
@@ -34,7 +60,7 @@ export type UserUpdateTier = typeof UserUpdateTier[keyof typeof UserUpdateTier];
 
 export const UserUpdateTier = {
   free: 'free',
-  academy: 'academy',
+  workshop: 'workshop',
   pro: 'pro',
 } as const;
 
@@ -154,7 +180,7 @@ export type WorkshopTier = typeof WorkshopTier[keyof typeof WorkshopTier];
 
 export const WorkshopTier = {
   free: 'free',
-  academy: 'academy',
+  workshop: 'workshop',
   pro: 'pro',
 } as const;
 
@@ -193,7 +219,7 @@ export type WorkshopDetailTier = typeof WorkshopDetailTier[keyof typeof Workshop
 
 export const WorkshopDetailTier = {
   free: 'free',
-  academy: 'academy',
+  workshop: 'workshop',
   pro: 'pro',
 } as const;
 
@@ -392,7 +418,7 @@ export type CommunityEventCategory = typeof CommunityEventCategory[keyof typeof 
 
 
 export const CommunityEventCategory = {
-  academy: 'academy',
+  workshop: 'workshop',
   'pop-up': 'pop-up',
   gallery: 'gallery',
   activation: 'activation',
@@ -432,7 +458,7 @@ export type CommunityEventInputCategory = typeof CommunityEventInputCategory[key
 
 
 export const CommunityEventInputCategory = {
-  academy: 'academy',
+  workshop: 'workshop',
   'pop-up': 'pop-up',
   gallery: 'gallery',
   activation: 'activation',
@@ -665,6 +691,26 @@ export interface CommentInput {
   content: string;
 }
 
+export type AuthGetCurrentUser200 = {
+  user: AuthUser | null;
+};
+
+export type BeginBrowserLoginParams = {
+returnTo?: string;
+};
+
+export type LogoutBrowserSessionParams = {
+returnTo?: string;
+};
+
+export type MobileAuthCodeExchange200 = {
+  token: string;
+};
+
+export type MobileAuthLogout200 = {
+  success: boolean;
+};
+
 export type GetActivityFeedParams = {
 limit?: number;
 };
@@ -699,7 +745,7 @@ export type ListWorkshopsTier = typeof ListWorkshopsTier[keyof typeof ListWorksh
 
 export const ListWorkshopsTier = {
   free: 'free',
-  academy: 'academy',
+  workshop: 'workshop',
   pro: 'pro',
 } as const;
 

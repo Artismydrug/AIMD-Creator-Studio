@@ -293,11 +293,11 @@ function CommentThread({ postId, onCount }: { postId: number; onCount: (n: numbe
   const [draft, setDraft] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { data: comments = [], isLoading } = useQuery({
+  const { data: rawComments, isLoading } = useQuery({
     queryKey: ['comments', postId],
-    queryFn: () => fetchComments(postId),
-    onSuccess: (data: any[]) => onCount(data.length),
-  } as any);
+    queryFn: () => fetchComments(postId) as Promise<any[]>,
+  });
+  const comments: any[] = rawComments ?? [];
 
   const addComment = useMutation({
     mutationFn: (content: string) => postComment(postId, content),

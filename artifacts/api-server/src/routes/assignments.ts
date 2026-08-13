@@ -11,13 +11,15 @@ import {
 import { requireTier } from "../middleware/requireTier";
 
 const router: IRouter = Router();
-const CURRENT_USER_ID = 1;
 
 router.get("/assignments", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const assignments = await db
     .select()
     .from(assignmentsTable)
-    .where(eq(assignmentsTable.userId, CURRENT_USER_ID))
+    .where(eq(assignmentsTable.userId, userId))
     .orderBy(desc(assignmentsTable.submittedAt));
 
   const workshopIds = [...new Set(assignments.map((a) => a.workshopId))];
@@ -33,6 +35,9 @@ router.get("/assignments", async (req, res): Promise<void> => {
 
 // Assignment submission requires Academy Pass or above
 router.post("/assignments", requireTier("academy"), async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const parsed = SubmitAssignmentBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -40,7 +45,7 @@ router.post("/assignments", requireTier("academy"), async (req, res): Promise<vo
   }
   const [assignment] = await db
     .insert(assignmentsTable)
-    .values({ ...parsed.data, userId: CURRENT_USER_ID, status: "pending" })
+    .values({ ...parsed.data, userId, status: "pending" })
     .returning();
 
   const [workshop] = await db.select().from(workshopsTable).where(eq(workshopsTable.id, parsed.data.workshopId));

@@ -59,7 +59,7 @@ function CreatorCard({ creator, idx }: { creator: Creator; idx: number }) {
   const avatarClass = AVATAR_BG[idx % AVATAR_BG.length];
 
   return (
-    <div className="flex flex-col bg-muted/40 border border-border overflow-hidden group transition-all hover:border-border">
+    <div className="flex flex-col bg-zinc-900 border border-zinc-800 overflow-hidden group transition-all hover:border-zinc-600">
       {/* Header strip */}
       <div className="h-1 bg-gradient-to-r from-emerald-500/60 via-emerald-400/40 to-transparent" />
 
@@ -84,12 +84,12 @@ function CreatorCard({ creator, idx }: { creator: Creator; idx: number }) {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <Link href={`/profile/${creator.id}`}>
-                <p className="font-bold text-white text-sm truncate hover:text-primary transition-colors cursor-pointer">{creator.username}</p>
+                <p className="font-bold text-white text-sm truncate hover:text-emerald-400 transition-colors cursor-pointer">{creator.username}</p>
               </Link>
-              <Shield className="w-3.5 h-3.5 text-primary flex-shrink-0" title="Studio Ready" />
+              <Shield className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" aria-label="Studio Ready" />
             </div>
             {creator.location && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+              <p className="text-xs text-zinc-500 flex items-center gap-1 mt-0.5">
                 <MapPin className="w-3 h-3" />
                 {creator.location}
               </p>
@@ -99,18 +99,18 @@ function CreatorCard({ creator, idx }: { creator: Creator; idx: number }) {
 
         {/* Discipline */}
         {creator.discipline && (
-          <span className="self-start font-mono text-[10px] uppercase tracking-widest text-muted-foreground border border-border px-2 py-0.5">
+          <span className="self-start font-mono text-[10px] uppercase tracking-widest text-zinc-400 border border-zinc-700 px-2 py-0.5">
             {creator.discipline}
           </span>
         )}
 
         {/* Bio */}
         {creator.bio && (
-          <p className="text-xs text-muted-foreground leading-relaxed flex-1">{creator.bio}</p>
+          <p className="text-xs text-zinc-400 leading-relaxed flex-1">{creator.bio}</p>
         )}
 
         {/* Stats */}
-        <div className="flex items-center gap-4 pt-2 border-t border-border text-xs text-muted-foreground font-mono">
+        <div className="flex items-center gap-4 pt-2 border-t border-zinc-800 text-xs text-zinc-600 font-mono">
           <span className="flex items-center gap-1">
             <BookOpen className="w-3 h-3" />
             {creator.badgeCount} badge{creator.badgeCount !== 1 ? 's' : ''}
@@ -126,7 +126,7 @@ function CreatorCard({ creator, idx }: { creator: Creator; idx: number }) {
           {creator.bookingOpen ? (
             <Button
               asChild
-              className="flex-1 h-9 rounded-none bg-primary hover:bg-primary/90 text-zinc-950 font-bold uppercase tracking-wider text-xs"
+              className="flex-1 h-9 rounded-none bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold uppercase tracking-wider text-xs"
             >
               <a href={`mailto:bookings@artismydrug.org?subject=Booking Request — ${creator.username}`}>
                 Request Booking
@@ -136,7 +136,7 @@ function CreatorCard({ creator, idx }: { creator: Creator; idx: number }) {
             <Button
               disabled
               variant="outline"
-              className="flex-1 h-9 rounded-none border-border text-muted-foreground font-mono text-xs uppercase"
+              className="flex-1 h-9 rounded-none border-zinc-700 text-zinc-600 font-mono text-xs uppercase"
             >
               Not Accepting
             </Button>
@@ -145,7 +145,7 @@ function CreatorCard({ creator, idx }: { creator: Creator; idx: number }) {
             asChild
             variant="outline"
             size="icon"
-            className="h-9 w-9 rounded-none border-border text-muted-foreground hover:text-primary hover:border-primary/40"
+            className="h-9 w-9 rounded-none border-zinc-700 text-zinc-400 hover:text-emerald-400 hover:border-emerald-500/40"
             title="Message"
           >
             <Link href="/messages">
@@ -157,7 +157,7 @@ function CreatorCard({ creator, idx }: { creator: Creator; idx: number }) {
               asChild
               variant="outline"
               size="icon"
-              className="h-9 w-9 rounded-none border-border text-muted-foreground hover:text-white"
+              className="h-9 w-9 rounded-none border-zinc-700 text-zinc-400 hover:text-white"
             >
               <a href={creator.portfolioUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="w-3.5 h-3.5" />

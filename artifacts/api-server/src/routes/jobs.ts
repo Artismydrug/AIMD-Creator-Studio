@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, desc } from "drizzle-orm";
-import { db, jobListingsTable, jobApplicationsTable, usersTable } from "@workspace/db";
+import { db, jobListingsTable, jobApplicationsTable } from "@workspace/db";
 import {
   ListJobListingsQueryParams,
   ListJobListingsResponse,
@@ -13,7 +13,6 @@ import {
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
-const CURRENT_USER_ID = 1;
 
 router.get("/job-listings", async (req, res): Promise<void> => {
   const parsed = ListJobListingsQueryParams.safeParse(req.query);
@@ -31,14 +30,20 @@ router.get("/job-listings", async (req, res): Promise<void> => {
     listings = listings.filter((l) => l.isOpen === parsed.data.open);
   }
 
-  const applications = await db
-    .select()
-    .from(jobApplicationsTable)
-    .where(eq(jobApplicationsTable.userId, CURRENT_USER_ID));
-  const appliedSet = new Set(applications.map((a) => a.jobListingId));
-
-  const result = listings.map((l) => ({ ...l, hasApplied: appliedSet.has(l.id) }));
-  res.json(ListJobListingsResponse.parse(result));
+  // Only compute hasApplied when authenticated
+  if (req.isAuthenticated()) {
+    const userId = req.user.id;
+    const applications = await db
+      .select()
+      .from(jobApplicationsTable)
+      .where(eq(jobApplicationsTable.userId, userId));
+    const appliedSet = new Set(applications.map((a) => a.jobListingId));
+    const result = listings.map((l) => ({ ...l, hasApplied: appliedSet.has(l.id) }));
+    res.json(ListJobListingsResponse.parse(result));
+  } else {
+    const result = listings.map((l) => ({ ...l, hasApplied: false }));
+    res.json(ListJobListingsResponse.parse(result));
+  }
 });
 
 router.get("/job-listings/:id", async (req, res): Promise<void> => {
@@ -52,15 +57,23 @@ router.get("/job-listings/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Job listing not found" });
     return;
   }
-  const [application] = await db
-    .select()
-    .from(jobApplicationsTable)
-    .where(and(eq(jobApplicationsTable.jobListingId, listing.id), eq(jobApplicationsTable.userId, CURRENT_USER_ID)));
 
-  res.json(GetJobListingResponse.parse({ ...listing, hasApplied: !!application }));
+  let hasApplied = false;
+  if (req.isAuthenticated()) {
+    const [application] = await db
+      .select()
+      .from(jobApplicationsTable)
+      .where(and(eq(jobApplicationsTable.jobListingId, listing.id), eq(jobApplicationsTable.userId, req.user.id)));
+    hasApplied = !!application;
+  }
+
+  res.json(GetJobListingResponse.parse({ ...listing, hasApplied }));
 });
 
 router.post("/job-listings/:id/apply", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const params = ApplyForJobParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -85,7 +98,7 @@ router.post("/job-listings/:id/apply", async (req, res): Promise<void> => {
   const [application] = await db
     .insert(jobApplicationsTable)
     .values({
-      userId: CURRENT_USER_ID,
+      userId,
       jobListingId: params.data.id,
       coverLetter: parsed.data.coverLetter ?? null,
       status: "pending",
@@ -107,10 +120,13 @@ router.post("/job-listings/:id/apply", async (req, res): Promise<void> => {
 });
 
 router.get("/applications", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const applications = await db
     .select()
     .from(jobApplicationsTable)
-    .where(eq(jobApplicationsTable.userId, CURRENT_USER_ID))
+    .where(eq(jobApplicationsTable.userId, userId))
     .orderBy(desc(jobApplicationsTable.appliedAt));
 
   const listingIds = applications.map((a) => a.jobListingId);

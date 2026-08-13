@@ -4,13 +4,15 @@ import { db, badgesTable, workshopsTable } from "@workspace/db";
 import { ListBadgesResponse } from "@workspace/api-zod";
 
 const router: IRouter = Router();
-const CURRENT_USER_ID = 1;
 
 router.get("/badges", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const badges = await db
     .select()
     .from(badgesTable)
-    .where(eq(badgesTable.userId, CURRENT_USER_ID))
+    .where(eq(badgesTable.userId, userId))
     .orderBy(desc(badgesTable.earnedAt));
 
   const workshopIds = badges.map((b) => b.workshopId).filter((id): id is number => id !== null);

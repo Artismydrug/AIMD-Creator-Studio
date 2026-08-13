@@ -11,7 +11,6 @@ import {
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
-const CURRENT_USER_ID = 1;
 
 const ART_FORM_MILESTONES: Record<string, string[]> = {
   "Tattooing": [
@@ -71,10 +70,13 @@ async function getTrackWithMilestones(trackId: number) {
 }
 
 router.get("/skill-tracks", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const tracks = await db
     .select()
     .from(skillTracksTable)
-    .where(eq(skillTracksTable.userId, CURRENT_USER_ID))
+    .where(eq(skillTracksTable.userId, userId))
     .orderBy(desc(skillTracksTable.createdAt));
 
   const result = await Promise.all(tracks.map((t) => getTrackWithMilestones(t.id)));
@@ -82,6 +84,9 @@ router.get("/skill-tracks", async (req, res): Promise<void> => {
 });
 
 router.post("/skill-tracks", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const parsed = CreateSkillTrackBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -94,7 +99,7 @@ router.post("/skill-tracks", async (req, res): Promise<void> => {
   const [track] = await db
     .insert(skillTracksTable)
     .values({
-      userId: CURRENT_USER_ID,
+      userId,
       artForm: parsed.data.artForm,
       totalMilestones,
       completedMilestones: 0,
@@ -117,6 +122,9 @@ router.post("/skill-tracks", async (req, res): Promise<void> => {
 });
 
 router.patch("/skill-tracks/:id", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const params = UpdateSkillTrackParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -131,7 +139,7 @@ router.patch("/skill-tracks/:id", async (req, res): Promise<void> => {
   const [track] = await db
     .select()
     .from(skillTracksTable)
-    .where(and(eq(skillTracksTable.id, params.data.id), eq(skillTracksTable.userId, CURRENT_USER_ID)));
+    .where(and(eq(skillTracksTable.id, params.data.id), eq(skillTracksTable.userId, userId)));
   if (!track) {
     res.status(404).json({ error: "Skill track not found" });
     return;

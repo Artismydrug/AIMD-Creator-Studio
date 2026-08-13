@@ -57,6 +57,9 @@
   },
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.4.2",
-    "expo-camera": "^17.0.10"
+    "expo-auth-session": "~7.0.11",
+    "expo-camera": "^17.0.10",
+    "expo-crypto": "~15.0.9",
+    "expo-secure-store": "~15.0.8"
   }
 }

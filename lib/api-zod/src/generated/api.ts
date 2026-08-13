@@ -9,6 +9,82 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Get the currently authenticated user
+ */
+export const AuthGetCurrentUserResponse = zod.object({
+  "user": zod.union([zod.object({
+  "id": zod.int(),
+  "email": zod.string().nullish(),
+  "firstName": zod.string().nullish(),
+  "lastName": zod.string().nullish(),
+  "profileImageUrl": zod.string().nullish()
+}),zod.null()])
+})
+
+
+/**
+ * @summary Start the browser OIDC login flow
+ */
+export const BeginBrowserLoginQueryParams = zod.object({
+  "returnTo": zod.coerce.string().optional()
+})
+
+export const BeginBrowserLoginResponse = zod.void()
+
+
+/**
+ * @summary Complete the browser OIDC login flow
+ */
+export const HandleBrowserLoginCallbackResponse = zod.void()
+
+
+/**
+ * @summary Clear the session and begin OIDC logout
+ */
+export const logoutBrowserSessionQueryReturnToDefault = `/`;
+
+export const LogoutBrowserSessionQueryParams = zod.object({
+  "returnTo": zod.coerce.string().default(logoutBrowserSessionQueryReturnToDefault)
+})
+
+export const LogoutBrowserSessionResponse = zod.void()
+
+
+/**
+ * @summary Begin the mobile OIDC authorization flow (server-generated crypto)
+ */
+export const MobileAuthBeginBody = zod.object({
+  "redirect_uri": zod.string()
+})
+
+export const MobileAuthBeginResponse = zod.object({
+  "transactionToken": zod.string(),
+  "authUrl": zod.string()
+})
+
+
+/**
+ * @summary Exchange an authorization code for a session token (mobile)
+ */
+export const MobileAuthCodeExchangeBody = zod.object({
+  "code": zod.string(),
+  "transactionToken": zod.string()
+})
+
+export const MobileAuthCodeExchangeResponse = zod.object({
+  "token": zod.string()
+})
+
+
+/**
+ * @summary Delete a mobile session
+ */
+export const MobileAuthLogoutResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
  * Returns server health status
  * @summary Health check
  */
@@ -319,7 +395,7 @@ export const LikeStudioPostResponse = zod.object({
  * @summary List available workshops
  */
 export const ListWorkshopsQueryParams = zod.object({
-  "tier": zod.union([zod.literal('free'),zod.literal('academy'),zod.literal('pro'),zod.literal(null)]).nullish(),
+  "tier": zod.union([zod.literal('free'),zod.literal('workshop'),zod.literal('pro'),zod.literal(null)]).nullish(),
   "category": zod.coerce.string().nullish()
 })
 
@@ -329,7 +405,7 @@ export const ListWorkshopsResponseItem = zod.object({
   "description": zod.string(),
   "instructorName": zod.string().nullish(),
   "thumbnailUrl": zod.string().nullish(),
-  "tier": zod.enum(['free', 'academy', 'pro']),
+  "tier": zod.enum(['free', 'workshop', 'pro']),
   "category": zod.string(),
   "totalModules": zod.int(),
   "durationMinutes": zod.int().optional(),
@@ -353,7 +429,7 @@ export const GetWorkshopResponse = zod.object({
   "description": zod.string(),
   "instructorName": zod.string().nullish(),
   "thumbnailUrl": zod.string().nullish(),
-  "tier": zod.enum(['free', 'academy', 'pro']),
+  "tier": zod.enum(['free', 'workshop', 'pro']),
   "category": zod.string(),
   "totalModules": zod.int(),
   "durationMinutes": zod.int().optional(),
@@ -945,7 +1021,7 @@ export const GetCurrentUserResponse = zod.object({
   "username": zod.string(),
   "email": zod.string(),
   "avatarUrl": zod.string().nullish(),
-  "tier": zod.enum(['free', 'academy', 'pro']),
+  "tier": zod.enum(['free', 'workshop', 'pro']),
   "studioReadyBadge": zod.boolean().optional(),
   "createdAt": zod.coerce.date()
 })
@@ -957,7 +1033,7 @@ export const GetCurrentUserResponse = zod.object({
 export const UpdateCurrentUserBody = zod.object({
   "username": zod.string().optional(),
   "avatarUrl": zod.string().nullish(),
-  "tier": zod.enum(['free', 'academy', 'pro']).optional()
+  "tier": zod.enum(['free', 'workshop', 'pro']).optional()
 })
 
 export const UpdateCurrentUserResponse = zod.object({
@@ -965,7 +1041,7 @@ export const UpdateCurrentUserResponse = zod.object({
   "username": zod.string(),
   "email": zod.string(),
   "avatarUrl": zod.string().nullish(),
-  "tier": zod.enum(['free', 'academy', 'pro']),
+  "tier": zod.enum(['free', 'workshop', 'pro']),
   "studioReadyBadge": zod.boolean().optional(),
   "createdAt": zod.coerce.date()
 })

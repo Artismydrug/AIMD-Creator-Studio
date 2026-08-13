@@ -13,11 +13,15 @@ import {
 } from '@expo-google-fonts/dm-sans';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { setBaseUrl } from '@workspace/api-client-react';
+import * as SecureStore from 'expo-secure-store';
+import { setBaseUrl, setAuthTokenGetter } from '@workspace/api-client-react';
 import { StatusBar } from 'expo-status-bar';
+import { AuthProvider } from '@/lib/auth';
 
-// Set API base URL before any component renders
-setBaseUrl(`https://${process.env.EXPO_PUBLIC_DOMAIN}`);
+// Set API base URL and auth token getter before any component renders
+const domain = process.env.EXPO_PUBLIC_DOMAIN;
+if (domain) setBaseUrl(`https://${domain}`);
+setAuthTokenGetter(() => SecureStore.getItemAsync('auth_session_token'));
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -66,14 +70,16 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0a0a0a' }}>
-            <KeyboardProvider>
-              <StatusBar style="light" />
-              <RootLayoutNav />
-            </KeyboardProvider>
-          </GestureHandlerRootView>
-        </QueryClientProvider>
+        <AuthProvider>
+          <QueryClientProvider client={queryClient}>
+            <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0a0a0a' }}>
+              <KeyboardProvider>
+                <StatusBar style="light" />
+                <RootLayoutNav />
+              </KeyboardProvider>
+            </GestureHandlerRootView>
+          </QueryClientProvider>
+        </AuthProvider>
       </ErrorBoundary>
     </SafeAreaProvider>
   );

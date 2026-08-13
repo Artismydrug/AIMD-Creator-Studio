@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useGetCurrentUser } from '@workspace/api-client-react';
+import { useAuth } from '@workspace/replit-auth-web';
+import { LogIn, LogOut } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -188,20 +190,20 @@ function SidebarContent({
   onNav?: () => void;
 }) {
   return (
-    <div className="flex flex-col h-full bg-sidebar">
+    <div className="flex flex-col h-full bg-zinc-950">
       {/* Brand header */}
       <div className="mb-8 px-6 pt-6">
         <Link href="/" onClick={onNav}>
           <div className="flex items-center gap-2 cursor-pointer">
-            <h1 className="text-xl font-black tracking-wider text-foreground">AIMD</h1>
-            <span className="text-[10px] font-bold bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full">
+            <h1 className="text-xl font-black tracking-wider text-white">AIMD</h1>
+            <span className="text-[10px] font-bold bg-zinc-800 text-zinc-400 border border-zinc-700 px-2 py-0.5 rounded-full">
               NETWORK
             </span>
-            <span className="text-[10px] font-bold bg-primary/10 text-primary border border-primary/25 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
               501(c)(3)
             </span>
           </div>
-          <p className="text-xs text-muted-foreground uppercase font-semibold tracking-widest mt-0.5">
+          <p className="text-xs text-zinc-500 uppercase font-semibold tracking-widest mt-0.5">
             Art Is My Drug
           </p>
         </Link>
@@ -211,10 +213,10 @@ function SidebarContent({
       <div className="flex-1 overflow-y-auto px-4 space-y-6">
         {NAV_SECTIONS.map((section) => (
           <div key={section.heading}>
-            <h3 className="text-[10px] font-bold text-muted-foreground tracking-wider mb-2 px-2 uppercase">
+            <h3 className="text-[10px] font-bold text-zinc-500 tracking-wider mb-2 px-2 uppercase">
               {section.heading}
             </h3>
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               {section.items.map((item) => {
                 const Icon = item.icon;
                 const isActive =
@@ -226,15 +228,15 @@ function SidebarContent({
                     <div
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                         item.highlight
-                          ? 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15'
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
                           : isActive
-                          ? 'bg-[#F2ECE1] text-primary font-semibold'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-[#F2ECE1]'
+                          ? 'bg-zinc-800 text-white'
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
                       }`}
                     >
                       <Icon
                         className={`w-4 h-4 flex-shrink-0 ${
-                          isActive || item.highlight ? 'text-primary' : 'text-muted-foreground'
+                          isActive || item.highlight ? 'text-emerald-400' : 'text-zinc-500'
                         }`}
                       />
                       <span className="truncate">{item.label}</span>
@@ -247,43 +249,65 @@ function SidebarContent({
         ))}
       </div>
 
-      {/* Profile footer */}
-      <div className="border-t border-border pt-3 pb-4 px-6 flex items-center justify-between">
+      {/* Profile footer — auth-aware (sign in/sign out) */}
+      <SidebarFooter user={user} onNav={onNav} />
+    </div>
+  );
+}
+
+function SidebarFooter({
+  user,
+  onNav,
+}: {
+  user: Parameters<typeof SidebarContent>[0]['user'];
+  onNav?: () => void;
+}) {
+  const { isAuthenticated, login, logout } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <div className="border-t border-zinc-800/80 pt-3 pb-4 px-6">
+        <button
+          onClick={() => login()}
+          className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-semibold rounded-md transition-colors"
+        >
+          <LogIn className="w-4 h-4" />
+          Sign In
+        </button>
+      </div>
+    );
+  }
+
+  return (
+      <div className="border-t border-zinc-800/80 pt-3 pb-4 px-6 flex items-center justify-between">
         <Link href="/profile" onClick={onNav}>
-          <div className="flex items-center gap-3 cursor-pointer group">
-            <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0 overflow-hidden">
+          <div className="flex items-center gap-3 cursor-pointer">
+            <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-xs font-bold text-emerald-400 flex-shrink-0 overflow-hidden">
               {user?.avatarUrl
                 ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
                 : (user?.username?.slice(0, 2).toUpperCase() ?? 'CR')
               }
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-xs font-bold text-foreground leading-none truncate group-hover:text-primary transition-colors">
+              <span className="text-xs font-bold text-white leading-none truncate">
                 {user?.username ?? 'Creator'}
               </span>
-              <span className="text-[10px] text-muted-foreground mt-0.5 capitalize">
+              <span className="text-[10px] text-zinc-500 mt-0.5 capitalize">
                 {user?.tier ?? 'Community'}{user?.studioReadyBadge ? ' · Studio Ready' : ''}
               </span>
             </div>
           </div>
         </Link>
-
-        {/* Welcome tour shortcut */}
-        <Link href="/onboarding" onClick={onNav}>
-          <button
-            title="Welcome Tour"
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-          </button>
-        </Link>
+        <button
+          onClick={() => logout()}
+          className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors"
+          title="Sign out"
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
       </div>
-    </div>
   );
 }
-
-// ─── Mobile Drawer ────────────────────────────────────────────────────────────
-
 function MobileDrawer({
   open,
   onClose,

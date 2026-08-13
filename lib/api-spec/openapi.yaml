@@ -8,6 +8,8 @@ servers:
   - url: /api
     description: Base API path
 tags:
+  - name: Auth
+    description: Browser and mobile authentication endpoints.
   - name: health
     description: Health operations
   - name: dashboard
@@ -42,6 +44,119 @@ tags:
     description: Messaging and conversations
 
 paths:
+  # ── Auth ─────────────────────────────────────────────────────────────────────
+  /auth/user:
+    get:
+      tags: [Auth]
+      operationId: authGetCurrentUser
+      summary: Get the currently authenticated user
+      responses:
+        '200':
+          description: Auth status resolved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user]
+                properties:
+                  user:
+                    oneOf:
+                      - $ref: '#/components/schemas/AuthUser'
+                      - type: 'null'
+  /login:
+    get:
+      tags: [Auth]
+      operationId: beginBrowserLogin
+      summary: Start the browser OIDC login flow
+      parameters:
+        - name: returnTo
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to the OIDC authorization endpoint.
+  /callback:
+    get:
+      tags: [Auth]
+      operationId: handleBrowserLoginCallback
+      summary: Complete the browser OIDC login flow
+      responses:
+        '302':
+          description: Redirect to the returnTo path on success.
+  /logout:
+    get:
+      tags: [Auth]
+      operationId: logoutBrowserSession
+      summary: Clear the session and begin OIDC logout
+      parameters:
+        - name: returnTo
+          in: query
+          required: false
+          schema:
+            type: string
+            default: /
+      responses:
+        '302':
+          description: Redirect to the OIDC provider logout URL.
+  /mobile-auth/begin:
+    post:
+      tags: [Auth]
+      operationId: mobileAuthBegin
+      summary: Begin the mobile OIDC authorization flow (server-generated crypto)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MobileAuthBeginInput'
+      responses:
+        '200':
+          description: Authorization URL and signed transaction token returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MobileAuthBeginResult'
+  /mobile-auth/token-exchange:
+    post:
+      tags: [Auth]
+      operationId: mobileAuthCodeExchange
+      summary: Exchange an authorization code for a session token (mobile)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MobileAuthCodeInput'
+      responses:
+        '200':
+          description: Token exchange successful.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token]
+                properties:
+                  token:
+                    type: string
+  /mobile-auth/logout:
+    post:
+      tags: [Auth]
+      operationId: mobileAuthLogout
+      summary: Delete a mobile session
+      responses:
+        '200':
+          description: Session deleted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success]
+                properties:
+                  success:
+                    type: boolean
+
   /healthz:
     get:
       operationId: healthCheck
@@ -1096,6 +1211,47 @@ components:
         check-in tokens. Must be supplied by event organizers only.
 
   schemas:
+    # ── Auth ──────────────────────────────────────────────────────────────
+    AuthUser:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: integer
+        email:
+          type: ["string", "null"]
+        firstName:
+          type: ["string", "null"]
+        lastName:
+          type: ["string", "null"]
+        profileImageUrl:
+          type: ["string", "null"]
+
+    MobileAuthBeginInput:
+      type: object
+      required: [redirect_uri]
+      properties:
+        redirect_uri:
+          type: string
+
+    MobileAuthBeginResult:
+      type: object
+      required: [transactionToken, authUrl]
+      properties:
+        transactionToken:
+          type: string
+        authUrl:
+          type: string
+
+    MobileAuthCodeInput:
+      type: object
+      required: [code, transactionToken]
+      properties:
+        code:
+          type: string
+        transactionToken:
+          type: string
+
     HealthStatus:
       type: object
       properties:

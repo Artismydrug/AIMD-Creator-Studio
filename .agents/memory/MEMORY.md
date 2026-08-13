@@ -1,3 +1,2 @@
 - [Stripe setup quirks](stripe-setup-quirks.md) — settings.secret not secret_key; runMigrations needs manual SQL; syncBackfill needs {object:"all"}
-- [AIMD Network mobile app](aimd-network-mobile.md) — DM Sans font, dark-first tokens, camera pinning, CORS needs API Server running, hardcoded userId=1
-- [AIMD Academy light theme](aimd-academy-light-theme.md) — full warm gallery retheme: CSS vars, Shell.tsx, bulk page sed, DropsCountdownBanner; Zod tier enum fix needed after bulk sed
+- [AIMD Network mobile app](aimd-network-mobile.md) — server-side OIDC transaction auth; orval codegen TDZ/TS2308 fix patterns; session + replit_id DB setup

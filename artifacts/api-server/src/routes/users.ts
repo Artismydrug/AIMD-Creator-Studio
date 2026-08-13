@@ -8,10 +8,12 @@ import {
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
-const CURRENT_USER_ID = 1;
 
 router.get("/users/me", async (req, res): Promise<void> => {
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, CURRENT_USER_ID));
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
   if (!user) {
     res.status(404).json({ error: "User not found" });
     return;
@@ -20,6 +22,9 @@ router.get("/users/me", async (req, res): Promise<void> => {
 });
 
 router.patch("/users/me", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const parsed = UpdateCurrentUserBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -28,13 +33,38 @@ router.patch("/users/me", async (req, res): Promise<void> => {
   const [user] = await db
     .update(usersTable)
     .set(parsed.data)
-    .where(eq(usersTable.id, CURRENT_USER_ID))
+    .where(eq(usersTable.id, userId))
     .returning();
   if (!user) {
     res.status(404).json({ error: "User not found" });
     return;
   }
   res.json(UpdateCurrentUserResponse.parse(user));
+});
+
+// Creator directory — studio-ready creators
+router.get("/directory", async (req, res): Promise<void> => {
+  const rows = await db.execute(sql`
+    SELECT
+      u.id,
+      u.username,
+      u.avatar_url        AS "avatarUrl",
+      u.tier,
+      u.discipline,
+      u.bio,
+      u.location,
+      u.booking_open      AS "bookingOpen",
+      u.portfolio_url     AS "portfolioUrl",
+      COUNT(DISTINCT p.id)::int  AS "postCount",
+      COUNT(DISTINCT b.id)::int  AS "badgeCount"
+    FROM users u
+    LEFT JOIN studio_posts p ON p.user_id = u.id
+    LEFT JOIN badges b       ON b.user_id = u.id
+    WHERE u.studio_ready_badge = true
+    GROUP BY u.id
+    ORDER BY u.created_at DESC
+  `);
+  res.json(rows.rows);
 });
 
 // Public profile for any user by id
@@ -59,42 +89,21 @@ router.get("/users/:id/profile", async (req, res): Promise<void> => {
           'id', b2.id, 'name', b2.name,
           'imageUrl', b2.image_url,
           'earnedAt', b2.earned_at
-        ))
+        ) ORDER BY b2.earned_at DESC)
         FROM badges b2 WHERE b2.user_id = u.id
-      ) AS badges
+      ) AS "recentBadges"
     FROM users u
     LEFT JOIN studio_posts p ON p.user_id = u.id
     WHERE u.id = ${userId}
     GROUP BY u.id
   `);
 
-  if (rows.rows.length === 0) { res.status(404).json({ error: "User not found" }); return; }
-  res.json(rows.rows[0]);
-});
+  if (!rows.rows.length) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
 
-// Public directory — Studio Ready alumni only
-router.get("/directory", async (_req, res): Promise<void> => {
-  const rows = await db.execute(sql`
-    SELECT
-      u.id,
-      u.username,
-      u.avatar_url       AS "avatarUrl",
-      u.tier,
-      u.discipline,
-      u.bio,
-      u.location,
-      u.booking_open     AS "bookingOpen",
-      u.portfolio_url    AS "portfolioUrl",
-      COUNT(DISTINCT b.id)::int  AS "badgeCount",
-      COUNT(DISTINCT p.id)::int  AS "postCount"
-    FROM users u
-    LEFT JOIN badges b       ON b.user_id = u.id
-    LEFT JOIN studio_posts p ON p.user_id = u.id
-    WHERE u.studio_ready_badge = true
-    GROUP BY u.id
-    ORDER BY "badgeCount" DESC, u.id
-  `);
-  res.json(rows.rows);
+  res.json(rows.rows[0]);
 });
 
 export default router;

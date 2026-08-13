@@ -8,7 +8,6 @@ import {
 } from "@workspace/api-zod";
 
 const router = Router();
-const CURRENT_USER_ID = 1;
 
 const SPONSORSHIP_AMOUNTS: Record<string, number> = {
   kit: 49,
@@ -49,6 +48,9 @@ router.get("/", async (req, res) => {
 
 // POST /sponsorships
 router.post("/", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   try {
     const body = CreateSponsorshipBody.parse(req.body);
 
@@ -56,7 +58,7 @@ router.post("/", async (req, res): Promise<void> => {
     const [sponsor] = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.id, CURRENT_USER_ID));
+      .where(eq(usersTable.id, userId));
 
     // Get creator info
     const [creator] = await db
@@ -74,7 +76,7 @@ router.post("/", async (req, res): Promise<void> => {
     const [sponsorship] = await db
       .insert(sponsorshipsTable)
       .values({
-        sponsorUserId: CURRENT_USER_ID,
+        sponsorUserId: userId,
         sponsorName: sponsor?.username ?? "Anonymous",
         sponsorAvatarUrl: sponsor?.avatarUrl ?? null,
         creatorId: body.creatorId,

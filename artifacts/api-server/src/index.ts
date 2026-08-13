@@ -1,6 +1,7 @@
 import { runMigrations } from 'stripe-replit-sync';
 import { getStripeSync } from './stripeClient';
 import { ensureEventTables } from './lib/ensureEventTables';
+import { ensureAuthSchema } from './lib/ensureAuthSchema';
 import app from "./app";
 import { logger } from "./lib/logger";
 
@@ -53,6 +54,11 @@ async function initStripe() {
     throw error;
   }
 }
+
+// Ensure auth schema exists (sessions table + users.replit_id column).
+// Idempotent — safe across restarts and deployments.
+await ensureAuthSchema();
+logger.info('Auth schema verified');
 
 // Ensure event_attendances table exists (idempotent — safe across restarts).
 // This is a hard prerequisite for the check-in feature; crash if it fails.

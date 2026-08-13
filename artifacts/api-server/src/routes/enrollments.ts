@@ -4,13 +4,15 @@ import { db, enrollmentsTable, workshopsTable } from "@workspace/db";
 import { ListEnrollmentsResponse } from "@workspace/api-zod";
 
 const router: IRouter = Router();
-const CURRENT_USER_ID = 1;
 
 router.get("/enrollments", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const enrollments = await db
     .select()
     .from(enrollmentsTable)
-    .where(eq(enrollmentsTable.userId, CURRENT_USER_ID))
+    .where(eq(enrollmentsTable.userId, userId))
     .orderBy(desc(enrollmentsTable.createdAt));
 
   const workshopIds = enrollments.map((e) => e.workshopId);

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, desc, and, gte, sql, count } from "drizzle-orm";
+import { eq, desc, and, gte, sql } from "drizzle-orm";
 import {
   db,
   habitsTable,
@@ -17,12 +17,14 @@ import {
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
-const CURRENT_USER_ID = 1;
 
 router.get("/dashboard/summary", async (req, res): Promise<void> => {
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, CURRENT_USER_ID));
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
 
-  const habits = await db.select().from(habitsTable).where(eq(habitsTable.userId, CURRENT_USER_ID));
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+
+  const habits = await db.select().from(habitsTable).where(eq(habitsTable.userId, userId));
   const totalHabits = habits.length;
 
   const currentStreakDays = habits.reduce((max, h) => Math.max(max, h.currentStreak), 0);
@@ -31,14 +33,13 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
   const monthStart = new Date();
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
-  const monthStartStr = monthStart.toISOString().slice(0, 10);
 
   const [postCountRow] = await db
     .select({ cnt: sql<number>`count(*)`.mapWith(Number) })
     .from(studioPostsTable)
     .where(
       and(
-        eq(studioPostsTable.userId, CURRENT_USER_ID),
+        eq(studioPostsTable.userId, userId),
         gte(studioPostsTable.createdAt, monthStart)
       )
     );
@@ -47,27 +48,26 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
   const [enrollCountRow] = await db
     .select({ cnt: sql<number>`count(*)`.mapWith(Number) })
     .from(enrollmentsTable)
-    .where(eq(enrollmentsTable.userId, CURRENT_USER_ID));
+    .where(eq(enrollmentsTable.userId, userId));
   const workshopsEnrolled = enrollCountRow?.cnt ?? 0;
 
   const [badgeCountRow] = await db
     .select({ cnt: sql<number>`count(*)`.mapWith(Number) })
     .from(badgesTable)
-    .where(eq(badgesTable.userId, CURRENT_USER_ID));
+    .where(eq(badgesTable.userId, userId));
   const badgesEarned = badgeCountRow?.cnt ?? 0;
 
   const [skillCountRow] = await db
     .select({ cnt: sql<number>`count(*)`.mapWith(Number) })
     .from(skillTracksTable)
-    .where(and(eq(skillTracksTable.userId, CURRENT_USER_ID), eq(skillTracksTable.status, "in_progress")));
+    .where(and(eq(skillTracksTable.userId, userId), eq(skillTracksTable.status, "in_progress")));
   const skillTracksActive = skillCountRow?.cnt ?? 0;
 
-  // Completion rate: today's completed / total habits
   const today = new Date().toISOString().slice(0, 10);
   const todayLogs = await db
     .select()
     .from(habitLogsTable)
-    .where(and(eq(habitLogsTable.userId, CURRENT_USER_ID), eq(habitLogsTable.date, today), eq(habitLogsTable.completed, true)));
+    .where(and(eq(habitLogsTable.userId, userId), eq(habitLogsTable.date, today), eq(habitLogsTable.completed, true)));
   const completionRate = totalHabits > 0 ? (todayLogs.length / totalHabits) * 100 : 0;
 
   res.json(
@@ -86,6 +86,9 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
 });
 
 router.get("/dashboard/activity-feed", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const parsed = GetActivityFeedQueryParams.safeParse(req.query);
   const limit = parsed.success ? (parsed.data.limit ?? 20) : 20;
 
@@ -101,7 +104,7 @@ router.get("/dashboard/activity-feed", async (req, res): Promise<void> => {
   const logs = await db
     .select()
     .from(habitLogsTable)
-    .where(and(eq(habitLogsTable.userId, CURRENT_USER_ID), eq(habitLogsTable.completed, true)))
+    .where(and(eq(habitLogsTable.userId, userId), eq(habitLogsTable.completed, true)))
     .orderBy(desc(habitLogsTable.createdAt))
     .limit(10);
 
@@ -120,7 +123,7 @@ router.get("/dashboard/activity-feed", async (req, res): Promise<void> => {
   const posts = await db
     .select()
     .from(studioPostsTable)
-    .where(eq(studioPostsTable.userId, CURRENT_USER_ID))
+    .where(eq(studioPostsTable.userId, userId))
     .orderBy(desc(studioPostsTable.createdAt))
     .limit(10);
 
@@ -138,7 +141,7 @@ router.get("/dashboard/activity-feed", async (req, res): Promise<void> => {
   const badges = await db
     .select()
     .from(badgesTable)
-    .where(eq(badgesTable.userId, CURRENT_USER_ID))
+    .where(eq(badgesTable.userId, userId))
     .orderBy(desc(badgesTable.earnedAt))
     .limit(5);
 
@@ -152,7 +155,6 @@ router.get("/dashboard/activity-feed", async (req, res): Promise<void> => {
     });
   }
 
-  // sort by date desc and take limit
   items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   const sliced = items.slice(0, limit);
 

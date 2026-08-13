@@ -12,9 +12,6 @@ const TIER_RANK: Record<string, number> = {
   pro:     2,
 };
 
-// Hardcoded for demo auth — replace with session lookup in production
-const CURRENT_USER_ID = 1;
-
 /**
  * Express middleware that enforces a minimum subscription tier.
  *
@@ -24,11 +21,16 @@ const CURRENT_USER_ID = 1;
  * On failure responds: 403 { error: "tier_required", requiredTier, currentTier }
  */
 export function requireTier(minTier: Tier) {
-  return async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    if (!req.isAuthenticated()) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
     const [user] = await db
       .select({ tier: usersTable.tier })
       .from(usersTable)
-      .where(eq(usersTable.id, CURRENT_USER_ID));
+      .where(eq(usersTable.id, req.user.id));
 
     const currentTier = (user?.tier ?? "free") as Tier;
     const currentRank = TIER_RANK[currentTier] ?? 0;
@@ -49,14 +51,13 @@ export function requireTier(minTier: Tier) {
 }
 
 /**
- * Returns the current user's tier. Useful in route handlers that need
- * tier-conditional logic rather than a hard gate.
+ * Returns the current user's tier from req.user.id.
  */
-export async function getCurrentTier(): Promise<Tier> {
+export async function getCurrentTier(userId: number): Promise<Tier> {
   const [user] = await db
     .select({ tier: usersTable.tier })
     .from(usersTable)
-    .where(eq(usersTable.id, CURRENT_USER_ID));
+    .where(eq(usersTable.id, userId));
   return (user?.tier ?? "free") as Tier;
 }
 

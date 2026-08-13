@@ -1,145 +1,137 @@
 import React from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
-import { useColors } from '@/hooks/useColors';
-import { Feather } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
-import { isLiquidGlassAvailable } from 'expo-glass-effect';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Platform } from 'react-native';
 import { Tabs } from 'expo-router';
-import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
-import { SymbolView } from 'expo-symbols';
+import { Feather } from '@expo/vector-icons';
+import { useColors } from '@/hooks/useColors';
+import { useAuth } from '@/lib/auth';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-function NativeTabLayout() {
+function LoginPrompt() {
+  const colors = useColors();
+  const { login, isLoading } = useAuth();
+  const insets = useSafeAreaInsets();
+
+  const s = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingBottom: insets.bottom + 40,
+      gap: 24,
+      paddingHorizontal: 32,
+    },
+    title: {
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 28,
+      color: colors.primary,
+      letterSpacing: 3,
+    },
+    subtitle: {
+      fontFamily: 'DMSans_400Regular',
+      fontSize: 16,
+      color: colors.mutedForeground,
+      textAlign: 'center',
+    },
+    btn: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 40,
+      paddingVertical: 14,
+      width: '100%',
+      alignItems: 'center',
+    },
+    btnText: {
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 16,
+      color: colors.primaryForeground,
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <View style={s.container}>
+        <ActivityIndicator color={colors.primary} size="large" />
+      </View>
+    );
+  }
+
   return (
-    <NativeTabs>
-      <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: 'house', selected: 'house.fill' }} />
-        <Label>Feed</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="habits">
-        <Icon sf={{ default: 'flame', selected: 'flame.fill' }} />
-        <Label>Habits</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="messages">
-        <Icon sf={{ default: 'message', selected: 'message.fill' }} />
-        <Label>Messages</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="directory">
-        <Icon sf={{ default: 'person.2', selected: 'person.2.fill' }} />
-        <Label>Directory</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="events">
-        <Icon sf={{ default: 'calendar', selected: 'calendar' }} />
-        <Label>Events</Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
+    <View style={s.container}>
+      <Text style={s.title}>AIMD</Text>
+      <Text style={s.subtitle}>The network for independent music producers and sound designers.</Text>
+      <TouchableOpacity style={s.btn} onPress={login}>
+        <Text style={s.btnText}>Log In / Sign Up</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
-function ClassicTabLayout() {
+export default function TabLayout() {
   const colors = useColors();
-  const isIOS = Platform.OS === 'ios';
-  const isWeb = Platform.OS === 'web';
-  const insets = useSafeAreaInsets();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (!isAuthenticated) {
+    return <LoginPrompt />;
+  }
 
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarStyle: {
-          position: 'absolute',
-          backgroundColor: isIOS ? 'transparent' : colors.background,
-          borderTopWidth: 1,
+          backgroundColor: colors.background,
           borderTopColor: colors.border,
-          elevation: 0,
-          paddingBottom: isWeb ? 0 : insets.bottom,
-          ...(isWeb ? { height: 84 } : {}),
+          height: Platform.OS === 'web' ? 60 : undefined,
         },
-        tabBarBackground: () =>
-          isIOS ? (
-            <BlurView
-              intensity={80}
-              tint="dark"
-              style={StyleSheet.absoluteFill}
-            />
-          ) : isWeb ? (
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]} />
-          ) : null,
-        tabBarLabelStyle: {
-          fontFamily: 'DMSans_500Medium',
-          fontSize: 10,
-        },
+        headerShown: false,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Feed',
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="house" tintColor={color} size={22} />
-            ) : (
-              <Feather name="home" size={22} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="habits"
-        options={{
-          title: 'Habits',
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="flame" tintColor={color} size={22} />
-            ) : (
-              <Feather name="activity" size={22} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="messages"
-        options={{
-          title: 'Messages',
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="message" tintColor={color} size={22} />
-            ) : (
-              <Feather name="message-circle" size={22} color={color} />
-            ),
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="home" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="directory"
         options={{
           title: 'Directory',
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="person.2" tintColor={color} size={22} />
-            ) : (
-              <Feather name="users" size={22} color={color} />
-            ),
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="users" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="habits"
+        options={{
+          title: 'Habits',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="activity" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="messages"
+        options={{
+          title: 'Messages',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="message-circle" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="events"
         options={{
           title: 'Events',
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="calendar" tintColor={color} size={22} />
-            ) : (
-              <Feather name="calendar" size={22} color={color} />
-            ),
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="calendar" size={size} color={color} />
+          ),
         }}
       />
     </Tabs>
   );
-}
-
-export default function TabLayout() {
-  if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
-  }
-  return <ClassicTabLayout />;
 }

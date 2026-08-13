@@ -20,17 +20,16 @@ import {
   useSendMessage,
 } from '@workspace/api-client-react';
 import type { ConversationMessage } from '@workspace/api-client-react';
-
-const CURRENT_USER_ID = 1;
+import { useAuth } from '@/lib/auth';
 
 function formatTime(dateStr: string): string {
   const d = new Date(dateStr);
   return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
-function MessageBubble({ msg }: { msg: ConversationMessage }) {
+function MessageBubble({ msg, currentUserId }: { msg: ConversationMessage; currentUserId: number | null }) {
   const colors = useColors();
-  const isMe = msg.senderId === CURRENT_USER_ID;
+  const isMe = currentUserId != null && msg.senderId === currentUserId;
 
   const s = useMemo(() => StyleSheet.create({
     row: {
@@ -84,6 +83,7 @@ export default function ConversationScreen() {
   const insets = useSafeAreaInsets();
   const { id, name } = useLocalSearchParams<{ id: string; name?: string }>();
   const navigation = useNavigation();
+  const { user } = useAuth();
   const convId = parseInt(id ?? '0', 10);
   const [text, setText] = useState('');
   const [localMessages, setLocalMessages] = useState<ConversationMessage[]>([]);
@@ -206,7 +206,7 @@ export default function ConversationScreen() {
       <FlatList
         data={reversed}
         keyExtractor={(item) => String(item.id)}
-        renderItem={({ item }) => <MessageBubble msg={item} />}
+        renderItem={({ item }) => <MessageBubble msg={item} currentUserId={user?.id ?? null} />}
         inverted
         contentContainerStyle={s.listContent}
         showsVerticalScrollIndicator={false}

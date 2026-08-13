@@ -3,7 +3,6 @@ import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
 
 const router: IRouter = Router();
-const CURRENT_USER_ID = 1;
 
 // GET /studio-posts/:id/comments
 router.get("/studio-posts/:id/comments", async (req, res): Promise<void> => {
@@ -31,6 +30,9 @@ router.get("/studio-posts/:id/comments", async (req, res): Promise<void> => {
 
 // POST /studio-posts/:id/comments
 router.post("/studio-posts/:id/comments", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const postId = parseInt(req.params.id);
   if (isNaN(postId)) { res.status(400).json({ error: "Invalid post id" }); return; }
 
@@ -39,7 +41,7 @@ router.post("/studio-posts/:id/comments", async (req, res): Promise<void> => {
 
   const result = await db.execute(sql`
     INSERT INTO comments (post_id, user_id, content, parent_id)
-    VALUES (${postId}, ${CURRENT_USER_ID}, ${content.trim()}, ${parentId ?? null})
+    VALUES (${postId}, ${userId}, ${content.trim()}, ${parentId ?? null})
     RETURNING
       id,
       post_id   AS "postId",
@@ -52,7 +54,7 @@ router.post("/studio-posts/:id/comments", async (req, res): Promise<void> => {
   const comment = result.rows[0] as any;
 
   // Attach user info
-  const userRow = await db.execute(sql`SELECT username, avatar_url AS "avatarUrl" FROM users WHERE id = ${CURRENT_USER_ID}`);
+  const userRow = await db.execute(sql`SELECT username, avatar_url AS "avatarUrl" FROM users WHERE id = ${userId}`);
   const user = userRow.rows[0] as any;
 
   res.status(201).json({ ...comment, username: user?.username, avatarUrl: user?.avatarUrl });

@@ -10,6 +10,8 @@ export const usersTable = pgTable("users", {
   tier: text("tier").notNull().default("free"), // free | workshop | pro
   studioReadyBadge: boolean("studio_ready_badge").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  // Replit Auth: links Replit OIDC sub claim to this integer-id user row
+  replitId: text("replit_id").unique(),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true });

@@ -13,7 +13,10 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import request from "supertest";
 import app from "../app";
 import { pool } from "@workspace/db";
+import { db, sessionsTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 import { deriveOrganizerKey, generateToken, signToken } from "../lib/eventQrToken";
+import { createSession } from "../lib/auth";
 
 // The tests need a real SESSION_SECRET (server fails-closed without one).
 // In CI / the Replit environment this is always set.
@@ -24,6 +27,7 @@ const SESSION_SECRET = process.env.SESSION_SECRET;
 const ORGANIZER_KEY = SESSION_SECRET ? deriveOrganizerKey(SESSION_SECRET) : "";
 
 let testEventId: number | null = null;
+let testSessionToken: string | null = null;
 
 beforeAll(async () => {
   if (!SESSION_SECRET) {
@@ -55,6 +59,12 @@ beforeAll(async () => {
       [testEventId]
     );
   }
+
+  // Create a real session for user 1 (seed user) so check-in tests can authenticate
+  testSessionToken = await createSession({
+    user: { id: 1, email: null, firstName: null, lastName: null, profileImageUrl: null },
+    access_token: "test-token",
+  });
 });
 
 afterAll(async () => {
@@ -64,6 +74,12 @@ afterAll(async () => {
       "DELETE FROM event_attendances WHERE user_id = 1 AND event_id = $1",
       [testEventId]
     );
+  }
+  // Clean up test session (only the one created for this test run)
+  if (testSessionToken) {
+    await db.delete(sessionsTable)
+      .where(eq(sessionsTable.sid, testSessionToken))
+      .catch(() => {});
   }
   await pool.end().catch(() => {});
 });
@@ -102,10 +118,22 @@ describe("GET /api/events/:id/qr-token", () => {
 // ── Check-in idempotency ──────────────────────────────────────────────────────
 
 describe("POST /api/events/check-in", () => {
+  it("returns 401 when the caller is not authenticated", async () => {
+    if (!SESSION_SECRET || testEventId === null) return;
+    const token = generateToken(testEventId);
+    const res = await request(app)
+      .post("/api/events/check-in")
+      // No Authorization header — unauthenticated
+      .send({ qrData: token });
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBeTruthy();
+  });
+
   it("rejects a plain integer (no signature)", async () => {
     if (!SESSION_SECRET) return;
     const res = await request(app)
       .post("/api/events/check-in")
+      .set("Authorization", `Bearer ${testSessionToken}`)
       .send({ qrData: "42" });
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(false);
@@ -118,6 +146,7 @@ describe("POST /api/events/check-in", () => {
     const tampered = `1.${expiry}.${"A".repeat(43)}`;
     const res = await request(app)
       .post("/api/events/check-in")
+      .set("Authorization", `Bearer ${testSessionToken}`)
       .send({ qrData: tampered });
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(false);
@@ -131,6 +160,7 @@ describe("POST /api/events/check-in", () => {
     const expired = `1.${pastExpiry}.${sig}`;
     const res = await request(app)
       .post("/api/events/check-in")
+      .set("Authorization", `Bearer ${testSessionToken}`)
       .send({ qrData: expired });
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(false);
@@ -142,6 +172,7 @@ describe("POST /api/events/check-in", () => {
     const token = generateToken(testEventId);
     const res = await request(app)
       .post("/api/events/check-in")
+      .set("Authorization", `Bearer ${testSessionToken}`)
       .send({ qrData: token });
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
@@ -155,6 +186,7 @@ describe("POST /api/events/check-in", () => {
     const token = generateToken(testEventId);
     const res = await request(app)
       .post("/api/events/check-in")
+      .set("Authorization", `Bearer ${testSessionToken}`)
       .send({ qrData: token });
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);

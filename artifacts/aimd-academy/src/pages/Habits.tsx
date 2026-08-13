@@ -300,7 +300,7 @@ function CreateHabitDialog() {
 
   const submit = () => {
     createHabit.mutate(
-      { data: { name, targetMinutes: parseInt(minutes), category: category || undefined } },
+      { data: { name, targetMinutes: parseInt(minutes), category: category || 'General' } },
       {
         onSuccess: () => {
           setOpen(false); setName(''); setMinutes('30'); setCategory('');

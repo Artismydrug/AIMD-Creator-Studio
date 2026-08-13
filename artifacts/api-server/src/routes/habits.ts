@@ -21,7 +21,6 @@ import {
 import { FREE_HABIT_LIMIT } from "../middleware/requireTier";
 
 const router: IRouter = Router();
-const CURRENT_USER_ID = 1;
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
@@ -57,24 +56,27 @@ async function updateStreak(habitId: number, userId: number): Promise<void> {
     .where(eq(habitsTable.id, habitId));
 }
 
-router.get("/habits", async (_req, res): Promise<void> => {
+router.get("/habits", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const habits = await db
     .select()
     .from(habitsTable)
-    .where(eq(habitsTable.userId, CURRENT_USER_ID))
+    .where(eq(habitsTable.userId, userId))
     .orderBy(desc(habitsTable.createdAt));
 
   const today = todayStr();
   const todayLogs = await db
     .select()
     .from(habitLogsTable)
-    .where(and(eq(habitLogsTable.userId, CURRENT_USER_ID), eq(habitLogsTable.date, today)));
+    .where(and(eq(habitLogsTable.userId, userId), eq(habitLogsTable.date, today)));
 
   const completedToday = new Set(todayLogs.filter((l) => l.completed).map((l) => l.habitId));
   const result = habits.map((h) => ({ ...h, completedToday: completedToday.has(h.id) }));
 
   // Attach tier and limit metadata for the frontend
-  const [user] = await db.select({ tier: usersTable.tier }).from(usersTable).where(eq(usersTable.id, CURRENT_USER_ID));
+  const [user] = await db.select({ tier: usersTable.tier }).from(usersTable).where(eq(usersTable.id, userId));
   const tier = user?.tier ?? "free";
   const limitedTier = tier === "free";
 
@@ -90,10 +92,13 @@ router.get("/habits", async (_req, res): Promise<void> => {
 });
 
 router.post("/habits", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   // Enforce free tier habit limit
-  const [user] = await db.select({ tier: usersTable.tier }).from(usersTable).where(eq(usersTable.id, CURRENT_USER_ID));
+  const [user] = await db.select({ tier: usersTable.tier }).from(usersTable).where(eq(usersTable.id, userId));
   if (user?.tier === "free") {
-    const countResult = await db.execute(sql`SELECT count(*)::int AS cnt FROM habits WHERE user_id = ${CURRENT_USER_ID}`);
+    const countResult = await db.execute(sql`SELECT count(*)::int AS cnt FROM habits WHERE user_id = ${userId}`);
     const habitCount = (countResult.rows[0] as any)?.cnt ?? 0;
     if (habitCount >= FREE_HABIT_LIMIT) {
       res.status(403).json({
@@ -112,12 +117,15 @@ router.post("/habits", async (req, res): Promise<void> => {
   }
   const [habit] = await db
     .insert(habitsTable)
-    .values({ ...parsed.data, userId: CURRENT_USER_ID })
+    .values({ ...parsed.data, userId })
     .returning();
   res.status(201).json(CreateHabitResponse.parse({ ...habit, completedToday: false }));
 });
 
-router.get("/habits/heatmap", async (_req, res): Promise<void> => {
+router.get("/habits/heatmap", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const yearAgo = new Date();
   yearAgo.setFullYear(yearAgo.getFullYear() - 1);
   const yearAgoStr = yearAgo.toISOString().slice(0, 10);
@@ -130,7 +138,7 @@ router.get("/habits/heatmap", async (_req, res): Promise<void> => {
     .from(habitLogsTable)
     .where(
       and(
-        eq(habitLogsTable.userId, CURRENT_USER_ID),
+        eq(habitLogsTable.userId, userId),
         eq(habitLogsTable.completed, true),
         gte(habitLogsTable.date, yearAgoStr)
       )
@@ -147,12 +155,15 @@ router.get("/habits/heatmap", async (_req, res): Promise<void> => {
 });
 
 router.get("/habits/:id", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const params = GetHabitParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const [habit] = await db
     .select()
     .from(habitsTable)
-    .where(and(eq(habitsTable.id, params.data.id), eq(habitsTable.userId, CURRENT_USER_ID)));
+    .where(and(eq(habitsTable.id, params.data.id), eq(habitsTable.userId, userId)));
   if (!habit) { res.status(404).json({ error: "Habit not found" }); return; }
   const today = todayStr();
   const [todayLog] = await db
@@ -163,6 +174,9 @@ router.get("/habits/:id", async (req, res): Promise<void> => {
 });
 
 router.patch("/habits/:id", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const params = UpdateHabitParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const parsed = UpdateHabitBody.safeParse(req.body);
@@ -170,24 +184,30 @@ router.patch("/habits/:id", async (req, res): Promise<void> => {
   const [habit] = await db
     .update(habitsTable)
     .set(parsed.data)
-    .where(and(eq(habitsTable.id, params.data.id), eq(habitsTable.userId, CURRENT_USER_ID)))
+    .where(and(eq(habitsTable.id, params.data.id), eq(habitsTable.userId, userId)))
     .returning();
   if (!habit) { res.status(404).json({ error: "Habit not found" }); return; }
   res.json(UpdateHabitResponse.parse({ ...habit, completedToday: false }));
 });
 
 router.delete("/habits/:id", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const params = DeleteHabitParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const [habit] = await db
     .delete(habitsTable)
-    .where(and(eq(habitsTable.id, params.data.id), eq(habitsTable.userId, CURRENT_USER_ID)))
+    .where(and(eq(habitsTable.id, params.data.id), eq(habitsTable.userId, userId)))
     .returning();
   if (!habit) { res.status(404).json({ error: "Habit not found" }); return; }
   res.sendStatus(204);
 });
 
 router.post("/habits/:id/log", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const params = LogHabitSessionParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const parsed = LogHabitSessionBody.safeParse(req.body);
@@ -196,7 +216,7 @@ router.post("/habits/:id/log", async (req, res): Promise<void> => {
   const [habit] = await db
     .select()
     .from(habitsTable)
-    .where(and(eq(habitsTable.id, params.data.id), eq(habitsTable.userId, CURRENT_USER_ID)));
+    .where(and(eq(habitsTable.id, params.data.id), eq(habitsTable.userId, userId)));
   if (!habit) { res.status(404).json({ error: "Habit not found" }); return; }
 
   const logDate: string = (parsed.data.date as string | undefined) ?? todayStr();
@@ -204,14 +224,17 @@ router.post("/habits/:id/log", async (req, res): Promise<void> => {
 
   const [log] = await db
     .insert(habitLogsTable)
-    .values({ habitId: habit.id, userId: CURRENT_USER_ID, date: logDate, minutesSpent: parsed.data.minutesSpent, completed })
+    .values({ habitId: habit.id, userId, date: logDate, minutesSpent: parsed.data.minutesSpent, completed })
     .returning();
 
-  await updateStreak(habit.id, CURRENT_USER_ID);
+  await updateStreak(habit.id, userId);
   res.status(201).json(LogHabitSessionResponse.parse(log));
 });
 
 router.get("/habit-logs", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const parsed = ListHabitLogsQueryParams.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const days   = parsed.data.days ?? 30;
@@ -224,7 +247,7 @@ router.get("/habit-logs", async (req, res): Promise<void> => {
   const logs = await db
     .select()
     .from(habitLogsTable)
-    .where(and(eq(habitLogsTable.habitId, habitId), eq(habitLogsTable.userId, CURRENT_USER_ID), gte(habitLogsTable.date, cutoffStr)))
+    .where(and(eq(habitLogsTable.habitId, habitId), eq(habitLogsTable.userId, userId), gte(habitLogsTable.date, cutoffStr)))
     .orderBy(desc(habitLogsTable.date));
 
   res.json(ListHabitLogsResponse.parse(logs));

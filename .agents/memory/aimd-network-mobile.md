@@ -1,25 +1,26 @@
 ---
 name: AIMD Network mobile app
-description: Key decisions and quirks from building the Expo mobile app for AIMD Network
+description: Key facts about the AIMD Network Expo app, its API server integration, and auth design decisions
 ---
 
-## Design tokens
-- Synced from aimd-academy's index.css — dark-first palette, radius: 0 (sharp corners), emerald primary #33cc66
-- Both light and dark keys use same dark values since the app is always dark-mode
+## Mobile app (artifacts/aimd-network)
+- Font: DM Sans (DMSans_400Regular/500Medium/600SemiBold/700Bold via @expo-google-fonts/dm-sans)
+- Dark-first design token system in hooks/useColors.ts
+- Camera pinning: expo-camera with CameraView component
+- CORS needs the API Server workflow running (artifacts/api-server)
+- Auth: server-side OIDC transaction (see below); token stored as `auth_session_token` in expo-secure-store
+- Auth token getter wired via `setAuthTokenGetter` in app/_layout.tsx
+- User.id is `number` (integer from API), not string — important for message bubble alignment in conversation/[id].tsx
 
-## Font
-- Uses DM Sans (@expo-google-fonts/dm-sans) matching the web app, not Inter
-- Weights: DM_Sans_400Regular, DM_Sans_500Medium, DM_Sans_600SemiBold, DM_Sans_700Bold
+## Auth implementation (Replit OIDC — server-side transaction)
+- Strategy: `/mobile-auth/begin` → signed transaction token + authUrl → `WebBrowser.openAuthSessionAsync` → code → `/mobile-auth/token-exchange` → Bearer session token
+- **Why server-side**: server generates nonce/state/code_verifier; mobile client cannot supply or tamper with them. Client holds an opaque HMAC-signed transaction token (SESSION_SECRET).
+- Sessions table: `sessions` (sid, sess jsonb, expire); ensureAuthSchema() provisions on startup
+- Users table extended with `replit_id TEXT UNIQUE` (nullable for seed users)
+- Web auth: @workspace/replit-auth-web package; useAuth() in Shell.tsx SidebarFooter
+- All routes require req.isAuthenticated() → 401 if not; studio post list/get are public-read but writes require auth
 
-## API client
-- setBaseUrl must be called at module level in _layout.tsx (outside any component)
-- Conversations, directory, comments endpoints were NOT in the original openapi.yaml — they were added and codegen re-run before building the app
-- expo-camera must be pinned to ~17.0.10 for Expo SDK 54 (57.x was installed by default and incompatible)
-
-## Architecture
-- Tab layout: Feed (index), Habits, messages, directory, events — 5 tabs
-- Conversation thread at app/conversation/[id].tsx — inverted FlatList + KeyboardAvoidingView from react-native-keyboard-controller
-- QR check-in uses expo-camera CameraView with barcodeScannerSettings — wrapped in Platform.OS !== 'web' guard
-- CURRENT_USER_ID hardcoded as 1 (matches server default) — will be replaced when auth lands (Task #10)
-
-**Why:** The API server uses cors() with no options (allows all origins), so CORS works once the API Server workflow is running. Both workflows must be running for web preview to work.
+## API schema / codegen quirk
+**Why:** orval generates BOTH Zod schemas (api.ts) AND TypeScript interfaces (types/) for ANY named schema component. If the same name appears in both files, TS2308 fires.
+**Fix pattern:** Use `$ref` to a DIFFERENTLY-NAMED component (e.g. `MobileAuthCodeInput` not `MobileAuthCodeExchangeBody`). Never use `{operationId}Body` or `{operationId}Response` as component names — those are reserved by orval for the generated Zod schemas.
+**TDZ ordering:** After codegen, verify all `*Default` constants in api.ts appear BEFORE the schema that uses them. If not, manually reorder.

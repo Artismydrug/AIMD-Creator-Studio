@@ -11,7 +11,6 @@ import {
 import { generateToken, verifyToken, TOKEN_TTL_HOURS, isValidOrganizerKey } from "../lib/eventQrToken";
 
 const router = Router();
-const CURRENT_USER_ID = 1;
 
 // GET /events
 router.get("/", async (req, res): Promise<void> => {
@@ -38,12 +37,14 @@ router.get("/", async (req, res): Promise<void> => {
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(desc(communityEventsTable.isFeatured), communityEventsTable.startsAt);
 
-    const rsvps = await db
-      .select({ eventId: eventRsvpsTable.eventId })
-      .from(eventRsvpsTable)
-      .where(eq(eventRsvpsTable.userId, CURRENT_USER_ID));
-
-    const rsvpSet = new Set(rsvps.map((r) => r.eventId));
+    const rsvpSet = new Set<number>();
+    if (req.isAuthenticated()) {
+      const rsvps = await db
+        .select({ eventId: eventRsvpsTable.eventId })
+        .from(eventRsvpsTable)
+        .where(eq(eventRsvpsTable.userId, req.user.id));
+      rsvps.forEach((r) => rsvpSet.add(r.eventId));
+    }
 
     const result = events.map((e) => ({
       id: e.id,
@@ -102,11 +103,12 @@ router.post("/", async (req, res): Promise<void> => {
 
 // GET /events/my-rsvps  — must be before /:id
 router.get("/my-rsvps", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
   try {
     const rsvps = await db
       .select({ eventId: eventRsvpsTable.eventId })
       .from(eventRsvpsTable)
-      .where(eq(eventRsvpsTable.userId, CURRENT_USER_ID));
+      .where(eq(eventRsvpsTable.userId, req.user.id));
 
     const eventIds = rsvps.map((r) => r.eventId);
     if (eventIds.length === 0) {
@@ -136,7 +138,13 @@ router.get("/my-rsvps", async (req, res): Promise<void> => {
 
 // POST /events/check-in — verifies a signed QR token and records attendance
 // Must come before /:id routes to prevent "check-in" being parsed as an id.
+// Authentication is required: only logged-in creators can record attendance.
 router.post("/check-in", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized — sign in to check in to an event" });
+    return;
+  }
+
   try {
     const qrData = req.body?.qrData;
     if (typeof qrData !== "string" || !qrData.trim()) {
@@ -184,7 +192,7 @@ router.post("/check-in", async (req, res): Promise<void> => {
     // both succeed without a race condition; inserted count tells us which case.
     const inserted = await db
       .insert(eventAttendancesTable)
-      .values({ userId: CURRENT_USER_ID, eventId: event.id })
+      .values({ userId: req.user.id, eventId: event.id })
       .onConflictDoNothing({ target: [eventAttendancesTable.userId, eventAttendancesTable.eventId] })
       .returning({ id: eventAttendancesTable.id });
 
@@ -218,15 +226,12 @@ router.get("/:id", async (req, res): Promise<void> => {
       return;
     }
 
-    const [rsvp] = await db
-      .select()
-      .from(eventRsvpsTable)
-      .where(
-        and(
-          eq(eventRsvpsTable.eventId, id),
-          eq(eventRsvpsTable.userId, CURRENT_USER_ID)
-        )
-      );
+    const [rsvp] = req.isAuthenticated()
+      ? await db
+          .select()
+          .from(eventRsvpsTable)
+          .where(and(eq(eventRsvpsTable.eventId, id), eq(eventRsvpsTable.userId, req.user.id)))
+      : [undefined];
 
     res.json({
       ...event,
@@ -242,6 +247,8 @@ router.get("/:id", async (req, res): Promise<void> => {
 
 // POST /events/:id/rsvp — toggle
 router.post("/:id/rsvp", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
   try {
     const { id } = RsvpToEventParams.parse({ id: Number(req.params.id) });
 
@@ -258,12 +265,7 @@ router.post("/:id/rsvp", async (req, res): Promise<void> => {
     const [existing] = await db
       .select()
       .from(eventRsvpsTable)
-      .where(
-        and(
-          eq(eventRsvpsTable.eventId, id),
-          eq(eventRsvpsTable.userId, CURRENT_USER_ID)
-        )
-      );
+      .where(and(eq(eventRsvpsTable.eventId, id), eq(eventRsvpsTable.userId, userId)));
 
     let hasRsvped: boolean;
     if (existing) {
@@ -278,7 +280,7 @@ router.post("/:id/rsvp", async (req, res): Promise<void> => {
     } else {
       await db
         .insert(eventRsvpsTable)
-        .values({ userId: CURRENT_USER_ID, eventId: id });
+        .values({ userId, eventId: id });
       await db
         .update(communityEventsTable)
         .set({ rsvpCount: event.rsvpCount + 1 })

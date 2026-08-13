@@ -246,7 +246,7 @@ export default function Profile() {
   const isOwnProfile = !userId;
 
   // Own profile uses the existing hook
-  const { data: currentUser, isLoading: loadingMe } = useGetCurrentUser({ query: { enabled: isOwnProfile } });
+  const { data: currentUser, isLoading: loadingMe } = useGetCurrentUser({ query: { queryKey: ['getCurrentUser'], enabled: isOwnProfile } });
   const { data: badges = [], isLoading: loadingBadges } = useListBadges({ query: { queryKey: ['listBadges'], enabled: isOwnProfile } }) as any;
 
   // Public profile uses a direct fetch

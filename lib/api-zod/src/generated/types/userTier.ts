@@ -11,6 +11,6 @@ export type UserTier = typeof UserTier[keyof typeof UserTier];
 
 export const UserTier = {
   free: 'free',
-  academy: 'academy',
+  workshop: 'workshop',
   pro: 'pro',
 } as const;

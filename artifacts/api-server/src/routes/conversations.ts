@@ -3,10 +3,12 @@ import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
 
 const router: IRouter = Router();
-const CURRENT_USER_ID = 1;
 
 // GET /conversations — list conversations for current user with last message + participant info
 router.get("/conversations", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const rows = await db.execute(sql`
     SELECT
       c.id,
@@ -38,19 +40,19 @@ router.get("/conversations", async (req, res): Promise<void> => {
         ))
         FROM conversation_participants cp2
         JOIN users u3 ON u3.id = cp2.user_id
-        WHERE cp2.conversation_id = c.id AND cp2.user_id != ${CURRENT_USER_ID}
+        WHERE cp2.conversation_id = c.id AND cp2.user_id != ${userId}
       ) AS "participants",
       -- Unread count
       (
         SELECT count(*)::int
         FROM messages m2
-        JOIN conversation_participants cp3 ON cp3.conversation_id = m2.conversation_id AND cp3.user_id = ${CURRENT_USER_ID}
+        JOIN conversation_participants cp3 ON cp3.conversation_id = m2.conversation_id AND cp3.user_id = ${userId}
         WHERE m2.conversation_id = c.id
-          AND m2.sender_id != ${CURRENT_USER_ID}
+          AND m2.sender_id != ${userId}
           AND (cp3.last_read_at IS NULL OR m2.created_at > cp3.last_read_at)
       ) AS "unreadCount"
     FROM conversations c
-    JOIN conversation_participants cp ON cp.conversation_id = c.id AND cp.user_id = ${CURRENT_USER_ID}
+    JOIN conversation_participants cp ON cp.conversation_id = c.id AND cp.user_id = ${userId}
     ORDER BY (
       SELECT max(m.created_at) FROM messages m WHERE m.conversation_id = c.id
     ) DESC NULLS LAST
@@ -61,12 +63,15 @@ router.get("/conversations", async (req, res): Promise<void> => {
 
 // POST /conversations — start a new conversation
 router.post("/conversations", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const { participantIds, name } = req.body as { participantIds?: number[]; name?: string };
   if (!Array.isArray(participantIds) || participantIds.length === 0) {
     res.status(400).json({ error: "participantIds required" }); return;
   }
 
-  const allIds = [...new Set([CURRENT_USER_ID, ...participantIds])];
+  const allIds = [...new Set([userId, ...participantIds])];
   const isGroup = allIds.length > 2;
 
   // For DMs: check if conversation already exists between these two users
@@ -75,7 +80,7 @@ router.post("/conversations", async (req, res): Promise<void> => {
     const existing = await db.execute(sql`
       SELECT c.id
       FROM conversations c
-      JOIN conversation_participants cp1 ON cp1.conversation_id = c.id AND cp1.user_id = ${CURRENT_USER_ID}
+      JOIN conversation_participants cp1 ON cp1.conversation_id = c.id AND cp1.user_id = ${userId}
       JOIN conversation_participants cp2 ON cp2.conversation_id = c.id AND cp2.user_id = ${otherId}
       WHERE c.is_group = false
       LIMIT 1
@@ -104,19 +109,22 @@ router.post("/conversations", async (req, res): Promise<void> => {
 
 // GET /conversations/:id/messages
 router.get("/conversations/:id/messages", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const convId = parseInt(req.params.id);
   if (isNaN(convId)) { res.status(400).json({ error: "Invalid id" }); return; }
 
   // Verify participant
   const check = await db.execute(sql`
-    SELECT 1 FROM conversation_participants WHERE conversation_id = ${convId} AND user_id = ${CURRENT_USER_ID}
+    SELECT 1 FROM conversation_participants WHERE conversation_id = ${convId} AND user_id = ${userId}
   `);
   if (check.rows.length === 0) { res.status(403).json({ error: "Not a participant" }); return; }
 
   // Mark as read
   await db.execute(sql`
     UPDATE conversation_participants SET last_read_at = NOW()
-    WHERE conversation_id = ${convId} AND user_id = ${CURRENT_USER_ID}
+    WHERE conversation_id = ${convId} AND user_id = ${userId}
   `);
 
   const rows = await db.execute(sql`
@@ -139,6 +147,9 @@ router.get("/conversations/:id/messages", async (req, res): Promise<void> => {
 
 // POST /conversations/:id/messages
 router.post("/conversations/:id/messages", async (req, res): Promise<void> => {
+  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.user.id;
+
   const convId = parseInt(req.params.id);
   if (isNaN(convId)) { res.status(400).json({ error: "Invalid id" }); return; }
 
@@ -147,18 +158,18 @@ router.post("/conversations/:id/messages", async (req, res): Promise<void> => {
 
   // Verify participant
   const check = await db.execute(sql`
-    SELECT 1 FROM conversation_participants WHERE conversation_id = ${convId} AND user_id = ${CURRENT_USER_ID}
+    SELECT 1 FROM conversation_participants WHERE conversation_id = ${convId} AND user_id = ${userId}
   `);
   if (check.rows.length === 0) { res.status(403).json({ error: "Not a participant" }); return; }
 
   const result = await db.execute(sql`
     INSERT INTO messages (conversation_id, sender_id, content)
-    VALUES (${convId}, ${CURRENT_USER_ID}, ${content.trim()})
+    VALUES (${convId}, ${userId}, ${content.trim()})
     RETURNING id, conversation_id AS "conversationId", sender_id AS "senderId", content, created_at AS "createdAt"
   `);
 
   const msg = result.rows[0] as any;
-  const userRow = await db.execute(sql`SELECT username, avatar_url AS "senderAvatar" FROM users WHERE id = ${CURRENT_USER_ID}`);
+  const userRow = await db.execute(sql`SELECT username, avatar_url AS "senderAvatar" FROM users WHERE id = ${userId}`);
   const u = userRow.rows[0] as any;
 
   res.status(201).json({ ...msg, senderName: u?.username, senderAvatar: u?.senderAvatar });
