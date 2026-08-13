@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useGetCurrentUser } from '@workspace/api-client-react';
-import { useAuth } from '@workspace/replit-auth-web';
+import { useAuth, useClerk } from '@clerk/react';
 import { LogIn, LogOut } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -262,14 +262,16 @@ function SidebarFooter({
   user: Parameters<typeof SidebarContent>[0]['user'];
   onNav?: () => void;
 }) {
-  const { isAuthenticated, login, logout } = useAuth();
+  const { isSignedIn } = useAuth();
+  const { signOut } = useClerk();
+  const [, navigate] = useLocation();
 
-  if (!isAuthenticated) {
+  if (!isSignedIn) {
     return (
-      <div className="border-t border-zinc-800/80 pt-3 pb-4 px-6">
+      <div className="border-t border-sidebar-border pt-3 pb-4 px-6">
         <button
-          onClick={() => login()}
-          className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-semibold rounded-md transition-colors"
+          onClick={() => navigate('/sign-in')}
+          className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary text-xs font-semibold rounded-xl transition-colors"
         >
           <LogIn className="w-4 h-4" />
           Sign In
@@ -279,28 +281,28 @@ function SidebarFooter({
   }
 
   return (
-      <div className="border-t border-zinc-800/80 pt-3 pb-4 px-6 flex items-center justify-between">
+      <div className="border-t border-sidebar-border pt-3 pb-4 px-6 flex items-center justify-between">
         <Link href="/profile" onClick={onNav}>
           <div className="flex items-center gap-3 cursor-pointer">
-            <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-xs font-bold text-emerald-400 flex-shrink-0 overflow-hidden">
+            <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0 overflow-hidden">
               {user?.avatarUrl
                 ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
                 : (user?.username?.slice(0, 2).toUpperCase() ?? 'CR')
               }
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-xs font-bold text-white leading-none truncate">
+              <span className="text-xs font-bold text-sidebar-foreground leading-none truncate">
                 {user?.username ?? 'Creator'}
               </span>
-              <span className="text-[10px] text-zinc-500 mt-0.5 capitalize">
+              <span className="text-[10px] text-sidebar-foreground/50 mt-0.5 capitalize">
                 {user?.tier ?? 'Community'}{user?.studioReadyBadge ? ' · Studio Ready' : ''}
               </span>
             </div>
           </div>
         </Link>
         <button
-          onClick={() => logout()}
-          className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors"
+          onClick={() => signOut({ redirectUrl: '/' })}
+          className="p-1.5 text-sidebar-foreground/40 hover:text-sidebar-foreground/80 transition-colors"
           title="Sign out"
         >
           <LogOut className="w-4 h-4" />

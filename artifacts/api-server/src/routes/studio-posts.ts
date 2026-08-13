@@ -57,8 +57,8 @@ router.get("/studio-posts", async (req, res): Promise<void> => {
   const postIds = posts.map((p) => p.id);
   const likedSet = new Set<number>();
 
-  if (postIds.length > 0 && req.isAuthenticated()) {
-    const userId = req.user.id;
+  if (postIds.length > 0 && !!req.dbUser) {
+    const userId = req.dbUser!.id;
     const likes = await db
       .select()
       .from(postLikesTable)
@@ -71,8 +71,8 @@ router.get("/studio-posts", async (req, res): Promise<void> => {
 });
 
 router.post("/studio-posts", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const parsed = CreateStudioPostBody.safeParse(req.body);
   if (!parsed.success) {
@@ -123,11 +123,11 @@ router.get("/studio-posts/:id", async (req, res): Promise<void> => {
   }
 
   let likedByMe = false;
-  if (req.isAuthenticated()) {
+  if (!!req.dbUser) {
     const [like] = await db
       .select()
       .from(postLikesTable)
-      .where(and(eq(postLikesTable.postId, post.id), eq(postLikesTable.userId, req.user.id)));
+      .where(and(eq(postLikesTable.postId, post.id), eq(postLikesTable.userId, req.dbUser!.id)));
     likedByMe = !!like;
   }
 
@@ -135,8 +135,8 @@ router.get("/studio-posts/:id", async (req, res): Promise<void> => {
 });
 
 router.delete("/studio-posts/:id", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const params = DeleteStudioPostParams.safeParse(req.params);
   if (!params.success) {
@@ -155,8 +155,8 @@ router.delete("/studio-posts/:id", async (req, res): Promise<void> => {
 });
 
 router.post("/studio-posts/:id/like", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const params = LikeStudioPostParams.safeParse(req.params);
   if (!params.success) {

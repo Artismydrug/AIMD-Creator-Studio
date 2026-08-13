@@ -31,8 +31,8 @@ router.get("/job-listings", async (req, res): Promise<void> => {
   }
 
   // Only compute hasApplied when authenticated
-  if (req.isAuthenticated()) {
-    const userId = req.user.id;
+  if (!!req.dbUser) {
+    const userId = req.dbUser!.id;
     const applications = await db
       .select()
       .from(jobApplicationsTable)
@@ -59,11 +59,11 @@ router.get("/job-listings/:id", async (req, res): Promise<void> => {
   }
 
   let hasApplied = false;
-  if (req.isAuthenticated()) {
+  if (!!req.dbUser) {
     const [application] = await db
       .select()
       .from(jobApplicationsTable)
-      .where(and(eq(jobApplicationsTable.jobListingId, listing.id), eq(jobApplicationsTable.userId, req.user.id)));
+      .where(and(eq(jobApplicationsTable.jobListingId, listing.id), eq(jobApplicationsTable.userId, req.dbUser!.id)));
     hasApplied = !!application;
   }
 
@@ -71,8 +71,8 @@ router.get("/job-listings/:id", async (req, res): Promise<void> => {
 });
 
 router.post("/job-listings/:id/apply", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const params = ApplyForJobParams.safeParse(req.params);
   if (!params.success) {
@@ -120,8 +120,8 @@ router.post("/job-listings/:id/apply", async (req, res): Promise<void> => {
 });
 
 router.get("/applications", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const applications = await db
     .select()

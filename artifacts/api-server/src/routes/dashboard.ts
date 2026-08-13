@@ -19,8 +19,8 @@ import {
 const router: IRouter = Router();
 
 router.get("/dashboard/summary", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
 
@@ -86,8 +86,8 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
 });
 
 router.get("/dashboard/activity-feed", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const parsed = GetActivityFeedQueryParams.safeParse(req.query);
   const limit = parsed.success ? (parsed.data.limit ?? 20) : 20;

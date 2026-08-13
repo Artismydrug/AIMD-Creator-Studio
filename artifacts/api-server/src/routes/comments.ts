@@ -30,8 +30,8 @@ router.get("/studio-posts/:id/comments", async (req, res): Promise<void> => {
 
 // POST /studio-posts/:id/comments
 router.post("/studio-posts/:id/comments", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const postId = parseInt(req.params.id);
   if (isNaN(postId)) { res.status(400).json({ error: "Invalid post id" }); return; }

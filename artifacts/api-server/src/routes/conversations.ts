@@ -6,8 +6,8 @@ const router: IRouter = Router();
 
 // GET /conversations — list conversations for current user with last message + participant info
 router.get("/conversations", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const rows = await db.execute(sql`
     SELECT
@@ -63,8 +63,8 @@ router.get("/conversations", async (req, res): Promise<void> => {
 
 // POST /conversations — start a new conversation
 router.post("/conversations", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const { participantIds, name } = req.body as { participantIds?: number[]; name?: string };
   if (!Array.isArray(participantIds) || participantIds.length === 0) {
@@ -109,8 +109,8 @@ router.post("/conversations", async (req, res): Promise<void> => {
 
 // GET /conversations/:id/messages
 router.get("/conversations/:id/messages", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const convId = parseInt(req.params.id);
   if (isNaN(convId)) { res.status(400).json({ error: "Invalid id" }); return; }
@@ -147,8 +147,8 @@ router.get("/conversations/:id/messages", async (req, res): Promise<void> => {
 
 // POST /conversations/:id/messages
 router.post("/conversations/:id/messages", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const convId = parseInt(req.params.id);
   if (isNaN(convId)) { res.status(400).json({ error: "Invalid id" }); return; }

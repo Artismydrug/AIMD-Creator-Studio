@@ -22,7 +22,7 @@ const TIER_RANK: Record<string, number> = {
  */
 export function requireTier(minTier: Tier) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    if (!req.isAuthenticated()) {
+    if (!req.dbUser) {
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
@@ -30,7 +30,7 @@ export function requireTier(minTier: Tier) {
     const [user] = await db
       .select({ tier: usersTable.tier })
       .from(usersTable)
-      .where(eq(usersTable.id, req.user.id));
+      .where(eq(usersTable.id, req.dbUser.id));
 
     const currentTier = (user?.tier ?? "free") as Tier;
     const currentRank = TIER_RANK[currentTier] ?? 0;

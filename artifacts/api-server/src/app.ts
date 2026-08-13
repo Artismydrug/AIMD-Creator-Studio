@@ -1,13 +1,22 @@
 import express, { type Express } from "express";
 import cors from "cors";
-import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
-import { authMiddleware } from "./middlewares/authMiddleware";
+import { clerkMiddleware } from "@clerk/express";
+import { publishableKeyFromHost } from "@clerk/shared/keys";
+import {
+  CLERK_PROXY_PATH,
+  clerkProxyMiddleware,
+  getClerkProxyHost,
+} from "./middlewares/clerkProxyMiddleware";
+import { clerkAuth } from "./middlewares/clerkAuth";
 import router from "./routes";
 import { WebhookHandlers } from "./webhookHandlers";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
+
+// ── Clerk FAPI proxy — must be before ALL body parsers ────────────────────────
+app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
 // ── Stripe webhook MUST be registered before express.json() ──────────────────
 // Stripe requires the raw Buffer body for signature verification.
@@ -31,9 +40,8 @@ app.post(
   }
 );
 
-// ── Standard middleware (after webhook route) ─────────────────────────────────
+// ── Standard middleware ───────────────────────────────────────────────────────
 app.use(cors({ credentials: true, origin: true }));
-app.use(cookieParser());
 app.use(
   pinoHttp({
     logger,
@@ -49,7 +57,19 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(authMiddleware);
+
+// ── Clerk session validation ──────────────────────────────────────────────────
+app.use(
+  clerkMiddleware((req) => ({
+    publishableKey: publishableKeyFromHost(
+      getClerkProxyHost(req) ?? "",
+      process.env.CLERK_PUBLISHABLE_KEY,
+    ),
+  })),
+);
+
+// ── JIT user provisioning: sets req.dbUser for authenticated requests ─────────
+app.use(clerkAuth);
 
 app.use("/api", router);
 

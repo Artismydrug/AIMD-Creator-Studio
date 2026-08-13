@@ -1,77 +1,33 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Platform } from 'react-native';
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
-import { useAuth } from '@/lib/auth';
+import { useAuth } from '@clerk/expo';
+import { setAuthTokenGetter } from '@workspace/api-client-react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-function LoginPrompt() {
+export default function TabLayout() {
   const colors = useColors();
-  const { login, isLoading } = useAuth();
-  const insets = useSafeAreaInsets();
+  const { isSignedIn, isLoaded, getToken } = useAuth();
 
-  const s = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingBottom: insets.bottom + 40,
-      gap: 24,
-      paddingHorizontal: 32,
-    },
-    title: {
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 28,
-      color: colors.primary,
-      letterSpacing: 3,
-    },
-    subtitle: {
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 16,
-      color: colors.mutedForeground,
-      textAlign: 'center',
-    },
-    btn: {
-      backgroundColor: colors.primary,
-      paddingHorizontal: 40,
-      paddingVertical: 14,
-      width: '100%',
-      alignItems: 'center',
-    },
-    btnText: {
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 16,
-      color: colors.primaryForeground,
-    },
-  });
+  // Wire Clerk bearer token into the generated API client for all mobile API calls
+  useEffect(() => {
+    setAuthTokenGetter(() => getToken());
+  }, [getToken]);
 
-  if (isLoading) {
+  // Show loading spinner while Clerk initialises
+  if (!isLoaded) {
     return (
-      <View style={s.container}>
+      <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );
   }
 
-  return (
-    <View style={s.container}>
-      <Text style={s.title}>AIMD</Text>
-      <Text style={s.subtitle}>The network for independent music producers and sound designers.</Text>
-      <TouchableOpacity style={s.btn} onPress={login}>
-        <Text style={s.btnText}>Log In / Sign Up</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
-
-export default function TabLayout() {
-  const colors = useColors();
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (!isAuthenticated) {
-    return <LoginPrompt />;
+  // Redirect unauthenticated users to the sign-in screen
+  if (!isSignedIn) {
+    return <Redirect href="/(auth)/sign-in" />;
   }
 
   return (

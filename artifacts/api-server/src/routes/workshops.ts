@@ -33,11 +33,11 @@ router.get("/workshops", async (req, res): Promise<void> => {
   }
 
   const enrolledSet = new Set<number>();
-  if (req.isAuthenticated()) {
+  if (!!req.dbUser) {
     const enrollments = await db
       .select()
       .from(enrollmentsTable)
-      .where(eq(enrollmentsTable.userId, req.user.id));
+      .where(eq(enrollmentsTable.userId, req.dbUser!.id));
     enrollments.forEach((e) => enrolledSet.add(e.workshopId));
   }
 
@@ -64,11 +64,11 @@ router.get("/workshops/:id", async (req, res): Promise<void> => {
     .where(eq(workshopModulesTable.workshopId, workshop.id))
     .orderBy(workshopModulesTable.order);
 
-  const [enrollment] = req.isAuthenticated()
+  const [enrollment] = !!req.dbUser
     ? await db
         .select()
         .from(enrollmentsTable)
-        .where(and(eq(enrollmentsTable.workshopId, workshop.id), eq(enrollmentsTable.userId, req.user.id)))
+        .where(and(eq(enrollmentsTable.workshopId, workshop.id), eq(enrollmentsTable.userId, req.dbUser!.id)))
     : [undefined];
 
   let completedSet = new Set<number>();
@@ -92,8 +92,8 @@ router.get("/workshops/:id", async (req, res): Promise<void> => {
 });
 
 router.post("/workshops/:id/enroll", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const params = EnrollInWorkshopParams.safeParse(req.params);
   if (!params.success) {
@@ -148,8 +148,8 @@ router.post("/workshops/:id/enroll", async (req, res): Promise<void> => {
 });
 
 router.post("/workshops/:id/modules/:moduleId/complete", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const params = CompleteWorkshopModuleParams.safeParse(req.params);
   if (!params.success) {

@@ -10,8 +10,8 @@ import {
 const router: IRouter = Router();
 
 router.get("/users/me", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
   if (!user) {
@@ -22,8 +22,8 @@ router.get("/users/me", async (req, res): Promise<void> => {
 });
 
 router.patch("/users/me", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const parsed = UpdateCurrentUserBody.safeParse(req.body);
   if (!parsed.success) {

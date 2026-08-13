@@ -60,14 +60,14 @@ const EVENTS: Record<string, AimdEvent> = {
 // ─── POST /checkin ─────────────────────────────────────────────────────────────
 
 router.post("/checkin", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) {
+  if (!!!req.dbUser) {
     res.status(401).json({ error: "Unauthorized — sign in to claim a badge" });
     return;
   }
 
-  // req.user is typed as Express.User (which may not expose .id in TS)
+  // req.dbUser is typed as Express.User (which may not expose .id in TS)
   // but the actual runtime object always has it — use a cast.
-  const userId = (req.user as any).id as number;
+  const userId = (req.dbUser as any).id as number;
   const rawCode = req.body?.eventCode;
 
   if (typeof rawCode !== "string" || !rawCode.trim()) {
@@ -120,12 +120,12 @@ router.post("/checkin", async (req, res): Promise<void> => {
 // Returns only event (QR) badges belonging to the current user.
 
 router.get("/checkin/my-badges", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) {
+  if (!!!req.dbUser) {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
 
-  const userId = (req.user as any).id as number;
+  const userId = (req.dbUser as any).id as number;
 
   try {
     const { rows } = await pool.query(

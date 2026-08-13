@@ -64,8 +64,8 @@ router.get("/challenges/current", async (req, res): Promise<void> => {
     const votedIds = new Set<number>();
     let mySubmissionId: number | null = null;
 
-    if (req.isAuthenticated()) {
-      const userId = (req.user as any).id as number;
+    if (!!req.dbUser) {
+      const userId = (req.dbUser as any).id as number;
 
       const { rows: votes } = await pool.query<{ submission_id: number }>(
         `SELECT submission_id FROM challenge_votes WHERE user_id = $1`,
@@ -113,7 +113,7 @@ router.get("/challenges/current", async (req, res): Promise<void> => {
 // ─── POST /challenges/submit ──────────────────────────────────────────────────
 
 router.post("/challenges/submit", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) {
+  if (!!!req.dbUser) {
     res.status(401).json({ error: "Unauthorized — sign in to submit an entry" });
     return;
   }
@@ -138,7 +138,7 @@ router.post("/challenges/submit", async (req, res): Promise<void> => {
        VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (challenge_week, user_id) DO NOTHING
        RETURNING id`,
-      [challengeWeek, (req.user as any).id, caption.trim(), imageUrl ?? null, tagsArr]
+      [challengeWeek, (req.dbUser as any).id, caption.trim(), imageUrl ?? null, tagsArr]
     );
 
     if (rows.length === 0) {
@@ -158,7 +158,7 @@ router.post("/challenges/submit", async (req, res): Promise<void> => {
 // number of rows in challenge_votes.
 
 router.post("/challenges/:id/vote", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) {
+  if (!!!req.dbUser) {
     res.status(401).json({ error: "Unauthorized — sign in to vote" });
     return;
   }
@@ -169,7 +169,7 @@ router.post("/challenges/:id/vote", async (req, res): Promise<void> => {
     return;
   }
 
-  const userId = (req.user as any).id as number;
+  const userId = (req.dbUser as any).id as number;
   const client = await pool.connect();
 
   try {

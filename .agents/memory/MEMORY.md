@@ -1,2 +1,3 @@
 - [Stripe setup quirks](stripe-setup-quirks.md) — settings.secret not secret_key; runMigrations needs manual SQL; syncBackfill needs {object:"all"}
 - [AIMD Network mobile app](aimd-network-mobile.md) — server-side OIDC transaction auth; orval codegen TDZ/TS2308 fix patterns; session + replit_id DB setup
+- [Clerk auth migration](clerk-auth-migration.md) — email bridge JIT in clerkAuth.ts; web cookie session; mobile Bearer via setAuthTokenGetter; req.dbUser replaces req.user

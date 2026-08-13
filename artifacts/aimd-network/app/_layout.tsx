@@ -13,15 +13,17 @@ import {
 } from '@expo-google-fonts/dm-sans';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import * as SecureStore from 'expo-secure-store';
-import { setBaseUrl, setAuthTokenGetter } from '@workspace/api-client-react';
+import { setBaseUrl } from '@workspace/api-client-react';
 import { StatusBar } from 'expo-status-bar';
-import { AuthProvider } from '@/lib/auth';
+import { ClerkProvider, ClerkLoaded } from '@clerk/expo';
+import { tokenCache } from '@clerk/expo/token-cache';
 
-// Set API base URL and auth token getter before any component renders
+// Set API base URL before any component renders
 const domain = process.env.EXPO_PUBLIC_DOMAIN;
 if (domain) setBaseUrl(`https://${domain}`);
-setAuthTokenGetter(() => SecureStore.getItemAsync('auth_session_token'));
+
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
+const proxyUrl = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -36,6 +38,7 @@ function RootLayoutNav() {
   return (
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen
         name="conversation/[id]"
         options={{
@@ -68,19 +71,25 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null;
 
   return (
-    <SafeAreaProvider>
-      <ErrorBoundary>
-        <AuthProvider>
-          <QueryClientProvider client={queryClient}>
-            <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0a0a0a' }}>
-              <KeyboardProvider>
-                <StatusBar style="light" />
-                <RootLayoutNav />
-              </KeyboardProvider>
-            </GestureHandlerRootView>
-          </QueryClientProvider>
-        </AuthProvider>
-      </ErrorBoundary>
-    </SafeAreaProvider>
+    <ClerkProvider
+      publishableKey={publishableKey}
+      tokenCache={tokenCache}
+      proxyUrl={proxyUrl}
+    >
+      <ClerkLoaded>
+        <SafeAreaProvider>
+          <ErrorBoundary>
+            <QueryClientProvider client={queryClient}>
+              <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0a0a0a' }}>
+                <KeyboardProvider>
+                  <StatusBar style="light" />
+                  <RootLayoutNav />
+                </KeyboardProvider>
+              </GestureHandlerRootView>
+            </QueryClientProvider>
+          </ErrorBoundary>
+        </SafeAreaProvider>
+      </ClerkLoaded>
+    </ClerkProvider>
   );
 }

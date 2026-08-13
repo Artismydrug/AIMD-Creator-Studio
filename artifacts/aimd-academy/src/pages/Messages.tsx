@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MessageSquare, Send, Users, Plus, Search, ChevronLeft, Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useGetCurrentUser } from '@workspace/api-client-react';
 
 // ─── API helpers ──────────────────────────────────────────────────────────────
 
@@ -127,11 +128,12 @@ function MessageBubble({ msg, isMine }: { msg: any; isMine: boolean }) {
 
 // ─── Thread view ──────────────────────────────────────────────────────────────
 
-const CURRENT_USER_ID = 1;
-const CURRENT_USERNAME = 'Alex Rivera';
+// currentUserId resolved from Clerk session via useGetCurrentUser() below
 
 function ThreadView({ convId, convName, onBack }: { convId: number; convName: string; onBack: () => void }) {
   const qc = useQueryClient();
+  const { data: currentUser } = useGetCurrentUser();
+  const currentUserId = currentUser?.id;
   const [draft, setDraft] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -180,7 +182,7 @@ function ThreadView({ convId, convName, onBack }: { convId: number; convName: st
           </div>
         ) : (
           messages.map((msg: any) => (
-            <MessageBubble key={msg.id} msg={msg} isMine={msg.senderId === CURRENT_USER_ID} />
+            <MessageBubble key={msg.id} msg={msg} isMine={msg.senderId === currentUserId} />
           ))
         )}
         <div ref={bottomRef} />

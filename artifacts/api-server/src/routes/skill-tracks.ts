@@ -70,8 +70,8 @@ async function getTrackWithMilestones(trackId: number) {
 }
 
 router.get("/skill-tracks", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const tracks = await db
     .select()
@@ -84,8 +84,8 @@ router.get("/skill-tracks", async (req, res): Promise<void> => {
 });
 
 router.post("/skill-tracks", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const parsed = CreateSkillTrackBody.safeParse(req.body);
   if (!parsed.success) {
@@ -122,8 +122,8 @@ router.post("/skill-tracks", async (req, res): Promise<void> => {
 });
 
 router.patch("/skill-tracks/:id", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const params = UpdateSkillTrackParams.safeParse(req.params);
   if (!params.success) {

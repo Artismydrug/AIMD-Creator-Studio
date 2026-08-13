@@ -13,8 +13,8 @@ import { requireTier } from "../middleware/requireTier";
 const router: IRouter = Router();
 
 router.get("/assignments", async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const assignments = await db
     .select()
@@ -35,8 +35,8 @@ router.get("/assignments", async (req, res): Promise<void> => {
 
 // Assignment submission requires Academy Pass or above
 router.post("/assignments", requireTier("academy"), async (req, res): Promise<void> => {
-  if (!req.isAuthenticated()) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.user.id;
+  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser!.id;
 
   const parsed = SubmitAssignmentBody.safeParse(req.body);
   if (!parsed.success) {
