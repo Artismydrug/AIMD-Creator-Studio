@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
@@ -20,8 +21,17 @@ import {
   useListPostComments,
   getListPostCommentsQueryKey,
   useAddPostComment,
+  getBaseUrl,
 } from '@workspace/api-client-react';
 import type { StudioPost } from '@workspace/api-client-react';
+
+/** Resolve a relative imageUrl (e.g. /api/storage/objects/…) to an absolute URL for React Native. */
+function resolveImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  const base = getBaseUrl();
+  return base ? `${base}${url}` : url;
+}
 
 function formatTime(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -146,6 +156,13 @@ export default function PostCard({ post, onRefresh }: PostCardProps) {
       fontSize: 12,
       color: colors.primary,
     },
+    postImage: {
+      width: '100%',
+      aspectRatio: 1,
+      borderRadius: 4,
+      marginBottom: 10,
+      backgroundColor: colors.muted,
+    },
     actions: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -257,6 +274,14 @@ export default function PostCard({ post, onRefresh }: PostCardProps) {
       </View>
 
       <Text style={s.caption}>{post.caption}</Text>
+
+      {resolveImageUrl(post.imageUrl) ? (
+        <Image
+          source={{ uri: resolveImageUrl(post.imageUrl)! }}
+          style={s.postImage}
+          resizeMode="cover"
+        />
+      ) : null}
 
       {post.tags && post.tags.length > 0 && (
         <View style={s.tagsRow}>

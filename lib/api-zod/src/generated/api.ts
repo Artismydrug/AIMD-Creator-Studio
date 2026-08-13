@@ -9,6 +9,16 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Serve an object entity from PRIVATE_OBJECT_DIR
+ */
+export const GetStorageObjectParams = zod.object({
+  "objectPath": zod.coerce.string()
+})
+
+export const GetStorageObjectResponse = zod.unknown()
+
+
+/**
  * @summary Get the currently authenticated user
  */
 export const AuthGetCurrentUserResponse = zod.object({

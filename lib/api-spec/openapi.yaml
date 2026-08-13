@@ -8,6 +8,8 @@ servers:
   - url: /api
     description: Base API path
 tags:
+  - name: Storage
+    description: Object storage upload and serving endpoints.
   - name: Auth
     description: Browser and mobile authentication endpoints.
   - name: health
@@ -44,6 +46,33 @@ tags:
     description: Messaging and conversations
 
 paths:
+  # ── Storage ───────────────────────────────────────────────────────────────────
+  /storage/objects/{objectPath}:
+    get:
+      tags: [Storage]
+      operationId: getStorageObject
+      summary: Serve an object entity from PRIVATE_OBJECT_DIR
+      parameters:
+        - name: objectPath
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Object content streamed.
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Object not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
   # ── Auth ─────────────────────────────────────────────────────────────────────
   /auth/user:
     get:
@@ -2128,3 +2157,10 @@ components:
         content:
           type: string
           minLength: 1
+
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string

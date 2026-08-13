@@ -691,6 +691,10 @@ export interface CommentInput {
   content: string;
 }
 
+export interface ErrorEnvelope {
+  error: string;
+}
+
 export type AuthGetCurrentUser200 = {
   user: AuthUser | null;
 };

@@ -35,6 +35,7 @@ export * from './dashboardSummary';
 export * from './directoryCreator';
 export * from './enrollment';
 export * from './enrollmentStatus';
+export * from './errorEnvelope';
 export * from './eventCheckInInput';
 export * from './eventCheckInResult';
 export * from './eventQrToken';

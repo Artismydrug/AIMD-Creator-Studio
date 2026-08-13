@@ -11,17 +11,38 @@ import {
   RefreshControl,
   Platform,
   KeyboardAvoidingView,
+  Image,
+  Alert,
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
 import {
   useListStudioPosts,
   useCreateStudioPost,
   useGetCurrentUser,
+  customFetch,
 } from '@workspace/api-client-react';
 import PostCard from '@/components/PostCard';
+
+/** Upload an image directly to the API server. Returns the objectPath. */
+async function uploadImageToServer(
+  uri: string,
+  contentType: string,
+): Promise<string> {
+  // Read the image into an ArrayBuffer then pass as body
+  const fileResponse = await fetch(uri);
+  const arrayBuffer = await fileResponse.arrayBuffer();
+
+  const result = await customFetch<{ objectPath: string }>('/api/storage/uploads', {
+    method: 'POST',
+    headers: { 'Content-Type': contentType },
+    body: arrayBuffer,
+  });
+  return result.objectPath;
+}
 
 export default function FeedScreen() {
   const colors = useColors();
@@ -29,6 +50,13 @@ export default function FeedScreen() {
   const [composing, setComposing] = useState(false);
   const [caption, setCaption] = useState('');
   const [tags, setTags] = useState('');
+  const [selectedImage, setSelectedImage] = useState<{
+    uri: string;
+    contentType: string;
+    fileName: string;
+    fileSize: number;
+  } | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const { data: posts, isLoading, isError, refetch } = useListStudioPosts();
@@ -41,6 +69,7 @@ export default function FeedScreen() {
         setComposing(false);
         setCaption('');
         setTags('');
+        setSelectedImage(null);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       },
     },
@@ -52,126 +81,225 @@ export default function FeedScreen() {
     setRefreshing(false);
   }, [refetch]);
 
-  const handleSubmit = () => {
-    if (!caption.trim()) return;
-    const tagList = tags.split(',').map((t) => t.trim()).filter(Boolean);
-    createMutation.mutate({ data: { caption: caption.trim(), tags: tagList } });
+  const handlePickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission needed',
+        'Allow access to your photo library to attach images.',
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.85,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      const ext = (asset.uri.split('.').pop() ?? 'jpg').toLowerCase();
+      const mimeMap: Record<string, string> = {
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        png: 'image/png',
+        webp: 'image/webp',
+        heic: 'image/heic',
+      };
+      const contentType = mimeMap[ext] ?? 'image/jpeg';
+      setSelectedImage({
+        uri: asset.uri,
+        contentType,
+        fileName: asset.fileName ?? `photo.${ext}`,
+        fileSize: asset.fileSize ?? 1,
+      });
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
   };
+
+  const handleSubmit = async () => {
+    if (!caption.trim()) return;
+    const tagList = tags
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    if (!selectedImage) {
+      createMutation.mutate({ data: { caption: caption.trim(), tags: tagList } });
+      return;
+    }
+
+    // Upload image directly to the server, then post
+    setUploading(true);
+    try {
+      const objectPath = await uploadImageToServer(
+        selectedImage.uri,
+        selectedImage.contentType,
+      );
+      // Build the serving URL: /api/storage + objectPath (e.g. /objects/uploads/uuid)
+      const imageUrl = `/api/storage${objectPath}`;
+      createMutation.mutate({
+        data: { caption: caption.trim(), tags: tagList, imageUrl },
+      });
+    } catch (err) {
+      Alert.alert('Upload failed', 'Could not upload the image. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const isPending = uploading || createMutation.isPending;
 
   const topPad = Platform.OS === 'web' ? 67 : insets.top + 8;
 
-  const s = useMemo(() => StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingTop: topPad,
-      paddingHorizontal: 16,
-      paddingBottom: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    headerTitle: {
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 24,
-      color: colors.primary,
-      letterSpacing: 3,
-    },
-    greeting: {
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 13,
-      color: colors.mutedForeground,
-    },
-    composeBtn: {
-      width: 38,
-      height: 38,
-      backgroundColor: colors.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    listContent: { paddingBottom: Platform.OS === 'web' ? 100 : 100 },
-    centered: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingTop: 100,
-      gap: 12,
-    },
-    emptyTitle: {
-      fontFamily: 'DMSans_600SemiBold',
-      fontSize: 16,
-      color: colors.foreground,
-    },
-    emptyText: {
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 14,
-      color: colors.mutedForeground,
-    },
-    retryBtn: {
-      marginTop: 8,
-      borderWidth: 1,
-      borderColor: colors.border,
-      paddingHorizontal: 20,
-      paddingVertical: 8,
-    },
-    retryText: {
-      fontFamily: 'DMSans_500Medium',
-      fontSize: 14,
-      color: colors.foreground,
-    },
-    modalOverlay: {
-      flex: 1,
-      justifyContent: 'flex-end',
-      backgroundColor: 'rgba(0,0,0,0.75)',
-    },
-    sheet: {
-      backgroundColor: colors.card,
-      paddingTop: 16,
-      paddingHorizontal: 16,
-      paddingBottom: Platform.OS === 'web' ? 40 : insets.bottom + 20,
-    },
-    sheetHandle: {
-      width: 36,
-      height: 4,
-      backgroundColor: colors.border,
-      borderRadius: 2,
-      alignSelf: 'center',
-      marginBottom: 16,
-    },
-    sheetHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: 16,
-    },
-    sheetTitle: {
-      fontFamily: 'DMSans_600SemiBold',
-      fontSize: 16,
-      color: colors.foreground,
-    },
-    postBtn: {
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 15,
-      color: colors.primary,
-    },
-    captionInput: {
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 16,
-      color: colors.foreground,
-      minHeight: 100,
-      textAlignVertical: 'top',
-      marginBottom: 12,
-    },
-    tagsInput: {
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 14,
-      color: colors.foreground,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-      paddingTop: 12,
-    },
-  }), [colors, insets, topPad]);
+  const s = useMemo(
+    () =>
+      StyleSheet.create({
+        container: { flex: 1, backgroundColor: colors.background },
+        header: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingTop: topPad,
+          paddingHorizontal: 16,
+          paddingBottom: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        },
+        headerTitle: {
+          fontFamily: 'DMSans_700Bold',
+          fontSize: 24,
+          color: colors.primary,
+          letterSpacing: 3,
+        },
+        greeting: {
+          fontFamily: 'DMSans_400Regular',
+          fontSize: 13,
+          color: colors.mutedForeground,
+        },
+        composeBtn: {
+          width: 38,
+          height: 38,
+          backgroundColor: colors.primary,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        listContent: { paddingBottom: Platform.OS === 'web' ? 100 : 100 },
+        centered: {
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingTop: 100,
+          gap: 12,
+        },
+        emptyTitle: {
+          fontFamily: 'DMSans_600SemiBold',
+          fontSize: 16,
+          color: colors.foreground,
+        },
+        emptyText: {
+          fontFamily: 'DMSans_400Regular',
+          fontSize: 14,
+          color: colors.mutedForeground,
+        },
+        retryBtn: {
+          marginTop: 8,
+          borderWidth: 1,
+          borderColor: colors.border,
+          paddingHorizontal: 20,
+          paddingVertical: 8,
+        },
+        retryText: {
+          fontFamily: 'DMSans_500Medium',
+          fontSize: 14,
+          color: colors.foreground,
+        },
+        modalOverlay: {
+          flex: 1,
+          justifyContent: 'flex-end',
+          backgroundColor: 'rgba(0,0,0,0.75)',
+        },
+        sheet: {
+          backgroundColor: colors.card,
+          paddingTop: 16,
+          paddingHorizontal: 16,
+          paddingBottom: Platform.OS === 'web' ? 40 : insets.bottom + 20,
+        },
+        sheetHandle: {
+          width: 36,
+          height: 4,
+          backgroundColor: colors.border,
+          borderRadius: 2,
+          alignSelf: 'center',
+          marginBottom: 16,
+        },
+        sheetHeader: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 16,
+        },
+        sheetTitle: {
+          fontFamily: 'DMSans_600SemiBold',
+          fontSize: 16,
+          color: colors.foreground,
+        },
+        postBtn: {
+          fontFamily: 'DMSans_700Bold',
+          fontSize: 15,
+          color: colors.primary,
+        },
+        captionInput: {
+          fontFamily: 'DMSans_400Regular',
+          fontSize: 16,
+          color: colors.foreground,
+          minHeight: 100,
+          textAlignVertical: 'top',
+          marginBottom: 12,
+        },
+        imageRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 10,
+          marginBottom: 12,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          paddingTop: 12,
+        },
+        imagePickerBtn: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+          paddingVertical: 6,
+          paddingHorizontal: 10,
+          borderWidth: 1,
+          borderColor: colors.border,
+        },
+        imagePickerText: {
+          fontFamily: 'DMSans_500Medium',
+          fontSize: 13,
+          color: colors.mutedForeground,
+        },
+        previewThumb: {
+          width: 56,
+          height: 56,
+          borderRadius: 4,
+        },
+        removeImgBtn: {
+          padding: 4,
+        },
+        tagsInput: {
+          fontFamily: 'DMSans_400Regular',
+          fontSize: 14,
+          color: colors.foreground,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          paddingTop: 12,
+        },
+      }),
+    [colors, insets, topPad],
+  );
 
   return (
     <View style={s.container}>
@@ -236,19 +364,31 @@ export default function FeedScreen() {
           <View style={s.sheet}>
             <View style={s.sheetHandle} />
             <View style={s.sheetHeader}>
-              <TouchableOpacity onPress={() => setComposing(false)}>
+              <TouchableOpacity
+                onPress={() => {
+                  setComposing(false);
+                  setSelectedImage(null);
+                  setCaption('');
+                  setTags('');
+                }}
+              >
                 <Feather name="x" size={22} color={colors.mutedForeground} />
               </TouchableOpacity>
               <Text style={s.sheetTitle}>Studio Post</Text>
               <TouchableOpacity
                 onPress={handleSubmit}
-                disabled={!caption.trim() || createMutation.isPending}
+                disabled={!caption.trim() || isPending}
               >
-                <Text style={[s.postBtn, { opacity: caption.trim() ? 1 : 0.35 }]}>
-                  {createMutation.isPending ? '...' : 'Share'}
-                </Text>
+                {isPending ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <Text style={[s.postBtn, { opacity: caption.trim() ? 1 : 0.35 }]}>
+                    Share
+                  </Text>
+                )}
               </TouchableOpacity>
             </View>
+
             <TextInput
               style={s.captionInput}
               value={caption}
@@ -259,6 +399,32 @@ export default function FeedScreen() {
               maxLength={500}
               autoFocus
             />
+
+            {/* Image picker row */}
+            <View style={s.imageRow}>
+              <TouchableOpacity style={s.imagePickerBtn} onPress={handlePickImage}>
+                <Feather name="image" size={16} color={colors.mutedForeground} />
+                <Text style={s.imagePickerText}>
+                  {selectedImage ? 'Change photo' : 'Add photo'}
+                </Text>
+              </TouchableOpacity>
+              {selectedImage && (
+                <>
+                  <Image
+                    source={{ uri: selectedImage.uri }}
+                    style={s.previewThumb}
+                    resizeMode="cover"
+                  />
+                  <TouchableOpacity
+                    style={s.removeImgBtn}
+                    onPress={() => setSelectedImage(null)}
+                  >
+                    <Feather name="x-circle" size={18} color={colors.mutedForeground} />
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+
             <TextInput
               style={s.tagsInput}
               value={tags}
