@@ -50,6 +50,10 @@ function RootLayoutNav() {
           headerShadowVisible: false,
         }}
       />
+      <Stack.Screen
+        name="creator/[id]"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }

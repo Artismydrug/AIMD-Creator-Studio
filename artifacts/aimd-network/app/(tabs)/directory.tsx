@@ -14,10 +14,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useListDirectory } from '@workspace/api-client-react';
 import CreatorCard from '@/components/CreatorCard';
+import { useRouter } from 'expo-router';
 
 export default function DirectoryScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -166,7 +168,12 @@ export default function DirectoryScreen() {
         <FlatList
           data={filtered}
           keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => <CreatorCard creator={item} />}
+          renderItem={({ item }) => (
+              <CreatorCard
+                creator={item}
+                onPress={() => router.push(`/creator/${item.id}`)}
+              />
+            )}
           contentContainerStyle={s.listContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
