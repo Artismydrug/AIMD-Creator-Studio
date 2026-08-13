@@ -3,7 +3,7 @@ import { CheckCircle2, QrCode, Shield, Sparkles, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-// ─── Event registry ───────────────────────────────────────────────────────────
+// ─── Event registry (client-side, for display only) ───────────────────────────
 
 interface AimdEvent {
   code: string;
@@ -13,10 +13,10 @@ interface AimdEvent {
   badge: {
     name: string;
     description: string;
-    color: string;      // tailwind accent class
-    symbol: string;     // emoji
+    color: string;
+    symbol: string;
   };
-  exclusive: string;    // unlocked content description
+  exclusive: string;
 }
 
 const EVENTS: Record<string, AimdEvent> = {
@@ -63,13 +63,21 @@ const EVENTS: Record<string, AimdEvent> = {
 
 const ACCENT: Record<string, { text: string; bg: string; border: string; glow: string }> = {
   amber:   { text: 'text-amber-400',  bg: 'bg-amber-500/10',  border: 'border-amber-500/40',  glow: 'shadow-amber-500/20' },
-  emerald: { text: 'text-primary',bg: 'bg-primary/10',border: 'border-primary/40',glow: 'shadow-emerald-500/20' },
+  emerald: { text: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/40', glow: 'shadow-emerald-500/20' },
   violet:  { text: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/40', glow: 'shadow-violet-500/20' },
 };
 
 // ─── Badge display ────────────────────────────────────────────────────────────
 
-function EarnedBadge({ event, onReset }: { event: AimdEvent; onReset: () => void }) {
+function EarnedBadge({
+  event,
+  alreadyClaimed,
+  onReset,
+}: {
+  event: AimdEvent;
+  alreadyClaimed: boolean;
+  onReset: () => void;
+}) {
   const ac = ACCENT[event.badge.color];
 
   return (
@@ -90,12 +98,17 @@ function EarnedBadge({ event, onReset }: { event: AimdEvent; onReset: () => void
 
       <div>
         <p className={`font-mono text-[11px] uppercase tracking-widest ${ac.text} mb-1`}>
-          Badge Claimed
+          {alreadyClaimed ? 'Already Claimed' : 'Badge Claimed'}
         </p>
         <h2 className="font-display font-black text-3xl uppercase tracking-tight text-white mb-1">
           {event.badge.name}
         </h2>
         <p className="text-muted-foreground text-sm max-w-xs mx-auto">{event.badge.description}</p>
+        {alreadyClaimed && (
+          <p className="text-muted-foreground text-xs mt-2 font-mono">
+            You already claimed this badge — it's on your profile.
+          </p>
+        )}
       </div>
 
       {/* Exclusive unlock */}
@@ -124,21 +137,53 @@ function EarnedBadge({ event, onReset }: { event: AimdEvent; onReset: () => void
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-type Status = 'idle' | 'success' | 'error';
+type Status = 'idle' | 'loading' | 'success' | 'already_claimed' | 'error' | 'not_found' | 'auth_required';
 
 export default function CheckIn() {
   const [code, setCode] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [claimedEvent, setClaimedEvent] = useState<AimdEvent | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = code.trim().toUpperCase();
+
+    // Quick client-side check so we can show the event UI immediately
     const event = EVENTS[trimmed];
-    if (event) {
+    if (!event) {
+      setStatus('not_found');
+      return;
+    }
+
+    setStatus('loading');
+
+    try {
+      const res = await fetch('/api/checkin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ eventCode: trimmed }),
+      });
+
+      if (res.status === 401) {
+        setStatus('auth_required');
+        return;
+      }
+
+      if (res.status === 404) {
+        setStatus('not_found');
+        return;
+      }
+
+      if (!res.ok) {
+        setStatus('error');
+        return;
+      }
+
+      const data = await res.json();
       setClaimedEvent(event);
-      setStatus('success');
-    } else {
+      setStatus(data.alreadyClaimed ? 'already_claimed' : 'success');
+    } catch {
       setStatus('error');
     }
   }
@@ -148,6 +193,8 @@ export default function CheckIn() {
     setStatus('idle');
     setClaimedEvent(null);
   }
+
+  const showSuccess = (status === 'success' || status === 'already_claimed') && claimedEvent;
 
   return (
     <div className="min-h-screen bg-background text-white p-6 md:p-10">
@@ -167,14 +214,18 @@ export default function CheckIn() {
           </p>
         </div>
 
-        {status === 'success' && claimedEvent ? (
-          <EarnedBadge event={claimedEvent} onReset={reset} />
+        {showSuccess ? (
+          <EarnedBadge
+            event={claimedEvent}
+            alreadyClaimed={status === 'already_claimed'}
+            onReset={reset}
+          />
         ) : (
           <>
             {/* QR scan prompt */}
             <div className="relative w-full aspect-square max-w-xs mx-auto mb-8 border border-border bg-muted/40 flex flex-col items-center justify-center gap-4 overflow-hidden">
               {/* Corner brackets */}
-              {['top-3 left-3', 'top-3 right-3 rotate-90', 'bottom-3 right-3 rotate-180', 'bottom-3 left-3 -rotate-90'].map((pos, i) => (
+              {(['top-3 left-3', 'top-3 right-3 rotate-90', 'bottom-3 right-3 rotate-180', 'bottom-3 left-3 -rotate-90'] as const).map((pos, i) => (
                 <div key={i} className={`absolute ${pos} w-6 h-6 border-t-2 border-l-2 border-primary/50`} />
               ))}
 
@@ -197,10 +248,22 @@ export default function CheckIn() {
                   className="rounded-none bg-muted/40 border-border text-white font-mono text-base uppercase tracking-wider placeholder:text-muted-foreground focus-visible:ring-emerald-500/40 focus-visible:border-primary/50 h-12"
                   autoFocus
                 />
-                {status === 'error' && (
+                {status === 'not_found' && (
                   <div className="flex items-center gap-2 text-red-400 font-mono text-xs">
                     <XCircle className="w-4 h-4" />
                     Code not found. Check the event card or try again.
+                  </div>
+                )}
+                {status === 'auth_required' && (
+                  <div className="flex items-center gap-2 text-amber-400 font-mono text-xs">
+                    <XCircle className="w-4 h-4" />
+                    Sign in first to claim your badge.
+                  </div>
+                )}
+                {status === 'error' && (
+                  <div className="flex items-center gap-2 text-red-400 font-mono text-xs">
+                    <XCircle className="w-4 h-4" />
+                    Something went wrong. Please try again.
                   </div>
                 )}
               </div>
@@ -208,10 +271,10 @@ export default function CheckIn() {
               <Button
                 type="submit"
                 className="w-full h-12 rounded-none bg-primary hover:bg-primary/90 text-zinc-950 font-bold uppercase tracking-wider"
-                disabled={!code.trim()}
+                disabled={!code.trim() || status === 'loading'}
               >
                 <Shield className="w-4 h-4 mr-2" />
-                Claim Badge
+                {status === 'loading' ? 'Claiming…' : 'Claim Badge'}
               </Button>
             </form>
 

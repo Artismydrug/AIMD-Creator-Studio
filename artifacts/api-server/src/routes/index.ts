@@ -16,6 +16,8 @@ import sponsorshipsRouter from "./sponsorships";
 import paymentsRouter from "./payments";
 import commentsRouter from "./comments";
 import conversationsRouter from "./conversations";
+import checkinRouter from "./checkin";
+import challengesRouter from "./challenges";
 
 const router: IRouter = Router();
 
@@ -36,5 +38,7 @@ router.use("/sponsorships", sponsorshipsRouter);
 router.use("/payments", paymentsRouter);
 router.use(commentsRouter);
 router.use(conversationsRouter);
+router.use(checkinRouter);
+router.use(challengesRouter);
 
 export default router;

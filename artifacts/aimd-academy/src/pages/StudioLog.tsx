@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useListStudioPosts, useCreateStudioPost, useLikeStudioPost } from '@workspace/api-client-react';
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 
@@ -29,68 +29,65 @@ import { useToast } from '@/hooks/use-toast';
 
 type Tab = 'feed' | 'challenge';
 
-// ─── Weekly Challenge data ────────────────────────────────────────────────────
+// ─── API helpers ──────────────────────────────────────────────────────────────
 
-const CHALLENGE = {
-  week: 'Week 32',
-  theme: 'Ocean & Maritime',
-  prompt:
-    'Create a flash sheet with 3+ designs inspired by the ocean — nautical, sea creatures, waves, or maritime heritage. Any medium. Show process if you can.',
-  deadline: new Date('2026-08-17T23:59:00'),
-  prize: '250 AIMD Points + Studio Ready fast-track entry',
-  totalSubmissions: 47,
-};
+async function fetchCurrentChallenge() {
+  const r = await fetch('/api/challenges/current', { credentials: 'include' });
+  if (!r.ok) throw new Error('Failed to load challenge');
+  return r.json() as Promise<{
+    challenge: {
+      week: string;
+      theme: string;
+      prompt: string;
+      deadline: string;
+      prize: string;
+      challengeWeek: string;
+      totalSubmissions: number;
+    };
+    submissions: Array<{
+      id: number;
+      rank: number;
+      challengeWeek: string;
+      username: string;
+      initials: string;
+      caption: string;
+      imageUrl: string | null;
+      tags: string[];
+      votes: number;
+      hasVoted: boolean;
+    }>;
+    hasSubmitted: boolean;
+    mySubmissionId: number | null;
+  }>;
+}
 
-const SUBMISSIONS = [
-  {
-    id: 1,
-    rank: 1,
-    username: 'Maya Chen',
-    initials: 'MC',
-    caption:
-      'Traditional nautical flash sheet — anchor, mermaid, compass rose, and some rope knot filler. Going for that vintage sailor vibe.',
-    tags: ['nautical', 'flash', 'traditional'],
-    votes: 214,
-    hasVoted: false,
-    imageUrl: null as string | null,
-  },
-  {
-    id: 2,
-    rank: 2,
-    username: 'Dani Reyes',
-    initials: 'DR',
-    caption:
-      'Deep sea creature set. Anglerfish, viperfish, comb jelly. All single-needle, no shading — just line weight contrast.',
-    tags: ['deepsea', 'fineline', 'illustration'],
-    votes: 189,
-    hasVoted: false,
-    imageUrl: null as string | null,
-  },
-  {
-    id: 3,
-    rank: 3,
-    username: 'Alex Rivera',
-    initials: 'AR',
-    caption:
-      'Mixed media flash. Watercolor wash for the sea bg, ink lines on top. Octopus center piece, whale silhouette, coral accents.',
-    tags: ['mixedmedia', 'watercolor', 'flash'],
-    votes: 143,
-    hasVoted: false,
-    imageUrl: null as string | null,
-  },
-];
+async function submitChallengeEntry(caption: string, imageUrl: string, tags: string[]) {
+  const r = await fetch('/api/challenges/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ caption, imageUrl: imageUrl || null, tags }),
+  });
+  if (!r.ok) {
+    const data = await r.json().catch(() => ({}));
+    throw new Error(data.error ?? 'Submission failed');
+  }
+  return r.json();
+}
+
+async function voteOnSubmission(submissionId: number) {
+  const r = await fetch(`/api/challenges/${submissionId}/vote`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  });
+  if (!r.ok) throw new Error('Vote failed');
+  return r.json() as Promise<{ submissionId: number; hasVoted: boolean; voteCount: number }>;
+}
 
 // ─── Countdown display ────────────────────────────────────────────────────────
 
-function useCountdown(target: Date) {
-  const [t, setT] = useState(() => calc(target));
-  useState(() => {
-    const id = setInterval(() => setT(calc(target)), 1000);
-    return () => clearInterval(id);
-  });
-  return t;
-}
-function calc(target: Date) {
+function calcCountdown(target: Date) {
   const diff = Math.max(0, target.getTime() - Date.now());
   return {
     days: Math.floor(diff / 86_400_000),
@@ -99,31 +96,100 @@ function calc(target: Date) {
   };
 }
 
+/** Always called unconditionally; uses useEffect (not useState) for the interval. */
+function useCountdown(target: Date) {
+  const [t, setT] = useState(() => calcCountdown(target));
+  useEffect(() => {
+    setT(calcCountdown(target));
+    const id = setInterval(() => setT(calcCountdown(target)), 1000);
+    return () => clearInterval(id);
+  }, [target.getTime()]);
+  return t;
+}
+
 // ─── Challenge tab ────────────────────────────────────────────────────────────
 
 function WeeklyChallenge() {
-  const [submissions, setSubmissions] = useState(SUBMISSIONS);
-  const [submitted, setSubmitted] = useState(false);
   const [submitOpen, setSubmitOpen] = useState(false);
   const [caption, setCaption] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [tagsStr, setTagsStr] = useState('');
   const { toast } = useToast();
-  const cd = useCountdown(CHALLENGE.deadline);
+  const queryClient = useQueryClient();
 
-  function handleVote(id: number) {
-    setSubmissions((prev) =>
-      prev.map((s) =>
-        s.id === id ? { ...s, votes: s.hasVoted ? s.votes - 1 : s.votes + 1, hasVoted: !s.hasVoted } : s
-      ).sort((a, b) => b.votes - a.votes)
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['challenges', 'current'],
+    queryFn: fetchCurrentChallenge,
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: () =>
+      submitChallengeEntry(
+        caption,
+        imageUrl,
+        tagsStr.split(',').map((t) => t.trim()).filter(Boolean),
+      ),
+    onSuccess: () => {
+      setSubmitOpen(false);
+      setCaption('');
+      setImageUrl('');
+      setTagsStr('');
+      queryClient.invalidateQueries({ queryKey: ['challenges', 'current'] });
+      toast({
+        title: 'Submission received!',
+        description: `Your entry is in the queue.`,
+      });
+    },
+    onError: (err: Error) => {
+      toast({ title: 'Submission failed', description: err.message, variant: 'destructive' });
+    },
+  });
+
+  const voteMutation = useMutation({
+    mutationFn: (submissionId: number) => voteOnSubmission(submissionId),
+    onSuccess: (result) => {
+      // Optimistically update the cached data
+      queryClient.setQueryData(['challenges', 'current'], (old: typeof data) => {
+        if (!old) return old;
+        return {
+          ...old,
+          submissions: old.submissions
+            .map((s) =>
+              s.id === result.submissionId
+                ? { ...s, votes: result.voteCount, hasVoted: result.hasVoted }
+                : s,
+            )
+            .sort((a, b) => b.votes - a.votes)
+            .map((s, i) => ({ ...s, rank: i + 1 })),
+        };
+      });
+    },
+  });
+
+  // useCountdown must be called unconditionally before any early returns so
+  // the hook count stays stable across renders (Rules of Hooks).
+  // We fall back to the server-side deadline constant when data is not yet loaded.
+  const FALLBACK_DEADLINE = new Date('2026-08-17T23:59:00.000Z');
+  const deadline = data ? new Date(data.challenge.deadline) : FALLBACK_DEADLINE;
+  const cd = useCountdown(deadline);
+
+  if (isLoading) {
+    return (
+      <div className="py-16 text-center font-mono text-sm text-muted-foreground animate-pulse">
+        Loading challenge…
+      </div>
     );
   }
 
-  function handleSubmit() {
-    setSubmitted(true);
-    setSubmitOpen(false);
-    toast({ title: 'Submission received!', description: `Your entry for "${CHALLENGE.theme}" is in the queue.` });
+  if (isError || !data) {
+    return (
+      <div className="py-16 text-center font-mono text-sm text-red-400">
+        Failed to load challenge. Please refresh.
+      </div>
+    );
   }
+
+  const { challenge, submissions, hasSubmitted } = data;
 
   return (
     <div className="space-y-8">
@@ -133,9 +199,9 @@ function WeeklyChallenge() {
 
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
           <div>
-            <span className="font-mono text-[10px] text-primary uppercase tracking-widest">{CHALLENGE.week} · Active</span>
+            <span className="font-mono text-[10px] text-primary uppercase tracking-widest">{challenge.week} · Active</span>
             <h2 className="font-display font-black text-2xl uppercase tracking-tight text-white mt-1">
-              {CHALLENGE.theme}
+              {challenge.theme}
             </h2>
           </div>
           {/* Countdown */}
@@ -147,16 +213,16 @@ function WeeklyChallenge() {
           </div>
         </div>
 
-        <p className="text-sm text-foreground/80 leading-relaxed mb-4">{CHALLENGE.prompt}</p>
+        <p className="text-sm text-foreground/80 leading-relaxed mb-4">{challenge.prompt}</p>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between pt-4 border-t border-primary/20">
           <div className="flex items-center gap-2">
             <Trophy className="w-4 h-4 text-amber-400" />
-            <span className="text-xs text-muted-foreground font-mono">{CHALLENGE.prize}</span>
+            <span className="text-xs text-muted-foreground font-mono">{challenge.prize}</span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="font-mono text-xs text-muted-foreground">{CHALLENGE.totalSubmissions} entries</span>
-            {submitted ? (
+            <span className="font-mono text-xs text-muted-foreground">{challenge.totalSubmissions} entries</span>
+            {hasSubmitted ? (
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 border border-primary/40 text-primary font-mono text-xs uppercase">
                 <Zap className="w-3 h-3" /> Submitted
               </div>
@@ -169,25 +235,48 @@ function WeeklyChallenge() {
                 </DialogTrigger>
                 <DialogContent className="rounded-none border-border bg-card sm:max-w-lg">
                   <DialogHeader>
-                    <DialogTitle className="font-display uppercase text-xl">Submit: {CHALLENGE.theme}</DialogTitle>
+                    <DialogTitle className="font-display uppercase text-xl">Submit: {challenge.theme}</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <div className="space-y-2">
                       <label className="font-mono text-xs uppercase text-muted-foreground">Image URL (Optional)</label>
-                      <Input className="rounded-none border-border bg-background" placeholder="https://..." value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
+                      <Input
+                        className="rounded-none border-border bg-background"
+                        placeholder="https://..."
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="font-mono text-xs uppercase text-muted-foreground">Caption / Artist Notes</label>
-                      <Textarea className="rounded-none border-border bg-background min-h-[100px] resize-none" placeholder="Describe your piece, process, or intent..." value={caption} onChange={e => setCaption(e.target.value)} />
+                      <Textarea
+                        className="rounded-none border-border bg-background min-h-[100px] resize-none"
+                        placeholder="Describe your piece, process, or intent..."
+                        value={caption}
+                        onChange={(e) => setCaption(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="font-mono text-xs uppercase text-muted-foreground">Tags (comma separated)</label>
-                      <Input className="rounded-none border-border bg-background" placeholder="flash, watercolor, maritime" value={tagsStr} onChange={e => setTagsStr(e.target.value)} />
+                      <Input
+                        className="rounded-none border-border bg-background"
+                        placeholder="flash, watercolor, maritime"
+                        value={tagsStr}
+                        onChange={(e) => setTagsStr(e.target.value)}
+                      />
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" className="rounded-none" onClick={() => setSubmitOpen(false)}>Cancel</Button>
-                    <Button className="rounded-none bg-primary hover:bg-primary/90 text-zinc-950" onClick={handleSubmit} disabled={!caption}>Submit Entry</Button>
+                    <Button variant="outline" className="rounded-none" onClick={() => setSubmitOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button
+                      className="rounded-none bg-primary hover:bg-primary/90 text-zinc-950"
+                      onClick={() => submitMutation.mutate()}
+                      disabled={!caption || submitMutation.isPending}
+                    >
+                      {submitMutation.isPending ? 'Submitting…' : 'Submit Entry'}
+                    </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -202,64 +291,86 @@ function WeeklyChallenge() {
           <ThumbsUp className="w-5 h-5 text-primary" />
           Community Votes
           <span className="font-mono text-xs text-muted-foreground ml-auto">
-            {CHALLENGE.totalSubmissions} entries · tap to vote
+            {challenge.totalSubmissions} entries · tap to vote
           </span>
         </h3>
 
-        <div className="space-y-4">
-          {submissions.map((sub) => (
-            <article key={sub.id} className="border border-border bg-card overflow-hidden">
-              <div className="p-4 flex items-center gap-3 border-b border-border">
-                {/* Rank badge */}
-                <div className={`w-7 h-7 flex items-center justify-center font-mono font-bold text-xs flex-shrink-0 ${
-                  sub.rank === 1 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
-                  sub.rank === 2 ? 'bg-zinc-700 text-foreground/80 border border-border' :
-                  'bg-muted text-muted-foreground border border-border'
-                }`}>
-                  #{sub.rank}
-                </div>
-                <Avatar className="w-9 h-9 border border-primary/20 rounded-none flex-shrink-0">
-                  <AvatarFallback className="bg-primary/10 text-primary rounded-none font-mono text-xs">
-                    {sub.initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="font-bold text-sm">{sub.username}</div>
-                  <div className="flex gap-1.5 mt-0.5">
-                    {sub.tags.map((t) => (
-                      <span key={t} className="font-mono text-[10px] text-primary">#{t}</span>
-                    ))}
+        {submissions.length === 0 ? (
+          <div className="py-16 text-center border border-dashed border-border">
+            <ThumbsUp className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="font-mono text-sm text-muted-foreground">
+              No submissions yet — be the first to enter.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {submissions.map((sub) => (
+              <article key={sub.id} className="border border-border bg-card overflow-hidden">
+                <div className="p-4 flex items-center gap-3 border-b border-border">
+                  {/* Rank badge */}
+                  <div
+                    className={`w-7 h-7 flex items-center justify-center font-mono font-bold text-xs flex-shrink-0 ${
+                      sub.rank === 1
+                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                        : sub.rank === 2
+                        ? 'bg-zinc-700 text-foreground/80 border border-border'
+                        : 'bg-muted text-muted-foreground border border-border'
+                    }`}
+                  >
+                    #{sub.rank}
+                  </div>
+                  <Avatar className="w-9 h-9 border border-primary/20 rounded-none flex-shrink-0">
+                    <AvatarFallback className="bg-primary/10 text-primary rounded-none font-mono text-xs">
+                      {sub.initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-bold text-sm">{sub.username}</div>
+                    <div className="flex gap-1.5 mt-0.5">
+                      {sub.tags.map((t) => (
+                        <span key={t} className="font-mono text-[10px] text-primary">
+                          #{t}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {sub.imageUrl && (
-                <div className="aspect-video bg-muted relative">
-                  <img src={sub.imageUrl} alt="Submission" className="absolute inset-0 w-full h-full object-cover" />
+                {sub.imageUrl && (
+                  <div className="aspect-video bg-muted relative">
+                    <img
+                      src={sub.imageUrl}
+                      alt="Submission"
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                <div className="p-4 flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground flex-1 mr-4 line-clamp-2">{sub.caption}</p>
+                  <button
+                    onClick={() => voteMutation.mutate(sub.id)}
+                    disabled={voteMutation.isPending}
+                    className={`flex items-center gap-2 flex-shrink-0 px-3 py-1.5 border font-mono text-sm transition-all disabled:opacity-60 ${
+                      sub.hasVoted
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                    }`}
+                  >
+                    <ThumbsUp className={`w-4 h-4 ${sub.hasVoted ? 'fill-current' : ''}`} />
+                    <span>{sub.votes}</span>
+                  </button>
                 </div>
-              )}
+              </article>
+            ))}
+          </div>
+        )}
 
-              <div className="p-4 flex items-center justify-between">
-                <p className="text-sm text-muted-foreground flex-1 mr-4 line-clamp-2">{sub.caption}</p>
-                <button
-                  onClick={() => handleVote(sub.id)}
-                  className={`flex items-center gap-2 flex-shrink-0 px-3 py-1.5 border font-mono text-sm transition-all ${
-                    sub.hasVoted
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
-                  }`}
-                >
-                  <ThumbsUp className={`w-4 h-4 ${sub.hasVoted ? 'fill-current' : ''}`} />
-                  <span>{sub.votes}</span>
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-
-        <p className="text-center text-xs font-mono text-muted-foreground mt-6">
-          Showing top 3 of {CHALLENGE.totalSubmissions} entries. Submit to see the full community feed.
-        </p>
+        {challenge.totalSubmissions > submissions.length && (
+          <p className="text-center text-xs font-mono text-muted-foreground mt-6">
+            Showing top {submissions.length} of {challenge.totalSubmissions} entries. Submit to see the full community feed.
+          </p>
+        )}
       </div>
     </div>
   );
@@ -501,38 +612,43 @@ export default function StudioLog() {
   const [tab, setTab] = useState<Tab>('feed');
 
   return (
-    <div className="p-6 md:p-10 max-w-3xl mx-auto space-y-8">
+    <div className="min-h-screen bg-background text-white">
       {/* Header */}
-      <header className="flex items-center justify-between gap-6 pb-6 border-b border-border">
-        <div>
-          <h1 className="text-4xl md:text-5xl font-black font-display uppercase tracking-tight">Studio Log</h1>
-          <p className="text-muted-foreground font-mono mt-2">Public progress. Post your WIPS, flashes, and finals.</p>
+      <div className="border-b border-border px-6 md:px-10 py-8">
+        <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
+          <div>
+            <h1 className="font-display font-black text-4xl md:text-5xl uppercase tracking-tight">Studio Log</h1>
+            <p className="text-muted-foreground font-mono text-sm mt-1">Community feed · Weekly challenge</p>
+          </div>
+          {tab === 'feed' && <CreatePostDialog />}
         </div>
-        {tab === 'feed' && <CreatePostDialog />}
-      </header>
-
-      {/* Tabs */}
-      <div className="flex border-b border-border">
-        {([
-          { id: 'feed',      label: 'Studio Feed' },
-          { id: 'challenge', label: '⚡ Weekly Challenge' },
-        ] as { id: Tab; label: string }[]).map(({ id, label }) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className={`px-4 py-2.5 font-mono text-xs uppercase tracking-wider border-b-2 -mb-px transition-colors ${
-              tab === id
-                ? 'border-primary text-foreground'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
       </div>
 
-      {/* Tab content */}
-      {tab === 'feed' ? <StudioFeed /> : <WeeklyChallenge />}
+      {/* Tabs */}
+      <div className="border-b border-border px-6 md:px-10">
+        <div className="max-w-3xl mx-auto flex gap-0">
+          {(['feed', 'challenge'] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-5 py-3 font-mono text-xs uppercase tracking-widest border-b-2 transition-colors ${
+                tab === t
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {t === 'feed' ? 'Studio Feed' : 'Weekly Challenge'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="px-6 md:px-10 py-8">
+        <div className="max-w-3xl mx-auto">
+          {tab === 'feed' ? <StudioFeed /> : <WeeklyChallenge />}
+        </div>
+      </div>
     </div>
   );
 }

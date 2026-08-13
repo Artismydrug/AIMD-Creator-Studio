@@ -2,6 +2,7 @@ import { runMigrations } from 'stripe-replit-sync';
 import { getStripeSync } from './stripeClient';
 import { ensureEventTables } from './lib/ensureEventTables';
 import { ensureAuthSchema } from './lib/ensureAuthSchema';
+import { ensureChallengeTables } from './lib/ensureChallengeTables';
 import app from "./app";
 import { logger } from "./lib/logger";
 
@@ -64,6 +65,10 @@ logger.info('Auth schema verified');
 // This is a hard prerequisite for the check-in feature; crash if it fails.
 await ensureEventTables();
 logger.info('Event tables verified');
+
+// Ensure challenge_submissions, challenge_votes, and badges.event_code exist.
+await ensureChallengeTables();
+logger.info('Challenge tables verified');
 
 // Stripe init is non-fatal — the server must start even if Stripe is unavailable
 try {
