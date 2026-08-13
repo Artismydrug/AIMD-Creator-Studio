@@ -12,7 +12,7 @@ import {
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { useListDirectory } from '@workspace/api-client-react';
+import { useListDirectory, useCreateConversation } from '@workspace/api-client-react';
 import CreatorCard from '@/components/CreatorCard';
 import { useRouter } from 'expo-router';
 
@@ -22,6 +22,9 @@ export default function DirectoryScreen() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [messagingId, setMessagingId] = useState<number | null>(null);
+
+  const createConversation = useCreateConversation();
 
   const { data: creators, isLoading, isError, refetch } = useListDirectory();
 
@@ -42,6 +45,25 @@ export default function DirectoryScreen() {
     await refetch();
     setRefreshing(false);
   }, [refetch]);
+
+  const handleMessage = useCallback((creatorId: number, username: string) => {
+    if (messagingId !== null) return;
+    setMessagingId(creatorId);
+    createConversation.mutate(
+      { data: { participantIds: [creatorId] } },
+      {
+        onSuccess: (result) => {
+          router.push({
+            pathname: '/conversation/[id]',
+            params: { id: result.id, name: username },
+          });
+        },
+        onSettled: () => {
+          setMessagingId(null);
+        },
+      }
+    );
+  }, [messagingId, createConversation, router]);
 
   const topPad = Platform.OS === 'web' ? 67 : insets.top + 8;
 
@@ -172,6 +194,8 @@ export default function DirectoryScreen() {
               <CreatorCard
                 creator={item}
                 onPress={() => router.push(`/creator/${item.id}`)}
+                onMessage={() => handleMessage(item.id, item.username)}
+                messagingLoading={messagingId === item.id}
               />
             )}
           contentContainerStyle={s.listContent}

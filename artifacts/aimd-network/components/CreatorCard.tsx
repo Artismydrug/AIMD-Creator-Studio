@@ -13,9 +13,11 @@ const TIER_COLORS: Record<string, string> = {
 interface CreatorCardProps {
   creator: DirectoryCreator;
   onPress?: () => void;
+  onMessage?: () => void;
+  messagingLoading?: boolean;
 }
 
-export default function CreatorCard({ creator, onPress }: CreatorCardProps) {
+export default function CreatorCard({ creator, onPress, onMessage, messagingLoading }: CreatorCardProps) {
   const colors = useColors();
   const tierColor = TIER_COLORS[creator.tier] ?? colors.mutedForeground;
   const initials = creator.username.slice(0, 2).toUpperCase();
@@ -92,6 +94,19 @@ export default function CreatorCard({ creator, onPress }: CreatorCardProps) {
       borderRadius: 4,
       backgroundColor: colors.primary,
     },
+    actions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    msgBtn: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      backgroundColor: colors.muted,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
   }), [colors]);
 
   return (
@@ -123,7 +138,20 @@ export default function CreatorCard({ creator, onPress }: CreatorCardProps) {
           )}
         </View>
       </View>
-      <Feather name="chevron-right" size={16} color={colors.border} />
+      <View style={s.actions}>
+        {onMessage && (
+          <TouchableOpacity
+            style={[s.msgBtn, { opacity: messagingLoading ? 0.5 : 1 }]}
+            onPress={(e) => { e.stopPropagation(); onMessage(); }}
+            disabled={messagingLoading}
+            testID={`message-creator-${creator.id}`}
+            activeOpacity={0.7}
+          >
+            <Feather name="message-circle" size={16} color={colors.primary} />
+          </TouchableOpacity>
+        )}
+        <Feather name="chevron-right" size={16} color={colors.border} />
+      </View>
     </TouchableOpacity>
   );
 }
