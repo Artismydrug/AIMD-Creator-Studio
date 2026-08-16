@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,19 +10,38 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { useSignUp, useAuth } from '@clerk/expo';
+import { useSignUp, useAuth, useSSO } from '@clerk/expo';
+import * as WebBrowser from 'expo-web-browser';
+import * as AuthSession from 'expo-auth-session';
 import { type Href, Link, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+// Handle any pending authentication sessions on Android
+WebBrowser.maybeCompleteAuthSession();
+
+function useWarmUpBrowser() {
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    void WebBrowser.warmUpAsync();
+    return () => {
+      void WebBrowser.coolDownAsync();
+    };
+  }, []);
+}
+
 export default function SignUpScreen() {
+  useWarmUpBrowser();
+
   const { signUp, errors, fetchStatus } = useSignUp();
   const { isSignedIn } = useAuth();
+  const { startSSOFlow } = useSSO();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
+  const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
 
   const handleSignUp = async () => {
     const { error } = await signUp.password({ emailAddress: email, password });
@@ -45,6 +64,29 @@ export default function SignUpScreen() {
       });
     }
   };
+
+  const handleOAuth = useCallback(async (provider: 'oauth_google' | 'oauth_apple') => {
+    const key = provider === 'oauth_google' ? 'google' : 'apple';
+    try {
+      setOauthLoading(key);
+      const { createdSessionId, setActive } = await startSSOFlow({
+        strategy: provider,
+        redirectUrl: AuthSession.makeRedirectUri(),
+      });
+      if (createdSessionId && setActive) {
+        await setActive({
+          session: createdSessionId,
+          navigate: async ({ decorateUrl }) => {
+            router.replace(decorateUrl('/') as Href);
+          },
+        });
+      }
+    } catch (err) {
+      console.error('OAuth error:', JSON.stringify(err, null, 2));
+    } finally {
+      setOauthLoading(null);
+    }
+  }, [startSSOFlow, router]);
 
   if (signUp.status === 'complete' || isSignedIn) return null;
 
@@ -101,6 +143,46 @@ export default function SignUpScreen() {
       >
         <Text style={s.title}>AIMD</Text>
         <Text style={s.subtitle}>Join the creator network — free forever</Text>
+
+        {/* OAuth buttons */}
+        <Pressable
+          style={({ pressed }) => [s.oauthBtn, pressed && s.btnPressed, oauthLoading === 'google' && s.btnDisabled]}
+          onPress={() => handleOAuth('oauth_google')}
+          disabled={oauthLoading !== null}
+        >
+          {oauthLoading === 'google'
+            ? <ActivityIndicator color="#e8e3d5" />
+            : (
+              <View style={s.oauthBtnInner}>
+                <Text style={s.oauthIcon}>G</Text>
+                <Text style={s.oauthBtnText}>Continue with Google</Text>
+              </View>
+            )}
+        </Pressable>
+
+        {Platform.OS === 'ios' && (
+          <Pressable
+            style={({ pressed }) => [s.oauthBtn, pressed && s.btnPressed, oauthLoading === 'apple' && s.btnDisabled]}
+            onPress={() => handleOAuth('oauth_apple')}
+            disabled={oauthLoading !== null}
+          >
+            {oauthLoading === 'apple'
+              ? <ActivityIndicator color="#e8e3d5" />
+              : (
+                <View style={s.oauthBtnInner}>
+                  <Text style={s.oauthIcon}></Text>
+                  <Text style={s.oauthBtnText}>Continue with Apple</Text>
+                </View>
+              )}
+          </Pressable>
+        )}
+
+        {/* Divider */}
+        <View style={s.divider}>
+          <View style={s.dividerLine} />
+          <Text style={s.dividerText}>or</Text>
+          <View style={s.dividerLine} />
+        </View>
 
         <Text style={s.label}>Email</Text>
         <TextInput
@@ -174,7 +256,49 @@ const s = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
+  },
+  oauthBtn: {
+    backgroundColor: '#1a1a1a',
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  oauthBtnInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  oauthIcon: {
+    fontSize: 16,
+    color: '#e8e3d5',
+    fontFamily: 'DMSans_700Bold',
+    width: 20,
+    textAlign: 'center',
+  },
+  oauthBtnText: {
+    fontFamily: 'DMSans_600SemiBold',
+    fontSize: 15,
+    color: '#e8e3d5',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginVertical: 8,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#2a2a2a',
+  },
+  dividerText: {
+    fontFamily: 'DMSans_400Regular',
+    fontSize: 12,
+    color: '#555',
   },
   label: {
     fontFamily: 'DMSans_600SemiBold',
