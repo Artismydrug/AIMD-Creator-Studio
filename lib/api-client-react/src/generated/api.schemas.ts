@@ -5,32 +5,6 @@
  * AIMD Academy & Studio Portal API
  * OpenAPI spec version: 0.2.0
  */
-export interface AuthUser {
-  id: number;
-  /** @nullable */
-  email?: string | null;
-  /** @nullable */
-  firstName?: string | null;
-  /** @nullable */
-  lastName?: string | null;
-  /** @nullable */
-  profileImageUrl?: string | null;
-}
-
-export interface MobileAuthBeginInput {
-  redirect_uri: string;
-}
-
-export interface MobileAuthBeginResult {
-  transactionToken: string;
-  authUrl: string;
-}
-
-export interface MobileAuthCodeInput {
-  code: string;
-  transactionToken: string;
-}
-
 export interface HealthStatus {
   status: string;
 }
@@ -694,26 +668,6 @@ export interface CommentInput {
 export interface ErrorEnvelope {
   error: string;
 }
-
-export type AuthGetCurrentUser200 = {
-  user: AuthUser | null;
-};
-
-export type BeginBrowserLoginParams = {
-returnTo?: string;
-};
-
-export type LogoutBrowserSessionParams = {
-returnTo?: string;
-};
-
-export type MobileAuthCodeExchange200 = {
-  token: string;
-};
-
-export type MobileAuthLogout200 = {
-  success: boolean;
-};
 
 export type GetActivityFeedParams = {
 limit?: number;
