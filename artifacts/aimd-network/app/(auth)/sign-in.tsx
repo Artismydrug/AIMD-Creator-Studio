@@ -19,6 +19,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // Handle any pending authentication sessions on Android
 WebBrowser.maybeCompleteAuthSession();
 
+type Step = 'sign_in' | 'forgot_email' | 'forgot_code';
+
 function useWarmUpBrowser() {
   useEffect(() => {
     if (Platform.OS !== 'android') return;
@@ -42,6 +44,15 @@ export default function SignInScreen() {
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
+
+  // Forgot-password flow
+  const [step, setStep] = useState<Step>('sign_in');
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [resetError, setResetError] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetDone, setResetDone] = useState(false);
 
   const handleSignIn = async () => {
     const { error } = await signIn.password({ emailAddress: email, password });
@@ -102,8 +113,214 @@ export default function SignInScreen() {
     }
   }, [startSSOFlow, router]);
 
+  const handleSendResetCode = async () => {
+    if (!resetEmail) return;
+    setResetError('');
+    setResetLoading(true);
+    try {
+      // Initialize sign-in with the user's identifier
+      const { error: createError } = await signIn.create({ identifier: resetEmail });
+      if (createError) {
+        setResetError(createError.longMessage ?? createError.message ?? 'Something went wrong. Please try again.');
+        return;
+      }
+      // Send the password-reset code to the user's email
+      const { error: sendError } = await signIn.resetPasswordEmailCode.sendCode();
+      if (sendError) {
+        setResetError(sendError.longMessage ?? sendError.message ?? 'Could not send reset code. Please try again.');
+        return;
+      }
+      setStep('forgot_code');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleResendResetCode = async () => {
+    setResetCode('');
+    setResetError('');
+    setResetLoading(true);
+    try {
+      const { error } = await signIn.resetPasswordEmailCode.sendCode();
+      if (error) {
+        setResetError(error.longMessage ?? error.message ?? 'Could not resend code. Please try again.');
+      }
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetCode || !newPassword) return;
+    setResetError('');
+    setResetLoading(true);
+    try {
+      // Verify the code — on success status becomes 'needs_new_password'
+      const { error: verifyError } = await signIn.resetPasswordEmailCode.verifyCode({ code: resetCode });
+      if (verifyError) {
+        setResetError(verifyError.longMessage ?? verifyError.message ?? 'Invalid code. Please try again.');
+        return;
+      }
+      // Submit the new password — on success status becomes 'complete'
+      const { error: submitError } = await signIn.resetPasswordEmailCode.submitPassword({ password: newPassword });
+      if (submitError) {
+        setResetError(submitError.longMessage ?? submitError.message ?? 'Could not set new password. Please try again.');
+        return;
+      }
+      // Finalize the session so the user is signed in immediately
+      if (signIn.status === 'complete') {
+        setResetDone(true);
+        await signIn.finalize({
+          navigate: ({ decorateUrl }) => {
+            const url = decorateUrl('/');
+            if (url.startsWith('http')) {
+              // handled by Clerk
+            } else {
+              router.replace(url as Href);
+            }
+          },
+        });
+      }
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const cancelReset = async () => {
+    void signIn.reset();
+    setStep('sign_in');
+    setResetEmail('');
+    setResetCode('');
+    setNewPassword('');
+    setResetError('');
+    setResetDone(false);
+  };
+
   if (isSignedIn) return null;
 
+  // ── Forgot password: enter email ──────────────────────────────────────────
+  if (step === 'forgot_email') {
+    return (
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={[s.container, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 16 }]}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={s.title}>AIMD</Text>
+          <Text style={s.subtitle}>Enter your email to receive a reset code</Text>
+
+          <Text style={s.label}>Email</Text>
+          <TextInput
+            style={s.input}
+            value={resetEmail}
+            placeholder="you@example.com"
+            placeholderTextColor="#555"
+            onChangeText={setResetEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoFocus
+          />
+          {!!resetError && <Text style={s.error}>{resetError}</Text>}
+
+          <Pressable
+            style={({ pressed }) => [
+              s.btn,
+              (!resetEmail || resetLoading) && s.btnDisabled,
+              pressed && s.btnPressed,
+            ]}
+            onPress={handleSendResetCode}
+            disabled={!resetEmail || resetLoading}
+          >
+            {resetLoading
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={s.btnText}>Send Reset Code</Text>}
+          </Pressable>
+
+          <Pressable onPress={cancelReset} style={s.secondary}>
+            <Text style={s.secondaryText}>Back to sign in</Text>
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // ── Forgot password: enter code + new password ────────────────────────────
+  if (step === 'forgot_code') {
+    if (resetDone) {
+      return (
+        <View style={[s.container, s.centeredContainer, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 16 }]}>
+          <Text style={s.title}>AIMD</Text>
+          <Text style={[s.subtitle, { color: '#6bcb6b', marginTop: 24 }]}>
+            Password updated! Signing you in…
+          </Text>
+        </View>
+      );
+    }
+
+    return (
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={[s.container, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 16 }]}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={s.title}>AIMD</Text>
+          <Text style={s.subtitle}>Enter the code from your email and choose a new password</Text>
+
+          <Text style={s.label}>Reset Code</Text>
+          <TextInput
+            style={s.input}
+            value={resetCode}
+            placeholder="6-digit code"
+            placeholderTextColor="#555"
+            onChangeText={setResetCode}
+            keyboardType="numeric"
+            autoFocus
+          />
+
+          <Text style={s.label}>New Password</Text>
+          <TextInput
+            style={s.input}
+            value={newPassword}
+            placeholder="New password"
+            placeholderTextColor="#555"
+            onChangeText={setNewPassword}
+            secureTextEntry
+          />
+          {!!resetError && <Text style={s.error}>{resetError}</Text>}
+
+          <Pressable
+            style={({ pressed }) => [
+              s.btn,
+              (!resetCode || !newPassword || resetLoading) && s.btnDisabled,
+              pressed && s.btnPressed,
+            ]}
+            onPress={handleResetPassword}
+            disabled={!resetCode || !newPassword || resetLoading}
+          >
+            {resetLoading
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={s.btnText}>Reset Password</Text>}
+          </Pressable>
+
+          <Pressable onPress={handleResendResetCode} style={s.secondary} disabled={resetLoading}>
+            <Text style={s.secondaryText}>Resend code</Text>
+          </Pressable>
+          <Pressable onPress={cancelReset} style={s.secondary}>
+            <Text style={s.secondaryText}>Back to sign in</Text>
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // ── MFA verification ──────────────────────────────────────────────────────
   if (signIn.status === 'needs_client_trust') {
     return (
       <View style={[s.container, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 16 }]}>
@@ -141,6 +358,7 @@ export default function SignInScreen() {
     );
   }
 
+  // ── Normal sign-in ────────────────────────────────────────────────────────
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -216,6 +434,11 @@ export default function SignInScreen() {
           secureTextEntry
         />
         {errors.fields.password && <Text style={s.error}>{errors.fields.password.message}</Text>}
+
+        {/* Forgot password link */}
+        <Pressable onPress={() => { setResetEmail(email); setStep('forgot_email'); }} style={s.forgotRow}>
+          <Text style={s.forgotText}>Forgot password?</Text>
+        </Pressable>
 
         <Pressable
           style={({ pressed }) => [
@@ -367,6 +590,19 @@ const s = StyleSheet.create({
   footerLink: {
     fontFamily: 'DMSans_600SemiBold',
     fontSize: 14,
+    color: '#b8532d',
+  },
+  centeredContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  forgotRow: {
+    alignSelf: 'flex-end',
+    paddingVertical: 4,
+  },
+  forgotText: {
+    fontFamily: 'DMSans_400Regular',
+    fontSize: 13,
     color: '#b8532d',
   },
 });
