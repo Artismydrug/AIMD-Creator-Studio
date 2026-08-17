@@ -58,7 +58,8 @@ export default function SignUpScreen() {
           if (url.startsWith('http')) {
             // handled by Clerk
           } else {
-            router.replace(url as Href);
+            // Route new email sign-ups through the username onboarding step
+            router.replace('/onboarding' as Href);
           }
         },
       });

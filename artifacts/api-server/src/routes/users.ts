@@ -30,6 +30,25 @@ router.patch("/users/me", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+
+  // Validate username format and uniqueness when changing username
+  if (parsed.data.username !== undefined) {
+    const username = parsed.data.username;
+    if (!/^[a-zA-Z0-9_]{3,28}$/.test(username)) {
+      res.status(400).json({ error: "Username must be 3–28 characters and contain only letters, numbers, or underscores." });
+      return;
+    }
+    const [existing] = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.username, username))
+      .limit(1);
+    if (existing && existing.id !== userId) {
+      res.status(409).json({ error: "That username is already taken. Please choose another." });
+      return;
+    }
+  }
+
   const [user] = await db
     .update(usersTable)
     .set(parsed.data)
