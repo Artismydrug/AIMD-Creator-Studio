@@ -1,6 +1,6 @@
 import { getAuth } from "@clerk/express";
 import { db, usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import type { Request, Response, NextFunction } from "express";
 
 // ── Type augmentation ─────────────────────────────────────────────────────────
@@ -16,9 +16,10 @@ declare global {
  * Soft Clerk auth middleware.
  *
  * Runs after clerkMiddleware(). For authenticated requests it resolves
- * (or JIT-creates) the local DB user row by email and attaches it as
- * `req.dbUser`. Unauthenticated requests pass through — individual route
- * handlers that require auth check `if (!req.dbUser)`.
+ * (or JIT-creates) the local DB user row by Clerk user ID (preferred) or
+ * email (fallback for rows created before clerkId was added) and attaches
+ * it as `req.dbUser`. Unauthenticated requests pass through — individual
+ * route handlers that require auth check `if (!req.dbUser)`.
  */
 export async function clerkAuth(
   req: Request,
@@ -27,21 +28,43 @@ export async function clerkAuth(
 ): Promise<void> {
   try {
     const auth = getAuth(req);
+    const clerkUserId = auth?.userId;
     const email = (auth?.sessionClaims?.email as string | undefined)?.toLowerCase().trim();
 
-    if (!email) {
+    if (!clerkUserId && !email) {
       return next();
     }
 
-    // 1. Look up existing user by email (the bridge column).
-    let [dbUser] = await db
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.email, email))
-      .limit(1);
+    // 1. Look up existing user.
+    //    Primary: match by stable Clerk ID.
+    //    Fallback: match by email ONLY when the row has no clerk_id yet (legacy
+    //    rows created before this column existed). Never rebind a row that is
+    //    already attached to a different Clerk account — that would be an
+    //    account-takeover via recycled/shared email addresses.
+    let [dbUser] = clerkUserId
+      ? await db
+          .select()
+          .from(usersTable)
+          .where(eq(usersTable.clerkId, clerkUserId))
+          .limit(1)
+      : [];
+
+    if (!dbUser && email) {
+      // Fallback: legacy email-only row (clerk_id IS NULL).
+      const [emailRow] = await db
+        .select()
+        .from(usersTable)
+        .where(and(eq(usersTable.email, email), isNull(usersTable.clerkId)))
+        .limit(1);
+      dbUser = emailRow;
+    }
 
     // 2. JIT provision: create a new row on first Clerk login.
     if (!dbUser) {
+      if (!email) {
+        return next(); // can't provision without an email
+      }
+
       const rawUsername =
         (auth.sessionClaims?.username as string | undefined) ||
         email.split("@")[0];
@@ -53,20 +76,35 @@ export async function clerkAuth(
 
       const [inserted] = await db
         .insert(usersTable)
-        .values({ email, username })
+        .values({ email, username, clerkId: clerkUserId ?? null })
         .onConflictDoNothing()
         .returning();
 
       if (inserted) {
         dbUser = inserted;
-      } else {
-        // Race condition: another request just inserted — re-fetch.
+      } else if (clerkUserId) {
+        // Race condition: another concurrent request may have just inserted the
+        // same Clerk account. Re-fetch strictly by Clerk ID — never by email,
+        // because the conflict may be with a row owned by a DIFFERENT Clerk
+        // account (recycled/shared email). If nothing is found by Clerk ID,
+        // leave dbUser undefined so the caller gets an unauthenticated response.
         [dbUser] = await db
           .select()
           .from(usersTable)
-          .where(eq(usersTable.email, email))
+          .where(eq(usersTable.clerkId, clerkUserId))
           .limit(1);
       }
+      // No clerkUserId path: email-only sessions can't safely recover from a
+      // conflict without risking account-takeover — leave dbUser undefined.
+    } else if (clerkUserId && dbUser.clerkId !== clerkUserId) {
+      // 3. Back-fill clerkId on existing rows that were created before this
+      //    column existed (e.g. legacy email-only rows or Replit-auth rows).
+      const [updated] = await db
+        .update(usersTable)
+        .set({ clerkId: clerkUserId })
+        .where(eq(usersTable.id, dbUser.id))
+        .returning();
+      if (updated) dbUser = updated;
     }
 
     req.dbUser = dbUser ?? undefined;

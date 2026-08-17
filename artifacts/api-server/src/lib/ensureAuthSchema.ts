@@ -28,4 +28,34 @@ export async function ensureAuthSchema(): Promise<void> {
   await pool.query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS replit_id TEXT UNIQUE
   `);
+
+  // Add clerk_id column to users if it doesn't exist
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS clerk_id TEXT UNIQUE
+  `);
+
+  // Add first_name and last_name columns synced from Clerk identity
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name TEXT
+  `);
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name TEXT
+  `);
+
+  // Add a unique index on users.username if it doesn't already exist.
+  // Wrapped in a try/catch: if duplicate usernames already exist in the DB,
+  // the index creation will fail — the app logs a warning and continues; the
+  // webhook's pre-check SELECT will handle conflicts safely at runtime.
+  try {
+    await pool.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS users_username_unique
+      ON users (username)
+    `);
+  } catch (err: any) {
+    console.warn(
+      "[ensureAuthSchema] Could not create unique index on users.username " +
+      "(duplicate values may already exist). Webhook username sync will " +
+      "fall back to a SELECT-then-update approach.\n" + err?.message,
+    );
+  }
 }

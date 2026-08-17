@@ -11,12 +11,23 @@ import {
 import { clerkAuth } from "./middlewares/clerkAuth";
 import router from "./routes";
 import { WebhookHandlers } from "./webhookHandlers";
+import { handleClerkWebhook } from "./routes/webhooks/clerk";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
 
 // ── Clerk FAPI proxy — must be before ALL body parsers ────────────────────────
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
+
+// ── Clerk webhook MUST be registered before express.json() ───────────────────
+// Svix requires the raw Buffer body for signature verification.
+app.post(
+  '/api/webhooks/clerk',
+  // Accept any content-type so tests (Buffer/string) and Clerk (application/json)
+  // both produce a raw Buffer body for Svix signature verification.
+  express.raw({ type: '*/*' }),
+  handleClerkWebhook,
+);
 
 // ── Stripe webhook MUST be registered before express.json() ──────────────────
 // Stripe requires the raw Buffer body for signature verification.

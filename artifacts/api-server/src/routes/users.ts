@@ -93,7 +93,9 @@ router.get("/users/:id/profile", async (req, res): Promise<void> => {
 
   const rows = await db.execute(sql`
     SELECT
-      u.id, u.username, u.email, u.avatar_url AS "avatarUrl",
+      u.id, u.username, u.email,
+      u.first_name AS "firstName", u.last_name AS "lastName",
+      u.avatar_url AS "avatarUrl",
       u.tier, u.studio_ready_badge AS "studioReadyBadge",
       u.discipline, u.bio, u.location,
       u.booking_open AS "bookingOpen",

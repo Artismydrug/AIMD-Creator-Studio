@@ -12,6 +12,11 @@ export const usersTable = pgTable("users", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   // Replit Auth: links Replit OIDC sub claim to this integer-id user row
   replitId: text("replit_id").unique(),
+  // Clerk Auth: links Clerk user ID to this integer-id user row
+  clerkId: text("clerk_id").unique(),
+  // Identity: synced from Clerk; separate from the app-level `username` handle
+  firstName: text("first_name"),
+  lastName: text("last_name"),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true });
