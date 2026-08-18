@@ -959,6 +959,63 @@ paths:
               schema:
                 $ref: "#/components/schemas/User"
 
+  /rewards:
+    get:
+      operationId: getRewards
+      tags: [users]
+      summary: Reward tiers and the current user's AIMD Points balance
+      responses:
+        "200":
+          description: Rewards info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RewardsInfo"
+
+  /admin/points-awards:
+    post:
+      operationId: awardPointsAdmin
+      tags: [users]
+      summary: (Admin) Award AIMD Points to a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AwardPointsBody"
+      responses:
+        "201":
+          description: Points awarded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PointAwardResult"
+        "403":
+          description: Admin access required
+
+  /admin/challenges/{submissionId}/award-winner:
+    post:
+      operationId: awardChallengeWinner
+      tags: [users]
+      summary: (Admin) Award the weekly-challenge prize to a submission's creator
+      parameters:
+        - name: submissionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Prize awarded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PointAwardResult"
+        "403":
+          description: Admin access required
+        "409":
+          description: Already awarded for that week
+
   /directory:
     get:
       operationId: listDirectory
@@ -1154,9 +1211,64 @@ components:
           enum: ["free", "workshop", "pro"]
         studioReadyBadge:
           type: boolean
+        isAdmin:
+          type: boolean
+        points:
+          type: integer
         createdAt:
           type: string
           format: date-time
+
+    RewardTier:
+      type: object
+      required: [points, reward, description, unlocked]
+      properties:
+        points:
+          type: integer
+        reward:
+          type: string
+        description:
+          type: string
+        unlocked:
+          type: boolean
+
+    RewardsInfo:
+      type: object
+      required: [points, challengeWinnerPoints, tiers]
+      properties:
+        points:
+          type: integer
+        challengeWinnerPoints:
+          type: integer
+        tiers:
+          type: array
+          items:
+            $ref: "#/components/schemas/RewardTier"
+
+    AwardPointsBody:
+      type: object
+      required: [userId, amount, reason]
+      properties:
+        userId:
+          type: integer
+        amount:
+          type: integer
+        reason:
+          type: string
+          minLength: 1
+
+    PointAwardResult:
+      type: object
+      required: [userId, amount, points]
+      properties:
+        userId:
+          type: integer
+        username:
+          type: string
+        amount:
+          type: integer
+        points:
+          type: integer
 
     UserUpdate:
       type: object
@@ -1318,6 +1430,10 @@ components:
           type: ["string", "null"]
         imageUrl:
           type: ["string", "null"]
+        mediaType:
+          type: string
+          enum: ["image", "video"]
+          default: "image"
         caption:
           type: string
         tags:
@@ -1338,6 +1454,10 @@ components:
       properties:
         imageUrl:
           type: ["string", "null"]
+        mediaType:
+          type: string
+          enum: ["image", "video"]
+          default: "image"
         caption:
           type: string
           minLength: 1

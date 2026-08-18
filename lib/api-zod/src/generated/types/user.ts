@@ -15,5 +15,7 @@ export interface User {
   avatarUrl?: string | null;
   tier: UserTier;
   studioReadyBadge?: boolean;
+  isAdmin?: boolean;
+  points?: number;
   createdAt: Date;
 }

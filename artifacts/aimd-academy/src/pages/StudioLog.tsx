@@ -24,6 +24,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
+import { MediaUpload, type MediaType } from '@/components/MediaUpload';
+import { useGetRewards } from '@workspace/api-client-react';
 
 // ─── Tab type ─────────────────────────────────────────────────────────────────
 
@@ -107,6 +109,65 @@ function useCountdown(target: Date) {
   return t;
 }
 
+// ─── Reward tiers ─────────────────────────────────────────────────────────────
+
+function RewardTiers() {
+  const { data } = useGetRewards();
+  if (!data) return null;
+
+  const nextTier = data.tiers.find((t) => !t.unlocked);
+  const progressPct = nextTier ? Math.min(100, (data.points / nextTier.points) * 100) : 100;
+
+  return (
+    <div className="border border-border bg-card p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
+        <h3 className="font-display font-bold text-lg uppercase flex items-center gap-2">
+          <Trophy className="w-5 h-5 text-amber-400" /> AIMD Points Rewards
+        </h3>
+        <span className="font-mono text-sm text-primary font-bold">{data.points} pts</span>
+      </div>
+
+      {/* Progress toward next tier */}
+      <div className="mb-6">
+        <div className="h-1.5 bg-muted overflow-hidden">
+          <div className="h-full bg-primary transition-all" style={{ width: `${progressPct}%` }} />
+        </div>
+        <p className="font-mono text-[11px] text-muted-foreground mt-2">
+          {nextTier
+            ? `${nextTier.points - data.points} pts to your next reward: ${nextTier.reward}`
+            : 'All reward tiers unlocked — see the AIMD team to claim.'}
+        </p>
+      </div>
+
+      <div className="grid sm:grid-cols-3 gap-3">
+        {data.tiers.map((tier, i) => (
+          <div
+            key={tier.points}
+            className={`p-4 border ${
+              tier.unlocked ? 'border-primary/50 bg-primary/5' : 'border-border bg-background'
+            }`}
+          >
+            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
+              Tier {i + 1} · {tier.points} pts
+            </p>
+            <p className={`font-display font-bold text-sm uppercase leading-tight mb-1.5 ${tier.unlocked ? 'text-primary' : 'text-white'}`}>
+              {tier.reward}
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">{tier.description}</p>
+            {tier.unlocked && (
+              <p className="font-mono text-[10px] text-primary uppercase tracking-widest mt-2">✓ Unlocked</p>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <p className="font-mono text-[10px] text-muted-foreground mt-4">
+        Earn {data.challengeWinnerPoints} pts by winning the weekly challenge. Rewards are claimed in person with the AIMD team.
+      </p>
+    </div>
+  );
+}
+
 // ─── Challenge tab ────────────────────────────────────────────────────────────
 
 function WeeklyChallenge() {
@@ -169,7 +230,7 @@ function WeeklyChallenge() {
   // useCountdown must be called unconditionally before any early returns so
   // the hook count stays stable across renders (Rules of Hooks).
   // We fall back to the server-side deadline constant when data is not yet loaded.
-  const FALLBACK_DEADLINE = new Date('2026-08-17T23:59:00.000Z');
+  const FALLBACK_DEADLINE = new Date('2026-08-24T06:59:00.000Z');
   const deadline = data ? new Date(data.challenge.deadline) : FALLBACK_DEADLINE;
   const cd = useCountdown(deadline);
 
@@ -193,6 +254,9 @@ function WeeklyChallenge() {
 
   return (
     <div className="space-y-8">
+      {/* Reward tiers */}
+      <RewardTiers />
+
       {/* Challenge brief */}
       <div className="border border-primary/30 bg-primary/5 p-6 relative overflow-hidden">
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/60 to-transparent" />
@@ -239,13 +303,8 @@ function WeeklyChallenge() {
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                      <label className="font-mono text-xs uppercase text-muted-foreground">Image URL (Optional)</label>
-                      <Input
-                        className="rounded-none border-border bg-background"
-                        placeholder="https://..."
-                        value={imageUrl}
-                        onChange={(e) => setImageUrl(e.target.value)}
-                      />
+                      <label className="font-mono text-xs uppercase text-muted-foreground">Artwork Photo (Optional)</label>
+                      <MediaUpload url={imageUrl} mediaType="image" onChange={(u) => setImageUrl(u)} />
                     </div>
                     <div className="space-y-2">
                       <label className="font-mono text-xs uppercase text-muted-foreground">Caption / Artist Notes</label>
@@ -502,9 +561,15 @@ function PostCard({ post }: { post: any }) {
       </div>
 
       {post.imageUrl && (
-        <div className="aspect-square bg-muted relative">
-          <img src={post.imageUrl} alt="Artwork" className="absolute inset-0 w-full h-full object-cover" />
-        </div>
+        post.mediaType === 'video' ? (
+          <div className="bg-black">
+            <video src={post.imageUrl} controls playsInline preload="metadata" className="w-full max-h-[80vh]" />
+          </div>
+        ) : (
+          <div className="aspect-square bg-muted relative">
+            <img src={post.imageUrl} alt="Artwork" className="absolute inset-0 w-full h-full object-cover" />
+          </div>
+        )
       )}
 
       <div className="p-5">
@@ -550,7 +615,8 @@ function PostCard({ post }: { post: any }) {
 function CreatePostDialog() {
   const [open, setOpen] = useState(false);
   const [caption, setCaption] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [mediaUrl, setMediaUrl] = useState('');
+  const [mediaType, setMediaType] = useState<MediaType>('image');
   const [tagsStr, setTagsStr] = useState('');
   const createPost = useCreateStudioPost();
   const queryClient = useQueryClient();
@@ -558,10 +624,10 @@ function CreatePostDialog() {
   const submit = () => {
     const tags = tagsStr.split(',').map(t => t.trim()).filter(Boolean);
     createPost.mutate({
-      data: { caption, imageUrl: imageUrl || null, tags: tags.length ? tags : undefined }
+      data: { caption, imageUrl: mediaUrl || null, mediaType, tags: tags.length ? tags : undefined }
     }, {
       onSuccess: () => {
-        setOpen(false); setCaption(''); setImageUrl(''); setTagsStr('');
+        setOpen(false); setCaption(''); setMediaUrl(''); setMediaType('image'); setTagsStr('');
         queryClient.invalidateQueries({ queryKey: ['listStudioPosts'] });
       }
     });
@@ -580,13 +646,8 @@ function CreatePostDialog() {
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <label className="font-mono text-xs uppercase text-muted-foreground">Image URL (Optional)</label>
-            <Input className="rounded-none border-border bg-background" placeholder="https://..." value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
-            {imageUrl && (
-              <div className="h-32 mt-2 bg-muted relative overflow-hidden border border-border">
-                <img src={imageUrl} className="w-full h-full object-cover" alt="Preview" onError={(e) => (e.currentTarget.style.display = 'none')} />
-              </div>
-            )}
+            <label className="font-mono text-xs uppercase text-muted-foreground">Photo or Video (Optional)</label>
+            <MediaUpload url={mediaUrl} mediaType={mediaType} allowVideo onChange={(u, t) => { setMediaUrl(u); setMediaType(t); }} />
           </div>
           <div className="space-y-2">
             <label className="font-mono text-xs uppercase text-muted-foreground">Caption</label>

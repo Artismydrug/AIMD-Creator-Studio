@@ -5,10 +5,12 @@
  * AIMD Academy & Studio Portal API
  * OpenAPI spec version: 0.2.0
  */
+import type { StudioPostInputMediaType } from './studioPostInputMediaType';
 
 export interface StudioPostInput {
   /** @nullable */
   imageUrl?: string | null;
+  mediaType?: StudioPostInputMediaType;
   /** @minLength 1 */
   caption: string;
   tags?: string[];

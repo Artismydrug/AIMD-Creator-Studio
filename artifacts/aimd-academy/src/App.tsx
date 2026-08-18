@@ -41,6 +41,7 @@ import Mission from '@/pages/Mission';
 import CheckIn from '@/pages/CheckIn';
 import Directory from '@/pages/Directory';
 import Messages from '@/pages/Messages';
+import Admin from '@/pages/Admin';
 import Onboarding from '@/pages/Onboarding';
 
 // ─── Clerk setup ──────────────────────────────────────────────────────────────
@@ -226,6 +227,7 @@ function AuthenticatedShell() {
           <Route path="/checkin"        component={CheckIn} />
           <Route path="/directory"      component={Directory} />
           <Route path="/messages"       component={Messages} />
+          <Route path="/admin"          component={Admin} />
           <Route                        component={NotFound} />
         </Switch>
       </RoutedErrorBoundary>

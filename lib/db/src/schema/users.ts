@@ -1,4 +1,5 @@
-import { pgTable, serial, text, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, boolean, integer, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -17,7 +18,26 @@ export const usersTable = pgTable("users", {
   // Identity: synced from Clerk; separate from the app-level `username` handle
   firstName: text("first_name"),
   lastName: text("last_name"),
+  // Admin: full control over events, challenges, and point awards
+  isAdmin: boolean("is_admin").notNull().default(false),
+  // AIMD Points balance (reward tiers: T-shirt, event ticket, workshop lesson)
+  points: integer("points").notNull().default(0),
 });
+
+// Ledger of every point award — auditable history behind users.points
+export const pointAwardsTable = pgTable("point_awards", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  amount: integer("amount").notNull(),
+  reason: text("reason").notNull(),
+  awardedBy: integer("awarded_by").references(() => usersTable.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  // A creator can only be awarded a given week's challenge win once
+  uniqueIndex("point_awards_challenge_win_unique")
+    .on(t.userId, t.reason)
+    .where(sql`reason LIKE 'Weekly Challenge winner%'`),
+]);
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true });
 export type InsertUser = z.infer<typeof insertUserSchema>;

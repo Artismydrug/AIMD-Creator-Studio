@@ -5,6 +5,7 @@
  * AIMD Academy & Studio Portal API
  * OpenAPI spec version: 0.2.0
  */
+import type { StudioPostMediaType } from './studioPostMediaType';
 
 export interface StudioPost {
   id: number;
@@ -14,6 +15,7 @@ export interface StudioPost {
   userAvatarUrl?: string | null;
   /** @nullable */
   imageUrl?: string | null;
+  mediaType?: StudioPostMediaType;
   caption: string;
   tags?: string[];
   likes: number;

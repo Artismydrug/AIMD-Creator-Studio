@@ -26,7 +26,36 @@ export interface User {
   avatarUrl?: string | null;
   tier: UserTier;
   studioReadyBadge?: boolean;
+  isAdmin?: boolean;
+  points?: number;
   createdAt: string;
+}
+
+export interface RewardTier {
+  points: number;
+  reward: string;
+  description: string;
+  unlocked: boolean;
+}
+
+export interface RewardsInfo {
+  points: number;
+  challengeWinnerPoints: number;
+  tiers: RewardTier[];
+}
+
+export interface AwardPointsBody {
+  userId: number;
+  amount: number;
+  /** @minLength 1 */
+  reason: string;
+}
+
+export interface PointAwardResult {
+  userId: number;
+  username?: string;
+  amount: number;
+  points: number;
 }
 
 export type UserUpdateTier = typeof UserUpdateTier[keyof typeof UserUpdateTier];
@@ -126,6 +155,14 @@ export interface HeatmapDay {
   level: number;
 }
 
+export type StudioPostMediaType = typeof StudioPostMediaType[keyof typeof StudioPostMediaType];
+
+
+export const StudioPostMediaType = {
+  image: 'image',
+  video: 'video',
+} as const;
+
 export interface StudioPost {
   id: number;
   userId: number;
@@ -134,6 +171,7 @@ export interface StudioPost {
   userAvatarUrl?: string | null;
   /** @nullable */
   imageUrl?: string | null;
+  mediaType?: StudioPostMediaType;
   caption: string;
   tags?: string[];
   likes: number;
@@ -141,9 +179,18 @@ export interface StudioPost {
   createdAt: string;
 }
 
+export type StudioPostInputMediaType = typeof StudioPostInputMediaType[keyof typeof StudioPostInputMediaType];
+
+
+export const StudioPostInputMediaType = {
+  image: 'image',
+  video: 'video',
+} as const;
+
 export interface StudioPostInput {
   /** @nullable */
   imageUrl?: string | null;
+  mediaType?: StudioPostInputMediaType;
   /** @minLength 1 */
   caption: string;
   tags?: string[];

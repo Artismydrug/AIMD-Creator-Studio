@@ -23,6 +23,7 @@ import type {
   ActivityItem,
   Assignment,
   AssignmentInput,
+  AwardPointsBody,
   Badge,
   CheckoutSession,
   CheckoutSessionInput,
@@ -60,6 +61,8 @@ import type {
   ListWorkshopsParams,
   MessageInput,
   Plan,
+  PointAwardResult,
+  RewardsInfo,
   SkillTrack,
   SkillTrackInput,
   SkillTrackUpdate,
@@ -3592,6 +3595,225 @@ export const useUpdateCurrentUser = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpdateCurrentUserMutationOptions(options));
+    }
+
+export const getGetRewardsUrl = () => {
+
+
+
+
+  return `/api/rewards`
+}
+
+/**
+ * @summary Reward tiers and the current user's AIMD Points balance
+ */
+export const getRewards = async ( options?: Parameters<typeof customFetch>[1]): Promise<RewardsInfo> => {
+
+  return customFetch<RewardsInfo>(getGetRewardsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRewardsQueryKey = () => {
+    return [
+    `/api/rewards`
+    ] as const;
+    }
+
+
+export const getGetRewardsQueryOptions = <TData = Awaited<ReturnType<typeof getRewards>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRewards>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRewardsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRewards>>> = ({ signal }) => getRewards({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRewards>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetRewardsQueryResult = NonNullable<Awaited<ReturnType<typeof getRewards>>>
+export type GetRewardsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Reward tiers and the current user's AIMD Points balance
+ */
+
+export function useGetRewards<TData = Awaited<ReturnType<typeof getRewards>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRewards>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetRewardsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getAwardPointsAdminUrl = () => {
+
+
+
+
+  return `/api/admin/points-awards`
+}
+
+/**
+ * @summary (Admin) Award AIMD Points to a user
+ */
+export const awardPointsAdmin = async (awardPointsBody: AwardPointsBody, options?: Parameters<typeof customFetch>[1]): Promise<PointAwardResult> => {
+
+  return customFetch<PointAwardResult>(getAwardPointsAdminUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(awardPointsBody)
+  }
+);}
+
+
+
+
+
+export const getAwardPointsAdminMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof awardPointsAdmin>>, TError,{data: BodyType<AwardPointsBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof awardPointsAdmin>>, TError,{data: BodyType<AwardPointsBody>}, TContext> => {
+
+const mutationKey = ['awardPointsAdmin'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof awardPointsAdmin>>, {data: BodyType<AwardPointsBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  awardPointsAdmin(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AwardPointsAdminMutationResult = NonNullable<Awaited<ReturnType<typeof awardPointsAdmin>>>
+    export type AwardPointsAdminMutationBody = BodyType<AwardPointsBody>
+    export type AwardPointsAdminMutationError = ErrorType<void>
+
+    /**
+ * @summary (Admin) Award AIMD Points to a user
+ */
+export const useAwardPointsAdmin = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof awardPointsAdmin>>, TError,{data: BodyType<AwardPointsBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof awardPointsAdmin>>,
+        TError,
+        {data: BodyType<AwardPointsBody>},
+        TContext
+      > => {
+      return useMutation(getAwardPointsAdminMutationOptions(options));
+    }
+
+export const getAwardChallengeWinnerUrl = (submissionId: number,) => {
+
+
+
+
+  return `/api/admin/challenges/${submissionId}/award-winner`
+}
+
+/**
+ * @summary (Admin) Award the weekly-challenge prize to a submission's creator
+ */
+export const awardChallengeWinner = async (submissionId: number, options?: Parameters<typeof customFetch>[1]): Promise<PointAwardResult> => {
+
+  return customFetch<PointAwardResult>(getAwardChallengeWinnerUrl(submissionId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getAwardChallengeWinnerMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof awardChallengeWinner>>, TError,{submissionId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof awardChallengeWinner>>, TError,{submissionId: number}, TContext> => {
+
+const mutationKey = ['awardChallengeWinner'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof awardChallengeWinner>>, {submissionId: number}> = (props) => {
+          const {submissionId} = props ?? {};
+
+          return  awardChallengeWinner(submissionId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AwardChallengeWinnerMutationResult = NonNullable<Awaited<ReturnType<typeof awardChallengeWinner>>>
+
+    export type AwardChallengeWinnerMutationError = ErrorType<void>
+
+    /**
+ * @summary (Admin) Award the weekly-challenge prize to a submission's creator
+ */
+export const useAwardChallengeWinner = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof awardChallengeWinner>>, TError,{submissionId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof awardChallengeWinner>>,
+        TError,
+        {submissionId: number},
+        TContext
+      > => {
+      return useMutation(getAwardChallengeWinnerMutationOptions(options));
     }
 
 export const getListDirectoryUrl = () => {

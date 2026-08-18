@@ -12,6 +12,7 @@ import {
   Menu,
   MessageSquare,
   QrCode,
+  ShieldCheck,
   Sparkles,
   Timer,
   User,
@@ -186,9 +187,19 @@ function SidebarContent({
   onNav,
 }: {
   location: string;
-  user: { username?: string; avatarUrl?: string | null; tier?: string; studioReadyBadge?: boolean } | undefined;
+  user: { username?: string; avatarUrl?: string | null; tier?: string; studioReadyBadge?: boolean; isAdmin?: boolean } | undefined;
   onNav?: () => void;
 }) {
+  const navSections: NavSection[] = user?.isAdmin
+    ? [
+        ...NAV_SECTIONS,
+        {
+          heading: 'Admin',
+          items: [{ href: '/admin', label: 'Admin Dashboard', icon: ShieldCheck }],
+        },
+      ]
+    : NAV_SECTIONS;
+
   return (
     <div className="flex flex-col h-full bg-zinc-950">
       {/* Brand header */}
@@ -208,7 +219,7 @@ function SidebarContent({
 
       {/* Nav sections */}
       <div className="flex-1 overflow-y-auto px-4 space-y-6">
-        {NAV_SECTIONS.map((section) => (
+        {navSections.map((section) => (
           <div key={section.heading}>
             <h3 className="text-[10px] font-bold text-zinc-500 tracking-wider mb-2 px-2 uppercase">
               {section.heading}

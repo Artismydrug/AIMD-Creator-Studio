@@ -20,8 +20,17 @@ const ALLOWED_IMAGE_TYPES = new Set([
   'image/gif',
 ]);
 
-/** 20 MB hard cap enforced at the Express layer. */
+/** Allowed MIME types for creator video uploads. */
+const ALLOWED_VIDEO_TYPES = new Set([
+  'video/mp4',
+  'video/quicktime',
+  'video/webm',
+]);
+
+/** 20 MB hard cap for images. */
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+/** 100 MB hard cap for videos. */
+const MAX_VIDEO_UPLOAD_BYTES = 100 * 1024 * 1024;
 
 function hasAuthenticatedSession(req: Request): boolean {
   return !!(req as any).dbUser;
@@ -37,36 +46,49 @@ function hasAuthenticatedSession(req: Request): boolean {
  */
 router.post(
   '/storage/uploads',
-  express.raw({
-    type: (req) => {
-      const ct = (req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
-      return ALLOWED_IMAGE_TYPES.has(ct);
-    },
-    limit: MAX_UPLOAD_BYTES,
-  }),
-  async (req: Request, res: Response) => {
+  // Authenticate BEFORE buffering the body — otherwise anonymous callers could
+  // force the server to allocate up to 100 MB per request before the 401.
+  (req: Request, res: Response, next) => {
     if (!hasAuthenticatedSession(req)) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
     }
-
+    next();
+  },
+  express.raw({
+    type: (req) => {
+      const ct = (req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
+      return ALLOWED_IMAGE_TYPES.has(ct) || ALLOWED_VIDEO_TYPES.has(ct);
+    },
+    limit: MAX_VIDEO_UPLOAD_BYTES,
+  }),
+  async (req: Request, res: Response) => {
     const contentType = (req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
 
-    // Reject if express.raw declined to parse (non-image content-type)
+    // Reject if express.raw declined to parse (unsupported content-type)
     if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
-      res.status(400).json({ error: 'Only image uploads are allowed (image/jpeg, image/png, image/webp, image/gif, image/heic)' });
+      res.status(400).json({ error: 'Only image (jpeg, png, webp, gif, heic) or video (mp4, mov, webm) uploads are allowed' });
       return;
     }
 
-    if (!ALLOWED_IMAGE_TYPES.has(contentType)) {
-      res.status(400).json({ error: 'Only image uploads are allowed' });
+    const isImage = ALLOWED_IMAGE_TYPES.has(contentType);
+    const isVideo = ALLOWED_VIDEO_TYPES.has(contentType);
+    if (!isImage && !isVideo) {
+      res.status(400).json({ error: 'Only image or video uploads are allowed' });
       return;
     }
 
-    // Validate first bytes as a known image magic number
-    const magic = validateImageMagicBytes(req.body);
+    if (isImage && req.body.length > MAX_UPLOAD_BYTES) {
+      res.status(413).json({ error: 'Images must be 20 MB or smaller' });
+      return;
+    }
+
+    // Validate first bytes as a known image/video magic number
+    const magic = isImage
+      ? validateImageMagicBytes(req.body)
+      : validateVideoMagicBytes(req.body);
     if (!magic) {
-      res.status(400).json({ error: 'File content does not match a supported image format' });
+      res.status(400).json({ error: 'File content does not match a supported format' });
       return;
     }
 
@@ -77,7 +99,7 @@ router.post(
         contentType,
         ownerId,
       );
-      res.json({ objectPath });
+      res.json({ objectPath, mediaType: isVideo ? 'video' : 'image' });
     } catch (error) {
       req.log.error({ err: error }, 'Error uploading object');
       res.status(500).json({ error: 'Failed to upload image' });
@@ -152,8 +174,8 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
     // Validate stored content type is an image before serving.
     const contentType = response.headers.get('content-type') ?? '';
     const baseType = contentType.split(';')[0].trim().toLowerCase();
-    if (!ALLOWED_IMAGE_TYPES.has(baseType)) {
-      res.status(415).json({ error: 'Object is not a permitted image type' });
+    if (!ALLOWED_IMAGE_TYPES.has(baseType) && !ALLOWED_VIDEO_TYPES.has(baseType)) {
+      res.status(415).json({ error: 'Object is not a permitted media type' });
       return;
     }
 
@@ -161,7 +183,7 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
     response.headers.forEach((value, key) => res.setHeader(key, value));
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Disposition', 'inline');
-    res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self'");
+    res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self'; media-src 'self'");
 
     if (response.body) {
       const nodeStream = Readable.fromWeb(response.body as ReadableStream<Uint8Array>);
@@ -212,6 +234,26 @@ function validateImageMagicBytes(buf: Buffer): string | null {
     buf.length >= 12 &&
     buf[4] === 0x66 && buf[5] === 0x74 && buf[6] === 0x79 && buf[7] === 0x70
   ) return 'image/heic';
+
+  return null;
+}
+
+/**
+ * Validate that the buffer starts with a known video container signature.
+ * Returns the detected MIME type or null if unrecognized.
+ */
+function validateVideoMagicBytes(buf: Buffer): string | null {
+  if (buf.length < 12) return null;
+
+  // MP4 / MOV: ISO BMFF — bytes 4-7 are 'ftyp'
+  if (
+    buf[4] === 0x66 && buf[5] === 0x74 && buf[6] === 0x79 && buf[7] === 0x70
+  ) return 'video/mp4';
+
+  // WebM / Matroska: EBML header 1A 45 DF A3
+  if (
+    buf[0] === 0x1a && buf[1] === 0x45 && buf[2] === 0xdf && buf[3] === 0xa3
+  ) return 'video/webm';
 
   return null;
 }

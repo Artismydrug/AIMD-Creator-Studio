@@ -26,11 +26,11 @@ function isoWeek(date: Date): string {
 // Hard-coded current challenge brief — in a future iteration this can be
 // stored in the DB so admins can manage it from a dashboard.
 const CURRENT_CHALLENGE = {
-  week: "Week 32",
+  week: "Week 34",
   theme: "Ocean & Maritime",
   prompt:
     "Create a flash sheet with 3+ designs inspired by the ocean — nautical, sea creatures, waves, or maritime heritage. Any medium. Show process if you can.",
-  deadline: "2026-08-17T23:59:00.000Z",
+  deadline: "2026-08-24T06:59:00.000Z", // Sunday Aug 23, 11:59 PM Pacific
   prize: "250 AIMD Points + Studio Ready fast-track entry",
 };
 

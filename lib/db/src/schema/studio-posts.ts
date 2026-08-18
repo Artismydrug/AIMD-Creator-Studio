@@ -7,6 +7,8 @@ export const studioPostsTable = pgTable("studio_posts", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   imageUrl: text("image_url"),
+  // 'image' | 'video' — how to render imageUrl (uploaded object paths carry no extension)
+  mediaType: text("media_type").notNull().default("image"),
   caption: text("caption").notNull(),
   tags: text("tags").array().notNull().default([]),
   likes: integer("likes").notNull().default(0),

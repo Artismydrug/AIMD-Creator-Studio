@@ -18,6 +18,7 @@ import commentsRouter from "./comments";
 import conversationsRouter from "./conversations";
 import checkinRouter from "./checkin";
 import challengesRouter from "./challenges";
+import rewardsRouter from "./rewards";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use(commentsRouter);
 router.use(conversationsRouter);
 router.use(checkinRouter);
 router.use(challengesRouter);
+router.use(rewardsRouter);
 
 export default router;

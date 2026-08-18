@@ -232,12 +232,15 @@ export const ListStudioPostsQueryParams = zod.object({
   "userId": zod.coerce.number().int().nullish()
 })
 
+export const listStudioPostsResponseMediaTypeDefault = `image`;
+
 export const ListStudioPostsResponseItem = zod.object({
   "id": zod.int(),
   "userId": zod.int(),
   "username": zod.string().optional(),
   "userAvatarUrl": zod.string().nullish(),
   "imageUrl": zod.string().nullish(),
+  "mediaType": zod.enum(['image', 'video']).default(listStudioPostsResponseMediaTypeDefault),
   "caption": zod.string(),
   "tags": zod.array(zod.string()).optional(),
   "likes": zod.int(),
@@ -250,14 +253,17 @@ export const ListStudioPostsResponse = zod.array(ListStudioPostsResponseItem)
 /**
  * @summary Create a studio log post
  */
-
+export const createStudioPostBodyMediaTypeDefault = `image`;
 
 
 export const CreateStudioPostBody = zod.object({
   "imageUrl": zod.string().nullish(),
+  "mediaType": zod.enum(['image', 'video']).default(createStudioPostBodyMediaTypeDefault),
   "caption": zod.string().min(1),
   "tags": zod.array(zod.string()).optional()
 })
+
+export const createStudioPostResponseMediaTypeDefault = `image`;
 
 export const CreateStudioPostResponse = zod.object({
   "id": zod.int(),
@@ -265,6 +271,7 @@ export const CreateStudioPostResponse = zod.object({
   "username": zod.string().optional(),
   "userAvatarUrl": zod.string().nullish(),
   "imageUrl": zod.string().nullish(),
+  "mediaType": zod.enum(['image', 'video']).default(createStudioPostResponseMediaTypeDefault),
   "caption": zod.string(),
   "tags": zod.array(zod.string()).optional(),
   "likes": zod.int(),
@@ -280,12 +287,15 @@ export const GetStudioPostParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
+export const getStudioPostResponseMediaTypeDefault = `image`;
+
 export const GetStudioPostResponse = zod.object({
   "id": zod.int(),
   "userId": zod.int(),
   "username": zod.string().optional(),
   "userAvatarUrl": zod.string().nullish(),
   "imageUrl": zod.string().nullish(),
+  "mediaType": zod.enum(['image', 'video']).default(getStudioPostResponseMediaTypeDefault),
   "caption": zod.string(),
   "tags": zod.array(zod.string()).optional(),
   "likes": zod.int(),
@@ -311,12 +321,15 @@ export const LikeStudioPostParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
+export const likeStudioPostResponseMediaTypeDefault = `image`;
+
 export const LikeStudioPostResponse = zod.object({
   "id": zod.int(),
   "userId": zod.int(),
   "username": zod.string().optional(),
   "userAvatarUrl": zod.string().nullish(),
   "imageUrl": zod.string().nullish(),
+  "mediaType": zod.enum(['image', 'video']).default(likeStudioPostResponseMediaTypeDefault),
   "caption": zod.string(),
   "tags": zod.array(zod.string()).optional(),
   "likes": zod.int(),
@@ -957,6 +970,8 @@ export const GetCurrentUserResponse = zod.object({
   "avatarUrl": zod.string().nullish(),
   "tier": zod.enum(['free', 'workshop', 'pro']),
   "studioReadyBadge": zod.boolean().optional(),
+  "isAdmin": zod.boolean().optional(),
+  "points": zod.int().optional(),
   "createdAt": zod.coerce.date()
 })
 
@@ -977,7 +992,59 @@ export const UpdateCurrentUserResponse = zod.object({
   "avatarUrl": zod.string().nullish(),
   "tier": zod.enum(['free', 'workshop', 'pro']),
   "studioReadyBadge": zod.boolean().optional(),
+  "isAdmin": zod.boolean().optional(),
+  "points": zod.int().optional(),
   "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Reward tiers and the current user's AIMD Points balance
+ */
+export const GetRewardsResponse = zod.object({
+  "points": zod.int(),
+  "challengeWinnerPoints": zod.int(),
+  "tiers": zod.array(zod.object({
+  "points": zod.int(),
+  "reward": zod.string(),
+  "description": zod.string(),
+  "unlocked": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary (Admin) Award AIMD Points to a user
+ */
+
+
+
+export const AwardPointsAdminBody = zod.object({
+  "userId": zod.int(),
+  "amount": zod.int(),
+  "reason": zod.string().min(1)
+})
+
+export const AwardPointsAdminResponse = zod.object({
+  "userId": zod.int(),
+  "username": zod.string().optional(),
+  "amount": zod.int(),
+  "points": zod.int()
+})
+
+
+/**
+ * @summary (Admin) Award the weekly-challenge prize to a submission's creator
+ */
+export const AwardChallengeWinnerParams = zod.object({
+  "submissionId": zod.coerce.number().int()
+})
+
+export const AwardChallengeWinnerResponse = zod.object({
+  "userId": zod.int(),
+  "username": zod.string().optional(),
+  "amount": zod.int(),
+  "points": zod.int()
 })
 
 

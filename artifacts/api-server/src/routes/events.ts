@@ -9,6 +9,7 @@ import {
   RsvpToEventParams,
 } from "@workspace/api-zod";
 import { generateToken, verifyToken, TOKEN_TTL_HOURS, isValidOrganizerKey } from "../lib/eventQrToken";
+import { requireAdmin } from "../middlewares/requireAdmin";
 
 const router = Router();
 
@@ -69,8 +70,8 @@ router.get("/", async (req, res): Promise<void> => {
   }
 });
 
-// POST /events
-router.post("/", async (req, res): Promise<void> => {
+// POST /events — admin only: all AIMD events are posted by the AIMD team
+router.post("/", requireAdmin, async (req, res): Promise<void> => {
   try {
     const body = CreateEventBody.parse(req.body);
     const [event] = await db
