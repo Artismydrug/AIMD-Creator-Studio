@@ -2,7 +2,9 @@ import { Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
-import { ArrowRight, Image as ImageIcon, Star, Zap } from 'lucide-react';
+import { ArrowRight, Image as ImageIcon, ShoppingBag, Star, Zap } from 'lucide-react';
+
+const SHOP_URL = 'https://www.artismydrug.org/category/all-products';
 import galleryImg from '@assets/generated_images/gallery-wall.jpg';
 import fineArtImg from '@assets/generated_images/workshop-fine-art.jpg';
 import spatialImg from '@assets/generated_images/workshop-spatial.jpg';
@@ -54,9 +56,14 @@ export default function Gallery() {
           <h1 className="text-4xl md:text-7xl font-black font-display uppercase leading-[0.95] tracking-tighter mb-4">
             Work Worth <span className="text-gradient-brand">The Wall.</span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-8">
             Curated artwork from the AIMD community — digital pieces, physical prints, and showcase work fresh off the grind.
           </p>
+          <Button size="lg" className="h-12 px-6 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono font-bold" asChild>
+            <a href={SHOP_URL} target="_blank" rel="noopener noreferrer">
+              <ShoppingBag className="w-4 h-4 mr-2" /> Shop Prints & Products
+            </a>
+          </Button>
         </div>
       </section>
 
@@ -77,6 +84,14 @@ export default function Gallery() {
                   <p className="font-display font-black uppercase tracking-tight">{c.title}</p>
                   <Star className="w-4 h-4 text-primary" />
                 </div>
+                <a
+                  href={SHOP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block px-4 pb-4 font-mono text-xs uppercase text-primary hover:underline"
+                >
+                  Shop this collection →
+                </a>
               </div>
             ))}
           </div>

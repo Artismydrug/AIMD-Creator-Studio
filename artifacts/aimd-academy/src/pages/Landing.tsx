@@ -197,8 +197,9 @@ export default function Landing() {
               Art Is The <span className="text-gradient-brand">Addiction.</span>
             </h1>
             <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mb-10">
-              Welcome to Art Is My Drug — a physical tattoo studio, digital gallery,
-              and gamified ecosystem designed to empower creators.
+              To bridge physical artistry, digital creation, and community ownership —
+              providing a vibrant platform where art is the ultimate form of expression,
+              community, and personal transformation.
             </p>
 
             <div className="flex flex-wrap gap-3">

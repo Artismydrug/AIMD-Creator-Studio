@@ -1,14 +1,85 @@
+import { useState } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
 import { ArrowRight, Brush, Calendar, Mail, Shield, Sparkles, Users } from 'lucide-react';
 import tattooImg from '@assets/generated_images/tattoo-studio.jpg';
 import flashImg from '@assets/generated_images/workshop-tattoo.jpg';
 
 const BOOKING_EMAIL = 'booking@artismydrug.com';
-const BOOKING_MAILTO = `mailto:${BOOKING_EMAIL}?subject=Tattoo Booking Request&body=Name:%0AInstagram/portfolio (optional):%0AIdea/placement:%0AApprox size:%0APreferred dates:%0A`;
+
+const ARTISTS = [
+  {
+    name: 'Poncho The Artist',
+    role: 'Founder · Resident Artist',
+    styles: 'Custom work · Fine line · Black & grey · Color',
+    featured: true,
+    available: true,
+  },
+  {
+    name: 'Edwin',
+    role: 'Resident Artist',
+    styles: 'Portfolio coming soon',
+    featured: false,
+    available: false,
+  },
+  {
+    name: 'Ashley',
+    role: 'Resident Artist',
+    styles: 'Portfolio coming soon',
+    featured: false,
+    available: false,
+  },
+];
+
+type BookingForm = {
+  name: string;
+  email: string;
+  phone: string;
+  idea: string;
+  placement: string;
+  size: string;
+  artist: string;
+};
+
+const EMPTY_FORM: BookingForm = {
+  name: '',
+  email: '',
+  phone: '',
+  idea: '',
+  placement: '',
+  size: '',
+  artist: 'No preference',
+};
 
 export default function Tattoo() {
+  const [form, setForm] = useState<BookingForm>(EMPTY_FORM);
+
+  const set = (key: keyof BookingForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const body = [
+      `Name: ${form.name}`,
+      `Email: ${form.email}`,
+      `Phone: ${form.phone}`,
+      `Preferred artist: ${form.artist}`,
+      `Body placement: ${form.placement}`,
+      `Estimated size: ${form.size}`,
+      '',
+      'Tattoo idea:',
+      form.idea,
+      '',
+      '(Please attach any reference images to this email before sending.)',
+    ].join('\n');
+    const mailto = `mailto:${BOOKING_EMAIL}?subject=${encodeURIComponent(`Tattoo Booking Request — ${form.name || 'New Client'}`)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailto;
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <MarketingNav />
@@ -49,9 +120,51 @@ export default function Tattoo() {
         </div>
       </section>
 
+      {/* Artists */}
+      <section className="py-16 px-6 border-b border-border">
+        <div className="container mx-auto">
+          <div className="flex items-center gap-4 mb-10">
+            <h2 className="text-2xl md:text-4xl font-black font-display uppercase tracking-tight">Meet The Artists</h2>
+            <div className="h-[2px] bg-border flex-1 hidden md:block" />
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {ARTISTS.map((a) => (
+              <div
+                key={a.name}
+                className={`glass-card p-6 flex flex-col ${a.featured ? 'glow-magenta border-2' : ''} ${!a.available ? 'opacity-70' : ''}`}
+                style={a.featured ? { borderColor: 'var(--vibrant-magenta)' } : undefined}
+              >
+                {a.featured && (
+                  <span className="self-start font-mono text-[11px] uppercase tracking-widest px-2 py-1 mb-4 text-white" style={{ backgroundColor: 'var(--vibrant-magenta)' }}>
+                    Featured Artist
+                  </span>
+                )}
+                <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center font-display font-black text-2xl mb-4">
+                  {a.name.charAt(0)}
+                </div>
+                <h3 className="font-display font-black uppercase tracking-tight text-xl mb-1">{a.name}</h3>
+                <p className="font-mono text-xs uppercase tracking-widest text-primary mb-3">{a.role}</p>
+                <p className="text-sm text-muted-foreground mb-5">{a.styles}</p>
+                {a.available ? (
+                  <Button
+                    className="mt-auto rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono text-xs"
+                    onClick={() => setForm((f) => ({ ...f, artist: a.name }))}
+                    asChild
+                  >
+                    <a href="#booking">Book with {a.name.split(' ')[0]}</a>
+                  </Button>
+                ) : (
+                  <p className="mt-auto font-mono text-xs uppercase text-muted-foreground">Books opening soon</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Booking intake */}
-      <section className="py-16 px-6 border-b border-border bg-card">
-        <div className="container mx-auto grid md:grid-cols-2 gap-10 items-center">
+      <section id="booking" className="py-16 px-6 border-b border-border bg-card">
+        <div className="container mx-auto grid md:grid-cols-2 gap-10 items-start">
           <div>
             <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary mb-4">
               <Calendar className="w-4 h-4" /> Booking Intake
@@ -60,7 +173,7 @@ export default function Tattoo() {
               Book Your Session
             </h2>
             <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
-              Tell us your idea, placement, size, and preferred dates. We'll match you
+              Tell us your idea, placement, size, and preferred artist. We'll match you
               with the right artist and confirm a time. Deposits lock in your session.
             </p>
             <ul className="space-y-3 mb-8">
@@ -77,22 +190,65 @@ export default function Tattoo() {
                 </li>
               ))}
             </ul>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild size="lg" className="h-14 px-7 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono font-bold group">
-                <a href={BOOKING_MAILTO}>
-                  <Mail className="w-4 h-4 mr-2" />
-                  Request a Booking
-                  <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </a>
-              </Button>
+            <div className="border border-border overflow-hidden hidden md:block">
+              <img src={flashImg} alt="Tattoo flash artwork" className="w-full object-cover" />
             </div>
-            <p className="font-mono text-xs text-muted-foreground mt-3">
-              Or email us directly: {BOOKING_EMAIL}
+          </div>
+
+          <form onSubmit={handleSubmit} className="glass-card p-6 md:p-8 space-y-5">
+            <div className="grid sm:grid-cols-2 gap-5">
+              <div>
+                <Label htmlFor="bk-name" className="font-mono text-xs uppercase">Name *</Label>
+                <Input id="bk-name" required value={form.name} onChange={set('name')} className="rounded-none mt-1.5" placeholder="Your full name" />
+              </div>
+              <div>
+                <Label htmlFor="bk-email" className="font-mono text-xs uppercase">Email *</Label>
+                <Input id="bk-email" type="email" required value={form.email} onChange={set('email')} className="rounded-none mt-1.5" placeholder="you@email.com" />
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-5">
+              <div>
+                <Label htmlFor="bk-phone" className="font-mono text-xs uppercase">Phone</Label>
+                <Input id="bk-phone" type="tel" value={form.phone} onChange={set('phone')} className="rounded-none mt-1.5" placeholder="(555) 555-5555" />
+              </div>
+              <div>
+                <Label htmlFor="bk-artist" className="font-mono text-xs uppercase">Preferred Artist</Label>
+                <select
+                  id="bk-artist"
+                  value={form.artist}
+                  onChange={set('artist')}
+                  className="mt-1.5 w-full h-10 border border-input bg-background px-3 text-sm rounded-none"
+                >
+                  <option>No preference</option>
+                  <option>Poncho The Artist</option>
+                  <option>Edwin</option>
+                  <option>Ashley</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="bk-idea" className="font-mono text-xs uppercase">Tattoo Idea *</Label>
+              <Textarea id="bk-idea" required value={form.idea} onChange={set('idea')} className="rounded-none mt-1.5 min-h-28" placeholder="Describe your tattoo idea, style, and any meaning behind it" />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-5">
+              <div>
+                <Label htmlFor="bk-placement" className="font-mono text-xs uppercase">Body Placement *</Label>
+                <Input id="bk-placement" required value={form.placement} onChange={set('placement')} className="rounded-none mt-1.5" placeholder="e.g. left forearm" />
+              </div>
+              <div>
+                <Label htmlFor="bk-size" className="font-mono text-xs uppercase">Estimated Size *</Label>
+                <Input id="bk-size" required value={form.size} onChange={set('size')} className="rounded-none mt-1.5" placeholder='e.g. 4" x 6"' />
+              </div>
+            </div>
+            <Button type="submit" size="lg" className="w-full h-14 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono font-bold group">
+              <Mail className="w-4 h-4 mr-2" />
+              Send Booking Request
+              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+            <p className="font-mono text-xs text-muted-foreground">
+              This opens your email app with everything filled in — attach reference images before sending. Or email us directly: {BOOKING_EMAIL}
             </p>
-          </div>
-          <div className="border border-border overflow-hidden">
-            <img src={flashImg} alt="Tattoo flash artwork" className="w-full h-full object-cover" />
-          </div>
+          </form>
         </div>
       </section>
 
@@ -104,10 +260,10 @@ export default function Tattoo() {
             <p className="text-muted-foreground text-sm">Join the creator platform — build your streak, win challenges, and get seen by the studio.</p>
           </div>
           <Button variant="outline" className="rounded-none border-primary/40 text-primary hover:bg-primary/10 uppercase font-mono text-xs" asChild>
-<Link href="/app">
+            <Link href="/app">
               Join the Creator Platform <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
             </Link>
-</Button>
+          </Button>
         </div>
       </section>
 
