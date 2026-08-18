@@ -1,13 +1,22 @@
 import { useParams, Link } from 'wouter';
-import { useGetCurrentUser, useListBadges } from '@workspace/api-client-react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useGetCurrentUser, useListBadges, useUpdateCurrentUser } from '@workspace/api-client-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useClerk } from '@clerk/react';
 import {
   Award, BookOpen, Briefcase, Calendar, ExternalLink,
-  Flame, GraduationCap, MapPin, MessageSquare, Shield,
+  Flame, GraduationCap, LogOut, MapPin, MessageSquare, Pencil, Shield,
   Star, Users, Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
+import { MediaUpload } from '@/components/MediaUpload';
 
 
 const TIER_LABELS: Record<string, { label: string; color: string }> = {
@@ -48,7 +57,7 @@ function Stat({ icon: Icon, label, value }: { icon: any; label: string; value: R
   return (
     <div className="flex flex-col items-center gap-1 px-6 py-4 border-r border-border last:border-r-0">
       <Icon className="w-4 h-4 text-primary mb-0.5" />
-      <span className="font-display font-black text-2xl text-white">{value}</span>
+      <span className="font-display font-black text-2xl text-foreground">{value}</span>
       <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</span>
     </div>
   );
@@ -89,7 +98,7 @@ function PostThumb({ post }: { post: any }) {
         </div>
       )}
       <div className="absolute bottom-0 inset-x-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-t from-background">
-        <div className="flex items-center gap-1 text-xs text-white font-mono">
+        <div className="flex items-center gap-1 text-xs text-foreground font-mono">
           <Star className="w-3 h-3 text-primary" />
           <span>{post.likes ?? 0}</span>
         </div>
@@ -98,37 +107,158 @@ function PostThumb({ post }: { post: any }) {
   );
 }
 
+// ─── Edit profile dialog ──────────────────────────────────────────────────────
+
+const DISCIPLINES = ['Tattooing', 'Fine Art', 'Fine Art & Murals', 'Mural & Street Art', 'Graphic Design', 'Illustration'];
+
+function EditProfileDialog({ user }: { user: any }) {
+  const [open, setOpen] = useState(false);
+  const [username, setUsername] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [bio, setBio] = useState('');
+  const [discipline, setDiscipline] = useState('');
+  const [location, setLocation] = useState('');
+  const [portfolioUrl, setPortfolioUrl] = useState('');
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const { toast } = useToast();
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    if (open) {
+      setUsername(user.username ?? '');
+      setAvatarUrl(user.avatarUrl ?? '');
+      setBio(user.bio ?? '');
+      setDiscipline(user.discipline ?? '');
+      setLocation(user.location ?? '');
+      setPortfolioUrl(user.portfolioUrl ?? '');
+      setBookingOpen(!!user.bookingOpen);
+    }
+  }, [open]);
+
+  const update = useUpdateCurrentUser({
+    mutation: {
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: ['getCurrentUser'] });
+        toast({ title: 'Profile updated' });
+        setOpen(false);
+      },
+      onError: (err: any) => {
+        toast({
+          title: 'Could not save profile',
+          description: err?.response?.data?.error ?? 'Please try again.',
+          variant: 'destructive',
+        });
+      },
+    },
+  });
+
+  const save = () => {
+    update.mutate({
+      data: {
+        username: username.trim(),
+        avatarUrl: avatarUrl || null,
+        bio: bio.trim() || null,
+        discipline: discipline || null,
+        location: location.trim() || null,
+        portfolioUrl: portfolioUrl.trim() || null,
+        bookingOpen,
+      },
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="rounded-none font-mono text-xs uppercase h-9">
+          <Pencil className="w-3.5 h-3.5 mr-1.5" />
+          Edit Profile
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-display uppercase tracking-tight">Edit Profile</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>Profile photo</Label>
+            <MediaUpload url={avatarUrl} mediaType="image" onChange={(url) => setAvatarUrl(url)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pf-username">Username</Label>
+            <Input id="pf-username" value={username} onChange={(e) => setUsername(e.target.value)} maxLength={28} />
+            <p className="text-[11px] text-muted-foreground">3–28 characters — letters, numbers, underscores.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pf-bio">Bio</Label>
+            <Textarea id="pf-bio" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={500} rows={3} placeholder="Tell people about your art…" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pf-discipline">Discipline</Label>
+            <select
+              id="pf-discipline"
+              value={discipline}
+              onChange={(e) => setDiscipline(e.target.value)}
+              className="w-full h-9 border border-input bg-background px-3 text-sm"
+            >
+              <option value="">— None —</option>
+              {DISCIPLINES.map((d) => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pf-location">Location</Label>
+            <Input id="pf-location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City, State" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pf-portfolio">Portfolio link</Label>
+            <Input id="pf-portfolio" type="url" value={portfolioUrl} onChange={(e) => setPortfolioUrl(e.target.value)} placeholder="https://…" />
+          </div>
+          <div className="flex items-center justify-between border border-border p-3">
+            <div>
+              <p className="text-sm font-medium">Open to bookings</p>
+              <p className="text-[11px] text-muted-foreground">Show a "Request Booking" button on your profile</p>
+            </div>
+            <Switch checked={bookingOpen} onCheckedChange={setBookingOpen} />
+          </div>
+          <Button onClick={save} disabled={update.isPending || username.trim().length < 3} className="w-full rounded-none font-mono text-xs uppercase">
+            {update.isPending ? 'Saving…' : 'Save Profile'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── Profile content ──────────────────────────────────────────────────────────
 
-function ProfileContent({ user, badges, posts }: { user: any; badges: any[]; posts: any[] }) {
+function ProfileContent({ user, badges, posts, isOwnProfile }: { user: any; badges: any[]; posts: any[]; isOwnProfile?: boolean }) {
   const tier = TIER_LABELS[user.tier] ?? TIER_LABELS['free'];
   const hasStudioReady = user.studioReadyBadge;
 
   return (
     <div className="max-w-4xl mx-auto pb-16">
       {/* Hero banner */}
-      <div className="h-32 bg-gradient-to-br from-muted/60 via-emerald-950/30 to-muted/60 border-b border-border" />
+      <div className="h-32 bg-gradient-to-br from-primary/20 via-secondary/25 to-primary/10 border-b border-border" />
 
       {/* Avatar + header */}
       <div className="px-6 md:px-10">
         <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-10 mb-8">
           <div className="relative">
-            <Avatar className="w-20 h-20 border-4 border-zinc-950 rounded-full">
+            <Avatar className="w-20 h-20 border-4 border-background rounded-full">
               <AvatarImage src={user.avatarUrl || ''} />
               <AvatarFallback className="bg-primary/15 text-primary font-black text-2xl rounded-full">
                 {user.username?.[0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
             {hasStudioReady && (
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center border-2 border-zinc-950" title="Studio Ready™">
-                <Shield className="w-3 h-3 text-zinc-950" />
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center border-2 border-background" title="Studio Ready™">
+                <Shield className="w-3 h-3 text-primary-foreground" />
               </div>
             )}
           </div>
 
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h1 className="font-display font-black text-3xl text-white">{user.username}</h1>
+              <h1 className="font-display font-black text-3xl text-foreground">{user.username}</h1>
               {hasStudioReady && (
                 <span className="font-mono text-[10px] uppercase tracking-widest text-primary border border-primary/30 bg-primary/10 px-2 py-0.5 flex items-center gap-1">
                   <Shield className="w-2.5 h-2.5" /> Studio Ready™
@@ -161,7 +291,9 @@ function ProfileContent({ user, badges, posts }: { user: any; badges: any[]; pos
 
           {/* Actions */}
           <div className="flex gap-2 sm:ml-auto">
-            {user.bookingOpen && (
+            {isOwnProfile && <EditProfileDialog user={user} />}
+            {isOwnProfile && <SignOutButton />}
+            {!isOwnProfile && user.bookingOpen && (
               <Button asChild variant="outline" className="rounded-none border-primary/40 text-primary hover:bg-primary/10 font-mono text-xs uppercase h-9">
                 <a href={`mailto:booking@artismydrug.com?subject=Booking Request — ${user.username}`}>
                   <Briefcase className="w-3.5 h-3.5 mr-1.5" />
@@ -169,12 +301,14 @@ function ProfileContent({ user, badges, posts }: { user: any; badges: any[]; pos
                 </a>
               </Button>
             )}
-            <Button asChild variant="outline" className="rounded-none border-border text-foreground/80 hover:bg-muted font-mono text-xs uppercase h-9">
-              <Link href="/messages">
-                <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
-                Message
-              </Link>
-            </Button>
+            {!isOwnProfile && (
+              <Button asChild variant="outline" className="rounded-none border-border text-foreground/80 hover:bg-muted font-mono text-xs uppercase h-9">
+                <Link href="/messages">
+                  <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
+                  Message
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -207,7 +341,7 @@ function ProfileContent({ user, badges, posts }: { user: any; badges: any[]; pos
         {/* Badges */}
         {badges.length > 0 && (
           <section className="mb-10">
-            <h2 className="font-display font-black text-xl uppercase tracking-tight text-white mb-4 flex items-center gap-2">
+            <h2 className="font-display font-black text-xl uppercase tracking-tight text-foreground mb-4 flex items-center gap-2">
               <Award className="w-5 h-5 text-primary" /> Earned Badges
             </h2>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
@@ -219,7 +353,7 @@ function ProfileContent({ user, badges, posts }: { user: any; badges: any[]; pos
         {/* Portfolio / posts grid */}
         {posts.length > 0 && (
           <section>
-            <h2 className="font-display font-black text-xl uppercase tracking-tight text-white mb-4 flex items-center gap-2">
+            <h2 className="font-display font-black text-xl uppercase tracking-tight text-foreground mb-4 flex items-center gap-2">
               <Zap className="w-5 h-5 text-primary" /> Studio Work
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -235,6 +369,20 @@ function ProfileContent({ user, badges, posts }: { user: any; badges: any[]; pos
         </div>
       </div>
     </div>
+  );
+}
+
+function SignOutButton() {
+  const { signOut } = useClerk();
+  return (
+    <Button
+      variant="outline"
+      onClick={() => signOut({ redirectUrl: '/' })}
+      className="rounded-none border-border text-foreground/80 hover:bg-muted font-mono text-xs uppercase h-9"
+    >
+      <LogOut className="w-3.5 h-3.5 mr-1.5" />
+      Sign Out
+    </Button>
   );
 }
 
@@ -267,5 +415,5 @@ export default function Profile() {
   if (isLoading) return <div className="p-8 font-mono animate-pulse text-muted-foreground">Loading profile…</div>;
   if (!user) return <div className="p-8 font-mono text-muted-foreground">Creator not found.</div>;
 
-  return <ProfileContent user={user} badges={isOwnProfile ? (badges as any[]) : (user.badges ?? [])} posts={posts as any[]} />;
+  return <ProfileContent user={user} badges={isOwnProfile ? (badges as any[]) : (user.badges ?? [])} posts={posts as any[]} isOwnProfile={isOwnProfile} />;
 }

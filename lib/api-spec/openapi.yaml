@@ -1215,6 +1215,16 @@ components:
           type: boolean
         points:
           type: integer
+        discipline:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        bookingOpen:
+          type: boolean
+        portfolioUrl:
+          type: ["string", "null"]
         createdAt:
           type: string
           format: date-time
@@ -1277,9 +1287,17 @@ components:
           type: string
         avatarUrl:
           type: ["string", "null"]
-        tier:
-          type: string
-          enum: ["free", "workshop", "pro"]
+        discipline:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+          maxLength: 500
+        location:
+          type: ["string", "null"]
+        bookingOpen:
+          type: boolean
+        portfolioUrl:
+          type: ["string", "null"]
 
     # ── Dashboard ─────────────────────────────────────────────────────────
     DashboardSummary:

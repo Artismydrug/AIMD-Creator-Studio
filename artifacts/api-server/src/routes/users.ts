@@ -49,9 +49,34 @@ router.patch("/users/me", async (req, res): Promise<void> => {
     }
   }
 
+  // URL validation: portfolio must be http(s); avatar must be our own storage path or https
+  if (parsed.data.portfolioUrl) {
+    if (!/^https?:\/\//i.test(parsed.data.portfolioUrl)) {
+      res.status(400).json({ error: "Portfolio link must start with http:// or https://" });
+      return;
+    }
+  }
+  if (parsed.data.avatarUrl) {
+    const a = parsed.data.avatarUrl;
+    if (!a.startsWith("/api/storage/") && !/^https:\/\//i.test(a)) {
+      res.status(400).json({ error: "Invalid avatar URL." });
+      return;
+    }
+  }
+
+  // Explicit allowlist of self-editable profile fields (never tier/points/isAdmin)
+  const updates: Record<string, unknown> = {};
+  for (const key of ["username", "avatarUrl", "bio", "discipline", "location", "bookingOpen", "portfolioUrl"] as const) {
+    if (parsed.data[key] !== undefined) updates[key] = parsed.data[key];
+  }
+  if (Object.keys(updates).length === 0) {
+    res.status(400).json({ error: "No profile fields to update." });
+    return;
+  }
+
   const [user] = await db
     .update(usersTable)
-    .set(parsed.data)
+    .set(updates)
     .where(eq(usersTable.id, userId))
     .returning();
   if (!user) {

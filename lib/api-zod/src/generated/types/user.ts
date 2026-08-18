@@ -17,5 +17,14 @@ export interface User {
   studioReadyBadge?: boolean;
   isAdmin?: boolean;
   points?: number;
+  /** @nullable */
+  discipline?: string | null;
+  /** @nullable */
+  bio?: string | null;
+  /** @nullable */
+  location?: string | null;
+  bookingOpen?: boolean;
+  /** @nullable */
+  portfolioUrl?: string | null;
   createdAt: Date;
 }

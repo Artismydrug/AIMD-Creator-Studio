@@ -150,7 +150,7 @@ function RewardTiers() {
             <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
               Tier {i + 1} · {tier.points} pts
             </p>
-            <p className={`font-display font-bold text-sm uppercase leading-tight mb-1.5 ${tier.unlocked ? 'text-primary' : 'text-white'}`}>
+            <p className={`font-display font-bold text-sm uppercase leading-tight mb-1.5 ${tier.unlocked ? 'text-primary' : 'text-foreground'}`}>
               {tier.reward}
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">{tier.description}</p>
@@ -264,7 +264,7 @@ function WeeklyChallenge() {
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
           <div>
             <span className="font-mono text-[10px] text-primary uppercase tracking-widest">{challenge.week} · Active</span>
-            <h2 className="font-display font-black text-2xl uppercase tracking-tight text-white mt-1">
+            <h2 className="font-display font-black text-2xl uppercase tracking-tight text-foreground mt-1">
               {challenge.theme}
             </h2>
           </div>
@@ -293,7 +293,7 @@ function WeeklyChallenge() {
             ) : (
               <Dialog open={submitOpen} onOpenChange={setSubmitOpen}>
                 <DialogTrigger asChild>
-                  <Button className="rounded-none bg-primary hover:bg-primary/90 text-zinc-950 font-bold text-xs uppercase tracking-wider h-8 px-4">
+                  <Button className="rounded-none bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs uppercase tracking-wider h-8 px-4">
                     <Upload className="w-3.5 h-3.5 mr-1.5" /> Submit Entry
                   </Button>
                 </DialogTrigger>
@@ -330,7 +330,7 @@ function WeeklyChallenge() {
                       Cancel
                     </Button>
                     <Button
-                      className="rounded-none bg-primary hover:bg-primary/90 text-zinc-950"
+                      className="rounded-none bg-primary hover:bg-primary/90 text-primary-foreground"
                       onClick={() => submitMutation.mutate()}
                       disabled={!caption || submitMutation.isPending}
                     >
@@ -372,7 +372,7 @@ function WeeklyChallenge() {
                       sub.rank === 1
                         ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
                         : sub.rank === 2
-                        ? 'bg-zinc-700 text-foreground/80 border border-border'
+                        ? 'bg-muted text-muted-foreground border border-border'
                         : 'bg-muted text-muted-foreground border border-border'
                     }`}
                   >
@@ -495,7 +495,7 @@ function CommentThread({ postId, onCount }: { postId: number; onCount: (n: numbe
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2 mb-0.5">
-                  <span className="font-bold text-xs text-white">{c.username}</span>
+                  <span className="font-bold text-xs text-foreground">{c.username}</span>
                   <span className="font-mono text-[10px] text-muted-foreground">
                     {new Date(c.createdAt).toLocaleDateString()}
                   </span>
@@ -515,12 +515,12 @@ function CommentThread({ postId, onCount }: { postId: number; onCount: (n: numbe
           onChange={e => setDraft(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && submit()}
           placeholder="Add a critique…"
-          className="flex-1 h-8 px-3 bg-muted/40 border border-border text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 font-mono"
+          className="flex-1 h-8 px-3 bg-muted/40 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 font-mono"
         />
         <button
           onClick={submit}
           disabled={!draft.trim() || addComment.isPending}
-          className="px-3 h-8 bg-primary hover:bg-primary/90 disabled:opacity-40 text-zinc-950 font-bold text-xs uppercase font-mono transition-colors"
+          className="px-3 h-8 bg-primary hover:bg-primary/90 disabled:opacity-40 text-primary-foreground font-bold text-xs uppercase font-mono transition-colors"
         >
           Post
         </button>
@@ -581,7 +581,7 @@ function PostCard({ post }: { post: any }) {
             ))}
           </div>
         )}
-        <div className="flex items-center gap-6 pt-4 border-t border-white/5">
+        <div className="flex items-center gap-6 pt-4 border-t border-border">
           <button
             onClick={handleLike}
             className={`flex items-center gap-2 text-sm font-mono transition-colors ${
@@ -673,7 +673,7 @@ export default function StudioLog() {
   const [tab, setTab] = useState<Tab>('feed');
 
   return (
-    <div className="min-h-screen bg-background text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <div className="border-b border-border px-6 md:px-10 py-8">
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">

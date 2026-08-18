@@ -83,7 +83,6 @@ export * from './studioPostMediaType';
 export * from './user';
 export * from './userTier';
 export * from './userUpdate';
-export * from './userUpdateTier';
 export * from './workshop';
 export * from './workshopDetail';
 export * from './workshopDetailTier';

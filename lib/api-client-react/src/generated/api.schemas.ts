@@ -28,6 +28,15 @@ export interface User {
   studioReadyBadge?: boolean;
   isAdmin?: boolean;
   points?: number;
+  /** @nullable */
+  discipline?: string | null;
+  /** @nullable */
+  bio?: string | null;
+  /** @nullable */
+  location?: string | null;
+  bookingOpen?: boolean;
+  /** @nullable */
+  portfolioUrl?: string | null;
   createdAt: string;
 }
 
@@ -58,20 +67,22 @@ export interface PointAwardResult {
   points: number;
 }
 
-export type UserUpdateTier = typeof UserUpdateTier[keyof typeof UserUpdateTier];
-
-
-export const UserUpdateTier = {
-  free: 'free',
-  workshop: 'workshop',
-  pro: 'pro',
-} as const;
-
 export interface UserUpdate {
   username?: string;
   /** @nullable */
   avatarUrl?: string | null;
-  tier?: UserUpdateTier;
+  /** @nullable */
+  discipline?: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  bio?: string | null;
+  /** @nullable */
+  location?: string | null;
+  bookingOpen?: boolean;
+  /** @nullable */
+  portfolioUrl?: string | null;
 }
 
 export interface DashboardSummary {

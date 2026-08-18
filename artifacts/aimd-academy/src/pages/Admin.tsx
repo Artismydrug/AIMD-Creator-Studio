@@ -86,7 +86,7 @@ function CreateEventCard() {
   const canSubmit = title.trim() && description.trim() && location.trim() && startsAt;
 
   const selectCls =
-    'w-full h-10 px-3 bg-background border border-border text-sm text-white font-mono focus:outline-none focus:border-primary/50';
+    'w-full h-10 px-3 bg-background border border-border text-sm text-foreground font-mono focus:outline-none focus:border-primary/50';
 
   return (
     <section className="border border-border bg-card p-6 md:p-8">
@@ -157,7 +157,7 @@ function CreateEventCard() {
 
       <div className="mt-6 flex justify-end">
         <Button
-          className="rounded-none bg-primary hover:bg-primary/90 text-zinc-950 font-bold uppercase tracking-wider"
+          className="rounded-none bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase tracking-wider"
           onClick={submit}
           disabled={!canSubmit || createEvent.isPending}
         >
@@ -233,7 +233,7 @@ function ChallengeWinnerCard() {
               </div>
               <Button
                 size="sm"
-                className="rounded-none bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs uppercase flex-shrink-0"
+                className="rounded-none bg-amber-500 hover:bg-amber-400 text-secondary-foreground font-bold text-xs uppercase flex-shrink-0"
                 onClick={() => award(sub.id, sub.username)}
                 disabled={awardWinner.isPending}
               >
@@ -270,7 +270,7 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="border-b border-border px-6 md:px-10 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-[11px] uppercase tracking-widest mb-3">

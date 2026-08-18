@@ -972,6 +972,11 @@ export const GetCurrentUserResponse = zod.object({
   "studioReadyBadge": zod.boolean().optional(),
   "isAdmin": zod.boolean().optional(),
   "points": zod.int().optional(),
+  "discipline": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "location": zod.string().nullish(),
+  "bookingOpen": zod.boolean().optional(),
+  "portfolioUrl": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })
 
@@ -979,10 +984,18 @@ export const GetCurrentUserResponse = zod.object({
 /**
  * @summary Update current user profile
  */
+export const updateCurrentUserBodyBioMax = 500;
+
+
+
 export const UpdateCurrentUserBody = zod.object({
   "username": zod.string().optional(),
   "avatarUrl": zod.string().nullish(),
-  "tier": zod.enum(['free', 'workshop', 'pro']).optional()
+  "discipline": zod.string().nullish(),
+  "bio": zod.string().max(updateCurrentUserBodyBioMax).nullish(),
+  "location": zod.string().nullish(),
+  "bookingOpen": zod.boolean().optional(),
+  "portfolioUrl": zod.string().nullish()
 })
 
 export const UpdateCurrentUserResponse = zod.object({
@@ -994,6 +1007,11 @@ export const UpdateCurrentUserResponse = zod.object({
   "studioReadyBadge": zod.boolean().optional(),
   "isAdmin": zod.boolean().optional(),
   "points": zod.int().optional(),
+  "discipline": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "location": zod.string().nullish(),
+  "bookingOpen": zod.boolean().optional(),
+  "portfolioUrl": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })
 

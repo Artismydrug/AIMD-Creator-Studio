@@ -5,11 +5,21 @@
  * AIMD Academy & Studio Portal API
  * OpenAPI spec version: 0.2.0
  */
-import type { UserUpdateTier } from './userUpdateTier';
 
 export interface UserUpdate {
   username?: string;
   /** @nullable */
   avatarUrl?: string | null;
-  tier?: UserUpdateTier;
+  /** @nullable */
+  discipline?: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  bio?: string | null;
+  /** @nullable */
+  location?: string | null;
+  bookingOpen?: boolean;
+  /** @nullable */
+  portfolioUrl?: string | null;
 }
