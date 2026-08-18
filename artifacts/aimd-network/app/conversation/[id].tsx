@@ -20,7 +20,7 @@ import {
   useSendMessage,
 } from '@workspace/api-client-react';
 import type { ConversationMessage } from '@workspace/api-client-react';
-import { useAuth } from '@/lib/auth';
+import { useGetCurrentUser } from '@workspace/api-client-react';
 
 function formatTime(dateStr: string): string {
   const d = new Date(dateStr);
@@ -83,7 +83,7 @@ export default function ConversationScreen() {
   const insets = useSafeAreaInsets();
   const { id, name } = useLocalSearchParams<{ id: string; name?: string }>();
   const navigation = useNavigation();
-  const { user } = useAuth();
+  const { data: user } = useGetCurrentUser();
   const convId = parseInt(id ?? '0', 10);
   const [text, setText] = useState('');
   const [localMessages, setLocalMessages] = useState<ConversationMessage[]>([]);

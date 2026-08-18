@@ -24,3 +24,7 @@ description: Key facts about the AIMD Network Expo app, its API server integrati
 **Why:** orval generates BOTH Zod schemas (api.ts) AND TypeScript interfaces (types/) for ANY named schema component. If the same name appears in both files, TS2308 fires.
 **Fix pattern:** Use `$ref` to a DIFFERENTLY-NAMED component (e.g. `MobileAuthCodeInput` not `MobileAuthCodeExchangeBody`). Never use `{operationId}Body` or `{operationId}Response` as component names — those are reserved by orval for the generated Zod schemas.
 **TDZ ordering:** After codegen, verify all `*Default` constants in api.ts appear BEFORE the schema that uses them. If not, manually reorder.
+
+## Debugging deploy bundle failures
+- Deploy fails as "Download failed: HTTP 500" from scripts/build.js; the real Metro error is in the 500 response body (build.js now includes it in the thrown error).
+- Long-running local `node scripts/build.js` processes get killed by the environment even with setsid/nohup. Fast alternative: curl the dev bundle from the running expo workflow (port = $PORT from workflow log, path `/artifacts/aimd-network/node_modules/expo-router/entry.bundle?platform=ios&dev=true`) — HTTP 200 confirms module resolution; resolution errors surface identically to prod bundling.
