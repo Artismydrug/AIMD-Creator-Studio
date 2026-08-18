@@ -1,0 +1,21 @@
+Please build and refine the homepage and overall application UI for artistmydrug.com, incorporating our brand hub, tattoo studio, online gallery, and creator app platform.
+
+1. Aesthetics & Vibrant Visual Theme:
+   - REPLACE all dark/gothic backgrounds with a clean, light, warm canvas background (e.g., soft off-white/cream #FAF8F5).
+   - Use high-frequency, energetic accent colors: electric magenta, sunset coral, vibrant cyan, and warm golden yellow.
+   - Design with soft glassmorphism card panels (light frosted backgrounds with subtle glowing borders and soft shadows).
+   - Use bold, expressive, artsy headings with vibrant gradient text for key slogans ("Art Is The Addiction", "Level Up Your Creative Journey").
+
+2. Homepage Layout & Structure (Route `/`):
+   - Hero Section: Bright, high-energy hero section introducing Artist My Drug as a tattoo studio, digital gallery, and creator ecosystem. Include CTA buttons: "Book Tattoo Session" (links to /tattoo), "Explore Gallery" (links to /gallery), and "Join Creator Platform" (links to /app).
+   - 3-Phase Creator Journey Section: Create interactive, vibrant cards detailing our 3 growth stages:
+     1. Phase 1: The Inspiring Artist (Discover & Connect) — Focus on exploring gallery pieces, tracking daily check-ins, and finding resident artists.
+     2. Phase 2: The Dedicated Artist (Level Up & Skill Building) — Focus on joining weekly creator challenges, unlocking rare badges, ranking on leaderboards, and building portfolios.
+     3. Phase 3: The Professional Artist (Showcase & Monetize) — Focus on selling prints in the gallery, custom tattoo/art bookings, and unlocking pro perks.
+   - Interactive Lightbox Gallery: Allow visitors on the homepage to click on art preview cards to open a high-resolution lightbox modal showing details, artist profiles, and direct purchase/booking links.
+
+3. Navigation & Technical Integration:
+   - Sticky Top Navigation Bar: Make the header sticky across all routes (`/`, `/tattoo`, `/gallery`, `/app`).
+   - Clerk Auth Integration: Integrate Clerk authentication state into the navigation bar (display user avatar & Dashboard link when logged in, or Sign In / Sign Up buttons when logged out).
+   - Route Mapping: Ensure route `/` leads to this new homepage, `/tattoo` to the Tattoo Studio & Booking page, `/gallery` to the Online Art Showcase, and `/app` to the Creator App Dashboard.
+   - Full Mobile Responsiveness: Ensure all hero sections, cards, modals, and navbars scale cleanly across mobile devices.

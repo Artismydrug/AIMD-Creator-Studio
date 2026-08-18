@@ -125,6 +125,17 @@
   --chart-4: 280 55% 55%;
   --chart-5: 16 80% 65%;
 
+  /* Vibrant marketing accents — darkened to meet WCAG AA for text on cream */
+  --vibrant-magenta: #B3125F;
+  --vibrant-coral: #BC3A20;
+  --vibrant-cyan: #0E7490;
+  --vibrant-gold: #8F5A00;
+  /* Brighter variants for decorative borders/glows only (not text) */
+  --vibrant-magenta-bright: #D6247A;
+  --vibrant-coral-bright: #E8543F;
+  --vibrant-cyan-bright: #0891B2;
+  --vibrant-gold-bright: #E9A319;
+
   --app-font-sans: 'DM Sans', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: 'Space Mono', monospace;
@@ -168,4 +179,30 @@
   .glass-panel {
     @apply bg-card/80 backdrop-blur-md border border-border shadow;
   }
+
+  /* Vibrant marketing utilities */
+  .text-gradient-brand {
+    background-image: linear-gradient(
+      92deg,
+      var(--vibrant-magenta) 0%,
+      var(--vibrant-coral) 45%,
+      var(--vibrant-gold) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .glass-card {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.8) inset,
+      0 8px 30px rgba(44, 38, 35, 0.09);
+  }
+  .glow-magenta { box-shadow: 0 8px 30px rgba(214, 36, 122, 0.18), 0 1px 0 rgba(255,255,255,.8) inset; }
+  .glow-coral   { box-shadow: 0 8px 30px rgba(232, 84, 63, 0.20), 0 1px 0 rgba(255,255,255,.8) inset; }
+  .glow-cyan    { box-shadow: 0 8px 30px rgba(8, 145, 178, 0.18), 0 1px 0 rgba(255,255,255,.8) inset; }
+  .glow-gold    { box-shadow: 0 8px 30px rgba(233, 163, 25, 0.20), 0 1px 0 rgba(255,255,255,.8) inset; }
 }

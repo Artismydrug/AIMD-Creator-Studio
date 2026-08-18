@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { Link } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
 import {
   ArrowRight, Brush, Calendar, Compass, Crown, Flame,
@@ -24,7 +27,7 @@ function PillarCard({
   cta: string;
 }) {
   return (
-    <div className="border border-border bg-card flex flex-col group overflow-hidden">
+    <div className="glass-card rounded-xl flex flex-col group overflow-hidden hover:-translate-y-1 transition-transform duration-300">
       <div className="h-44 overflow-hidden relative">
         <img src={image} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
@@ -56,6 +59,120 @@ function PillarCard({
   );
 }
 
+// ─── Art showcase with lightbox ───────────────────────────────────────────────
+
+type ShowcasePost = {
+  id: number;
+  username: string;
+  userAvatarUrl: string | null;
+  imageUrl: string | null;
+  mediaType?: string;
+  caption: string;
+  tags?: string[];
+};
+
+async function fetchShowcasePosts(): Promise<ShowcasePost[]> {
+  const r = await fetch('/api/studio-posts?limit=16');
+  if (!r.ok) return [];
+  const posts = (await r.json()) as ShowcasePost[];
+  return posts.filter((p) => p.imageUrl && p.mediaType !== 'video').slice(0, 8);
+}
+
+function ArtShowcase() {
+  const { data: posts = [] } = useQuery({ queryKey: ['landing', 'showcase'], queryFn: fetchShowcasePosts });
+  const [selected, setSelected] = useState<ShowcasePost | null>(null);
+
+  if (posts.length === 0) return null;
+
+  return (
+    <section className="py-20 px-6 border-b border-border bg-card">
+      <div className="container mx-auto">
+        <div className="flex items-center gap-4 mb-4">
+          <h2 className="text-3xl md:text-5xl font-black font-display uppercase tracking-tight">
+            Fresh From <span className="text-gradient-brand">The Community</span>
+          </h2>
+          <div className="h-[2px] bg-border flex-1 hidden md:block" />
+        </div>
+        <p className="text-muted-foreground text-lg mb-10">Tap any piece to see it up close.</p>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {posts.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setSelected(p)}
+              className="glass-card rounded-xl overflow-hidden text-left group hover:-translate-y-1 transition-transform duration-300 focus-visible:ring-2 focus-visible:ring-primary"
+              aria-label={`View artwork by ${p.username}`}
+            >
+              <div className="aspect-square overflow-hidden">
+                <img
+                  src={p.imageUrl!}
+                  alt={p.caption}
+                  loading="lazy"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+              <div className="p-3">
+                <p className="font-mono text-xs font-bold truncate">{p.username}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{p.caption}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
+          <DialogContent className="max-w-3xl p-0 overflow-hidden rounded-xl">
+            {selected && (
+              <div className="grid md:grid-cols-[1.4fr_1fr]">
+                <div className="bg-muted max-h-[70vh] flex items-center justify-center">
+                  <img src={selected.imageUrl!} alt={selected.caption} className="w-full h-full object-contain max-h-[70vh]" />
+                </div>
+                <div className="p-6 flex flex-col">
+                  <div className="flex items-center gap-3 mb-4">
+                    {selected.userAvatarUrl ? (
+                      <img src={selected.userAvatarUrl} alt="" className="w-10 h-10 rounded-full border border-border object-cover" />
+                    ) : (
+                      <span className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-mono text-sm font-bold">
+                        {selected.username.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                    <div>
+                      <DialogTitle className="font-display font-black uppercase tracking-tight text-lg">
+                        {selected.username}
+                      </DialogTitle>
+                      <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">AIMD Creator</p>
+                    </div>
+                  </div>
+                  <DialogDescription className="text-sm text-foreground/80 leading-relaxed mb-4">
+                    {selected.caption}
+                  </DialogDescription>
+                  {selected.tags && selected.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-6">
+                      {selected.tags.map((t) => (
+                        <span key={t} className="px-2 py-0.5 bg-muted text-muted-foreground font-mono text-[10px] uppercase tracking-wide rounded">
+                          #{t}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-auto flex flex-col gap-2">
+                    <Button asChild className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono text-xs">
+                      <Link href="/tattoo" onClick={() => setSelected(null)}>Book a Session</Link>
+                    </Button>
+                    <Button asChild variant="outline" className="rounded-none uppercase font-mono text-xs">
+                      <Link href="/gallery" onClick={() => setSelected(null)}>Explore Full Gallery</Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    </section>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Landing() {
@@ -77,7 +194,7 @@ export default function Landing() {
               Studio · Gallery · Creator Platform
             </div>
             <h1 className="text-5xl md:text-8xl font-black font-display uppercase leading-[0.9] tracking-tighter mb-6">
-              Art Is The <span className="text-primary">Addiction.</span>
+              Art Is The <span className="text-gradient-brand">Addiction.</span>
             </h1>
             <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mb-10">
               Welcome to Art Is My Drug — a physical tattoo studio, digital gallery,
@@ -149,6 +266,9 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Community art showcase with lightbox */}
+      <ArtShowcase />
+
       {/* Creator Journey — 3 growth phases */}
       <section className="py-20 px-6 border-b border-border">
         <div className="container mx-auto">
@@ -156,8 +276,9 @@ export default function Landing() {
             <h2 className="text-3xl md:text-5xl font-black font-display uppercase tracking-tight">The Creator Journey</h2>
             <div className="h-[2px] bg-border flex-1 hidden md:block" />
           </div>
-          <p className="text-muted-foreground text-lg mb-12 max-w-2xl">
-            Three growth phases take you from first check-in to full-time professional.
+          <p className="text-lg mb-12 max-w-2xl">
+            <span className="font-display font-black uppercase tracking-tight text-2xl md:text-3xl text-gradient-brand">Level Up Your Creative Journey</span>
+            <span className="block text-muted-foreground mt-1">Three growth phases take you from first check-in to full-time professional.</span>
           </p>
 
           <div className="relative grid md:grid-cols-3 gap-6">
@@ -169,6 +290,8 @@ export default function Landing() {
                 phase: 'Phase 01',
                 title: 'The Inspiring Artist',
                 tagline: 'Discover & Connect',
+                color: 'var(--vibrant-cyan)',
+                glow: 'glow-cyan',
                 points: [
                   'Explore artwork from the community',
                   'Track daily check-in streaks',
@@ -180,6 +303,8 @@ export default function Landing() {
                 phase: 'Phase 02',
                 title: 'The Dedicated Artist',
                 tagline: 'Level Up & Skill Building',
+                color: 'var(--vibrant-magenta)',
+                glow: 'glow-magenta',
                 points: [
                   'Join weekly creator challenges',
                   'Unlock rare badges & rank up on leaderboards',
@@ -191,27 +316,35 @@ export default function Landing() {
                 phase: 'Phase 03',
                 title: 'The Professional Artist',
                 tagline: 'Showcase & Monetize',
+                color: 'var(--vibrant-gold)',
+                glow: 'glow-gold',
                 points: [
                   'Feature artwork in the online gallery',
                   'Offer custom tattoo & art bookings',
                   'Unlock pro creator perks',
                 ],
               },
-            ].map(({ icon: Icon, phase, title, tagline, points }, i) => (
-              <div key={phase} className="relative border border-border bg-card p-6 pt-8 group hover:border-primary/40 transition-colors">
-                <div className="relative z-10 w-14 h-14 border-2 border-primary bg-background flex items-center justify-center mb-5">
-                  <Icon className="w-6 h-6 text-primary" />
-                  <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground font-mono text-[10px] font-bold w-6 h-6 flex items-center justify-center">
+            ].map(({ icon: Icon, phase, title, tagline, color, glow, points }, i) => (
+              <div key={phase} className={`relative glass-card ${glow} rounded-xl p-6 pt-8 group hover:-translate-y-1 transition-transform duration-300`}>
+                <div
+                  className="relative z-10 w-14 h-14 border-2 bg-background rounded-lg flex items-center justify-center mb-5"
+                  style={{ borderColor: color }}
+                >
+                  <Icon className="w-6 h-6" style={{ color }} />
+                  <span
+                    className="absolute -top-2 -right-2 text-white font-mono text-[10px] font-bold w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: color }}
+                  >
                     {i + 1}
                   </span>
                 </div>
-                <p className="font-mono text-[11px] uppercase tracking-widest text-primary mb-1">{phase}</p>
+                <p className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color }}>{phase}</p>
                 <h3 className="font-display font-black text-2xl uppercase tracking-tight mb-1">{title}</h3>
                 <p className="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-4">{tagline}</p>
                 <ul className="space-y-2">
                   {points.map((p) => (
                     <li key={p} className="flex items-start gap-2 text-sm">
-                      <span className="w-1.5 h-1.5 bg-primary mt-1.5 flex-shrink-0" />
+                      <span className="w-1.5 h-1.5 mt-1.5 flex-shrink-0" style={{ backgroundColor: color }} />
                       {p}
                     </li>
                   ))}

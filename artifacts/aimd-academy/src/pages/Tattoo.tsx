@@ -24,7 +24,7 @@ export default function Tattoo() {
             <Brush className="w-3.5 h-3.5" /> The Studio
           </div>
           <h1 className="text-4xl md:text-7xl font-black font-display uppercase leading-[0.95] tracking-tighter mb-4">
-            Ink With <span className="text-primary">Intention.</span>
+            Ink With <span className="text-gradient-brand">Intention.</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
             Custom work and flash from resident AIMD artists — in a studio built by creators, for creators.

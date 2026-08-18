@@ -52,7 +52,7 @@ export default function Gallery() {
             <ImageIcon className="w-3.5 h-3.5" /> The Gallery
           </div>
           <h1 className="text-4xl md:text-7xl font-black font-display uppercase leading-[0.95] tracking-tighter mb-4">
-            Work Worth <span className="text-primary">The Wall.</span>
+            Work Worth <span className="text-gradient-brand">The Wall.</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
             Curated artwork from the AIMD community — digital pieces, physical prints, and showcase work fresh off the grind.

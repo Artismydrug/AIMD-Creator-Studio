@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'wouter';
 import { useState } from 'react';
-import { useAuth } from '@clerk/react';
+import { useAuth, useUser } from '@clerk/react';
 import { Button } from '@/components/ui/button';
 import { Flame, Menu, X, ArrowRight } from 'lucide-react';
 
@@ -15,7 +15,10 @@ const NAV_LINKS = [
 export function MarketingNav() {
   const [location] = useLocation();
   const { isSignedIn } = useAuth();
+  const { user } = useUser();
   const [open, setOpen] = useState(false);
+  const avatarUrl = user?.imageUrl;
+  const displayName = user?.firstName || user?.username || 'You';
 
   return (
     <nav className="border-b border-border px-6 py-4 sticky top-0 z-50 bg-background/90 backdrop-blur-md">
@@ -46,12 +49,23 @@ export function MarketingNav() {
 
         <div className="hidden md:flex items-center gap-2">
           {isSignedIn ? (
-            <Button className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono text-xs group" asChild>
-<Link href="/dashboard">
-                Enter Studio
-                <ArrowRight className="ml-1.5 w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            <>
+              <Link href="/profile" className="flex items-center gap-2 mr-1" aria-label="Your profile">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={displayName} className="w-8 h-8 rounded-full border border-border object-cover" />
+                ) : (
+                  <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-mono text-xs font-bold">
+                    {displayName.charAt(0).toUpperCase()}
+                  </span>
+                )}
               </Link>
-</Button>
+              <Button className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono text-xs group" asChild>
+                <Link href="/dashboard">
+                  Dashboard
+                  <ArrowRight className="ml-1.5 w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              </Button>
+            </>
           ) : (
             <>
               <Button variant="ghost" className="rounded-none uppercase font-mono text-xs text-foreground/70 hover:text-foreground" asChild>
@@ -83,9 +97,26 @@ export function MarketingNav() {
             </Button>
           ))}
           {isSignedIn ? (
-            <Button asChild className="w-full rounded-none bg-primary text-primary-foreground uppercase font-mono text-xs mt-1">
-              <Link href="/dashboard" onClick={() => setOpen(false)}>Enter Studio</Link>
-            </Button>
+            <>
+              <Link
+                href="/profile"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 px-4 py-2 hover:bg-muted"
+                aria-label="Your profile"
+              >
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={displayName} className="w-7 h-7 rounded-full border border-border object-cover" />
+                ) : (
+                  <span className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-mono text-xs font-bold">
+                    {displayName.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <span className="font-mono text-xs uppercase">Profile</span>
+              </Link>
+              <Button asChild className="w-full rounded-none bg-primary text-primary-foreground uppercase font-mono text-xs mt-1">
+                <Link href="/dashboard" onClick={() => setOpen(false)}>Dashboard</Link>
+              </Button>
+            </>
           ) : (
             <div className="flex gap-2 mt-1">
               <Button asChild variant="outline" className="flex-1 rounded-none uppercase font-mono text-xs">
