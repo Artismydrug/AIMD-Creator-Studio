@@ -193,7 +193,7 @@ router.post("/create-sponsor-checkout", async (req, res): Promise<void> => {
             unit_amount:  amountCents,
             product_data: {
               name:        desc,
-              description: body.message ?? `Sponsor a deserving creator's ${tierLabel} membership for one month. Tax-deductible 501(c)(3) donation.`,
+              description: body.message ?? `Sponsor a deserving creator's ${tierLabel} membership for one month.`,
             },
           },
           quantity: 1,

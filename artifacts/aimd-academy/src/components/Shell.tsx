@@ -65,7 +65,7 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    heading: 'Non-Profit & Movement',
+    heading: 'Mission & Movement',
     items: [
       { href: '/mission', label: 'Our Mission',        icon: HeartHandshake },
       { href: '/sponsor', label: 'Sponsor a Creator',  icon: HeartHandshake, highlight: true },
@@ -198,9 +198,6 @@ function SidebarContent({
             <h1 className="text-xl font-black tracking-wider text-white">AIMD</h1>
             <span className="text-[10px] font-bold bg-zinc-800 text-zinc-400 border border-zinc-700 px-2 py-0.5 rounded-full">
               NETWORK
-            </span>
-            <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-              501(c)(3)
             </span>
           </div>
           <p className="text-xs text-zinc-500 uppercase font-semibold tracking-widest mt-0.5">

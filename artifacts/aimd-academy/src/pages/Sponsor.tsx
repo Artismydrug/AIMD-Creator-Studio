@@ -17,7 +17,7 @@ export default function Sponsor() {
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-border">
         <div className="max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-sm uppercase mb-4">
-            <Sparkles className="w-4 h-4" /> 501(c)(3) Tax Deductible
+            <Sparkles className="w-4 h-4" /> Support a Creator
           </div>
           <h1 className="text-4xl md:text-5xl font-black font-display uppercase tracking-tight mb-4">Sponsor a Creator</h1>
           <p className="text-muted-foreground font-sans text-lg">

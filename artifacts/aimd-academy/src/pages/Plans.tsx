@@ -183,14 +183,14 @@ function SponsorSection() {
         <div className="flex items-center gap-3 mb-2">
           <HeartHandshake className="w-6 h-6 text-primary" />
           <span className="font-mono text-[11px] uppercase tracking-widest text-primary">
-            501(c)(3) Tax-Deductible Donation
+            Sponsorship
           </span>
         </div>
         <h2 className="font-display font-black text-3xl uppercase tracking-tight text-white mb-3">
           Sponsor a Creator
         </h2>
         <p className="text-muted-foreground text-sm leading-relaxed mb-8 max-w-xl">
-          Gift an Academy Pass or Pro / Career membership to a deserving Free-tier artist. 100% goes directly to the creator's access. You'll receive a donation receipt.
+          Gift an Academy Pass or Pro / Career membership to a deserving Free-tier artist. 100% goes directly to the creator's access.
         </p>
 
         {/* Optional fields */}

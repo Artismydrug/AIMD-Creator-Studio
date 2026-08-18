@@ -42,7 +42,7 @@ export default function Landing() {
           <div className="max-w-4xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-sm uppercase mb-8">
               <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-              Art Is My Drug — 501(c)(3) Non-Profit
+              Art Is My Drug
             </div>
             <h1 className="text-6xl md:text-8xl font-black font-display uppercase leading-[0.9] tracking-tighter mb-6">
               Discipline <br />
@@ -119,7 +119,7 @@ export default function Landing() {
             <span className="font-display font-black text-xl tracking-widest uppercase">AIMD Academy</span>
           </div>
           <p className="text-muted-foreground text-sm font-mono">
-            © {new Date().getFullYear()} Art Is My Drug. A 501(c)(3) Non-Profit Organization.
+            © {new Date().getFullYear()} Art Is My Drug. All rights reserved.
           </p>
         </div>
       </footer>

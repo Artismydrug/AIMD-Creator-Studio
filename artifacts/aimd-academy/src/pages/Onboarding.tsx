@@ -14,13 +14,13 @@ import {
 
 const SLIDES = [
   {
-    badge: 'NON-PROFIT MISSION',
+    badge: 'OUR MISSION',
     icon: Heart,
     iconBg: 'bg-[#FAF0EC]',
     iconColor: 'text-primary',
     accent: '#C85A32',
     title: 'Built For Artists,\nBy Artists',
-    body: 'AIMD is a 501(c)(3) non-profit built to give independent creators real infrastructure — daily accountability, world-class education, studio placement, and IP protection. No investors. No shortcuts.',
+    body: 'AIMD is built to give independent creators real infrastructure — daily accountability, world-class education, studio placement, and IP protection. No investors. No shortcuts.',
   },
   {
     badge: 'DAILY DISCIPLINE',
@@ -242,7 +242,7 @@ export function Onboarding() {
 
       {/* Brand footer */}
       <p className="mt-6 text-[10px] font-mono tracking-widest uppercase text-[#BBB]">
-        Art Is My Drug · 501(c)(3) Non-Profit
+        Art Is My Drug
       </p>
     </div>
   );

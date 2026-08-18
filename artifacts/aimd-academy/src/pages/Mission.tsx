@@ -59,11 +59,11 @@ const PILLARS = [
 const FAQS = [
   {
     q: 'What does my membership fee actually fund?',
-    a: 'Every dollar goes directly to AIMD operations: instructor compensation, equipment for youth creators, studio space costs, and the platform infrastructure. AIMD is a 501(c)(3) non-profit — no investors, no profit motive.',
+    a: 'Every dollar goes directly to AIMD operations: instructor compensation, equipment for youth creators, studio space costs, and the platform infrastructure. No investors, no profit motive.',
   },
   {
     q: 'How does "Sponsor a Creator" work?',
-    a: 'You choose a tier — Studio Kit ($49), Workshop Tuition ($199), or Full-Ride ($499) — and optionally select a specific creator or let AIMD allocate to the highest-need applicant. All sponsorships are tax-deductible and you receive a donation receipt.',
+    a: 'You choose a tier — Studio Kit ($49), Workshop Tuition ($199), or Full-Ride ($499) — and optionally select a specific creator or let AIMD allocate to the highest-need applicant. Every sponsorship goes directly to supporting a creator.',
   },
   {
     q: 'What is the Studio Ready certification?',
@@ -120,7 +120,7 @@ export default function Mission() {
       <section className="px-6 md:px-16 pt-16 pb-12 max-w-5xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/30 text-primary font-mono text-[11px] uppercase tracking-widest mb-6">
           <HeartHandshake className="w-3.5 h-3.5" />
-          Art Is My Drug · 501(c)(3) Non-Profit
+          Art Is My Drug
         </div>
 
         <h1 className="font-display font-black text-4xl md:text-6xl uppercase tracking-tight leading-[0.95] mb-6">
@@ -275,11 +275,11 @@ export default function Mission() {
             {/* Non-profit card */}
             <div className="p-6 bg-muted/40 border border-primary/20">
               <p className="font-mono text-[10px] text-primary uppercase tracking-widest mb-3">
-                501(c)(3) Registered
+                Mission-Driven
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Art Is My Drug is a registered non-profit. All donations and sponsorships are
-                tax-deductible. EIN available on request.
+                Art Is My Drug is a mission-driven organization. Every donation and sponsorship
+                goes directly to supporting creators.
               </p>
               <div className="mt-4 pt-4 border-t border-border">
                 <p className="text-xs text-muted-foreground font-mono">
