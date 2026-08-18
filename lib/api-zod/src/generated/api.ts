@@ -1032,6 +1032,24 @@ export const GetRewardsResponse = zod.object({
 
 
 /**
+ * @summary (Admin) List all members
+ */
+export const ListAdminUsersResponse = zod.object({
+  "total": zod.int(),
+  "members": zod.array(zod.object({
+  "id": zod.int(),
+  "username": zod.string(),
+  "email": zod.string(),
+  "tier": zod.string(),
+  "points": zod.int(),
+  "isAdmin": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "postCount": zod.int()
+}))
+})
+
+
+/**
  * @summary (Admin) Award AIMD Points to a user
  */
 

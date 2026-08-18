@@ -60,6 +60,17 @@ export interface AwardPointsBody {
   reason: string;
 }
 
+export interface AdminMember {
+  id: number;
+  username: string;
+  email: string;
+  tier: string;
+  points: number;
+  isAdmin: boolean;
+  createdAt: string;
+  postCount: number;
+}
+
 export interface PointAwardResult {
   userId: number;
   username?: string;
@@ -798,5 +809,10 @@ category?: string | null;
 
 export type ListSponsorshipsParams = {
 limit?: number;
+};
+
+export type ListAdminUsers200 = {
+  total: number;
+  members: AdminMember[];
 };
 

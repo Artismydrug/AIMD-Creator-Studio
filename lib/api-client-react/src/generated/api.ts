@@ -53,6 +53,7 @@ import type {
   JobApplication,
   JobApplicationInput,
   JobListing,
+  ListAdminUsers200,
   ListEventsParams,
   ListHabitLogsParams,
   ListJobListingsParams,
@@ -3662,6 +3663,83 @@ export function useGetRewards<TData = Awaited<ReturnType<typeof getRewards>>, TE
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetRewardsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListAdminUsersUrl = () => {
+
+
+
+
+  return `/api/admin/users`
+}
+
+/**
+ * @summary (Admin) List all members
+ */
+export const listAdminUsers = async ( options?: Parameters<typeof customFetch>[1]): Promise<ListAdminUsers200> => {
+
+  return customFetch<ListAdminUsers200>(getListAdminUsersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminUsersQueryKey = () => {
+    return [
+    `/api/admin/users`
+    ] as const;
+    }
+
+
+export const getListAdminUsersQueryOptions = <TData = Awaited<ReturnType<typeof listAdminUsers>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminUsers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminUsersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminUsers>>> = ({ signal }) => listAdminUsers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminUsers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminUsersQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminUsers>>>
+export type ListAdminUsersQueryError = ErrorType<void>
+
+
+/**
+ * @summary (Admin) List all members
+ */
+
+export function useListAdminUsers<TData = Awaited<ReturnType<typeof listAdminUsers>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminUsers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminUsersQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

@@ -8,6 +8,7 @@
 
 export * from './activityItem';
 export * from './activityItemType';
+export * from './adminMember';
 export * from './assignment';
 export * from './assignmentInput';
 export * from './assignmentStatus';
@@ -50,6 +51,7 @@ export * from './jobApplicationInput';
 export * from './jobApplicationStatus';
 export * from './jobListing';
 export * from './jobListingType';
+export * from './listAdminUsers200';
 export * from './listEventsParams';
 export * from './listHabitLogsParams';
 export * from './listJobListingsParams';

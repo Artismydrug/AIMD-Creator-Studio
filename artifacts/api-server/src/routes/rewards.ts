@@ -117,4 +117,24 @@ router.post(
   }
 );
 
+// ─── GET /admin/users ─────────────────────────────────────────────────────────
+router.get("/admin/users", requireAdmin, async (_req, res): Promise<void> => {
+  const { rows } = await pool.query(`
+    SELECT
+      u.id,
+      u.username,
+      u.email,
+      u.tier,
+      u.points,
+      u.is_admin   AS "isAdmin",
+      u.created_at AS "createdAt",
+      COUNT(p.id)::int AS "postCount"
+    FROM users u
+    LEFT JOIN studio_posts p ON p.user_id = u.id
+    GROUP BY u.id
+    ORDER BY u.created_at DESC
+  `);
+  res.json({ total: rows.length, members: rows });
+});
+
 export default router;

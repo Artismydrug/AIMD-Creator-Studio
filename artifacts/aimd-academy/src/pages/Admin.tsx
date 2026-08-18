@@ -4,13 +4,14 @@ import {
   useGetCurrentUser,
   useCreateEvent,
   useAwardChallengeWinner,
+  useListAdminUsers,
 } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { MediaUpload } from '@/components/MediaUpload';
-import { Calendar, ShieldCheck, Trophy, ThumbsUp } from 'lucide-react';
+import { Calendar, ShieldCheck, Trophy, ThumbsUp, Users, Search, Crown } from 'lucide-react';
 
 // ─── Challenge data (same shape the Studio Log uses) ─────────────────────────
 
@@ -247,6 +248,99 @@ function ChallengeWinnerCard() {
   );
 }
 
+// ─── Members roster ───────────────────────────────────────────────────────────
+
+const TIER_LABELS: Record<string, string> = {
+  free: 'Starter',
+  workshop: 'Academy',
+  pro: 'Pro',
+};
+
+function MembersCard() {
+  const [search, setSearch] = useState('');
+  const { data, isLoading } = useListAdminUsers();
+
+  const members = (data?.members ?? []).filter((m) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return m.username.toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
+  });
+
+  return (
+    <section className="border border-border bg-card p-6 md:p-8">
+      <div className="flex items-start justify-between gap-4 mb-1">
+        <h2 className="font-display font-bold text-xl uppercase flex items-center gap-2">
+          <Users className="w-5 h-5 text-primary" /> Members
+        </h2>
+        {data && (
+          <span className="font-mono text-xs text-muted-foreground border border-border px-2 py-1 flex-shrink-0">
+            {data.total} total
+          </span>
+        )}
+      </div>
+      <p className="text-sm text-muted-foreground mb-5">
+        Everyone who's created an account — newest first.
+      </p>
+
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+        <Input
+          className="rounded-none border-border bg-background pl-9 font-mono text-sm"
+          placeholder="Search by name or email…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      {isLoading ? (
+        <p className="font-mono text-sm text-muted-foreground animate-pulse py-6 text-center">Loading members…</p>
+      ) : members.length === 0 ? (
+        <div className="py-10 text-center border border-dashed border-border">
+          <p className="font-mono text-sm text-muted-foreground">{search ? 'No members match that search.' : 'No members yet.'}</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground py-2 pr-4">Creator</th>
+                <th className="text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground py-2 pr-4 hidden sm:table-cell">Email</th>
+                <th className="text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground py-2 pr-4">Plan</th>
+                <th className="text-right font-mono text-[10px] uppercase tracking-widest text-muted-foreground py-2 pr-4">Pts</th>
+                <th className="text-right font-mono text-[10px] uppercase tracking-widest text-muted-foreground py-2 pr-4 hidden md:table-cell">Posts</th>
+                <th className="text-right font-mono text-[10px] uppercase tracking-widest text-muted-foreground py-2">Joined</th>
+              </tr>
+            </thead>
+            <tbody>
+              {members.map((m) => (
+                <tr key={m.id} className="border-b border-border/50 hover:bg-muted/40 transition-colors">
+                  <td className="py-2.5 pr-4">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium truncate max-w-[120px]">{m.username}</span>
+                      {m.isAdmin && <Crown className="w-3 h-3 text-amber-500 flex-shrink-0" aria-label="Admin" />}
+                    </div>
+                  </td>
+                  <td className="py-2.5 pr-4 text-muted-foreground font-mono text-xs truncate max-w-[180px] hidden sm:table-cell">{m.email}</td>
+                  <td className="py-2.5 pr-4">
+                    <span className="font-mono text-[10px] uppercase tracking-wider border border-border px-1.5 py-0.5 text-muted-foreground">
+                      {TIER_LABELS[m.tier] ?? m.tier}
+                    </span>
+                  </td>
+                  <td className="py-2.5 pr-4 text-right font-mono text-xs">{m.points ?? 0}</td>
+                  <td className="py-2.5 pr-4 text-right font-mono text-xs text-muted-foreground hidden md:table-cell">{m.postCount ?? 0}</td>
+                  <td className="py-2.5 text-right font-mono text-xs text-muted-foreground whitespace-nowrap">
+                    {new Date(m.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Admin() {
@@ -285,6 +379,7 @@ export default function Admin() {
 
       <div className="px-6 md:px-10 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
+          <MembersCard />
           <CreateEventCard />
           <ChallengeWinnerCard />
         </div>

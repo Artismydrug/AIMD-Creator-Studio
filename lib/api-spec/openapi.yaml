@@ -972,6 +972,29 @@ paths:
               schema:
                 $ref: "#/components/schemas/RewardsInfo"
 
+  /admin/users:
+    get:
+      operationId: listAdminUsers
+      tags: [users]
+      summary: (Admin) List all members
+      responses:
+        "200":
+          description: Member list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [total, members]
+                properties:
+                  total:
+                    type: integer
+                  members:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AdminMember"
+        "403":
+          description: Admin access required
+
   /admin/points-awards:
     post:
       operationId: awardPointsAdmin
@@ -1266,6 +1289,28 @@ components:
         reason:
           type: string
           minLength: 1
+
+    AdminMember:
+      type: object
+      required: [id, username, email, tier, points, isAdmin, createdAt, postCount]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        tier:
+          type: string
+        points:
+          type: integer
+        isAdmin:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        postCount:
+          type: integer
 
     PointAwardResult:
       type: object
