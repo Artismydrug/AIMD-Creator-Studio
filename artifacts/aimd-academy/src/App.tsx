@@ -43,6 +43,8 @@ import Directory from '@/pages/Directory';
 import Messages from '@/pages/Messages';
 import Admin from '@/pages/Admin';
 import Onboarding from '@/pages/Onboarding';
+import Tattoo from '@/pages/Tattoo';
+import Gallery from '@/pages/Gallery';
 
 // ─── Clerk setup ──────────────────────────────────────────────────────────────
 // REQUIRED — resolves the publishable key from the request host so the same
@@ -184,12 +186,12 @@ function SignUpPage() {
   );
 }
 
-// ─── Landing redirect for authenticated users ─────────────────────────────────
-function HomeRoute() {
+// ─── /app entry — creator app hub ─────────────────────────────────────────────
+function AppEntryRoute() {
   return (
     <>
       <Show when="signed-in"><Redirect to="/dashboard" /></Show>
-      <Show when="signed-out"><Landing /></Show>
+      <Show when="signed-out"><Redirect to="/sign-in" /></Show>
     </>
   );
 }
@@ -249,8 +251,12 @@ function Router() {
       <Route path="/sign-up/*?" component={SignUpPage} />
       {/* Onboarding is public — accessible without shell */}
       <Route path="/onboarding" component={Onboarding} />
-      {/* Landing: public for guests, redirects for authenticated */}
-      <Route path="/" component={HomeRoute} />
+      {/* Public marketing pages — the AIMD hub */}
+      <Route path="/" component={Landing} />
+      <Route path="/tattoo" component={Tattoo} />
+      <Route path="/gallery" component={Gallery} />
+      {/* Creator app entry: dashboard when signed in, sign-in otherwise */}
+      <Route path="/app" component={AppEntryRoute} />
       {/* Everything else requires auth */}
       <Route component={AuthenticatedShell} />
     </Switch>
