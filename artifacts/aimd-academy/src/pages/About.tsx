@@ -16,7 +16,6 @@ import {
   Flame,
   TrendingUp,
 } from 'lucide-react';
-import { BrandVideo } from '@/components/BrandVideo';
 import aimdHeroImg from '@assets/generated_images/aimd-hero.jpg';
 import resortCampusImg from '@assets/generated_images/artist-resort-campus.jpg';
 import resortContainersImg from '@assets/generated_images/artist-resort-containers.jpg';
@@ -75,7 +74,7 @@ export default function About() {
         </div>
       </section>
 
-      {/* Brand video */}
+      {/* Community impact video */}
       <section className="py-20 px-6 border-b border-border bg-card">
         <div className="container mx-auto">
           <div className="max-w-3xl mx-auto text-center mb-10">
@@ -83,14 +82,26 @@ export default function About() {
               <Sparkles className="w-4 h-4" /> Watch Our Story
             </div>
             <h2 className="text-4xl md:text-6xl font-black font-display uppercase tracking-tight mb-4">
-              Art Is <span className="text-gradient-brand">My Drug.</span>
+              Our Community Impact <span className="text-gradient-brand">& Roots.</span>
             </h2>
             <p className="text-lg text-muted-foreground">
-              See how AIMD bridges physical artistry and digital creation — from the studio chair to the digital gallery.
+              Art is more than expression—it's a catalyst for community growth and personal transformation. Watch our Youth Art Workshop at The School of Los Angeles in action.
             </p>
           </div>
           <div className="max-w-4xl mx-auto">
-            <BrandVideo />
+            <div className="glass-card rounded-xl p-2">
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black">
+                <iframe
+                  className="absolute inset-0 w-full h-full"
+                  src="https://www.youtube.com/embed/fmVeAgPqNEk"
+                  title="AIMD Youth Art Workshop at The School of Los Angeles"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                  loading="lazy"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
