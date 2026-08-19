@@ -1,0 +1,29 @@
+Please build and refine the homepage and overall application UI for artistmydrug.com, incorporating our exact brand identity, logo, mission/vision, live gallery link, and tattoo studio booking flow.
+
+1. Brand Identity & Vibrant Aesthetic:
+   - Logo & Branding: Feature our official AIMD Logo (AIMD Logo.jpg) prominently in the top navigation bar, footer, and brand hero sections.
+   - Aesthetic: Clean, light, warm canvas background (soft off-white/cream #FAF8F5).
+   - Color Palette: High-frequency, energetic accent colors: electric magenta, sunset coral, vibrant cyan, and warm golden yellow with soft glassmorphism card panels.
+
+2. Homepage Hero & Mission/Vision (Route `/`):
+   - Hero Section: Display the AIMD logo and replace generic tagline copy with our core Mission & Vision:
+     * Headline: "Art Is The Addiction."
+     * Vision/Mission Subheadline: "To bridge physical artistry, digital creation, and community ownership—providing a vibrant platform where art is the ultimate form of expression, community, and personal transformation."
+     * Primary CTA Buttons: "Book Tattoo Session" (links to /tattoo), "Explore Gallery" (links to https://www.artismydrug.org/category/all-products or /gallery), and "Join Creator Platform" (links to /app).
+
+3. 3-Phase Creator Journey Section:
+   - Display vibrant interactive cards detailing our 3 growth stages:
+     1. Phase 1: The Inspiring Artist (Discover & Connect) — Focus on exploring gallery pieces, daily check-ins, and discovering resident artists.
+     2. Phase 2: The Dedicated Artist (Level Up & Skill Building) — Focus on weekly challenges, badges, leaderboards, and portfolio building.
+     3. Phase 3: The Professional Artist (Showcase & Monetize) — Focus on selling prints in the gallery, custom tattoo/art bookings, and pro perks.
+
+4. Tattoo Studio & Booking Flow (Route `/tattoo`):
+   - Spotlight Artists: Highlight "Poncho The Artist" as the primary featured tattoo artist (with placeholder cards ready for Edwin and Ashley).
+   - Booking System: Structure the booking intake form similar to https://ponchotheartist.com/booking/ (collecting client details, tattoo idea description, body placement, estimated size, preferred artist, and reference image uploads).
+
+5. Online Gallery (Route `/gallery`):
+   - Showcase artwork and link products directly to our shop catalog at https://www.artismydrug.org/category/all-products.
+
+6. Technical & Navigation Integration:
+   - Sticky Navigation Bar: Sticky header with AIMD Logo, links to Home, Tattoo Studio, Gallery, Creator App, and integrated Clerk Auth buttons.
+   - Mobile Responsiveness: Fully optimized for mobile screens across all routes.
