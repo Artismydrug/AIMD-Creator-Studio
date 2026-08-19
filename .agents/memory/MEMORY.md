@@ -2,3 +2,4 @@
 - [AIMD Network mobile app](aimd-network-mobile.md) — server-side OIDC transaction auth; orval codegen TDZ/TS2308 fix patterns; session + replit_id DB setup
 - [Clerk auth migration](clerk-auth-migration.md) — email bridge JIT in clerkAuth.ts; web cookie session; mobile Bearer via setAuthTokenGetter; req.dbUser replaces req.user
 - [DB schema changes](db-schema-changes.md) — drizzle-kit push prompts interactively and fails headless; apply new columns/tables via manual SQL matching the drizzle schema
+- [Embedded motion accessibility](embedded-motion-accessibility.md) — autoplaying explainers need visible touch controls and a complete reduced-motion alternative.

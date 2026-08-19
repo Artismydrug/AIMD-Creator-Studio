@@ -10,9 +10,10 @@ import {
   Compass,
   GraduationCap,
   Crown,
-  Film,
   Check,
 } from 'lucide-react';
+
+import { CreatorAppExplainer } from '@/components/video/CreatorAppExplainer';
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -115,20 +116,8 @@ export default function AppOnboarding() {
           </p>
 
           {/* Walkthrough tour video container */}
-          <div className="w-full max-w-4xl">
-            <div className="glass-card rounded-xl p-2">
-              <div className="w-full aspect-video rounded-lg bg-muted/60 border border-border flex flex-col items-center justify-center text-center px-6">
-                <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
-                  <Film className="w-6 h-6 text-primary" />
-                </div>
-                <p className="font-display font-black uppercase tracking-tight text-xl mb-1">
-                  Studio Walkthrough Coming Soon
-                </p>
-                <p className="text-sm text-muted-foreground max-w-md">
-                  A full tour of the Digital Studio — streaks, badges, challenges, and everything in between.
-                </p>
-              </div>
-            </div>
+          <div className="w-full max-w-4xl relative z-10 shadow-2xl shadow-primary/20 rounded-xl">
+            <CreatorAppExplainer />
           </div>
         </div>
       </section>
