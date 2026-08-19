@@ -645,6 +645,129 @@ export interface CheckoutSession {
   checkoutUrl: string;
 }
 
+export type StoreProductCategory = typeof StoreProductCategory[keyof typeof StoreProductCategory];
+
+
+export const StoreProductCategory = {
+  apparel: 'apparel',
+  canvas: 'canvas',
+  digital: 'digital',
+} as const;
+
+export type StoreProductFulfillmentType = typeof StoreProductFulfillmentType[keyof typeof StoreProductFulfillmentType];
+
+
+export const StoreProductFulfillmentType = {
+  physical: 'physical',
+  digital: 'digital',
+} as const;
+
+export interface StoreProduct {
+  id: string;
+  name: string;
+  description: string;
+  category: StoreProductCategory;
+  imageKey: string;
+  fulfillmentType: StoreProductFulfillmentType;
+  featured: boolean;
+  inventoryLabel: string;
+  priceId: string;
+  /** @minimum 0 */
+  unitAmount: number;
+  currency: string;
+}
+
+export interface StoreCartItemInput {
+  /** @minLength 4 */
+  priceId: string;
+  /**
+     * @minimum 1
+     * @maximum 10
+     */
+  quantity: number;
+}
+
+export interface StoreShippingAddressInput {
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  line1: string;
+  /** @nullable */
+  line2?: string | null;
+  /** @minLength 1 */
+  city: string;
+  /** @minLength 1 */
+  state: string;
+  /** @minLength 2 */
+  postalCode: string;
+  /**
+     * @minLength 2
+     * @maxLength 2
+     */
+  country: string;
+  /** @nullable */
+  phone?: string | null;
+}
+
+export interface StorePaymentIntentInput {
+  email: string;
+  /**
+     * @minItems 1
+     * @maxItems 20
+     */
+  items: StoreCartItemInput[];
+  shippingAddress?: StoreShippingAddressInput | null;
+}
+
+export type StoreOrderStatus = typeof StoreOrderStatus[keyof typeof StoreOrderStatus];
+
+
+export const StoreOrderStatus = {
+  creating: 'creating',
+  awaiting_payment: 'awaiting_payment',
+  processing: 'processing',
+  paid: 'paid',
+  failed: 'failed',
+  canceled: 'canceled',
+  refunded: 'refunded',
+  disputed: 'disputed',
+} as const;
+
+export interface StoreOrderItem {
+  id: number;
+  stripeProductId: string;
+  stripePriceId: string;
+  productName: string;
+  productDescription: string;
+  productCategory: string;
+  productImageKey: string;
+  fulfillmentType: string;
+  quantity: number;
+  unitAmount: number;
+  totalAmount: number;
+}
+
+export interface StoreOrder {
+  id: string;
+  confirmationToken: string;
+  customerEmail: string;
+  status: StoreOrderStatus;
+  currency: string;
+  subtotal: number;
+  shipping: number;
+  tax: number;
+  total: number;
+  items: StoreOrderItem[];
+  /** @nullable */
+  paidAt?: string | null;
+  createdAt: string;
+}
+
+export interface StorePaymentIntent {
+  clientSecret: string;
+  order: StoreOrder;
+}
+
 export interface DirectoryCreator {
   id: number;
   username: string;

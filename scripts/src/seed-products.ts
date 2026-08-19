@@ -32,7 +32,9 @@ async function getStripeCredentials(): Promise<{ secretKey: string }> {
 
   if (!resp.ok) throw new Error(`Failed to fetch Stripe credentials: ${resp.status}`);
 
-  const data = await resp.json();
+  const data = await resp.json() as {
+    items?: Array<{ settings?: { secret?: string } }>;
+  };
   const secretKey = data.items?.[0]?.settings?.secret;
   if (!secretKey) throw new Error('Stripe secret key not found in connection settings.');
 

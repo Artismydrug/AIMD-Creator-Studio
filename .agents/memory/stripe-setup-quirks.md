@@ -5,9 +5,17 @@ description: Non-obvious issues found when wiring stripe-replit-sync into the AI
 
 ## stripe-replit-sync field names
 
-The Replit connectors API returns `settings.secret` (not `settings.secret_key`) and `settings.publishable` (not `settings.publishable_key`) for the Stripe connector. The webhook secret is `settings.webhook_secret`.
+The Replit connectors API returns `settings.secret` (not `settings.secret_key`) and `settings.publishable` (not `settings.publishable_key`) for the Stripe connector. A managed webhook secret may not be exposed in connector settings.
 
 **How to apply:** In `stripeClient.ts`, always read `settings.secret`, not `settings.secret_key`.
+
+## Managed webhook verification
+
+When no webhook secret is supplied in configuration, `stripe-replit-sync` securely loads the managed endpoint secret from its own Stripe metadata table during `processWebhook`.
+
+**Why:** Re-verifying the same payload with a secret expected from connector settings caused valid payment events to fail, while the sync library already had access to the managed secret.
+
+**How to apply:** Pass the exact raw request body and Stripe signature to `processWebhook`; only parse or apply app-specific event handling after that call succeeds. Do not add a second secret-dependent verification layer.
 
 ## runMigrations does not create tables automatically
 
@@ -32,8 +40,10 @@ stripeSync.syncBackfill({ object: 'all' } as any)
 
 **Why:** The TypeScript types may not expose `object: "all"` but the JS switch case requires the string `"all"` to trigger the full sync.
 
-## Seed products script must use connector API, not env vars
+## Catalog seeding must run in the managed workflow
 
-The seed script (`scripts/src/seed-products.ts`) uses the Replit connectors API directly (`REPLIT_CONNECTORS_HOSTNAME` + `REPL_IDENTITY`). It does NOT work from a plain shell `node` invocation — it requires the Replit workflow environment where these env vars are populated.
+Stripe catalog writes through the Replit connector do not work from a plain shell process because connector identity is only injected into the managed workflow environment.
 
-**Run via:** `pnpm --filter @workspace/scripts exec tsx src/seed-products.ts` (from within the Replit workflow context, not bare shell).
+**Why:** One-off shell and connector attempts can appear credential-less even though the configured API workflow can seed and sync successfully.
+
+**How to apply:** Run catalog seed commands through the managed API workflow environment, then restore the normal service command and verify the synced catalog endpoint.

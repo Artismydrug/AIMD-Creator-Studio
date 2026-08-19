@@ -70,6 +70,10 @@ import type {
   Sponsorship,
   SponsorshipCheckout,
   SponsorshipInput,
+  StoreOrder,
+  StorePaymentIntent,
+  StorePaymentIntentInput,
+  StoreProduct,
   StudioPost,
   StudioPostInput,
   User,
@@ -3449,6 +3453,308 @@ export const useCreateCheckoutSession = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getCreateCheckoutSessionMutationOptions(options));
     }
+
+export const getListStoreProductsUrl = () => {
+
+
+
+
+  return `/api/store/products`
+}
+
+/**
+ * @summary List active AIMD storefront products and prices
+ */
+export const listStoreProducts = async ( options?: Parameters<typeof customFetch>[1]): Promise<StoreProduct[]> => {
+
+  return customFetch<StoreProduct[]>(getListStoreProductsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListStoreProductsQueryKey = () => {
+    return [
+    `/api/store/products`
+    ] as const;
+    }
+
+
+export const getListStoreProductsQueryOptions = <TData = Awaited<ReturnType<typeof listStoreProducts>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listStoreProducts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListStoreProductsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listStoreProducts>>> = ({ signal }) => listStoreProducts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listStoreProducts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListStoreProductsQueryResult = NonNullable<Awaited<ReturnType<typeof listStoreProducts>>>
+export type ListStoreProductsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List active AIMD storefront products and prices
+ */
+
+export function useListStoreProducts<TData = Awaited<ReturnType<typeof listStoreProducts>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listStoreProducts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListStoreProductsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateStorePaymentIntentUrl = () => {
+
+
+
+
+  return `/api/store/payment-intents`
+}
+
+/**
+ * @summary Validate a cart, create an order, and start embedded Stripe payment
+ */
+export const createStorePaymentIntent = async (storePaymentIntentInput: StorePaymentIntentInput, options?: Parameters<typeof customFetch>[1]): Promise<StorePaymentIntent> => {
+
+  return customFetch<StorePaymentIntent>(getCreateStorePaymentIntentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(storePaymentIntentInput)
+  }
+);}
+
+
+
+
+
+export const getCreateStorePaymentIntentMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createStorePaymentIntent>>, TError,{data: BodyType<StorePaymentIntentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createStorePaymentIntent>>, TError,{data: BodyType<StorePaymentIntentInput>}, TContext> => {
+
+const mutationKey = ['createStorePaymentIntent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createStorePaymentIntent>>, {data: BodyType<StorePaymentIntentInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createStorePaymentIntent(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateStorePaymentIntentMutationResult = NonNullable<Awaited<ReturnType<typeof createStorePaymentIntent>>>
+    export type CreateStorePaymentIntentMutationBody = BodyType<StorePaymentIntentInput>
+    export type CreateStorePaymentIntentMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Validate a cart, create an order, and start embedded Stripe payment
+ */
+export const useCreateStorePaymentIntent = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createStorePaymentIntent>>, TError,{data: BodyType<StorePaymentIntentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createStorePaymentIntent>>,
+        TError,
+        {data: BodyType<StorePaymentIntentInput>},
+        TContext
+      > => {
+      return useMutation(getCreateStorePaymentIntentMutationOptions(options));
+    }
+
+export const getListMyStoreOrdersUrl = () => {
+
+
+
+
+  return `/api/store/orders/me`
+}
+
+/**
+ * @summary List the signed-in creator's storefront purchases
+ */
+export const listMyStoreOrders = async ( options?: Parameters<typeof customFetch>[1]): Promise<StoreOrder[]> => {
+
+  return customFetch<StoreOrder[]>(getListMyStoreOrdersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyStoreOrdersQueryKey = () => {
+    return [
+    `/api/store/orders/me`
+    ] as const;
+    }
+
+
+export const getListMyStoreOrdersQueryOptions = <TData = Awaited<ReturnType<typeof listMyStoreOrders>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyStoreOrders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyStoreOrdersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyStoreOrders>>> = ({ signal }) => listMyStoreOrders({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyStoreOrders>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyStoreOrdersQueryResult = NonNullable<Awaited<ReturnType<typeof listMyStoreOrders>>>
+export type ListMyStoreOrdersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List the signed-in creator's storefront purchases
+ */
+
+export function useListMyStoreOrders<TData = Awaited<ReturnType<typeof listMyStoreOrders>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyStoreOrders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMyStoreOrdersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetStoreOrderUrl = (confirmationToken: string,) => {
+
+
+
+
+  return `/api/store/orders/${confirmationToken}`
+}
+
+/**
+ * @summary Get a storefront order by its private confirmation token
+ */
+export const getStoreOrder = async (confirmationToken: string, options?: Parameters<typeof customFetch>[1]): Promise<StoreOrder> => {
+
+  return customFetch<StoreOrder>(getGetStoreOrderUrl(confirmationToken),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStoreOrderQueryKey = (confirmationToken: string,) => {
+    return [
+    `/api/store/orders/${confirmationToken}`
+    ] as const;
+    }
+
+
+export const getGetStoreOrderQueryOptions = <TData = Awaited<ReturnType<typeof getStoreOrder>>, TError = ErrorType<unknown>>(confirmationToken: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStoreOrder>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStoreOrderQueryKey(confirmationToken);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStoreOrder>>> = ({ signal }) => getStoreOrder(confirmationToken, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: confirmationToken !== null && confirmationToken !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStoreOrder>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetStoreOrderQueryResult = NonNullable<Awaited<ReturnType<typeof getStoreOrder>>>
+export type GetStoreOrderQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get a storefront order by its private confirmation token
+ */
+
+export function useGetStoreOrder<TData = Awaited<ReturnType<typeof getStoreOrder>>, TError = ErrorType<unknown>>(
+ confirmationToken: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStoreOrder>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetStoreOrderQueryOptions(confirmationToken,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetCurrentUserUrl = () => {
 

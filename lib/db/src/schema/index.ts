@@ -9,3 +9,4 @@ export * from "./skill-tracks";
 export * from "./jobs";
 export * from "./events"; // exports communityEventsTable, eventRsvpsTable, eventAttendancesTable
 export * from "./sponsorships";
+export * from "./store";

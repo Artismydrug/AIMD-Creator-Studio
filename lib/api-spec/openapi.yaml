@@ -40,6 +40,8 @@ tags:
     description: Sponsor a Creator donations
   - name: payments
     description: Stripe payment and subscription operations
+  - name: store
+    description: AIMD storefront catalog, checkout, and orders
   - name: users
     description: User profile and creator directory
   - name: conversations
@@ -927,6 +929,76 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CheckoutSession"
+
+  # ── AIMD Store ────────────────────────────────────────────────────────────
+  /store/products:
+    get:
+      operationId: listStoreProducts
+      tags: [store]
+      summary: List active AIMD storefront products and prices
+      responses:
+        "200":
+          description: Storefront catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StoreProduct"
+
+  /store/payment-intents:
+    post:
+      operationId: createStorePaymentIntent
+      tags: [store]
+      summary: Validate a cart, create an order, and start embedded Stripe payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StorePaymentIntentInput"
+      responses:
+        "201":
+          description: Payment intent and pending order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StorePaymentIntent"
+
+  /store/orders/me:
+    get:
+      operationId: listMyStoreOrders
+      tags: [store]
+      summary: List the signed-in creator's storefront purchases
+      responses:
+        "200":
+          description: Purchase history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StoreOrder"
+
+  /store/orders/{confirmationToken}:
+    get:
+      operationId: getStoreOrder
+      tags: [store]
+      summary: Get a storefront order by its private confirmation token
+      parameters:
+        - in: path
+          name: confirmationToken
+          required: true
+          schema:
+            type: string
+            minLength: 20
+      responses:
+        "200":
+          description: Order confirmation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreOrder"
 
   # ── Users ─────────────────────────────────────────────────────────────────
   /users/me:
@@ -2028,6 +2100,165 @@ components:
           type: string
         checkoutUrl:
           type: string
+
+    # ── AIMD Store ─────────────────────────────────────────────────────────
+    StoreProduct:
+      type: object
+      required: [id, name, description, category, imageKey, fulfillmentType, featured, inventoryLabel, priceId, unitAmount, currency]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: ["apparel", "canvas", "digital"]
+        imageKey:
+          type: string
+        fulfillmentType:
+          type: string
+          enum: ["physical", "digital"]
+        featured:
+          type: boolean
+        inventoryLabel:
+          type: string
+        priceId:
+          type: string
+        unitAmount:
+          type: integer
+          minimum: 0
+        currency:
+          type: string
+
+    StoreCartItemInput:
+      type: object
+      required: [priceId, quantity]
+      properties:
+        priceId:
+          type: string
+          minLength: 4
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 10
+
+    StoreShippingAddressInput:
+      type: object
+      required: [name, line1, city, state, postalCode, country]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        line1:
+          type: string
+          minLength: 1
+        line2:
+          type: ["string", "null"]
+        city:
+          type: string
+          minLength: 1
+        state:
+          type: string
+          minLength: 1
+        postalCode:
+          type: string
+          minLength: 2
+        country:
+          type: string
+          minLength: 2
+          maxLength: 2
+        phone:
+          type: ["string", "null"]
+
+    StorePaymentIntentInput:
+      type: object
+      required: [email, items]
+      properties:
+        email:
+          type: string
+          format: email
+        items:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/StoreCartItemInput"
+        shippingAddress:
+          oneOf:
+            - $ref: "#/components/schemas/StoreShippingAddressInput"
+            - type: "null"
+
+    StorePaymentIntent:
+      type: object
+      required: [clientSecret, order]
+      properties:
+        clientSecret:
+          type: string
+        order:
+          $ref: "#/components/schemas/StoreOrder"
+
+    StoreOrderItem:
+      type: object
+      required: [id, stripeProductId, stripePriceId, productName, productDescription, productCategory, productImageKey, fulfillmentType, quantity, unitAmount, totalAmount]
+      properties:
+        id:
+          type: integer
+        stripeProductId:
+          type: string
+        stripePriceId:
+          type: string
+        productName:
+          type: string
+        productDescription:
+          type: string
+        productCategory:
+          type: string
+        productImageKey:
+          type: string
+        fulfillmentType:
+          type: string
+        quantity:
+          type: integer
+        unitAmount:
+          type: integer
+        totalAmount:
+          type: integer
+
+    StoreOrder:
+      type: object
+      required: [id, confirmationToken, customerEmail, status, currency, subtotal, shipping, tax, total, items, createdAt]
+      properties:
+        id:
+          type: string
+        confirmationToken:
+          type: string
+        customerEmail:
+          type: string
+        status:
+          type: string
+          enum: ["creating", "awaiting_payment", "processing", "paid", "failed", "canceled", "refunded", "disputed"]
+        currency:
+          type: string
+        subtotal:
+          type: integer
+        shipping:
+          type: integer
+        tax:
+          type: integer
+        total:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/StoreOrderItem"
+        paidAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
 
     # ── Directory ─────────────────────────────────────────────────────────
     DirectoryCreator:

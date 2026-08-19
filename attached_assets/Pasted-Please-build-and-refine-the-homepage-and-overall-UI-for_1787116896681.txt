@@ -1,0 +1,34 @@
+Please build and refine the homepage and overall UI for artistmydrug.com with our vibrant, high-energy aesthetic, incorporating our exact logo, profile assets, live portfolio links, custom Stripe e-commerce gallery, and tattoo booking flow.
+
+1. Visual Aesthetic & Branding:
+   - Theme: Vibrant, warm canvas background (soft off-white/cream #FAF8F5).
+   - Accents: Electric magenta, sunset coral, energetic cyan, and warm golden yellow with soft glassmorphism card panels.
+   - Branding: Feature our official AIMD Logo (AIMD Logo.jpg) prominently in the sticky header and footer.
+
+2. Homepage Hero & Mission/Vision (`/`):
+   - Hero Section: Display the AIMD logo prominently and focus strictly on our brand name, core mission, and vision (DO NOT use "Art is the addiction"):
+     * Headline: "Artist My Drug"
+     * Mission & Vision Subheadline: "To bridge physical artistry, digital creation, and community ownership—providing a vibrant platform where art is the ultimate form of expression, community, and personal transformation."
+     * CTA Buttons: "Book Tattoo Session" (/tattoo), "Explore Gallery" (/gallery), and "Join Creator Platform" (/app).
+
+3. Native E-Commerce Storefront Gallery (`/gallery` - Option 2):
+   - Architecture: Build a custom storefront powered by Stripe Checkout / Stripe Elements and PostgreSQL database storage for products.
+   - Storefront UI: Display a vibrant product grid catalog inspired by https://www.artismydrug.org/category/all-products with filter tabs ("All Products", "Apparel & Merch", "Canvas Prints", "Digital Art").
+   - Product Cards & Checkout: Show product titles, prices, descriptions, images, and an in-app "Add to Cart / Buy Now" modal. Process native checkouts directly using Stripe without redirecting off-site.
+   - Database Integration: Store products, orders, and purchase history in the PostgreSQL database so user accounts (Clerk) can link purchased art and rewards directly to their creator profile.
+
+4. Tattoo Studio Page (`/tattoo`):
+   - Lead Artist Spotlight: Feature "Poncho The Artist" as the primary resident artist using our profile photo (IMG_0443.jpg).
+   - Portfolio Link: Direct users to https://ponchotheartist.com/tattoo via a "View Tattoo Portfolio" button.
+   - Resident Artists: Include styled placeholder cards ready for Edwin and Ashley.
+   - Booking Intake System: Multi-step booking form modeled after https://ponchotheartist.com/booking/ (collecting client contact info, tattoo idea description, body placement, estimated size, preferred artist, and reference image uploads).
+
+5. 3-Phase Creator Journey (`/` & Onboarding):
+   - Display vibrant interactive cards detailing our 3 growth stages:
+     * Phase 1: The Inspiring Artist (Discover & Connect) — Gallery exploration, daily check-ins, resident artist discovery.
+     * Phase 2: The Dedicated Artist (Level Up & Skill Building) — Weekly challenges, badges, leaderboards, portfolio building.
+     * Phase 3: The Professional Artist (Showcase & Monetize) — Print sales, custom tattoo/art bookings, pro perks.
+
+6. Navigation & Technical Setup:
+   - Sticky Navigation Bar: Include AIMD Logo, links to Home (/), Tattoo Studio (/tattoo), Gallery (/gallery), Creator App (/app), and Clerk Auth sign-in/profile buttons.
+   - Mobile Responsiveness: Fully optimized across all mobile and desktop viewports.

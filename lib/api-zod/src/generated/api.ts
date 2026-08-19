@@ -961,6 +961,169 @@ export const CreateCheckoutSessionResponse = zod.object({
 
 
 /**
+ * @summary List active AIMD storefront products and prices
+ */
+export const listStoreProductsResponseUnitAmountMin = 0;
+
+
+
+export const ListStoreProductsResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "category": zod.enum(['apparel', 'canvas', 'digital']),
+  "imageKey": zod.string(),
+  "fulfillmentType": zod.enum(['physical', 'digital']),
+  "featured": zod.boolean(),
+  "inventoryLabel": zod.string(),
+  "priceId": zod.string(),
+  "unitAmount": zod.int().min(listStoreProductsResponseUnitAmountMin),
+  "currency": zod.string()
+})
+export const ListStoreProductsResponse = zod.array(ListStoreProductsResponseItem)
+
+
+/**
+ * @summary Validate a cart, create an order, and start embedded Stripe payment
+ */
+export const createStorePaymentIntentBodyItemsItemPriceIdMin = 4;
+
+export const createStorePaymentIntentBodyItemsItemQuantityMax = 10;
+
+export const createStorePaymentIntentBodyItemsMax = 20;
+
+
+
+
+
+export const createStorePaymentIntentBodyShippingAddressOnePostalCodeMin = 2;
+
+export const createStorePaymentIntentBodyShippingAddressOneCountryMin = 2;
+export const createStorePaymentIntentBodyShippingAddressOneCountryMax = 2;
+
+
+
+export const CreateStorePaymentIntentBody = zod.object({
+  "email": zod.email(),
+  "items": zod.array(zod.object({
+  "priceId": zod.string().min(createStorePaymentIntentBodyItemsItemPriceIdMin),
+  "quantity": zod.int().min(1).max(createStorePaymentIntentBodyItemsItemQuantityMax)
+})).min(1).max(createStorePaymentIntentBodyItemsMax),
+  "shippingAddress": zod.union([zod.object({
+  "name": zod.string().min(1),
+  "line1": zod.string().min(1),
+  "line2": zod.string().nullish(),
+  "city": zod.string().min(1),
+  "state": zod.string().min(1),
+  "postalCode": zod.string().min(createStorePaymentIntentBodyShippingAddressOnePostalCodeMin),
+  "country": zod.string().min(createStorePaymentIntentBodyShippingAddressOneCountryMin).max(createStorePaymentIntentBodyShippingAddressOneCountryMax),
+  "phone": zod.string().nullish()
+}),zod.null()]).optional()
+})
+
+export const CreateStorePaymentIntentResponse = zod.object({
+  "clientSecret": zod.string(),
+  "order": zod.object({
+  "id": zod.string(),
+  "confirmationToken": zod.string(),
+  "customerEmail": zod.string(),
+  "status": zod.enum(['creating', 'awaiting_payment', 'processing', 'paid', 'failed', 'canceled', 'refunded', 'disputed']),
+  "currency": zod.string(),
+  "subtotal": zod.int(),
+  "shipping": zod.int(),
+  "tax": zod.int(),
+  "total": zod.int(),
+  "items": zod.array(zod.object({
+  "id": zod.int(),
+  "stripeProductId": zod.string(),
+  "stripePriceId": zod.string(),
+  "productName": zod.string(),
+  "productDescription": zod.string(),
+  "productCategory": zod.string(),
+  "productImageKey": zod.string(),
+  "fulfillmentType": zod.string(),
+  "quantity": zod.int(),
+  "unitAmount": zod.int(),
+  "totalAmount": zod.int()
+})),
+  "paidAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+})
+
+
+/**
+ * @summary List the signed-in creator's storefront purchases
+ */
+export const ListMyStoreOrdersResponseItem = zod.object({
+  "id": zod.string(),
+  "confirmationToken": zod.string(),
+  "customerEmail": zod.string(),
+  "status": zod.enum(['creating', 'awaiting_payment', 'processing', 'paid', 'failed', 'canceled', 'refunded', 'disputed']),
+  "currency": zod.string(),
+  "subtotal": zod.int(),
+  "shipping": zod.int(),
+  "tax": zod.int(),
+  "total": zod.int(),
+  "items": zod.array(zod.object({
+  "id": zod.int(),
+  "stripeProductId": zod.string(),
+  "stripePriceId": zod.string(),
+  "productName": zod.string(),
+  "productDescription": zod.string(),
+  "productCategory": zod.string(),
+  "productImageKey": zod.string(),
+  "fulfillmentType": zod.string(),
+  "quantity": zod.int(),
+  "unitAmount": zod.int(),
+  "totalAmount": zod.int()
+})),
+  "paidAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListMyStoreOrdersResponse = zod.array(ListMyStoreOrdersResponseItem)
+
+
+/**
+ * @summary Get a storefront order by its private confirmation token
+ */
+export const getStoreOrderPathConfirmationTokenMin = 20;
+
+
+
+export const GetStoreOrderParams = zod.object({
+  "confirmationToken": zod.coerce.string().min(getStoreOrderPathConfirmationTokenMin)
+})
+
+export const GetStoreOrderResponse = zod.object({
+  "id": zod.string(),
+  "confirmationToken": zod.string(),
+  "customerEmail": zod.string(),
+  "status": zod.enum(['creating', 'awaiting_payment', 'processing', 'paid', 'failed', 'canceled', 'refunded', 'disputed']),
+  "currency": zod.string(),
+  "subtotal": zod.int(),
+  "shipping": zod.int(),
+  "tax": zod.int(),
+  "total": zod.int(),
+  "items": zod.array(zod.object({
+  "id": zod.int(),
+  "stripeProductId": zod.string(),
+  "stripePriceId": zod.string(),
+  "productName": zod.string(),
+  "productDescription": zod.string(),
+  "productCategory": zod.string(),
+  "productImageKey": zod.string(),
+  "fulfillmentType": zod.string(),
+  "quantity": zod.int(),
+  "unitAmount": zod.int(),
+  "totalAmount": zod.int()
+})),
+  "paidAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Get the current demo user profile
  */
 export const GetCurrentUserResponse = zod.object({
