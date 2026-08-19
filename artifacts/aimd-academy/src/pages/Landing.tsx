@@ -4,7 +4,15 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
-import { ArrowRight, Brush, Zap, Image as ImageIcon } from 'lucide-react';
+import {
+  ArrowRight,
+  Brush,
+  Zap,
+  Image as ImageIcon,
+  Compass,
+  Trophy,
+  Crown,
+} from 'lucide-react';
 import aimdHeroImg from '@assets/generated_images/aimd-hero.jpg';
 import tattooImg from '@assets/generated_images/tattoo-studio.jpg';
 import galleryImg from '@assets/generated_images/gallery-wall.jpg';
@@ -44,6 +52,81 @@ function PillarCard({
         </Button>
       </div>
     </div>
+  );
+}
+
+// ─── Creator journey ───────────────────────────────────────────────────────────
+
+function CreatorJourney() {
+  const stages = [
+    {
+      icon: Compass,
+      title: 'Inspiring Artist',
+      action: 'Discover & connect',
+      description: 'Find your people, explore the work, and build a creative rhythm.',
+      color: 'var(--vibrant-cyan)',
+      glow: 'glow-cyan',
+    },
+    {
+      icon: Trophy,
+      title: 'Dedicated Artist',
+      action: 'Practice & level up',
+      description: 'Turn consistency into momentum through challenges, habits, and skill building.',
+      color: 'var(--vibrant-magenta)',
+      glow: 'glow-magenta',
+    },
+    {
+      icon: Crown,
+      title: 'Professional Artist',
+      action: 'Showcase & grow',
+      description: 'Build a portfolio, share your work, and create more opportunities.',
+      color: 'var(--vibrant-gold)',
+      glow: 'glow-gold',
+    },
+  ];
+
+  return (
+    <section className="py-24 px-6 border-b border-border bg-card">
+      <div className="container mx-auto">
+        <div className="max-w-3xl mb-12">
+          <p className="font-mono text-xs uppercase tracking-widest text-primary mb-3">Inside the Creator App</p>
+          <h2 className="text-4xl md:text-6xl font-black font-display uppercase tracking-tight leading-[0.9] mb-5">
+            Your creative path, <span className="text-gradient-brand">in motion.</span>
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            AIMD meets artists where they are and gives them a path to keep growing.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-5">
+          {stages.map(({ icon: Icon, title, action, description, color, glow }) => (
+            <article key={title} className={`glass-card ${glow} rounded-xl p-7 group hover:-translate-y-1 transition-transform duration-300`}>
+              <div
+                className="w-12 h-12 rounded-lg border-2 flex items-center justify-center mb-8 bg-background"
+                style={{ borderColor: color }}
+              >
+                <Icon className="w-5 h-5" style={{ color }} />
+              </div>
+              <p className="font-mono text-[11px] uppercase tracking-widest mb-2" style={{ color }}>{action}</p>
+              <h3 className="font-display font-black text-2xl uppercase tracking-tight mb-3">{title}</h3>
+              <p className="text-muted-foreground leading-relaxed">{description}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-10 flex flex-wrap gap-4 items-center">
+          <Button asChild size="lg" className="h-14 px-8 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono font-bold group">
+            <Link href="/app">
+              Start in the Creator App
+              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </Button>
+          <Link href="/about" className="font-mono text-xs uppercase tracking-widest text-primary hover:text-primary/75 transition-colors">
+            Explore the full journey
+          </Link>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -237,6 +320,8 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      <CreatorJourney />
 
       {/* Community art showcase with lightbox */}
       <ArtShowcase />
