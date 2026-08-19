@@ -73,7 +73,7 @@ function Storefront() {
                 Work Worth <br/><span className="text-gradient-brand">The Wall.</span>
               </h1>
               <p className="text-lg md:text-xl text-foreground font-medium max-w-2xl">
-                Independent art directly fueling the community. Prints, digital assets, and limited-edition apparel straight from the studio.
+                Experience art seamlessly beyond the studio walls. Prints, digital assets, and limited-edition apparel — independent art directly fueling the community.
               </p>
             </div>
 

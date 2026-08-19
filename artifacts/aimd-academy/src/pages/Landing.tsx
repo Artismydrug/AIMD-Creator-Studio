@@ -94,7 +94,7 @@ function CreatorJourney() {
             Your creative path, <span className="text-gradient-brand">in motion.</span>
           </h2>
           <p className="text-lg text-muted-foreground">
-            AIMD meets artists where they are and gives them a path to keep growing.
+            Passion powers performance. Creators unlock tangible growth through gamified milestones — wherever they are on the journey.
           </p>
         </div>
 
@@ -267,7 +267,7 @@ export default function Landing() {
             Create. <br className="md:hidden" />Connect. <br className="md:hidden" /><span className="text-gradient-brand">Transform.</span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mb-10 mx-auto">
-            An artist-built ecosystem grounded in real creative practice.
+            Bridging physical artistry, digital creation, and community ownership — where art is the ultimate form of expression, community, and personal transformation.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4">
@@ -304,7 +304,7 @@ export default function Landing() {
               icon={ImageIcon}
               kicker="Digital & Prints"
               title="The Gallery"
-              description="A curated showcase of work from the AIMD community — digital pieces and physical prints."
+              description="Experience art seamlessly beyond the studio — a curated digital gallery of community work, prints, and digital pieces."
               href="/gallery"
               cta="Explore Gallery"
             />
@@ -313,7 +313,7 @@ export default function Landing() {
               icon={Zap}
               kicker="The Ecosystem"
               title="Creator App"
-              description="A gamified home for working artists: build daily discipline, compete, and get rewarded."
+              description="Where passion powers performance: build daily discipline, hit gamified milestones, and unlock tangible growth."
               href="/app"
               cta="Open Creator App"
             />

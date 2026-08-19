@@ -11,7 +11,12 @@ import {
   Globe,
   HeartHandshake,
   Eye,
+  Palette,
+  Users,
+  Flame,
+  TrendingUp,
 } from 'lucide-react';
+import { BrandVideo } from '@/components/BrandVideo';
 import aimdHeroImg from '@assets/generated_images/aimd-hero.jpg';
 import resortCampusImg from '@assets/generated_images/artist-resort-campus.jpg';
 import resortContainersImg from '@assets/generated_images/artist-resort-containers.jpg';
@@ -38,7 +43,7 @@ export default function About() {
               To Bridge Physical Artistry & <span className="text-gradient-brand">Digital Creation.</span>
             </h1>
             <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mb-10">
-              AIMD (Art Is My Drug) is an artist-built ecosystem. We are creating a platform where art is the ultimate form of expression, community, and personal transformation.
+              AIMD (Art Is My Drug) bridges physical artistry, digital creation, and community ownership — a vibrant platform where art is the ultimate form of expression, community, and personal transformation.
             </p>
           </div>
         </div>
@@ -51,22 +56,94 @@ export default function About() {
             <HeartHandshake className="w-7 h-7 text-primary mb-5" />
             <p className="font-mono text-xs uppercase tracking-widest text-primary mb-2">Our Mission</p>
             <h2 className="text-2xl md:text-3xl font-black font-display uppercase tracking-tight mb-4">
-              Give artists a path forward.
+              Art. Community. Ownership.
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Connect physical artistry, digital creation, and community ownership so creators can practice, grow, and build sustainable careers.
+              To bridge physical artistry, digital creation, and community ownership — providing a vibrant platform where art is the ultimate form of expression, community, and personal transformation.
             </p>
           </article>
           <article className="glass-card rounded-xl p-7 md:p-9">
             <Eye className="w-7 h-7 text-primary mb-5" />
             <p className="font-mono text-xs uppercase tracking-widest text-primary mb-2">Our Vision</p>
             <h2 className="text-2xl md:text-3xl font-black font-display uppercase tracking-tight mb-4">
-              A creative ecosystem owned by artists.
+              The definitive creator ecosystem.
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              A connected world where expression creates opportunity, community builds confidence, and artists shape what comes next.
+              To become the definitive ecosystem for creators and tattoo artists — where passion powers performance, creators unlock tangible growth through gamified milestones, and fans experience art seamlessly across physical studios and digital galleries.
             </p>
           </article>
+        </div>
+      </section>
+
+      {/* Brand video */}
+      <section className="py-20 px-6 border-b border-border bg-card">
+        <div className="container mx-auto">
+          <div className="max-w-3xl mx-auto text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-6">
+              <Sparkles className="w-4 h-4" /> Watch Our Story
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black font-display uppercase tracking-tight mb-4">
+              Art Is <span className="text-gradient-brand">My Drug.</span>
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              See how AIMD bridges physical artistry and digital creation — from the studio chair to the digital gallery.
+            </p>
+          </div>
+          <div className="max-w-4xl mx-auto">
+            <BrandVideo />
+          </div>
+        </div>
+      </section>
+
+      {/* Brand values */}
+      <section className="py-20 px-6 border-b border-border">
+        <div className="container mx-auto">
+          <div className="flex items-center gap-4 mb-4">
+            <h2 className="text-3xl md:text-5xl font-black font-display uppercase tracking-tight">Brand Values</h2>
+            <div className="h-[2px] bg-border flex-1 hidden md:block" />
+          </div>
+          <p className="text-lg text-muted-foreground mb-12 max-w-2xl">
+            The principles behind everything we build — on the wall, on the screen, and in the community.
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[
+              {
+                icon: Palette,
+                title: 'Expression First',
+                body: 'Art is the ultimate form of expression. Every feature, wall, and gallery exists to amplify the work itself.',
+                color: 'var(--vibrant-magenta)',
+              },
+              {
+                icon: Users,
+                title: 'Community Ownership',
+                body: 'Creators shape the platform they build on. The community owns its culture, its showcase, and its future.',
+                color: 'var(--vibrant-cyan)',
+              },
+              {
+                icon: Flame,
+                title: 'Passion Powers Performance',
+                body: 'Daily discipline and creative drive turn into real momentum — streaks, challenges, and craft that compounds.',
+                color: 'var(--vibrant-coral, var(--vibrant-magenta))',
+              },
+              {
+                icon: TrendingUp,
+                title: 'Tangible Growth',
+                body: 'Gamified milestones unlock real opportunity: portfolios, gallery placement, bookings, and pro creator perks.',
+                color: 'var(--vibrant-gold)',
+              },
+            ].map(({ icon: Icon, title, body, color }) => (
+              <article key={title} className="glass-card rounded-xl p-6 group hover:-translate-y-1 transition-transform duration-300">
+                <div
+                  className="w-12 h-12 rounded-lg border-2 bg-background flex items-center justify-center mb-5"
+                  style={{ borderColor: color }}
+                >
+                  <Icon className="w-5 h-5" style={{ color }} />
+                </div>
+                <h3 className="font-display font-black text-xl uppercase tracking-tight mb-2">{title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{body}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
