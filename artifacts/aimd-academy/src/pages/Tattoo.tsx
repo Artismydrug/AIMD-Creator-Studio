@@ -10,11 +10,13 @@ import tattooImg from '@assets/generated_images/tattoo-studio.jpg';
 import flashImg from '@assets/generated_images/workshop-tattoo.jpg';
 import ponchoImg from '@assets/IMG_0443_1787113468837.jpg';
 import ashleyImg from '@assets/A79EF24A-5883-4B50-9303-2DEAD60C2323_1787179907960.jpeg';
+import edwinImg from '@assets/2E8CB3C8-F080-4FA1-9C19-31C4FD0B50DD.JPG_1787180646083.jpeg';
 
 const BOOKING_EMAIL = 'booking@artismydrug.com';
 
 const PORTFOLIO_URL = 'https://ponchotheartist.com/tattoo';
 const ASHLEY_PORTFOLIO_URL = 'https://www.instagram.com/ashole.inkz/';
+const EDWIN_PORTFOLIO_URL = 'https://www.instagram.com/edsta1/';
 
 const ARTISTS = [
   {
@@ -29,11 +31,11 @@ const ARTISTS = [
   {
     name: 'Edwin',
     role: 'Resident Artist',
-    styles: 'Portfolio coming soon',
+    styles: 'Tattoo work · Instagram portfolio',
     featured: false,
     available: false,
-    photo: undefined as string | undefined,
-    portfolioUrl: undefined as string | undefined,
+    photo: edwinImg,
+    portfolioUrl: EDWIN_PORTFOLIO_URL,
   },
   {
     name: 'Ashley',
