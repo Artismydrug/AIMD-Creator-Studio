@@ -9,10 +9,12 @@ import { ArrowRight, ArrowLeft, Brush, Calendar, ExternalLink, ImagePlus, Mail, 
 import tattooImg from '@assets/generated_images/tattoo-studio.jpg';
 import flashImg from '@assets/generated_images/workshop-tattoo.jpg';
 import ponchoImg from '@assets/IMG_0443_1787113468837.jpg';
+import ashleyImg from '@assets/A79EF24A-5883-4B50-9303-2DEAD60C2323_1787179907960.jpeg';
 
 const BOOKING_EMAIL = 'booking@artismydrug.com';
 
 const PORTFOLIO_URL = 'https://ponchotheartist.com/tattoo';
+const ASHLEY_PORTFOLIO_URL = 'https://www.instagram.com/ashole.inkz/';
 
 const ARTISTS = [
   {
@@ -36,11 +38,11 @@ const ARTISTS = [
   {
     name: 'Ashley',
     role: 'Resident Artist',
-    styles: 'Portfolio coming soon',
+    styles: 'Tattoo work · Instagram portfolio',
     featured: false,
     available: false,
-    photo: undefined as string | undefined,
-    portfolioUrl: undefined as string | undefined,
+    photo: ashleyImg,
+    portfolioUrl: ASHLEY_PORTFOLIO_URL,
   },
 ];
 
@@ -186,19 +188,19 @@ export default function Tattoo() {
                 <h3 className="font-display font-black uppercase tracking-tight text-xl mb-1">{a.name}</h3>
                 <p className="font-mono text-xs uppercase tracking-widest text-primary mb-3">{a.role}</p>
                 <p className="text-sm text-muted-foreground mb-5">{a.styles}</p>
-                {a.available ? (
-                  <div className="mt-auto flex flex-col gap-2">
-                    {a.portfolioUrl && (
-                      <Button
-                        variant="outline"
-                        className="rounded-none border-primary/40 text-primary hover:bg-primary/10 uppercase font-mono text-xs"
-                        asChild
-                      >
-                        <a href={a.portfolioUrl} target="_blank" rel="noopener noreferrer">
-                          View Tattoo Portfolio <ExternalLink className="ml-1.5 w-3.5 h-3.5" />
-                        </a>
-                      </Button>
-                    )}
+                <div className="mt-auto flex flex-col gap-2">
+                  {a.portfolioUrl && (
+                    <Button
+                      variant="outline"
+                      className="rounded-none border-primary/40 text-primary hover:bg-primary/10 uppercase font-mono text-xs"
+                      asChild
+                    >
+                      <a href={a.portfolioUrl} target="_blank" rel="noopener noreferrer">
+                        View Tattoo Portfolio <ExternalLink className="ml-1.5 w-3.5 h-3.5" />
+                      </a>
+                    </Button>
+                  )}
+                  {a.available ? (
                     <Button
                       className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono text-xs"
                       onClick={() => setForm((f) => ({ ...f, artist: a.name }))}
@@ -206,10 +208,10 @@ export default function Tattoo() {
                     >
                       <a href="#booking">Book with {a.name.split(' ')[0]}</a>
                     </Button>
-                  </div>
-                ) : (
+                  ) : (
                   <p className="mt-auto font-mono text-xs uppercase text-muted-foreground">Books opening soon</p>
-                )}
+                  )}
+                </div>
               </div>
             ))}
           </div>
