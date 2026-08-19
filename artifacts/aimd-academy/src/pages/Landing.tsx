@@ -9,6 +9,7 @@ import {
   Image as ImageIcon, MapPin, Sparkles, Trophy, Zap,
 } from 'lucide-react';
 import aimdHeroImg from '@assets/generated_images/aimd-hero.jpg';
+import aimdLogo from '@assets/aimd-logo.jpg';
 import tattooImg from '@assets/generated_images/tattoo-studio.jpg';
 import galleryImg from '@assets/generated_images/gallery-wall.jpg';
 
@@ -189,6 +190,7 @@ export default function Landing() {
 
         <div className="container relative z-10 px-6 mx-auto py-20">
           <div className="max-w-4xl">
+            <img src={aimdLogo} alt="AIMD — Art Is My Drug official logo" className="h-20 md:h-28 w-auto mb-8" />
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-8">
               <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
               Studio · Gallery · Creator Platform

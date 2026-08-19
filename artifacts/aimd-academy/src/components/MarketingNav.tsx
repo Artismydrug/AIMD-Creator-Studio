@@ -2,7 +2,8 @@ import { Link, useLocation } from 'wouter';
 import { useState } from 'react';
 import { useAuth, useUser } from '@clerk/react';
 import { Button } from '@/components/ui/button';
-import { Flame, Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, ArrowRight } from 'lucide-react';
+import aimdLogo from '@assets/aimd-logo.jpg';
 
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
@@ -23,12 +24,8 @@ export function MarketingNav() {
   return (
     <nav className="border-b border-border px-6 py-4 sticky top-0 z-50 bg-background/90 backdrop-blur-md">
       <div className="container mx-auto flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <Flame className="w-7 h-7 text-primary" />
-          <span className="font-display font-black text-xl tracking-widest">AIMD</span>
-          <span className="hidden sm:inline font-mono text-[10px] uppercase tracking-widest text-muted-foreground mt-1">
-            Art Is My Drug
-          </span>
+        <Link href="/" className="flex items-center gap-2" aria-label="AIMD — Art Is My Drug, home">
+          <img src={aimdLogo} alt="AIMD — Art Is My Drug" className="h-10 w-auto" />
         </Link>
 
         {/* Desktop links */}
@@ -139,9 +136,7 @@ export function MarketingFooter() {
     <footer className="border-t border-border px-6 py-10 bg-card">
       <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <Flame className="w-5 h-5 text-primary" />
-          <span className="font-display font-black tracking-widest">AIMD</span>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Art Is My Drug</span>
+          <img src={aimdLogo} alt="AIMD — Art Is My Drug" className="h-9 w-auto" />
         </div>
         <div className="flex flex-wrap justify-center gap-4 font-mono text-xs uppercase text-muted-foreground">
           <Link href="/tattoo" className="hover:text-foreground">Tattoo Studio</Link>
