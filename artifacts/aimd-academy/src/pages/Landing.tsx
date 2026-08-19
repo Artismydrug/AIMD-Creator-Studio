@@ -4,10 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
-import {
-  ArrowRight, Brush, Calendar, Compass, Crown, Flame,
-  Image as ImageIcon, MapPin, Sparkles, Trophy, Zap,
-} from 'lucide-react';
+import { ArrowRight, Brush, Zap, Image as ImageIcon } from 'lucide-react';
 import aimdHeroImg from '@assets/generated_images/aimd-hero.jpg';
 import tattooImg from '@assets/generated_images/tattoo-studio.jpg';
 import galleryImg from '@assets/generated_images/gallery-wall.jpg';
@@ -15,45 +12,36 @@ import galleryImg from '@assets/generated_images/gallery-wall.jpg';
 // ─── Pillar card ──────────────────────────────────────────────────────────────
 
 function PillarCard({
-  image, icon: Icon, kicker, title, description, points, href, cta,
+  image, icon: Icon, kicker, title, description, href, cta,
 }: {
   image: string;
   icon: any;
   kicker: string;
   title: string;
   description: string;
-  points: string[];
   href: string;
   cta: string;
 }) {
   return (
     <div className="glass-card rounded-xl flex flex-col group overflow-hidden hover:-translate-y-1 transition-transform duration-300">
-      <div className="h-44 overflow-hidden relative">
+      <div className="h-64 overflow-hidden relative">
         <img src={image} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-card/90 to-transparent" />
+        <div className="absolute bottom-4 left-6 right-6">
+          <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-primary mb-2 drop-shadow-md bg-background/80 px-2 py-1 w-fit rounded backdrop-blur-sm">
+            <Icon className="w-3.5 h-3.5" /> {kicker}
+          </div>
+          <h3 className="font-display font-black text-3xl uppercase tracking-tight text-foreground drop-shadow-lg">{title}</h3>
+        </div>
       </div>
       <div className="p-6 flex flex-col flex-1">
-        <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-primary mb-2">
-          <Icon className="w-4 h-4" /> {kicker}
-        </div>
-        <h3 className="font-display font-black text-2xl uppercase tracking-tight mb-3">{title}</h3>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-4">{description}</p>
-        <ul className="space-y-2 mb-6">
-          {points.map((p) => (
-            <li key={p} className="flex items-start gap-2 text-sm">
-              <span className="w-1.5 h-1.5 bg-primary mt-1.5 flex-shrink-0" />
-              {p}
-            </li>
-          ))}
-        </ul>
-        <div className="mt-auto">
-          <Button asChild variant="outline" className="rounded-none border-primary/40 text-primary hover:bg-primary/10 uppercase font-mono text-xs group/btn">
-            <Link href={href}>
-              {cta}
-              <ArrowRight className="ml-1.5 w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
-            </Link>
-          </Button>
-        </div>
+        <p className="text-sm text-muted-foreground leading-relaxed mb-6 flex-1">{description}</p>
+        <Button asChild variant="outline" className="w-full rounded-none border-primary/40 text-primary hover:bg-primary/10 uppercase font-mono text-xs group/btn">
+          <Link href={href}>
+            {cta}
+            <ArrowRight className="ml-1.5 w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
+          </Link>
+        </Button>
       </div>
     </div>
   );
@@ -89,11 +77,11 @@ function ArtShowcase() {
       <div className="container mx-auto">
         <div className="flex items-center gap-4 mb-4">
           <h2 className="text-3xl md:text-5xl font-black font-display uppercase tracking-tight">
-            Fresh From <span className="text-gradient-brand">The Community</span>
+            Fresh From <span className="text-gradient-brand">The Studio</span>
           </h2>
           <div className="h-[2px] bg-border flex-1 hidden md:block" />
         </div>
-        <p className="text-muted-foreground text-lg mb-10">Tap any piece to see it up close.</p>
+        <p className="text-muted-foreground text-lg mb-10">Real work from AIMD creators.</p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {posts.map((p) => (
@@ -104,17 +92,17 @@ function ArtShowcase() {
               className="glass-card rounded-xl overflow-hidden text-left group hover:-translate-y-1 transition-transform duration-300 focus-visible:ring-2 focus-visible:ring-primary"
               aria-label={`View artwork by ${p.username}`}
             >
-              <div className="aspect-square overflow-hidden">
+              <div className="aspect-square overflow-hidden relative">
                 <img
                   src={p.imageUrl!}
                   alt={p.caption}
                   loading="lazy"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-              </div>
-              <div className="p-3">
-                <p className="font-mono text-xs font-bold truncate">{p.username}</p>
-                <p className="text-[11px] text-muted-foreground truncate">{p.caption}</p>
+                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <p className="font-mono text-xs font-bold text-foreground truncate">{p.username}</p>
+                </div>
               </div>
             </button>
           ))}
@@ -181,87 +169,70 @@ export default function Landing() {
       <MarketingNav />
 
       {/* Hero */}
-      <section className="relative min-h-[80vh] flex items-center border-b border-border overflow-hidden">
+      <section className="relative min-h-[85vh] flex items-center border-b border-border overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img src={aimdHeroImg} alt="" className="w-full h-full object-cover opacity-20" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+          <img src={aimdHeroImg} alt="" className="w-full h-full object-cover opacity-25" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         </div>
 
-        <div className="container relative z-10 px-6 mx-auto py-20">
-          <div className="max-w-4xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-8">
-              <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-              Studio · Gallery · Creator Platform
-            </div>
-            <h1 className="text-5xl md:text-8xl font-black font-display uppercase leading-[0.9] tracking-tighter mb-6">
-              Create. Connect. <span className="text-gradient-brand">Transform.</span>
-            </h1>
-            <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mb-10">
-              To bridge physical artistry, digital creation, and community ownership —
-              providing a vibrant platform where art is the ultimate form of expression,
-              community, and personal transformation.
-            </p>
+        <div className="container relative z-10 px-6 mx-auto py-20 text-center flex flex-col items-center">
+          <div className="inline-flex items-center justify-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-8">
+            <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+            Studio · Gallery · Creator App
+          </div>
+          <h1 className="text-6xl md:text-9xl font-black font-display uppercase leading-[0.85] tracking-tighter mb-6 max-w-5xl">
+            Create. <br className="md:hidden" />Connect. <br className="md:hidden" /><span className="text-gradient-brand">Transform.</span>
+          </h1>
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mb-10 mx-auto">
+            An artist-built ecosystem grounded in real creative practice.
+          </p>
 
-            <div className="flex flex-wrap gap-3">
-              <Button size="lg" className="h-14 px-7 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono font-bold group" asChild>
-<Link href="/tattoo">
-                  Book Tattoo Session
-                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-</Button>
-              <Button size="lg" variant="outline" className="h-14 px-7 rounded-none border-foreground/20 hover:bg-muted uppercase font-mono font-bold" asChild>
-<Link href="/gallery">
-                  Explore Gallery
-                </Link>
-</Button>
-              <Button size="lg" variant="outline" className="h-14 px-7 rounded-none border-primary/40 text-primary hover:bg-primary/10 uppercase font-mono font-bold" asChild>
-<Link href="/app">
-                  Enter the Studio
-                </Link>
-</Button>
-            </div>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Button size="lg" className="h-14 px-8 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono font-bold group" asChild>
+              <Link href="/app">
+                Creator App
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="h-14 px-8 rounded-none border-foreground/20 hover:bg-muted uppercase font-mono font-bold" asChild>
+              <Link href="/about">
+                Our Mission
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
 
       {/* Three pillars */}
-      <section className="py-20 px-6 border-b border-border">
+      <section className="py-24 px-6 border-b border-border">
         <div className="container mx-auto">
-          <div className="flex items-center gap-4 mb-12">
-            <h2 className="text-3xl md:text-5xl font-black font-display uppercase tracking-tight">One Mission, Three Ways to Create</h2>
-            <div className="h-[2px] bg-border flex-1 hidden md:block" />
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-8">
             <PillarCard
               image={tattooImg}
               icon={Brush}
-              kicker="Pillar 01 · Physical Art"
+              kicker="Physical Art"
               title="The Studio"
-              description="Real needles, real walls, real work. Our resident artists take custom projects and walk-in flash."
-              points={['Resident artists & guest spots', 'Custom flash designs', 'Simple booking intake']}
+              description="Real needles, real walls, real work. Custom projects and walk-in flash by resident AIMD artists."
               href="/tattoo"
               cta="Book a Session"
             />
             <PillarCard
               image={galleryImg}
               icon={ImageIcon}
-              kicker="Pillar 02 · Digital & Prints"
+              kicker="Digital & Prints"
               title="The Gallery"
               description="A curated showcase of work from the AIMD community — digital pieces and physical prints."
-              points={['Curated community artwork', 'Prints & showcase pieces', 'Fresh work every week']}
               href="/gallery"
-              cta="Explore the Gallery"
+              cta="Explore Gallery"
             />
             <PillarCard
               image={aimdHeroImg}
               icon={Zap}
-              kicker="Pillar 03 · The Ecosystem"
-              title="The Creator Platform"
-              description="A gamified home for working artists: build daily discipline, compete, and get rewarded for the grind."
-              points={['Weekly challenges & leaderboards', 'Event check-in badges', 'AIMD Points & real rewards']}
+              kicker="The Ecosystem"
+              title="Creator App"
+              description="A gamified home for working artists: build daily discipline, compete, and get rewarded."
               href="/app"
-              cta="Join the Platform"
+              cta="Open Creator App"
             />
           </div>
         </div>
@@ -269,160 +240,6 @@ export default function Landing() {
 
       {/* Community art showcase with lightbox */}
       <ArtShowcase />
-
-      {/* Creator Journey — 3 growth phases */}
-      <section className="py-20 px-6 border-b border-border">
-        <div className="container mx-auto">
-          <div className="flex items-center gap-4 mb-4">
-            <h2 className="text-3xl md:text-5xl font-black font-display uppercase tracking-tight">The Creator Journey</h2>
-            <div className="h-[2px] bg-border flex-1 hidden md:block" />
-          </div>
-          <p className="text-lg mb-12 max-w-2xl">
-            <span className="font-display font-black uppercase tracking-tight text-2xl md:text-3xl text-gradient-brand">Level Up Your Creative Journey</span>
-            <span className="block text-muted-foreground mt-1">Three growth phases take you from first check-in to full-time professional.</span>
-          </p>
-
-          <div className="relative grid md:grid-cols-3 gap-6">
-            {/* connecting line (desktop) */}
-            <div className="hidden md:block absolute top-10 left-[12%] right-[12%] h-[2px] bg-border" aria-hidden="true" />
-            {[
-              {
-                icon: Compass,
-                phase: 'Phase 01',
-                title: 'The Inspiring Artist',
-                tagline: 'Discover & Connect',
-                color: 'var(--vibrant-cyan)',
-                glow: 'glow-cyan',
-                points: [
-                  'Explore artwork from the community',
-                  'Track daily check-in streaks',
-                  'Discover resident artists',
-                ],
-              },
-              {
-                icon: Trophy,
-                phase: 'Phase 02',
-                title: 'The Dedicated Artist',
-                tagline: 'Level Up & Skill Building',
-                color: 'var(--vibrant-magenta)',
-                glow: 'glow-magenta',
-                points: [
-                  'Join weekly creator challenges',
-                  'Unlock rare badges & rank up on leaderboards',
-                  'Build your portfolio',
-                ],
-              },
-              {
-                icon: Crown,
-                phase: 'Phase 03',
-                title: 'The Professional Artist',
-                tagline: 'Showcase & Monetize',
-                color: 'var(--vibrant-gold)',
-                glow: 'glow-gold',
-                points: [
-                  'Feature artwork in the online gallery',
-                  'Offer custom tattoo & art bookings',
-                  'Unlock pro creator perks',
-                ],
-              },
-            ].map(({ icon: Icon, phase, title, tagline, color, glow, points }, i) => (
-              <div key={phase} className={`relative glass-card ${glow} rounded-xl p-6 pt-8 group hover:-translate-y-1 transition-transform duration-300`}>
-                <div
-                  className="relative z-10 w-14 h-14 border-2 bg-background rounded-lg flex items-center justify-center mb-5"
-                  style={{ borderColor: color }}
-                >
-                  <Icon className="w-6 h-6" style={{ color }} />
-                  <span
-                    className="absolute -top-2 -right-2 text-white font-mono text-[10px] font-bold w-6 h-6 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: color }}
-                  >
-                    {i + 1}
-                  </span>
-                </div>
-                <p className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color }}>{phase}</p>
-                <h3 className="font-display font-black text-2xl uppercase tracking-tight mb-1">{title}</h3>
-                <p className="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-4">{tagline}</p>
-                <ul className="space-y-2">
-                  {points.map((p) => (
-                    <li key={p} className="flex items-start gap-2 text-sm">
-                      <span className="w-1.5 h-1.5 mt-1.5 flex-shrink-0" style={{ backgroundColor: color }} />
-                      {p}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-10 flex justify-center">
-            <Button asChild size="lg" className="h-14 px-8 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono font-bold group">
-              <Link href="/sign-up">
-                Start Your Journey
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Gamification banner */}
-      <section className="py-20 px-6 border-b border-border bg-card">
-        <div className="container mx-auto">
-          <div className="border border-primary/30 bg-primary/5 p-8 md:p-12 relative overflow-hidden">
-            <div className="absolute -right-10 -top-10 opacity-10">
-              <Flame className="w-64 h-64 text-primary" />
-            </div>
-            <div className="relative z-10 max-w-3xl">
-              <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary mb-4">
-                <Sparkles className="w-4 h-4" /> The Grind Pays
-              </div>
-              <h2 className="text-3xl md:text-5xl font-black font-display uppercase tracking-tight mb-4">
-                Streaks. Challenges. Rewards.
-              </h2>
-              <p className="text-muted-foreground text-lg mb-8 max-w-2xl">
-                Post your work daily to build streaks, enter the weekly challenge to win
-                AIMD Points, and cash points in for merch, event tickets, and workshop
-                lessons. Discipline eats talent — and it gets rewarded here.
-              </p>
-              <div className="flex flex-wrap gap-6 mb-8">
-                <div className="flex items-center gap-2 font-mono text-sm">
-                  <Flame className="w-4 h-4 text-primary" /> Daily streaks
-                </div>
-                <div className="flex items-center gap-2 font-mono text-sm">
-                  <Trophy className="w-4 h-4 text-primary" /> Weekly challenges
-                </div>
-                <div className="flex items-center gap-2 font-mono text-sm">
-                  <Zap className="w-4 h-4 text-primary" /> Points → real rewards
-                </div>
-              </div>
-              <Button size="lg" className="h-14 px-8 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono font-bold group" asChild>
-<Link href="/sign-up">
-                  Get Started / Log In
-                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-</Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Visit strip */}
-      <section className="py-14 px-6">
-        <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <MapPin className="w-6 h-6 text-primary" />
-            <div>
-              <p className="font-display font-black uppercase tracking-tight text-xl">Come see us in person</p>
-              <p className="text-muted-foreground text-sm">Studio sessions, pop-ups, gallery nights, and community events.</p>
-            </div>
-          </div>
-          <Button variant="outline" className="rounded-none border-foreground/20 hover:bg-muted uppercase font-mono text-xs" asChild>
-<Link href="/tattoo">
-              <Calendar className="w-4 h-4 mr-2" /> Plan a Visit
-            </Link>
-</Button>
-        </div>
-      </section>
 
       <MarketingFooter />
     </div>

@@ -7,6 +7,7 @@ import aimdLogo from '@assets/aimd-logo.jpg';
 
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
+  { href: '/about', label: 'About' },
   { href: '/tattoo', label: 'Tattoo Studio' },
   { href: '/gallery', label: 'Gallery' },
 ];
@@ -56,37 +57,34 @@ export function MarketingNav() {
                 )}
               </Link>
               <Button className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono text-xs group" asChild>
-                <Link href="/dashboard">
-                  Enter the Studio
+                <Link href="/app">
+                  Creator App
                   <ArrowRight className="ml-1.5 w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
               </Button>
             </>
           ) : (
-            <>
-              <Button variant="ghost" className="rounded-none uppercase font-mono text-xs text-foreground/70 hover:text-foreground" asChild>
-<Link href="/sign-in">
-                  Member Login
-                </Link>
-</Button>
-              <Button className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono text-xs" asChild>
-<Link href="/app">
-                  Enter the Studio
-                </Link>
-</Button>
-            </>
+            <Button className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono text-xs" asChild>
+              <Link href="/app">Creator App</Link>
+            </Button>
           )}
         </div>
 
         {/* Mobile toggle */}
-        <button className="md:hidden p-2" onClick={() => setOpen(!open)} aria-label="Menu">
+        <button
+          className="md:hidden p-2"
+          onClick={() => setOpen(!open)}
+          aria-label={open ? 'Close menu' : 'Open menu'}
+          aria-expanded={open}
+          aria-controls="marketing-mobile-menu"
+        >
           {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden mt-3 pb-2 flex flex-col gap-1 border-t border-border pt-3">
+        <div id="marketing-mobile-menu" className="md:hidden mt-3 pb-2 flex flex-col gap-1 border-t border-border pt-3">
           {NAV_LINKS.map((l) => (
             <Button key={l.href} asChild variant="ghost" className="w-full justify-start rounded-none uppercase font-mono text-xs">
               <Link href={l.href} onClick={() => setOpen(false)}>{l.label}</Link>
@@ -110,16 +108,13 @@ export function MarketingNav() {
                 <span className="font-mono text-xs uppercase">Profile</span>
               </Link>
               <Button asChild className="w-full rounded-none bg-primary text-primary-foreground uppercase font-mono text-xs mt-1">
-                <Link href="/dashboard" onClick={() => setOpen(false)}>Enter the Studio</Link>
+                <Link href="/app" onClick={() => setOpen(false)}>Creator App</Link>
               </Button>
             </>
           ) : (
             <div className="flex gap-2 mt-1">
-              <Button asChild variant="outline" className="flex-1 rounded-none uppercase font-mono text-xs">
-                <Link href="/sign-in" onClick={() => setOpen(false)}>Member Login</Link>
-              </Button>
               <Button asChild className="flex-1 rounded-none bg-primary text-primary-foreground uppercase font-mono text-xs">
-                <Link href="/app" onClick={() => setOpen(false)}>Enter the Studio</Link>
+                <Link href="/app" onClick={() => setOpen(false)}>Creator App</Link>
               </Button>
             </div>
           )}
@@ -138,10 +133,11 @@ export function MarketingFooter() {
           <img src={aimdLogo} alt="AIMD — Art Is My Drug" className="h-9 w-auto" />
         </div>
         <div className="flex flex-wrap justify-center gap-4 font-mono text-xs uppercase text-muted-foreground">
+          <Link href="/" className="hover:text-foreground">Home</Link>
+          <Link href="/about" className="hover:text-foreground">About</Link>
           <Link href="/tattoo" className="hover:text-foreground">Tattoo Studio</Link>
           <Link href="/gallery" className="hover:text-foreground">Gallery</Link>
-          <Link href="/app" className="hover:text-foreground">Enter the Studio</Link>
-          <Link href="/sign-in" className="hover:text-foreground">Member Login</Link>
+          <Link href="/app" className="hover:text-foreground">Creator App</Link>
         </div>
         <p className="font-mono text-[10px] text-muted-foreground">
           © {new Date().getFullYear()} Art Is My Drug

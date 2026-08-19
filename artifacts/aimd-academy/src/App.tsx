@@ -25,6 +25,7 @@ import { Shell } from '@/components/Shell';
 // Pages
 import NotFound from '@/pages/not-found';
 import Landing from '@/pages/Landing';
+import About from '@/pages/About';
 import Dashboard from '@/pages/Dashboard';
 import Habits from '@/pages/Habits';
 import StudioLog from '@/pages/StudioLog';
@@ -253,6 +254,7 @@ function Router() {
       <Route path="/onboarding" component={Onboarding} />
       {/* Public marketing pages — the AIMD hub */}
       <Route path="/" component={Landing} />
+      <Route path="/about" component={About} />
       <Route path="/tattoo" component={Tattoo} />
       <Route path="/gallery" component={Gallery} />
       {/* Creator app entry: dashboard when signed in, sign-in otherwise */}
