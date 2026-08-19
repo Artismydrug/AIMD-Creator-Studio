@@ -85,7 +85,7 @@ export default function About() {
               Our Community Impact <span className="text-gradient-brand">& Roots.</span>
             </h2>
             <p className="text-lg text-muted-foreground">
-              Art is more than expression—it's a catalyst for community growth and personal transformation. Watch our Youth Art Workshop at The School of Los Angeles in action.
+              Art is more than expression—it's a catalyst for community growth and personal transformation. Art Is My Drug empowers local youth, rising talent, and adult creators alike. Watch our Youth Art Workshop at The School of Los Angeles in action.
             </p>
           </div>
           <div className="max-w-4xl mx-auto">

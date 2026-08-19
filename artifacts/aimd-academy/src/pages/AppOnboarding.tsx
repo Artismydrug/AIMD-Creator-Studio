@@ -12,7 +12,6 @@ import {
   Crown,
   Film,
   Check,
-  Users,
 } from 'lucide-react';
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -54,14 +53,14 @@ const TIERS = [
     phase: 'Phase 01',
     title: 'The Discovering Artist',
     tagline: 'Open Exploration',
-    focus: 'Open to all ages, youth, and art enthusiasts discovering inspiring communities.',
+    focus: 'Open exploration for hobbyists & art enthusiasts discovering inspiring communities.',
     color: 'var(--vibrant-cyan)',
     glow: 'glow-cyan',
     points: [
       'Daily check-in streaks',
       'Collectible badges',
       'Gallery browsing',
-      'Entry-level community access',
+      'Community access',
     ],
   },
   {
@@ -69,7 +68,7 @@ const TIERS = [
     phase: 'Phase 02',
     title: 'The Dedicated Artist',
     tagline: 'Workshops & Mastery',
-    focus: 'Hands-on skill acquisition for creators ready to learn an actual craft and medium.',
+    focus: 'Hands-on mastery for creators ready to learn an actual craft and medium.',
     color: 'var(--vibrant-magenta)',
     glow: 'glow-magenta',
     points: [
@@ -105,18 +104,14 @@ export default function AppOnboarding() {
       {/* Ethos hero */}
       <section className="relative border-b border-border overflow-hidden">
         <div className="container px-6 mx-auto pt-24 pb-16 text-center flex flex-col items-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-8">
             <Flame className="w-4 h-4" /> The Creator App
-          </div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 border font-mono text-xs uppercase tracking-widest mb-8" style={{ color: 'var(--vibrant-cyan)', borderColor: 'var(--vibrant-cyan)', backgroundColor: 'color-mix(in srgb, var(--vibrant-cyan) 8%, transparent)' }}>
-            <Users className="w-3.5 h-3.5" />
-            All Ages &amp; Skill Levels Welcome
           </div>
           <h1 className="text-5xl md:text-8xl font-black font-display uppercase leading-[0.85] tracking-tighter mb-6 max-w-4xl">
             Discipline Eats <span className="text-gradient-brand">Talent.</span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mb-12">
-            Talent gets you started. Consistency builds the legacy. A digital studio built for creators of all ages.
+            Talent gets you started. Consistency builds the legacy. Welcome to the Art Is My Drug Digital Studio—built for creators of all ages.
           </p>
 
           {/* Walkthrough tour video container */}

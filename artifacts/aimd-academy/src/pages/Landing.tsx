@@ -12,7 +12,6 @@ import {
   Compass,
   Trophy,
   Crown,
-  Users,
 } from 'lucide-react';
 import aimdHeroImg from '@assets/generated_images/aimd-hero.jpg';
 import tattooImg from '@assets/generated_images/tattoo-studio.jpg';
@@ -260,19 +259,15 @@ export default function Landing() {
         </div>
 
         <div className="container relative z-10 px-6 mx-auto py-20 text-center flex flex-col items-center">
-          <div className="inline-flex items-center justify-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-4">
+          <div className="inline-flex items-center justify-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-8">
             <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
             Studio · Gallery · Creator App
           </div>
-          <div className="inline-flex items-center justify-center gap-2 px-3 py-1 border font-mono text-xs uppercase tracking-widest mb-8" style={{ color: 'var(--vibrant-cyan)', borderColor: 'var(--vibrant-cyan)', backgroundColor: 'color-mix(in srgb, var(--vibrant-cyan) 8%, transparent)' }}>
-            <Users className="w-3.5 h-3.5" />
-            All Ages &amp; Skill Levels Welcome
-          </div>
-          <h1 className="text-6xl md:text-9xl font-black font-display uppercase leading-[0.85] tracking-tighter mb-6 max-w-5xl">
-            Artist <br className="md:hidden" />My <span className="text-gradient-brand">Drug.</span>
+          <h1 className="text-5xl md:text-9xl font-black font-display uppercase leading-[0.85] tracking-tighter mb-6 max-w-6xl">
+            Art <br className="md:hidden" />Is My <span className="text-gradient-brand">Drug.</span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mb-10 mx-auto">
-            To bridge physical artistry, digital creation, and community ownership—providing a vibrant platform where art is the ultimate form of expression, community, and personal transformation for creators of all ages.
+            To bridge physical artistry, digital creation, and community ownership—providing a vibrant platform where art is the ultimate form of expression, community, and personal transformation.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4">
