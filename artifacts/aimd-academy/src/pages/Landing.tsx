@@ -9,7 +9,6 @@ import {
   Image as ImageIcon, MapPin, Sparkles, Trophy, Zap,
 } from 'lucide-react';
 import aimdHeroImg from '@assets/generated_images/aimd-hero.jpg';
-import aimdLogo from '@assets/aimd-logo.jpg';
 import tattooImg from '@assets/generated_images/tattoo-studio.jpg';
 import galleryImg from '@assets/generated_images/gallery-wall.jpg';
 
@@ -190,13 +189,12 @@ export default function Landing() {
 
         <div className="container relative z-10 px-6 mx-auto py-20">
           <div className="max-w-4xl">
-            <img src={aimdLogo} alt="AIMD — Art Is My Drug official logo" className="h-20 md:h-28 w-auto mb-8" />
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-8">
               <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
               Studio · Gallery · Creator Platform
             </div>
             <h1 className="text-5xl md:text-8xl font-black font-display uppercase leading-[0.9] tracking-tighter mb-6">
-              Art Is The <span className="text-gradient-brand">Addiction.</span>
+              Create. Connect. <span className="text-gradient-brand">Transform.</span>
             </h1>
             <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mb-10">
               To bridge physical artistry, digital creation, and community ownership —
@@ -218,7 +216,7 @@ export default function Landing() {
 </Button>
               <Button size="lg" variant="outline" className="h-14 px-7 rounded-none border-primary/40 text-primary hover:bg-primary/10 uppercase font-mono font-bold" asChild>
 <Link href="/app">
-                  Join Creator Platform
+                  Enter the Studio
                 </Link>
 </Button>
             </div>
@@ -230,7 +228,7 @@ export default function Landing() {
       <section className="py-20 px-6 border-b border-border">
         <div className="container mx-auto">
           <div className="flex items-center gap-4 mb-12">
-            <h2 className="text-3xl md:text-5xl font-black font-display uppercase tracking-tight">One Addiction, Three Doors</h2>
+            <h2 className="text-3xl md:text-5xl font-black font-display uppercase tracking-tight">One Mission, Three Ways to Create</h2>
             <div className="h-[2px] bg-border flex-1 hidden md:block" />
           </div>
 

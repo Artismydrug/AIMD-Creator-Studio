@@ -9,7 +9,6 @@ const NAV_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/tattoo', label: 'Tattoo Studio' },
   { href: '/gallery', label: 'Gallery' },
-  { href: '/app', label: 'Creator App' },
 ];
 
 /** Shared top navigation for public marketing pages (Home, Tattoo, Gallery). */
@@ -58,7 +57,7 @@ export function MarketingNav() {
               </Link>
               <Button className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono text-xs group" asChild>
                 <Link href="/dashboard">
-                  Dashboard
+                  Enter the Studio
                   <ArrowRight className="ml-1.5 w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
               </Button>
@@ -67,12 +66,12 @@ export function MarketingNav() {
             <>
               <Button variant="ghost" className="rounded-none uppercase font-mono text-xs text-foreground/70 hover:text-foreground" asChild>
 <Link href="/sign-in">
-                  Sign In
+                  Member Login
                 </Link>
 </Button>
               <Button className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono text-xs" asChild>
-<Link href="/sign-up">
-                  Sign Up
+<Link href="/app">
+                  Enter the Studio
                 </Link>
 </Button>
             </>
@@ -111,16 +110,16 @@ export function MarketingNav() {
                 <span className="font-mono text-xs uppercase">Profile</span>
               </Link>
               <Button asChild className="w-full rounded-none bg-primary text-primary-foreground uppercase font-mono text-xs mt-1">
-                <Link href="/dashboard" onClick={() => setOpen(false)}>Dashboard</Link>
+                <Link href="/dashboard" onClick={() => setOpen(false)}>Enter the Studio</Link>
               </Button>
             </>
           ) : (
             <div className="flex gap-2 mt-1">
               <Button asChild variant="outline" className="flex-1 rounded-none uppercase font-mono text-xs">
-                <Link href="/sign-in" onClick={() => setOpen(false)}>Sign In</Link>
+                <Link href="/sign-in" onClick={() => setOpen(false)}>Member Login</Link>
               </Button>
               <Button asChild className="flex-1 rounded-none bg-primary text-primary-foreground uppercase font-mono text-xs">
-                <Link href="/sign-up" onClick={() => setOpen(false)}>Sign Up</Link>
+                <Link href="/app" onClick={() => setOpen(false)}>Enter the Studio</Link>
               </Button>
             </div>
           )}
@@ -141,8 +140,8 @@ export function MarketingFooter() {
         <div className="flex flex-wrap justify-center gap-4 font-mono text-xs uppercase text-muted-foreground">
           <Link href="/tattoo" className="hover:text-foreground">Tattoo Studio</Link>
           <Link href="/gallery" className="hover:text-foreground">Gallery</Link>
-          <Link href="/app" className="hover:text-foreground">Creator App</Link>
-          <Link href="/sign-up" className="hover:text-foreground">Join AIMD</Link>
+          <Link href="/app" className="hover:text-foreground">Enter the Studio</Link>
+          <Link href="/sign-in" className="hover:text-foreground">Member Login</Link>
         </div>
         <p className="font-mono text-[10px] text-muted-foreground">
           © {new Date().getFullYear()} Art Is My Drug
