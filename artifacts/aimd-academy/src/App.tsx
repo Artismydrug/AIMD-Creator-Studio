@@ -26,6 +26,7 @@ import { Shell } from '@/components/Shell';
 import NotFound from '@/pages/not-found';
 import Landing from '@/pages/Landing';
 import About from '@/pages/About';
+import AppOnboarding from '@/pages/AppOnboarding';
 import Dashboard from '@/pages/Dashboard';
 import Habits from '@/pages/Habits';
 import StudioLog from '@/pages/StudioLog';
@@ -192,7 +193,7 @@ function AppEntryRoute() {
   return (
     <>
       <Show when="signed-in"><Redirect to="/dashboard" /></Show>
-      <Show when="signed-out"><Redirect to="/sign-in" /></Show>
+      <Show when="signed-out"><AppOnboarding /></Show>
     </>
   );
 }

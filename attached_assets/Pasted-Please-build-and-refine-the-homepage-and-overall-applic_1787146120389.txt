@@ -1,0 +1,40 @@
+Please build and refine the homepage and overall application UI for artistmydrug.com using our vibrant, high-energy aesthetic, integrating our logo, mission/vision, all-ages inclusivity, studio ethos, tattoo booking flow, custom e-commerce gallery, and 3-tier creator onboarding.
+
+1. Brand Identity & Vibrant Aesthetic:
+   - Theme: Clean, warm canvas background (soft off-white/cream #FAF8F5).
+   - Color Palette: High-frequency accents (electric magenta, sunset coral, energetic cyan, warm golden yellow) with soft frosted glassmorphism cards.
+   - Branding: Feature our official AIMD Logo (AIMD Logo.jpg) prominently in the sticky top header and footer.
+   - Inclusivity Badge: Add an "All Ages & Skill Levels Welcome" badge in the hero and onboarding sections, highlighting that our platform empowers youth, rising talent, and adult professionals alike.
+
+2. Homepage Hero & Mission/Vision (`/`):
+   - Hero Section: Display the AIMD logo prominently and lead with our brand name, core mission, and vision (DO NOT use "Art is the addiction"):
+     * Headline: "Artist My Drug"
+     * Mission/Vision Subheadline: "To bridge physical artistry, digital creation, and community ownership—providing a vibrant platform where art is the ultimate form of expression, community, and personal transformation for creators of all ages."
+     * CTA Buttons: "Book Tattoo Session" (/tattoo), "Explore Gallery" (/gallery), and "Join Creator Platform" (/app).
+
+3. "About Us" Section & Community Impact Video:
+   - Vision & Values: Feature our mission and vision statements alongside our core community commitment to empowering local youth and creators.
+   - Video Embed: Responsive video player embedding our Youth Art Workshop video (YouTube URL: https://www.youtube.com/watch?v=fmVeAgPqNEk) titled "Our Community Impact & Roots".
+
+4. Creator App Gateway (`/app` Onboarding & Studio Preview):
+   - Ethos Header: Display headline "Discipline Eats Talent" with subheadline "Talent gets you started. Consistency builds the legacy. A digital studio built for creators of all ages."
+   - Walkthrough Feature Teaser: Feature highlights for Daily Streaks & Collectible Badges, Weekly Creator Challenges, Daily Reward Wheel Spins, and Portfolio Publishing.
+   - 3-Phase Creator Tiers Summary:
+     * Phase 1: The Discovering Artist (Open Exploration) — Open to all ages, youth, and art enthusiasts discovering inspiring communities. Features daily check-in streaks, collectible badges, gallery browsing, and entry-level community access.
+     * Phase 2: The Dedicated Artist (Workshops & Mastery) — Hands-on skill acquisition for creators ready to learn an actual craft and medium. Features structured workshops and masterclasses (including Tattoo Apprenticeship Prep with Poncho The Artist, music production, painting, and digital design) plus skill challenges and instructor feedback.
+     * Phase 3: The Professional Artist (Career Paths & Facilities) — Career acceleration for pro creators and adult artists ready to monetize and access physical facilities. Features real-world career placements, opportunities in the AIMD Tattoo Bus / Container Studio, access to physical creation studio spaces, custom client booking intake, and priority gallery listings.
+   - Primary Action: Prominent "Join The Studio / Log In" CTA button triggering the Clerk sign-up/login modal.
+
+5. Tattoo Studio & Consultation Booking (`/tattoo`):
+   - Lead Artist Spotlight: Feature "Poncho The Artist" as the primary resident artist using profile photo IMG_0443.jpg.
+   - Portfolio CTA: Direct users to https://ponchotheartist.com/tattoo via a "View Tattoo Portfolio" button.
+   - Upcoming Artists: Styled placeholder cards ready for Edwin and Ashley.
+   - Multi-Step Booking Intake: Form modeled after https://ponchotheartist.com/booking/ collecting client contact info, tattoo concept, body placement, estimated size, preferred artist, and reference image uploads.
+
+6. E-Commerce Online Store Gallery (`/gallery`):
+   - Custom Store Catalog: Vibrant product grid catalog inspired by https://www.artismydrug.org/category/all-products with filter tabs ("All Products", "Apparel & Merch", "Canvas Prints", "Digital Art").
+   - Product Cards & Cart UI: Show product titles, prices, descriptions, preview images, and an in-app cart/checkout UI.
+
+7. Technical & Navigation Setup:
+   - Sticky Header Navigation: AIMD Logo, links to Home (/), Tattoo Studio (/tattoo), Gallery (/gallery), Creator App (/app), and Clerk Auth sign-in/profile buttons.
+   - Responsive Layout: Fully optimized across desktop and mobile devices.

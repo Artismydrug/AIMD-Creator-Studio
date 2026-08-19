@@ -12,6 +12,7 @@ import {
   Compass,
   Trophy,
   Crown,
+  Users,
 } from 'lucide-react';
 import aimdHeroImg from '@assets/generated_images/aimd-hero.jpg';
 import tattooImg from '@assets/generated_images/tattoo-studio.jpg';
@@ -61,25 +62,25 @@ function CreatorJourney() {
   const stages = [
     {
       icon: Compass,
-      title: 'Inspiring Artist',
-      action: 'Discover & connect',
-      description: 'Find your people, explore the work, and build a creative rhythm.',
+      title: 'The Discovering Artist',
+      action: 'Exploration & Community',
+      description: 'For hobbyists and art enthusiasts discovering inspiring communities — daily check-in streaks, collectible badges, gallery browsing, and introductory community access.',
       color: 'var(--vibrant-cyan)',
       glow: 'glow-cyan',
     },
     {
       icon: Trophy,
-      title: 'Dedicated Artist',
-      action: 'Practice & level up',
-      description: 'Turn consistency into momentum through challenges, habits, and skill building.',
+      title: 'The Dedicated Artist',
+      action: 'Workshops, Lessons & Mastery',
+      description: 'Learn a real craft from industry instructors — hands-on workshops and masterclasses like Tattoo Apprenticeship Prep with Poncho The Artist, music production, custom painting & digital design, plus skill-building challenges and instructor feedback.',
       color: 'var(--vibrant-magenta)',
       glow: 'glow-magenta',
     },
     {
       icon: Crown,
-      title: 'Professional Artist',
-      action: 'Showcase & grow',
-      description: 'Build a portfolio, share your work, and create more opportunities.',
+      title: 'The Professional Artist',
+      action: 'Career Paths, Studio Space & Opportunities',
+      description: 'Pursue a commercial career — real-world placements, the AIMD Tattoo Bus / Container Studio, physical studio access, custom client booking intake, and priority gallery store listings.',
       color: 'var(--vibrant-gold)',
       glow: 'glow-gold',
     },
@@ -259,27 +260,36 @@ export default function Landing() {
         </div>
 
         <div className="container relative z-10 px-6 mx-auto py-20 text-center flex flex-col items-center">
-          <div className="inline-flex items-center justify-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-8">
+          <div className="inline-flex items-center justify-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-4">
             <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
             Studio · Gallery · Creator App
           </div>
+          <div className="inline-flex items-center justify-center gap-2 px-3 py-1 border font-mono text-xs uppercase tracking-widest mb-8" style={{ color: 'var(--vibrant-cyan)', borderColor: 'var(--vibrant-cyan)', backgroundColor: 'color-mix(in srgb, var(--vibrant-cyan) 8%, transparent)' }}>
+            <Users className="w-3.5 h-3.5" />
+            All Ages &amp; Skill Levels Welcome
+          </div>
           <h1 className="text-6xl md:text-9xl font-black font-display uppercase leading-[0.85] tracking-tighter mb-6 max-w-5xl">
-            Create. <br className="md:hidden" />Connect. <br className="md:hidden" /><span className="text-gradient-brand">Transform.</span>
+            Artist <br className="md:hidden" />My <span className="text-gradient-brand">Drug.</span>
           </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mb-10 mx-auto">
-            Bridging physical artistry, digital creation, and community ownership — where art is the ultimate form of expression, community, and personal transformation.
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mb-10 mx-auto">
+            To bridge physical artistry, digital creation, and community ownership—providing a vibrant platform where art is the ultimate form of expression, community, and personal transformation for creators of all ages.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4">
             <Button size="lg" className="h-14 px-8 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono font-bold group" asChild>
-              <Link href="/app">
-                Creator App
+              <Link href="/tattoo">
+                Book Tattoo Session
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="h-14 px-8 rounded-none border-foreground/20 hover:bg-muted uppercase font-mono font-bold" asChild>
-              <Link href="/about">
-                Our Mission
+              <Link href="/gallery">
+                Explore Gallery
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="h-14 px-8 rounded-none border-primary/40 text-primary hover:bg-primary/10 uppercase font-mono font-bold" asChild>
+              <Link href="/app">
+                Join Creator Platform
               </Link>
             </Button>
           </div>

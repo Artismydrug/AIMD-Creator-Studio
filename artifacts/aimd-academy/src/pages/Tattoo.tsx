@@ -5,19 +5,24 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
-import { ArrowRight, Brush, Calendar, Mail, Shield, Sparkles, Users } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Brush, Calendar, ExternalLink, ImagePlus, Mail, Shield, Sparkles, Users, X } from 'lucide-react';
 import tattooImg from '@assets/generated_images/tattoo-studio.jpg';
 import flashImg from '@assets/generated_images/workshop-tattoo.jpg';
+import ponchoImg from '@assets/IMG_0443_1787113468837.jpg';
 
 const BOOKING_EMAIL = 'booking@artismydrug.com';
+
+const PORTFOLIO_URL = 'https://ponchotheartist.com/tattoo';
 
 const ARTISTS = [
   {
     name: 'Poncho The Artist',
-    role: 'Founder · Resident Artist',
+    role: 'Founder · Lead Resident Artist',
     styles: 'Custom work · Fine line · Black & grey · Color',
     featured: true,
     available: true,
+    photo: ponchoImg,
+    portfolioUrl: PORTFOLIO_URL,
   },
   {
     name: 'Edwin',
@@ -25,6 +30,8 @@ const ARTISTS = [
     styles: 'Portfolio coming soon',
     featured: false,
     available: false,
+    photo: undefined as string | undefined,
+    portfolioUrl: undefined as string | undefined,
   },
   {
     name: 'Ashley',
@@ -32,6 +39,8 @@ const ARTISTS = [
     styles: 'Portfolio coming soon',
     featured: false,
     available: false,
+    photo: undefined as string | undefined,
+    portfolioUrl: undefined as string | undefined,
   },
 ];
 
@@ -55,14 +64,35 @@ const EMPTY_FORM: BookingForm = {
   artist: 'No preference',
 };
 
+const STEPS = ['Contact Info', 'Tattoo Concept', 'References & Review'] as const;
+
 export default function Tattoo() {
   const [form, setForm] = useState<BookingForm>(EMPTY_FORM);
+  const [step, setStep] = useState(0);
+  const [references, setReferences] = useState<File[]>([]);
 
   const set = (key: keyof BookingForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
+  const stepValid =
+    step === 0
+      ? form.name.trim() !== '' && form.email.trim() !== ''
+      : step === 1
+        ? form.idea.trim() !== '' && form.placement.trim() !== '' && form.size.trim() !== ''
+        : true;
+
+  const addReferences = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    setReferences((prev) => [...prev, ...files].slice(0, 6));
+    e.target.value = '';
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (step < STEPS.length - 1) {
+      if (stepValid) setStep(step + 1);
+      return;
+    }
     const body = [
       `Name: ${form.name}`,
       `Email: ${form.email}`,
@@ -74,7 +104,9 @@ export default function Tattoo() {
       'Tattoo idea:',
       form.idea,
       '',
-      '(Please attach any reference images to this email before sending.)',
+      references.length > 0
+        ? `Reference images selected (${references.length}): ${references.map((f) => f.name).join(', ')}\n(Please attach these files to this email before sending.)`
+        : '(Please attach any reference images to this email before sending.)',
     ].join('\n');
     const mailto = `mailto:${BOOKING_EMAIL}?subject=${encodeURIComponent(`Tattoo Booking Request — ${form.name || 'New Client'}`)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailto;
@@ -139,20 +171,42 @@ export default function Tattoo() {
                     Featured Artist
                   </span>
                 )}
-                <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center font-display font-black text-2xl mb-4">
-                  {a.name.charAt(0)}
-                </div>
+                {a.photo ? (
+                  <img
+                    src={a.photo}
+                    alt={a.name}
+                    className="w-24 h-24 rounded-full object-cover border-2 mb-4"
+                    style={{ borderColor: 'var(--vibrant-magenta)' }}
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center font-display font-black text-2xl mb-4">
+                    {a.name.charAt(0)}
+                  </div>
+                )}
                 <h3 className="font-display font-black uppercase tracking-tight text-xl mb-1">{a.name}</h3>
                 <p className="font-mono text-xs uppercase tracking-widest text-primary mb-3">{a.role}</p>
                 <p className="text-sm text-muted-foreground mb-5">{a.styles}</p>
                 {a.available ? (
-                  <Button
-                    className="mt-auto rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono text-xs"
-                    onClick={() => setForm((f) => ({ ...f, artist: a.name }))}
-                    asChild
-                  >
-                    <a href="#booking">Book with {a.name.split(' ')[0]}</a>
-                  </Button>
+                  <div className="mt-auto flex flex-col gap-2">
+                    {a.portfolioUrl && (
+                      <Button
+                        variant="outline"
+                        className="rounded-none border-primary/40 text-primary hover:bg-primary/10 uppercase font-mono text-xs"
+                        asChild
+                      >
+                        <a href={a.portfolioUrl} target="_blank" rel="noopener noreferrer">
+                          View Tattoo Portfolio <ExternalLink className="ml-1.5 w-3.5 h-3.5" />
+                        </a>
+                      </Button>
+                    )}
+                    <Button
+                      className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono text-xs"
+                      onClick={() => setForm((f) => ({ ...f, artist: a.name }))}
+                      asChild
+                    >
+                      <a href="#booking">Book with {a.name.split(' ')[0]}</a>
+                    </Button>
+                  </div>
                 ) : (
                   <p className="mt-auto font-mono text-xs uppercase text-muted-foreground">Books opening soon</p>
                 )}
@@ -196,58 +250,157 @@ export default function Tattoo() {
           </div>
 
           <form onSubmit={handleSubmit} className="glass-card p-6 md:p-8 space-y-5">
-            <div className="grid sm:grid-cols-2 gap-5">
-              <div>
-                <Label htmlFor="bk-name" className="font-mono text-xs uppercase">Name *</Label>
-                <Input id="bk-name" required value={form.name} onChange={set('name')} className="rounded-none mt-1.5" placeholder="Your full name" />
-              </div>
-              <div>
-                <Label htmlFor="bk-email" className="font-mono text-xs uppercase">Email *</Label>
-                <Input id="bk-email" type="email" required value={form.email} onChange={set('email')} className="rounded-none mt-1.5" placeholder="you@email.com" />
-              </div>
+            {/* Step indicator */}
+            <div className="flex items-center gap-2">
+              {STEPS.map((label, i) => (
+                <div key={label} className="flex-1">
+                  <div
+                    className="h-1.5 mb-2"
+                    style={{ backgroundColor: i <= step ? 'var(--vibrant-magenta)' : 'var(--border)' }}
+                  />
+                  <p className={`font-mono text-[10px] uppercase tracking-wide ${i === step ? 'text-foreground font-bold' : 'text-muted-foreground'}`}>
+                    {i + 1}. {label}
+                  </p>
+                </div>
+              ))}
             </div>
-            <div className="grid sm:grid-cols-2 gap-5">
-              <div>
-                <Label htmlFor="bk-phone" className="font-mono text-xs uppercase">Phone</Label>
-                <Input id="bk-phone" type="tel" value={form.phone} onChange={set('phone')} className="rounded-none mt-1.5" placeholder="(555) 555-5555" />
-              </div>
-              <div>
-                <Label htmlFor="bk-artist" className="font-mono text-xs uppercase">Preferred Artist</Label>
-                <select
-                  id="bk-artist"
-                  value={form.artist}
-                  onChange={set('artist')}
-                  className="mt-1.5 w-full h-10 border border-input bg-background px-3 text-sm rounded-none"
+
+            {step === 0 && (
+              <>
+                <div className="grid sm:grid-cols-2 gap-5">
+                  <div>
+                    <Label htmlFor="bk-name" className="font-mono text-xs uppercase">Name *</Label>
+                    <Input id="bk-name" required value={form.name} onChange={set('name')} className="rounded-none mt-1.5" placeholder="Your full name" />
+                  </div>
+                  <div>
+                    <Label htmlFor="bk-email" className="font-mono text-xs uppercase">Email *</Label>
+                    <Input id="bk-email" type="email" required value={form.email} onChange={set('email')} className="rounded-none mt-1.5" placeholder="you@email.com" />
+                  </div>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-5">
+                  <div>
+                    <Label htmlFor="bk-phone" className="font-mono text-xs uppercase">Phone</Label>
+                    <Input id="bk-phone" type="tel" value={form.phone} onChange={set('phone')} className="rounded-none mt-1.5" placeholder="(555) 555-5555" />
+                  </div>
+                  <div>
+                    <Label htmlFor="bk-artist" className="font-mono text-xs uppercase">Preferred Artist</Label>
+                    <select
+                      id="bk-artist"
+                      value={form.artist}
+                      onChange={set('artist')}
+                      className="mt-1.5 w-full h-10 border border-input bg-background px-3 text-sm rounded-none"
+                    >
+                      <option>No preference</option>
+                      <option>Poncho The Artist</option>
+                      <option>Edwin</option>
+                      <option>Ashley</option>
+                    </select>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {step === 1 && (
+              <>
+                <div>
+                  <Label htmlFor="bk-idea" className="font-mono text-xs uppercase">Tattoo Idea *</Label>
+                  <Textarea id="bk-idea" required value={form.idea} onChange={set('idea')} className="rounded-none mt-1.5 min-h-28" placeholder="Describe your tattoo idea, style, and any meaning behind it" />
+                </div>
+                <div className="grid sm:grid-cols-2 gap-5">
+                  <div>
+                    <Label htmlFor="bk-placement" className="font-mono text-xs uppercase">Body Placement *</Label>
+                    <Input id="bk-placement" required value={form.placement} onChange={set('placement')} className="rounded-none mt-1.5" placeholder="e.g. left forearm" />
+                  </div>
+                  <div>
+                    <Label htmlFor="bk-size" className="font-mono text-xs uppercase">Estimated Size *</Label>
+                    <Input id="bk-size" required value={form.size} onChange={set('size')} className="rounded-none mt-1.5" placeholder='e.g. 4" x 6"' />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {step === 2 && (
+              <>
+                <div>
+                  <Label htmlFor="bk-refs" className="font-mono text-xs uppercase">Reference Images (up to 6)</Label>
+                  <label
+                    htmlFor="bk-refs"
+                    className="mt-1.5 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer py-8 px-4 text-center"
+                  >
+                    <ImagePlus className="w-6 h-6 text-primary" />
+                    <span className="font-mono text-xs uppercase text-primary">Add reference images</span>
+                    <span className="text-xs text-muted-foreground">Style examples, sketches, or photos of the placement area</span>
+                  </label>
+                  <input id="bk-refs" type="file" accept="image/*" multiple className="sr-only" onChange={addReferences} />
+                  {references.length > 0 && (
+                    <ul className="mt-3 space-y-1.5">
+                      {references.map((f, i) => (
+                        <li key={`${f.name}-${i}`} className="flex items-center justify-between gap-2 text-sm bg-background border border-border px-3 py-1.5">
+                          <span className="truncate">{f.name}</span>
+                          <button
+                            type="button"
+                            aria-label={`Remove ${f.name}`}
+                            onClick={() => setReferences((prev) => prev.filter((_, j) => j !== i))}
+                            className="text-muted-foreground hover:text-foreground flex-shrink-0"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Review summary */}
+                <div className="border border-border bg-background p-4 space-y-1.5 text-sm">
+                  <p className="font-mono text-[11px] uppercase tracking-widest text-primary mb-2">Review Your Request</p>
+                  <p><span className="text-muted-foreground">Name:</span> {form.name}</p>
+                  <p><span className="text-muted-foreground">Email:</span> {form.email}</p>
+                  {form.phone && <p><span className="text-muted-foreground">Phone:</span> {form.phone}</p>}
+                  <p><span className="text-muted-foreground">Artist:</span> {form.artist}</p>
+                  <p><span className="text-muted-foreground">Placement:</span> {form.placement} · <span className="text-muted-foreground">Size:</span> {form.size}</p>
+                  <p className="line-clamp-3"><span className="text-muted-foreground">Idea:</span> {form.idea}</p>
+                </div>
+              </>
+            )}
+
+            <div className="flex gap-3">
+              {step > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  className="h-14 rounded-none border-foreground/20 uppercase font-mono font-bold"
+                  onClick={() => setStep(step - 1)}
                 >
-                  <option>No preference</option>
-                  <option>Poncho The Artist</option>
-                  <option>Edwin</option>
-                  <option>Ashley</option>
-                </select>
-              </div>
+                  <ArrowLeft className="w-4 h-4 mr-2" /> Back
+                </Button>
+              )}
+              <Button
+                type="submit"
+                size="lg"
+                disabled={!stepValid}
+                className="flex-1 h-14 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono font-bold group"
+              >
+                {step < STEPS.length - 1 ? (
+                  <>
+                    Continue
+                    <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </>
+                ) : (
+                  <>
+                    <Mail className="w-4 h-4 mr-2" />
+                    Send Booking Request
+                    <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </Button>
             </div>
-            <div>
-              <Label htmlFor="bk-idea" className="font-mono text-xs uppercase">Tattoo Idea *</Label>
-              <Textarea id="bk-idea" required value={form.idea} onChange={set('idea')} className="rounded-none mt-1.5 min-h-28" placeholder="Describe your tattoo idea, style, and any meaning behind it" />
-            </div>
-            <div className="grid sm:grid-cols-2 gap-5">
-              <div>
-                <Label htmlFor="bk-placement" className="font-mono text-xs uppercase">Body Placement *</Label>
-                <Input id="bk-placement" required value={form.placement} onChange={set('placement')} className="rounded-none mt-1.5" placeholder="e.g. left forearm" />
-              </div>
-              <div>
-                <Label htmlFor="bk-size" className="font-mono text-xs uppercase">Estimated Size *</Label>
-                <Input id="bk-size" required value={form.size} onChange={set('size')} className="rounded-none mt-1.5" placeholder='e.g. 4" x 6"' />
-              </div>
-            </div>
-            <Button type="submit" size="lg" className="w-full h-14 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono font-bold group">
-              <Mail className="w-4 h-4 mr-2" />
-              Send Booking Request
-              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <p className="font-mono text-xs text-muted-foreground">
-              This opens your email app with everything filled in — attach reference images before sending. Or email us directly: {BOOKING_EMAIL}
-            </p>
+            {step === STEPS.length - 1 && (
+              <p className="font-mono text-xs text-muted-foreground">
+                This opens your email app with everything filled in — attach your selected reference images before sending. Or email us directly: {BOOKING_EMAIL}
+              </p>
+            )}
           </form>
         </div>
       </section>
