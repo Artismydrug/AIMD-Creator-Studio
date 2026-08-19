@@ -1,9 +1,21 @@
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
-import { ArrowRight, Compass, Trophy, Crown, Sparkles, Building, Globe, HeartHandshake, Eye } from 'lucide-react';
+import {
+  ArrowRight,
+  Compass,
+  Trophy,
+  Crown,
+  Sparkles,
+  Building,
+  Globe,
+  HeartHandshake,
+  Eye,
+} from 'lucide-react';
 import aimdHeroImg from '@assets/generated_images/aimd-hero.jpg';
-import residencyImg from '@assets/generated_images/artist-residency-vision.jpg';
+import resortCampusImg from '@assets/generated_images/artist-resort-campus.jpg';
+import resortContainersImg from '@assets/generated_images/artist-resort-containers.jpg';
+import resortSuiteImg from '@assets/generated_images/artist-resort-suite.jpg';
 
 export default function About() {
   return (
@@ -153,40 +165,75 @@ export default function About() {
         </div>
       </section>
 
-      {/* Future Vision - Residency */}
-      <section className="py-20 px-6 border-b border-border bg-card">
+      {/* Future Vision - Resort */}
+      <section id="artist-resort" className="py-24 px-6 border-b border-border bg-card">
         <div className="container mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="order-2 md:order-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted text-muted-foreground font-mono text-xs uppercase tracking-widest mb-6">
-                <Building className="w-4 h-4" /> Future Vision
-              </div>
-              <h2 className="text-3xl md:text-5xl font-black font-display uppercase tracking-tight mb-6">
-                The Artist <span className="text-gradient-brand">Residency.</span>
-              </h2>
-              <p className="text-lg text-muted-foreground mb-6">
-                Our long-term vision extends beyond digital spaces and our current physical studio. We are conceptualizing a dedicated artist residency — a sanctuary where creators can live, learn, and collaborate.
-              </p>
-              <p className="text-muted-foreground mb-8">
-                Imagine an environment fully optimized for the creative process. A place to unplug from the noise and plug into an intensive, supportive community of peers.
-              </p>
-              
-              <div className="border border-primary/20 bg-primary/5 p-4 flex items-start gap-3">
-                <Sparkles className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <p className="text-sm font-mono leading-relaxed text-foreground/80">
-                  <strong className="text-primary uppercase block mb-1">Concept Stage Only</strong>
-                  This residency is a future vision for the AIMD ecosystem. It is not currently open, bookable, or accepting applications. Stay tuned as we build toward this reality.
-                </p>
-              </div>
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted text-muted-foreground font-mono text-xs uppercase tracking-widest mb-6">
+              <Building className="w-4 h-4" /> Future Vision
             </div>
-            
-            <div className="order-1 md:order-2 glass-card rounded-xl overflow-hidden p-2">
-              <img 
-                src={residencyImg} 
-                alt="Conceptual rendering of AIMD's future artist residency vision"
-                className="w-full h-auto rounded-lg object-cover"
+            <h2 className="text-4xl md:text-6xl font-black font-display uppercase tracking-tight mb-4">
+              The AIMD Artist <span className="text-gradient-brand">Resort.</span>
+            </h2>
+            <p className="text-xl md:text-2xl font-display uppercase tracking-tight text-foreground/80 mb-6">
+              Containers create the infrastructure. Artists create the culture.
+            </p>
+            <p className="text-lg text-muted-foreground">
+              Our long-term vision extends beyond digital spaces and our current physical studio. We are conceptualizing an off-grid desert artist campus built from repurposed shipping containers — a sanctuary where creators can create, stay, and gather.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-12 gap-4 mb-16">
+            <div className="md:col-span-12 glass-card rounded-xl overflow-hidden p-2">
+              <img
+                src={resortCampusImg}
+                alt="Aerial concept of the AIMD Artist Resort campus"
+                className="w-full h-[40vh] md:h-[60vh] rounded-lg object-cover"
+                loading="lazy"
+                decoding="async"
               />
             </div>
+            <div className="md:col-span-8 glass-card rounded-xl overflow-hidden p-2">
+              <img
+                src={resortContainersImg}
+                alt="Exterior container architecture"
+                className="w-full h-64 md:h-96 rounded-lg object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <div className="md:col-span-4 glass-card rounded-xl overflow-hidden p-2">
+              <img
+                src={resortSuiteImg}
+                alt="Private container stay"
+                className="w-full h-64 md:h-96 rounded-lg object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-12">
+            <div className="text-center px-4">
+              <h3 className="font-display font-black text-2xl uppercase tracking-tight mb-3">Create</h3>
+              <p className="text-muted-foreground">Dedicated creative studios optimized for the artistic process, fully equipped and free from distraction.</p>
+            </div>
+            <div className="text-center px-4">
+              <h3 className="font-display font-black text-2xl uppercase tracking-tight mb-3">Stay</h3>
+              <p className="text-muted-foreground">Private, comfortable container suites that blend rugged off-grid living with modern sanctuary.</p>
+            </div>
+            <div className="text-center px-4">
+              <h3 className="font-display font-black text-2xl uppercase tracking-tight mb-3">Gather</h3>
+              <p className="text-muted-foreground">Shared fire circles and community spaces to unplug, connect, and collaborate with peers.</p>
+            </div>
+          </div>
+
+          <div className="max-w-2xl mx-auto border border-primary/20 bg-primary/5 p-6 rounded-xl flex items-start gap-4">
+            <Sparkles className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
+            <p className="text-sm md:text-base font-mono leading-relaxed text-foreground/80">
+              <strong className="text-primary uppercase block mb-1">Concept Stage Only</strong>
+              This resort is a future vision for the AIMD ecosystem. It is not currently open, bookable, or accepting applications. Stay tuned as we build toward this reality.
+            </p>
           </div>
         </div>
       </section>
