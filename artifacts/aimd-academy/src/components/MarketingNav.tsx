@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'wouter';
 import { useState } from 'react';
-import { useAuth, useUser } from '@clerk/react';
+import { SignInButton, useAuth, useUser } from '@clerk/react';
 import { Button } from '@/components/ui/button';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import aimdLogo from '@assets/aimd-logo.jpg';
@@ -64,9 +64,16 @@ export function MarketingNav() {
               </Button>
             </>
           ) : (
-            <Button className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono text-xs" asChild>
-              <Link href="/app">Creator App</Link>
-            </Button>
+            <>
+              <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+                <Button variant="outline" className="rounded-none uppercase font-mono text-xs">
+                  Log In
+                </Button>
+              </SignInButton>
+              <Button className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono text-xs" asChild>
+                <Link href="/app">Creator App</Link>
+              </Button>
+            </>
           )}
         </div>
 
@@ -113,6 +120,11 @@ export function MarketingNav() {
             </>
           ) : (
             <div className="flex gap-2 mt-1">
+              <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+                <Button variant="outline" className="flex-1 rounded-none uppercase font-mono text-xs">
+                  Log In
+                </Button>
+              </SignInButton>
               <Button asChild className="flex-1 rounded-none bg-primary text-primary-foreground uppercase font-mono text-xs">
                 <Link href="/app" onClick={() => setOpen(false)}>Creator App</Link>
               </Button>

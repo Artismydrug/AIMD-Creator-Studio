@@ -1,4 +1,4 @@
-import { SignUpButton } from '@clerk/react';
+import { SignInButton, SignUpButton } from '@clerk/react';
 import { Button } from '@/components/ui/button';
 import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
 import {
@@ -115,6 +115,20 @@ export default function AppOnboarding() {
             Talent gets you started. Consistency builds the legacy. Welcome to the Art Is My Drug Digital Studio—built for creators of all ages.
           </p>
 
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+            <SignUpButton mode="modal" forceRedirectUrl={`${basePath}/onboarding`} signInForceRedirectUrl={`${basePath}/dashboard`}>
+              <Button size="lg" className="w-full sm:w-auto h-14 px-8 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono font-bold text-sm group">
+                Join The Studio
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </SignUpButton>
+            <SignInButton mode="modal" forceRedirectUrl={`${basePath}/dashboard`}>
+              <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 rounded-none uppercase font-mono font-bold text-sm">
+                Log In
+              </Button>
+            </SignInButton>
+          </div>
+
           {/* Walkthrough tour video container */}
           <div className="w-full max-w-4xl relative z-10 shadow-2xl shadow-primary/20 rounded-xl">
             <CreatorAppExplainer />
@@ -199,7 +213,7 @@ export default function AppOnboarding() {
           <div className="mt-14 flex flex-col items-center gap-3">
             <SignUpButton mode="modal" forceRedirectUrl={`${basePath}/onboarding`} signInForceRedirectUrl={`${basePath}/dashboard`}>
               <Button size="lg" className="h-16 px-10 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono font-bold text-base group">
-                Join The Studio / Log In
+                 Join The Studio
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </SignUpButton>
