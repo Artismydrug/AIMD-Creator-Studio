@@ -14,7 +14,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import {
   useGetUserProfile,
+  getGetUserProfileQueryKey,
   useListStudioPosts,
+  getListStudioPostsQueryKey,
 } from '@workspace/api-client-react';
 
 const TIER_COLORS: Record<string, string> = {
@@ -44,7 +46,7 @@ export default function CreatorProfileScreen() {
     isLoading: profileLoading,
     isError: profileError,
   } = useGetUserProfile(creatorId as number, {
-    query: { enabled: creatorId != null },
+    query: { enabled: creatorId != null, queryKey: creatorId != null ? getGetUserProfileQueryKey(creatorId) : [] },
   });
 
   const {
@@ -52,11 +54,31 @@ export default function CreatorProfileScreen() {
     isLoading: postsLoading,
   } = useListStudioPosts(
     { userId: creatorId, limit: 10 },
-    { query: { enabled: creatorId != null } }
+    { query: { enabled: creatorId != null, queryKey: creatorId != null ? getListStudioPostsQueryKey({ userId: creatorId, limit: 10 }) : [] } }
   );
 
   const tierColor = profile ? (TIER_COLORS[profile.tier] ?? colors.mutedForeground) : colors.mutedForeground;
   const initials = profile ? profile.username.slice(0, 2).toUpperCase() : '??';
+
+  const points = profile?.points ?? 0;
+  let phase = 'Discovering';
+  let nextPhase: string | null = 'Dedicated';
+  let currentThreshold = 0;
+  let nextThreshold: number | null = 250;
+
+  if (points >= 1000) {
+    phase = 'Professional';
+    nextPhase = null;
+    currentThreshold = 1000;
+    nextThreshold = null;
+  } else if (points >= 250) {
+    phase = 'Dedicated';
+    nextPhase = 'Professional';
+    currentThreshold = 250;
+    nextThreshold = 1000;
+  }
+
+  const phasePercent = nextThreshold ? ((points - currentThreshold) / (nextThreshold - currentThreshold)) * 100 : 100;
 
   const topPad = Platform.OS === 'web' ? 16 : insets.top + 8;
 
@@ -144,6 +166,27 @@ export default function CreatorProfileScreen() {
       fontFamily: 'DMSans_500Medium',
       fontSize: 12,
       color: colors.primary,
+    },
+    progressText: {
+      fontFamily: 'DMSans_500Medium',
+      fontSize: 12,
+      color: colors.mutedForeground,
+      marginTop: 6,
+    },
+    progressBarContainer: {
+      width: 200,
+      height: 4,
+      backgroundColor: colors.muted,
+      borderRadius: 2,
+      overflow: 'hidden',
+      marginTop: 12,
+    },
+    progressBarFill: {
+      height: '100%',
+      backgroundColor: colors.primary,
+    },
+    profileProgress: {
+      alignItems: 'center',
     },
     bio: {
       fontFamily: 'DMSans_400Regular',
@@ -355,6 +398,20 @@ export default function CreatorProfileScreen() {
               <View style={s.tierBadge}>
                 <Text style={[s.tierText, { color: tierColor }]}>{profile.tier}</Text>
               </View>
+              <View style={[s.tierBadge, { backgroundColor: colors.primary + '20' }]}>
+                <Text style={[s.tierText, { color: colors.primary }]}>{phase}</Text>
+              </View>
+            </View>
+
+            <View style={s.profileProgress}>
+              <View style={s.progressBarContainer}>
+                <View style={[s.progressBarFill, { width: `${Math.max(0, Math.min(100, phasePercent))}%`, backgroundColor: colors.primary }]} />
+              </View>
+              {nextPhase ? (
+                <Text style={s.progressText}>{points} / {nextThreshold} pts to {nextPhase}</Text>
+              ) : (
+                <Text style={s.progressText}>{points} pts</Text>
+              )}
             </View>
 
             {profile.bookingOpen && (
@@ -398,23 +455,23 @@ export default function CreatorProfileScreen() {
             </View>
             <View style={s.statDivider} />
             <View style={s.stat}>
-              <Text style={s.statValue}>{(profile.recentBadges ?? []).length}</Text>
+              <Text style={s.statValue}>{profile?.recentBadges ? profile.recentBadges.length : 0}</Text>
               <Text style={s.statLabel}>Badges</Text>
             </View>
             <View style={s.statDivider} />
             <View style={s.stat}>
-              <Text style={s.statValue}>{profile.currentStreak ?? 0}</Text>
+              <Text style={s.statValue}>{profile?.currentStreak ?? 0}</Text>
               <Text style={s.statLabel}>Streak</Text>
             </View>
             <View style={s.statDivider} />
             <View style={s.stat}>
-              <Text style={s.statValue}>{profile.workshopsEnrolled ?? 0}</Text>
+              <Text style={s.statValue}>{profile?.workshopsEnrolled ?? 0}</Text>
               <Text style={s.statLabel}>Workshops</Text>
             </View>
           </View>
 
           {/* Badges */}
-          {(profile.recentBadges ?? []).length > 0 && (
+          {(profile?.recentBadges ?? []).length > 0 && (
             <>
               <View style={s.section}>
                 <Text style={s.sectionTitle}>Badges</Text>
@@ -423,7 +480,7 @@ export default function CreatorProfileScreen() {
                 {(profile.recentBadges ?? []).map((badge, i) => (
                   <View key={i} style={s.badgeRow}>
                     <Feather name="award" size={16} color={tierColor} />
-                    <Text style={s.badgeName}>{badge}</Text>
+                    <Text style={s.badgeName}>{badge.name || 'Badge'}</Text>
                   </View>
                 ))}
               </View>

@@ -20,6 +20,7 @@ import checkinRouter from "./checkin";
 import challengesRouter from "./challenges";
 import rewardsRouter from "./rewards";
 import storeRouter from "./store";
+import progressRouter from "./progress";
 
 const router: IRouter = Router();
 
@@ -44,5 +45,6 @@ router.use(conversationsRouter);
 router.use(checkinRouter);
 router.use(challengesRouter);
 router.use(rewardsRouter);
+router.use(progressRouter);
 
 export default router;

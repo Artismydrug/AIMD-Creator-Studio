@@ -1261,7 +1261,16 @@ export const ListDirectoryResponseItem = zod.object({
   "bookingOpen": zod.boolean(),
   "portfolioUrl": zod.string().nullish(),
   "badgeCount": zod.int(),
-  "postCount": zod.int()
+  "postCount": zod.int(),
+  "points": zod.int().optional(),
+  "currentStreak": zod.int().optional(),
+  "workshopsEnrolled": zod.int().optional(),
+  "recentBadges": zod.array(zod.object({
+  "id": zod.int().optional(),
+  "name": zod.string().optional(),
+  "imageUrl": zod.string().nullish(),
+  "earnedAt": zod.string().optional()
+})).optional()
 })
 export const ListDirectoryResponse = zod.array(ListDirectoryResponseItem)
 
@@ -1284,7 +1293,16 @@ export const GetUserProfileResponse = zod.object({
   "bookingOpen": zod.boolean(),
   "portfolioUrl": zod.string().nullish(),
   "badgeCount": zod.int(),
-  "postCount": zod.int()
+  "postCount": zod.int(),
+  "points": zod.int().optional(),
+  "currentStreak": zod.int().optional(),
+  "workshopsEnrolled": zod.int().optional(),
+  "recentBadges": zod.array(zod.object({
+  "id": zod.int().optional(),
+  "name": zod.string().optional(),
+  "imageUrl": zod.string().nullish(),
+  "earnedAt": zod.string().optional()
+})).optional()
 })
 
 
@@ -1369,6 +1387,192 @@ export const SendMessageResponse = zod.object({
   "createdAt": zod.coerce.date(),
   "senderName": zod.string(),
   "senderAvatar": zod.string().nullish()
+})
+
+
+/**
+ * Returns points, phase, streaks, recent badges, habit completions,
+ * check-in status, and today's reward spin availability/result.
+ * The saved creator timezone is authoritative once established; supply
+ * `timezone` only on the very first read before any timezone has been saved.
+ * This parameter is ignored when a valid saved timezone already exists.
+ * @summary Get the current creator's progress summary
+ */
+export const GetProgressQueryParams = zod.object({
+  "timezone": zod.coerce.string().nullish().describe('IANA timezone string (e.g. \"America\/New_York\"). Used only when the creator has no saved timezone yet; the server-side saved timezone takes priority on all subsequent calls.\n')
+})
+
+export const GetProgressResponse = zod.object({
+  "points": zod.int(),
+  "phase": zod.object({
+  "phase": zod.enum(['Discovering', 'Dedicated', 'Professional']),
+  "currentPoints": zod.int(),
+  "nextPhase": zod.string().nullable(),
+  "nextPhasePoints": zod.int().nullable(),
+  "progressPercent": zod.number()
+}),
+  "currentStreak": zod.int(),
+  "longestStreak": zod.int(),
+  "todayHabitsCompleted": zod.int(),
+  "totalHabits": zod.int(),
+  "recentBadges": zod.array(zod.object({
+  "id": zod.int(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "imageUrl": zod.string().nullish(),
+  "earnedAt": zod.coerce.date()
+})),
+  "nextBadge": zod.union([zod.object({
+  "name": zod.string(),
+  "requiredStreak": zod.int(),
+  "currentStreak": zod.int(),
+  "progressPercent": zod.number()
+}),zod.null()]).optional(),
+  "timezone": zod.string().nullable(),
+  "localDate": zod.coerce.date(),
+  "checkedInToday": zod.boolean(),
+  "spinAvailableToday": zod.boolean(),
+  "todaySpin": zod.union([zod.object({
+  "pointsAwarded": zod.int(),
+  "localDate": zod.coerce.date(),
+  "alreadySpun": zod.boolean(),
+  "newBalance": zod.int()
+}),zod.null()]).optional()
+})
+
+
+/**
+ * Idempotent — calling more than once on the same local calendar day
+ * returns the existing result without awarding points again.
+ * Awards 10 AIMD Points on the first check-in for each local day.
+ * Also awards streak milestone badges at 1, 3, 7, 14, and 30 days.
+ *
+ * Timezone rule: the `timezone` field establishes the creator's saved
+ * timezone on the very first call when no saved value exists. Once a
+ * valid timezone is stored server-side it becomes authoritative and the
+ * supplied value is ignored. The local calendar date is computed
+ * server-side using the authoritative timezone.
+ * @summary Record a daily check-in for the creator
+ */
+
+
+
+export const CheckInProgressBody = zod.object({
+  "timezone": zod.string().min(1).describe('IANA timezone string, e.g. \"America\/New_York\"')
+})
+
+export const CheckInProgressResponse = zod.object({
+  "points": zod.int(),
+  "phase": zod.object({
+  "phase": zod.enum(['Discovering', 'Dedicated', 'Professional']),
+  "currentPoints": zod.int(),
+  "nextPhase": zod.string().nullable(),
+  "nextPhasePoints": zod.int().nullable(),
+  "progressPercent": zod.number()
+}),
+  "currentStreak": zod.int(),
+  "longestStreak": zod.int(),
+  "todayHabitsCompleted": zod.int(),
+  "totalHabits": zod.int(),
+  "recentBadges": zod.array(zod.object({
+  "id": zod.int(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "imageUrl": zod.string().nullish(),
+  "earnedAt": zod.coerce.date()
+})),
+  "nextBadge": zod.union([zod.object({
+  "name": zod.string(),
+  "requiredStreak": zod.int(),
+  "currentStreak": zod.int(),
+  "progressPercent": zod.number()
+}),zod.null()]).optional(),
+  "timezone": zod.string().nullable(),
+  "localDate": zod.coerce.date(),
+  "checkedInToday": zod.boolean(),
+  "spinAvailableToday": zod.boolean(),
+  "todaySpin": zod.union([zod.object({
+  "pointsAwarded": zod.int(),
+  "localDate": zod.coerce.date(),
+  "alreadySpun": zod.boolean(),
+  "newBalance": zod.int()
+}),zod.null()]).optional()
+})
+
+
+/**
+ * Idempotent once per creator per local calendar date. Weighted outcomes
+ * are 5, 10, 20, or 50 points. The spin insert, point ledger insert, and
+ * user balance update are executed in a single transaction.
+ * Returns the existing result on retries.
+ *
+ * Timezone rule: the `timezone` field establishes the creator's saved
+ * timezone on the very first call when no saved value exists. Once a
+ * valid timezone is stored server-side it becomes authoritative and the
+ * supplied value is ignored. The local calendar date is computed
+ * server-side using the authoritative timezone.
+ * @summary Spin the daily reward wheel
+ */
+
+
+
+export const SpinDailyRewardBody = zod.object({
+  "timezone": zod.string().min(1).describe('IANA timezone string, e.g. \"America\/New_York\"')
+})
+
+export const SpinDailyRewardResponse = zod.object({
+  "pointsAwarded": zod.int(),
+  "localDate": zod.coerce.date(),
+  "alreadySpun": zod.boolean(),
+  "newBalance": zod.int()
+})
+
+
+/**
+ * @summary Get the current weekly challenge with submissions and vote counts
+ */
+export const GetCurrentChallengeResponse = zod.object({
+  "challenge": zod.object({
+  "week": zod.string(),
+  "theme": zod.string(),
+  "prompt": zod.string(),
+  "deadline": zod.coerce.date(),
+  "prize": zod.string(),
+  "challengeWeek": zod.string(),
+  "totalSubmissions": zod.int()
+}),
+  "submissions": zod.array(zod.object({
+  "id": zod.int(),
+  "rank": zod.int(),
+  "challengeWeek": zod.string(),
+  "username": zod.string(),
+  "initials": zod.string(),
+  "caption": zod.string(),
+  "imageUrl": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional(),
+  "votes": zod.int(),
+  "hasVoted": zod.boolean()
+})),
+  "hasSubmitted": zod.boolean(),
+  "mySubmissionId": zod.int().nullish()
+})
+
+
+/**
+ * One entry per creator per challenge week. Returns 409 if already submitted.
+ * @summary Submit an entry to the current weekly challenge
+ */
+
+
+
+export const SubmitChallengeEntryBody = zod.object({
+  "caption": zod.string().min(1),
+  "imageUrl": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional()
+})
+
+export const SubmitChallengeEntryResponse = zod.object({
+  "submissionId": zod.int()
 })
 
 

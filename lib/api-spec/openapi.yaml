@@ -46,6 +46,12 @@ tags:
     description: User profile and creator directory
   - name: conversations
     description: Messaging and conversations
+  - name: progress
+    description: Creator progress, daily check-in, streaks, phases, and badges
+  - name: rewards
+    description: Daily reward spin and AIMD Points
+  - name: challenges
+    description: Weekly creative challenge submissions and voting
 
 paths:
   # ── Storage ───────────────────────────────────────────────────────────────────
@@ -1224,6 +1230,144 @@ paths:
               schema:
                 $ref: "#/components/schemas/ConversationMessage"
 
+  # ── Creator Progress ──────────────────────────────────────────────────────
+  /progress:
+    get:
+      operationId: getProgress
+      tags: [progress]
+      summary: Get the current creator's progress summary
+      description: |
+        Returns points, phase, streaks, recent badges, habit completions,
+        check-in status, and today's reward spin availability/result.
+        The saved creator timezone is authoritative once established; supply
+        `timezone` only on the very first read before any timezone has been saved.
+        This parameter is ignored when a valid saved timezone already exists.
+      parameters:
+        - name: timezone
+          in: query
+          required: false
+          schema:
+            type: ["string", "null"]
+          description: >
+            IANA timezone string (e.g. "America/New_York"). Used only when
+            the creator has no saved timezone yet; the server-side saved
+            timezone takes priority on all subsequent calls.
+      responses:
+        "200":
+          description: Creator progress summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressSummary"
+        "401":
+          description: Authentication required
+
+  /progress/check-in:
+    post:
+      operationId: checkInProgress
+      tags: [progress]
+      summary: Record a daily check-in for the creator
+      description: |
+        Idempotent — calling more than once on the same local calendar day
+        returns the existing result without awarding points again.
+        Awards 10 AIMD Points on the first check-in for each local day.
+        Also awards streak milestone badges at 1, 3, 7, 14, and 30 days.
+
+        Timezone rule: the `timezone` field establishes the creator's saved
+        timezone on the very first call when no saved value exists. Once a
+        valid timezone is stored server-side it becomes authoritative and the
+        supplied value is ignored. The local calendar date is computed
+        server-side using the authoritative timezone.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgressDayInput"
+      responses:
+        "200":
+          description: Updated progress summary (idempotent — same shape whether new or repeat)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressSummary"
+        "400":
+          description: Invalid or missing timezone
+        "401":
+          description: Authentication required
+
+  /rewards/spin:
+    post:
+      operationId: spinDailyReward
+      tags: [rewards]
+      summary: Spin the daily reward wheel
+      description: |
+        Idempotent once per creator per local calendar date. Weighted outcomes
+        are 5, 10, 20, or 50 points. The spin insert, point ledger insert, and
+        user balance update are executed in a single transaction.
+        Returns the existing result on retries.
+
+        Timezone rule: the `timezone` field establishes the creator's saved
+        timezone on the very first call when no saved value exists. Once a
+        valid timezone is stored server-side it becomes authoritative and the
+        supplied value is ignored. The local calendar date is computed
+        server-side using the authoritative timezone.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgressDayInput"
+      responses:
+        "200":
+          description: Spin result (new or existing for today)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailySpinResult"
+        "400":
+          description: Invalid or missing timezone
+        "401":
+          description: Authentication required
+
+  # ── Weekly Challenges ─────────────────────────────────────────────────────
+  /challenges/current:
+    get:
+      operationId: getCurrentChallenge
+      tags: [challenges]
+      summary: Get the current weekly challenge with submissions and vote counts
+      responses:
+        "200":
+          description: Current weekly challenge with ranked submissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeeklyChallengeResult"
+
+  /challenges/submit:
+    post:
+      operationId: submitChallengeEntry
+      tags: [challenges]
+      summary: Submit an entry to the current weekly challenge
+      description: One entry per creator per challenge week. Returns 409 if already submitted.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChallengeSubmissionInput"
+      responses:
+        "201":
+          description: Submission created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChallengeSubmissionCreated"
+        "401":
+          description: Authentication required
+        "409":
+          description: Already submitted for this week
+
   # ── Post Comments ─────────────────────────────────────────────────────────
   /studio-posts/{id}/comments:
     get:
@@ -2287,6 +2431,25 @@ components:
           type: integer
         postCount:
           type: integer
+        points:
+          type: integer
+        currentStreak:
+          type: integer
+        workshopsEnrolled:
+          type: integer
+        recentBadges:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              imageUrl:
+                type: ["string", "null"]
+              earnedAt:
+                type: string
 
     # ── Conversations ─────────────────────────────────────────────────────
     ConversationParticipant:
@@ -2425,3 +2588,194 @@ components:
       properties:
         error:
           type: string
+
+    # ── Creator Progress ──────────────────────────────────────────────────
+    ProgressDayInput:
+      type: object
+      required: [timezone]
+      properties:
+        timezone:
+          type: string
+          description: IANA timezone string, e.g. "America/New_York"
+          minLength: 1
+
+    StreakBadge:
+      type: object
+      required: [id, name, description, earnedAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        earnedAt:
+          type: string
+          format: date-time
+
+    NextBadgeProgress:
+      type: object
+      required: [name, requiredStreak, currentStreak, progressPercent]
+      properties:
+        name:
+          type: string
+        requiredStreak:
+          type: integer
+        currentStreak:
+          type: integer
+        progressPercent:
+          type: number
+
+    PhaseProgress:
+      type: object
+      required: [phase, currentPoints, nextPhase, nextPhasePoints, progressPercent]
+      properties:
+        phase:
+          type: string
+          enum: ["Discovering", "Dedicated", "Professional"]
+        currentPoints:
+          type: integer
+        nextPhase:
+          type: ["string", "null"]
+        nextPhasePoints:
+          type: ["integer", "null"]
+        progressPercent:
+          type: number
+
+    DailySpinResult:
+      type: object
+      required: [pointsAwarded, localDate, alreadySpun, newBalance]
+      properties:
+        pointsAwarded:
+          type: integer
+        localDate:
+          type: string
+          format: date
+        alreadySpun:
+          type: boolean
+        newBalance:
+          type: integer
+
+    ProgressSummary:
+      type: object
+      required: [points, phase, currentStreak, longestStreak, todayHabitsCompleted, totalHabits, recentBadges, timezone, localDate, checkedInToday, spinAvailableToday]
+      properties:
+        points:
+          type: integer
+        phase:
+          $ref: "#/components/schemas/PhaseProgress"
+        currentStreak:
+          type: integer
+        longestStreak:
+          type: integer
+        todayHabitsCompleted:
+          type: integer
+        totalHabits:
+          type: integer
+        recentBadges:
+          type: array
+          items:
+            $ref: "#/components/schemas/StreakBadge"
+        nextBadge:
+          oneOf:
+            - $ref: "#/components/schemas/NextBadgeProgress"
+            - type: "null"
+        timezone:
+          type: ["string", "null"]
+        localDate:
+          type: string
+          format: date
+        checkedInToday:
+          type: boolean
+        spinAvailableToday:
+          type: boolean
+        todaySpin:
+          oneOf:
+            - $ref: "#/components/schemas/DailySpinResult"
+            - type: "null"
+
+    # ── Weekly Challenges ─────────────────────────────────────────────────
+    ChallengeSubmissionInput:
+      type: object
+      required: [caption]
+      properties:
+        caption:
+          type: string
+          minLength: 1
+        imageUrl:
+          type: ["string", "null"]
+        tags:
+          type: array
+          items:
+            type: string
+
+    ChallengeSubmissionCreated:
+      type: object
+      required: [submissionId]
+      properties:
+        submissionId:
+          type: integer
+
+    ChallengeSubmission:
+      type: object
+      required: [id, rank, challengeWeek, username, initials, caption, votes, hasVoted]
+      properties:
+        id:
+          type: integer
+        rank:
+          type: integer
+        challengeWeek:
+          type: string
+        username:
+          type: string
+        initials:
+          type: string
+        caption:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        tags:
+          type: array
+          items:
+            type: string
+        votes:
+          type: integer
+        hasVoted:
+          type: boolean
+
+    WeeklyChallengeBrief:
+      type: object
+      required: [week, theme, prompt, deadline, prize, challengeWeek, totalSubmissions]
+      properties:
+        week:
+          type: string
+        theme:
+          type: string
+        prompt:
+          type: string
+        deadline:
+          type: string
+          format: date-time
+        prize:
+          type: string
+        challengeWeek:
+          type: string
+        totalSubmissions:
+          type: integer
+
+    WeeklyChallengeResult:
+      type: object
+      required: [challenge, submissions, hasSubmitted]
+      properties:
+        challenge:
+          $ref: "#/components/schemas/WeeklyChallengeBrief"
+        submissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChallengeSubmission"
+        hasSubmitted:
+          type: boolean
+        mySubmissionId:
+          type: ["integer", "null"]

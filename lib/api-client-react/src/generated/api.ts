@@ -25,6 +25,8 @@ import type {
   AssignmentInput,
   AwardPointsBody,
   Badge,
+  ChallengeSubmissionCreated,
+  ChallengeSubmissionInput,
   CheckoutSession,
   CheckoutSessionInput,
   Comment,
@@ -35,6 +37,7 @@ import type {
   ConversationInput,
   ConversationMessage,
   ConversationResult,
+  DailySpinResult,
   DashboardSummary,
   DirectoryCreator,
   Enrollment,
@@ -43,6 +46,7 @@ import type {
   EventCheckInResult,
   EventQrToken,
   GetActivityFeedParams,
+  GetProgressParams,
   Habit,
   HabitInput,
   HabitLog,
@@ -63,6 +67,8 @@ import type {
   MessageInput,
   Plan,
   PointAwardResult,
+  ProgressDayInput,
+  ProgressSummary,
   RewardsInfo,
   SkillTrack,
   SkillTrackInput,
@@ -78,6 +84,7 @@ import type {
   StudioPostInput,
   User,
   UserUpdate,
+  WeeklyChallengeResult,
   Workshop,
   WorkshopDetail
 } from './api.schemas';
@@ -4649,6 +4656,406 @@ export const useSendMessage = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getSendMessageMutationOptions(options));
+    }
+
+export const getGetProgressUrl = (params?: GetProgressParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/progress?${stringifiedParams}` : `/api/progress`
+}
+
+/**
+ * Returns points, phase, streaks, recent badges, habit completions,
+ * check-in status, and today's reward spin availability/result.
+ * The saved creator timezone is authoritative once established; supply
+ * `timezone` only on the very first read before any timezone has been saved.
+ * This parameter is ignored when a valid saved timezone already exists.
+ * @summary Get the current creator's progress summary
+ */
+export const getProgress = async (params?: GetProgressParams, options?: Parameters<typeof customFetch>[1]): Promise<ProgressSummary> => {
+
+  return customFetch<ProgressSummary>(getGetProgressUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProgressQueryKey = (params?: GetProgressParams,) => {
+    return [
+    `/api/progress`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetProgressQueryOptions = <TData = Awaited<ReturnType<typeof getProgress>>, TError = ErrorType<void>>(params?: GetProgressParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProgress>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProgressQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProgress>>> = ({ signal }) => getProgress(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProgress>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetProgressQueryResult = NonNullable<Awaited<ReturnType<typeof getProgress>>>
+export type GetProgressQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get the current creator's progress summary
+ */
+
+export function useGetProgress<TData = Awaited<ReturnType<typeof getProgress>>, TError = ErrorType<void>>(
+ params?: GetProgressParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProgress>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetProgressQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCheckInProgressUrl = () => {
+
+
+
+
+  return `/api/progress/check-in`
+}
+
+/**
+ * Idempotent — calling more than once on the same local calendar day
+ * returns the existing result without awarding points again.
+ * Awards 10 AIMD Points on the first check-in for each local day.
+ * Also awards streak milestone badges at 1, 3, 7, 14, and 30 days.
+ *
+ * Timezone rule: the `timezone` field establishes the creator's saved
+ * timezone on the very first call when no saved value exists. Once a
+ * valid timezone is stored server-side it becomes authoritative and the
+ * supplied value is ignored. The local calendar date is computed
+ * server-side using the authoritative timezone.
+ * @summary Record a daily check-in for the creator
+ */
+export const checkInProgress = async (progressDayInput: ProgressDayInput, options?: Parameters<typeof customFetch>[1]): Promise<ProgressSummary> => {
+
+  return customFetch<ProgressSummary>(getCheckInProgressUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(progressDayInput)
+  }
+);}
+
+
+
+
+
+export const getCheckInProgressMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkInProgress>>, TError,{data: BodyType<ProgressDayInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof checkInProgress>>, TError,{data: BodyType<ProgressDayInput>}, TContext> => {
+
+const mutationKey = ['checkInProgress'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkInProgress>>, {data: BodyType<ProgressDayInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  checkInProgress(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CheckInProgressMutationResult = NonNullable<Awaited<ReturnType<typeof checkInProgress>>>
+    export type CheckInProgressMutationBody = BodyType<ProgressDayInput>
+    export type CheckInProgressMutationError = ErrorType<void>
+
+    /**
+ * @summary Record a daily check-in for the creator
+ */
+export const useCheckInProgress = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkInProgress>>, TError,{data: BodyType<ProgressDayInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof checkInProgress>>,
+        TError,
+        {data: BodyType<ProgressDayInput>},
+        TContext
+      > => {
+      return useMutation(getCheckInProgressMutationOptions(options));
+    }
+
+export const getSpinDailyRewardUrl = () => {
+
+
+
+
+  return `/api/rewards/spin`
+}
+
+/**
+ * Idempotent once per creator per local calendar date. Weighted outcomes
+ * are 5, 10, 20, or 50 points. The spin insert, point ledger insert, and
+ * user balance update are executed in a single transaction.
+ * Returns the existing result on retries.
+ *
+ * Timezone rule: the `timezone` field establishes the creator's saved
+ * timezone on the very first call when no saved value exists. Once a
+ * valid timezone is stored server-side it becomes authoritative and the
+ * supplied value is ignored. The local calendar date is computed
+ * server-side using the authoritative timezone.
+ * @summary Spin the daily reward wheel
+ */
+export const spinDailyReward = async (progressDayInput: ProgressDayInput, options?: Parameters<typeof customFetch>[1]): Promise<DailySpinResult> => {
+
+  return customFetch<DailySpinResult>(getSpinDailyRewardUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(progressDayInput)
+  }
+);}
+
+
+
+
+
+export const getSpinDailyRewardMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof spinDailyReward>>, TError,{data: BodyType<ProgressDayInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof spinDailyReward>>, TError,{data: BodyType<ProgressDayInput>}, TContext> => {
+
+const mutationKey = ['spinDailyReward'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof spinDailyReward>>, {data: BodyType<ProgressDayInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  spinDailyReward(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SpinDailyRewardMutationResult = NonNullable<Awaited<ReturnType<typeof spinDailyReward>>>
+    export type SpinDailyRewardMutationBody = BodyType<ProgressDayInput>
+    export type SpinDailyRewardMutationError = ErrorType<void>
+
+    /**
+ * @summary Spin the daily reward wheel
+ */
+export const useSpinDailyReward = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof spinDailyReward>>, TError,{data: BodyType<ProgressDayInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof spinDailyReward>>,
+        TError,
+        {data: BodyType<ProgressDayInput>},
+        TContext
+      > => {
+      return useMutation(getSpinDailyRewardMutationOptions(options));
+    }
+
+export const getGetCurrentChallengeUrl = () => {
+
+
+
+
+  return `/api/challenges/current`
+}
+
+/**
+ * @summary Get the current weekly challenge with submissions and vote counts
+ */
+export const getCurrentChallenge = async ( options?: Parameters<typeof customFetch>[1]): Promise<WeeklyChallengeResult> => {
+
+  return customFetch<WeeklyChallengeResult>(getGetCurrentChallengeUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCurrentChallengeQueryKey = () => {
+    return [
+    `/api/challenges/current`
+    ] as const;
+    }
+
+
+export const getGetCurrentChallengeQueryOptions = <TData = Awaited<ReturnType<typeof getCurrentChallenge>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCurrentChallenge>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCurrentChallengeQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCurrentChallenge>>> = ({ signal }) => getCurrentChallenge({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCurrentChallenge>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCurrentChallengeQueryResult = NonNullable<Awaited<ReturnType<typeof getCurrentChallenge>>>
+export type GetCurrentChallengeQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the current weekly challenge with submissions and vote counts
+ */
+
+export function useGetCurrentChallenge<TData = Awaited<ReturnType<typeof getCurrentChallenge>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCurrentChallenge>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCurrentChallengeQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSubmitChallengeEntryUrl = () => {
+
+
+
+
+  return `/api/challenges/submit`
+}
+
+/**
+ * One entry per creator per challenge week. Returns 409 if already submitted.
+ * @summary Submit an entry to the current weekly challenge
+ */
+export const submitChallengeEntry = async (challengeSubmissionInput: ChallengeSubmissionInput, options?: Parameters<typeof customFetch>[1]): Promise<ChallengeSubmissionCreated> => {
+
+  return customFetch<ChallengeSubmissionCreated>(getSubmitChallengeEntryUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(challengeSubmissionInput)
+  }
+);}
+
+
+
+
+
+export const getSubmitChallengeEntryMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitChallengeEntry>>, TError,{data: BodyType<ChallengeSubmissionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitChallengeEntry>>, TError,{data: BodyType<ChallengeSubmissionInput>}, TContext> => {
+
+const mutationKey = ['submitChallengeEntry'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitChallengeEntry>>, {data: BodyType<ChallengeSubmissionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  submitChallengeEntry(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitChallengeEntryMutationResult = NonNullable<Awaited<ReturnType<typeof submitChallengeEntry>>>
+    export type SubmitChallengeEntryMutationBody = BodyType<ChallengeSubmissionInput>
+    export type SubmitChallengeEntryMutationError = ErrorType<void>
+
+    /**
+ * @summary Submit an entry to the current weekly challenge
+ */
+export const useSubmitChallengeEntry = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitChallengeEntry>>, TError,{data: BodyType<ChallengeSubmissionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitChallengeEntry>>,
+        TError,
+        {data: BodyType<ChallengeSubmissionInput>},
+        TContext
+      > => {
+      return useMutation(getSubmitChallengeEntryMutationOptions(options));
     }
 
 export const getListPostCommentsUrl = (id: number,) => {

@@ -8,6 +8,11 @@
 
 import { Router, type IRouter } from "express";
 import { pool } from "@workspace/db";
+import {
+  GetCurrentChallengeResponse,
+  SubmitChallengeEntryBody,
+  SubmitChallengeEntryResponse,
+} from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
@@ -64,8 +69,8 @@ router.get("/challenges/current", async (req, res): Promise<void> => {
     const votedIds = new Set<number>();
     let mySubmissionId: number | null = null;
 
-    if (!!req.dbUser) {
-      const userId = (req.dbUser as any).id as number;
+    if (req.dbUser) {
+      const userId = req.dbUser.id;
 
       const { rows: votes } = await pool.query<{ submission_id: number }>(
         `SELECT submission_id FROM challenge_votes WHERE user_id = $1`,
@@ -95,7 +100,7 @@ router.get("/challenges/current", async (req, res): Promise<void> => {
       hasVoted: votedIds.has(s.id),
     }));
 
-    res.json({
+    res.json(GetCurrentChallengeResponse.parse({
       challenge: {
         ...CURRENT_CHALLENGE,
         challengeWeek,
@@ -103,34 +108,31 @@ router.get("/challenges/current", async (req, res): Promise<void> => {
       },
       submissions: result,
       hasSubmitted: mySubmissionId !== null,
-      mySubmissionId,
-    });
+      mySubmissionId: mySubmissionId ?? null,
+    }));
   } catch (err) {
-    res.status(500).json({ error: String(err) });
+    req.log.error({ err }, "getCurrentChallenge error");
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 // ─── POST /challenges/submit ──────────────────────────────────────────────────
 
 router.post("/challenges/submit", async (req, res): Promise<void> => {
-  if (!!!req.dbUser) {
+  if (!req.dbUser) {
     res.status(401).json({ error: "Unauthorized — sign in to submit an entry" });
     return;
   }
 
-  const { caption, imageUrl, tags } = req.body ?? {};
-
-  if (typeof caption !== "string" || !caption.trim()) {
-    res.status(400).json({ error: "caption is required" });
+  const parsed = SubmitChallengeEntryBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
     return;
   }
 
+  const { caption, imageUrl, tags } = parsed.data;
   const challengeWeek = isoWeek(new Date(CURRENT_CHALLENGE.deadline));
-  const tagsArr: string[] = Array.isArray(tags)
-    ? tags.map(String)
-    : typeof tags === "string"
-    ? tags.split(",").map((t: string) => t.trim()).filter(Boolean)
-    : [];
+  const tagsArr: string[] = Array.isArray(tags) ? tags.map(String) : [];
 
   try {
     const { rows } = await pool.query<{ id: number }>(
@@ -138,7 +140,7 @@ router.post("/challenges/submit", async (req, res): Promise<void> => {
        VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (challenge_week, user_id) DO NOTHING
        RETURNING id`,
-      [challengeWeek, (req.dbUser as any).id, caption.trim(), imageUrl ?? null, tagsArr]
+      [challengeWeek, req.dbUser.id, caption.trim(), imageUrl ?? null, tagsArr]
     );
 
     if (rows.length === 0) {
@@ -146,9 +148,10 @@ router.post("/challenges/submit", async (req, res): Promise<void> => {
       return;
     }
 
-    res.status(201).json({ submissionId: rows[0].id });
+    res.status(201).json(SubmitChallengeEntryResponse.parse({ submissionId: rows[0].id }));
   } catch (err) {
-    res.status(500).json({ error: String(err) });
+    req.log.error({ err }, "submitChallengeEntry error");
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -158,18 +161,19 @@ router.post("/challenges/submit", async (req, res): Promise<void> => {
 // number of rows in challenge_votes.
 
 router.post("/challenges/:id/vote", async (req, res): Promise<void> => {
-  if (!!!req.dbUser) {
+  if (!req.dbUser) {
     res.status(401).json({ error: "Unauthorized — sign in to vote" });
     return;
   }
 
-  const submissionId = parseInt(req.params.id, 10);
+  const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const submissionId = parseInt(rawId, 10);
   if (isNaN(submissionId)) {
     res.status(400).json({ error: "Invalid submission id" });
     return;
   }
 
-  const userId = (req.dbUser as any).id as number;
+  const userId = req.dbUser.id;
   const client = await pool.connect();
 
   try {
@@ -226,7 +230,8 @@ router.post("/challenges/:id/vote", async (req, res): Promise<void> => {
     res.json({ submissionId, hasVoted, voteCount: newCount });
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
-    res.status(500).json({ error: String(err) });
+    req.log.error({ err }, "vote toggle failed");
+    res.status(500).json({ error: "Internal server error" });
   } finally {
     client.release();
   }

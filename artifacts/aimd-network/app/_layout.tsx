@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -13,9 +13,9 @@ import {
 } from '@expo-google-fonts/dm-sans';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { setBaseUrl } from '@workspace/api-client-react';
+import { setAuthTokenGetter, setBaseUrl } from '@workspace/api-client-react';
 import { StatusBar } from 'expo-status-bar';
-import { ClerkProvider, ClerkLoaded } from '@clerk/expo';
+import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/expo';
 import { tokenCache } from '@clerk/expo/token-cache';
 
 // Set API base URL before any component renders
@@ -34,12 +34,37 @@ const queryClient = new QueryClient({
   },
 });
 
+function AuthSessionBridge({ children }: { children: ReactNode }) {
+  const { getToken, isLoaded, userId } = useAuth();
+  const previousUserId = useRef<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    setAuthTokenGetter(() => getToken());
+  }, [getToken]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const nextUserId = userId ?? null;
+    if (
+      previousUserId.current !== undefined &&
+      previousUserId.current !== nextUserId
+    ) {
+      queryClient.clear();
+    }
+    previousUserId.current = nextUserId;
+  }, [isLoaded, userId]);
+
+  return children;
+}
+
 function RootLayoutNav() {
   return (
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
+      <Stack.Screen name="feed" options={{ headerShown: false }} />
       <Stack.Screen
         name="conversation/[id]"
         options={{
@@ -82,18 +107,20 @@ export default function RootLayout() {
       proxyUrl={proxyUrl}
     >
       <ClerkLoaded>
-        <SafeAreaProvider>
-          <ErrorBoundary>
-            <QueryClientProvider client={queryClient}>
-              <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0a0a0a' }}>
-                <KeyboardProvider>
-                  <StatusBar style="light" />
-                  <RootLayoutNav />
-                </KeyboardProvider>
-              </GestureHandlerRootView>
-            </QueryClientProvider>
-          </ErrorBoundary>
-        </SafeAreaProvider>
+        <AuthSessionBridge>
+          <SafeAreaProvider>
+            <ErrorBoundary>
+              <QueryClientProvider client={queryClient}>
+                <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0a0a0a' }}>
+                  <KeyboardProvider>
+                    <StatusBar style="light" />
+                    <RootLayoutNav />
+                  </KeyboardProvider>
+                </GestureHandlerRootView>
+              </QueryClientProvider>
+            </ErrorBoundary>
+          </SafeAreaProvider>
+        </AuthSessionBridge>
       </ClerkLoaded>
     </ClerkProvider>
   );

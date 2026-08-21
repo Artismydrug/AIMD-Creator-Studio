@@ -768,6 +768,14 @@ export interface StorePaymentIntent {
   order: StoreOrder;
 }
 
+export type DirectoryCreatorRecentBadgesItem = {
+  id?: number;
+  name?: string;
+  /** @nullable */
+  imageUrl?: string | null;
+  earnedAt?: string;
+};
+
 export interface DirectoryCreator {
   id: number;
   username: string;
@@ -785,6 +793,10 @@ export interface DirectoryCreator {
   portfolioUrl?: string | null;
   badgeCount: number;
   postCount: number;
+  points?: number;
+  currentStreak?: number;
+  workshopsEnrolled?: number;
+  recentBadges?: DirectoryCreatorRecentBadgesItem[];
 }
 
 export interface ConversationParticipant {
@@ -859,6 +871,117 @@ export interface CommentInput {
 
 export interface ErrorEnvelope {
   error: string;
+}
+
+export interface ProgressDayInput {
+  /**
+     * IANA timezone string, e.g. "America/New_York"
+     * @minLength 1
+     */
+  timezone: string;
+}
+
+export interface StreakBadge {
+  id: number;
+  name: string;
+  description: string;
+  /** @nullable */
+  imageUrl?: string | null;
+  earnedAt: string;
+}
+
+export interface NextBadgeProgress {
+  name: string;
+  requiredStreak: number;
+  currentStreak: number;
+  progressPercent: number;
+}
+
+export type PhaseProgressPhase = typeof PhaseProgressPhase[keyof typeof PhaseProgressPhase];
+
+
+export const PhaseProgressPhase = {
+  Discovering: 'Discovering',
+  Dedicated: 'Dedicated',
+  Professional: 'Professional',
+} as const;
+
+export interface PhaseProgress {
+  phase: PhaseProgressPhase;
+  currentPoints: number;
+  /** @nullable */
+  nextPhase: string | null;
+  /** @nullable */
+  nextPhasePoints: number | null;
+  progressPercent: number;
+}
+
+export interface DailySpinResult {
+  pointsAwarded: number;
+  localDate: string;
+  alreadySpun: boolean;
+  newBalance: number;
+}
+
+export interface ProgressSummary {
+  points: number;
+  phase: PhaseProgress;
+  currentStreak: number;
+  longestStreak: number;
+  todayHabitsCompleted: number;
+  totalHabits: number;
+  recentBadges: StreakBadge[];
+  nextBadge?: NextBadgeProgress | null;
+  /** @nullable */
+  timezone: string | null;
+  localDate: string;
+  checkedInToday: boolean;
+  spinAvailableToday: boolean;
+  todaySpin?: DailySpinResult | null;
+}
+
+export interface ChallengeSubmissionInput {
+  /** @minLength 1 */
+  caption: string;
+  /** @nullable */
+  imageUrl?: string | null;
+  tags?: string[];
+}
+
+export interface ChallengeSubmissionCreated {
+  submissionId: number;
+}
+
+export interface ChallengeSubmission {
+  id: number;
+  rank: number;
+  challengeWeek: string;
+  username: string;
+  initials: string;
+  caption: string;
+  /** @nullable */
+  imageUrl?: string | null;
+  tags?: string[];
+  votes: number;
+  hasVoted: boolean;
+}
+
+export interface WeeklyChallengeBrief {
+  week: string;
+  theme: string;
+  prompt: string;
+  deadline: string;
+  prize: string;
+  challengeWeek: string;
+  totalSubmissions: number;
+}
+
+export interface WeeklyChallengeResult {
+  challenge: WeeklyChallengeBrief;
+  submissions: ChallengeSubmission[];
+  hasSubmitted: boolean;
+  /** @nullable */
+  mySubmissionId?: number | null;
 }
 
 export type GetActivityFeedParams = {
@@ -937,5 +1060,13 @@ limit?: number;
 export type ListAdminUsers200 = {
   total: number;
   members: AdminMember[];
+};
+
+export type GetProgressParams = {
+/**
+ * IANA timezone string (e.g. "America/New_York"). Used only when the creator has no saved timezone yet; the server-side saved timezone takes priority on all subsequent calls.
+ * @nullable
+ */
+timezone?: string | null;
 };
 

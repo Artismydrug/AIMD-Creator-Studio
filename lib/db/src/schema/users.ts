@@ -28,6 +28,8 @@ export const usersTable = pgTable("users", {
   isAdmin: boolean("is_admin").notNull().default(false),
   // AIMD Points balance (reward tiers: T-shirt, event ticket, workshop lesson)
   points: integer("points").notNull().default(0),
+  // Creator's IANA timezone saved from first check-in; used for local-date calculations
+  timezone: text("timezone"),
 });
 
 // Ledger of every point award — auditable history behind users.points

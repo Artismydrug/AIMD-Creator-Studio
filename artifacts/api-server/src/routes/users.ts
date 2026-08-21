@@ -113,7 +113,8 @@ router.get("/directory", async (req, res): Promise<void> => {
 
 // Public profile for any user by id
 router.get("/users/:id/profile", async (req, res): Promise<void> => {
-  const userId = parseInt(req.params.id);
+  const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const userId = parseInt(rawId, 10);
   if (isNaN(userId)) { res.status(400).json({ error: "Invalid id" }); return; }
 
   const rows = await db.execute(sql`
@@ -121,13 +122,28 @@ router.get("/users/:id/profile", async (req, res): Promise<void> => {
       u.id, u.username, u.email,
       u.first_name AS "firstName", u.last_name AS "lastName",
       u.avatar_url AS "avatarUrl",
-      u.tier, u.studio_ready_badge AS "studioReadyBadge",
+      u.tier, u.studio_ready_badge AS "studioReadyBadge", u.points,
       u.discipline, u.bio, u.location,
       u.booking_open AS "bookingOpen",
       u.portfolio_url AS "portfolioUrl",
       u.created_at AS "createdAt",
       COUNT(DISTINCT p.id)::int AS "postCount",
-      (SELECT COALESCE(MAX(h2.current_streak), 0) FROM habits h2 WHERE h2.user_id = u.id) AS "currentStreak",
+      -- Current streak from creator_daily_checkins:
+      --   Read the most recent row's streak_day, but only when its local_date is
+      --   today or yesterday in the creator's saved timezone.  Otherwise return 0.
+      COALESCE((
+        SELECT CASE
+          WHEN cdc.local_date >= (
+            (NOW() AT TIME ZONE COALESCE(NULLIF(u.timezone, ''), 'UTC'))::date - 1
+          )
+          THEN cdc.streak_day
+          ELSE 0
+        END
+        FROM creator_daily_checkins cdc
+        WHERE cdc.user_id = u.id
+        ORDER BY cdc.local_date DESC
+        LIMIT 1
+      ), 0)::int AS "currentStreak",
       (SELECT COUNT(*)::int FROM badges b WHERE b.user_id = u.id) AS "badgesEarned",
       (SELECT COUNT(*)::int FROM enrollments e WHERE e.user_id = u.id) AS "workshopsEnrolled",
       (

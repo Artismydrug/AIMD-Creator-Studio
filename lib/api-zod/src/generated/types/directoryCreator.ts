@@ -5,6 +5,7 @@
  * AIMD Academy & Studio Portal API
  * OpenAPI spec version: 0.2.0
  */
+import type { DirectoryCreatorRecentBadgesItem } from './directoryCreatorRecentBadgesItem';
 
 export interface DirectoryCreator {
   id: number;
@@ -23,4 +24,8 @@ export interface DirectoryCreator {
   portfolioUrl?: string | null;
   badgeCount: number;
   postCount: number;
+  points?: number;
+  currentStreak?: number;
+  workshopsEnrolled?: number;
+  recentBadges?: DirectoryCreatorRecentBadgesItem[];
 }
