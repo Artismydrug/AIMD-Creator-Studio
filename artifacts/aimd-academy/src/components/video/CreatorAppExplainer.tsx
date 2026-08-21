@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Flame, Trophy, Sparkles, ImageIcon, Compass, GraduationCap, Crown, Pause, Play } from 'lucide-react';
+import { Flame, Trophy, Sparkles, ImageIcon, Compass, GraduationCap, Crown, Pause, Play, RotateCcw } from 'lucide-react';
 
 const SCENE_DURATIONS = [4000, 4500, 4500, 4000, 5000, 4000];
 const TOTAL_SCENES = SCENE_DURATIONS.length;
@@ -8,6 +8,7 @@ const TOTAL_SCENES = SCENE_DURATIONS.length;
 export function CreatorAppExplainer() {
   const [currentScene, setCurrentScene] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [playbackCycle, setPlaybackCycle] = useState(0);
   const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
@@ -18,7 +19,13 @@ export function CreatorAppExplainer() {
     }, SCENE_DURATIONS[currentScene]);
 
     return () => clearTimeout(timeout);
-  }, [currentScene, isPlaying, shouldReduceMotion]);
+  }, [currentScene, isPlaying, playbackCycle, shouldReduceMotion]);
+
+  const replayExplainer = () => {
+    setCurrentScene(0);
+    setIsPlaying(true);
+    setPlaybackCycle((cycle) => cycle + 1);
+  };
 
   if (shouldReduceMotion) {
     return (
@@ -110,12 +117,12 @@ export function CreatorAppExplainer() {
         </div>
 
         <AnimatePresence mode="popLayout">
-          {currentScene === 0 && <Scene0 key="scene0" />}
-          {currentScene === 1 && <Scene1 key="scene1" />}
-          {currentScene === 2 && <Scene2 key="scene2" />}
-          {currentScene === 3 && <Scene3 key="scene3" />}
-          {currentScene === 4 && <Scene4 key="scene4" />}
-          {currentScene === 5 && <Scene5 key="scene5" />}
+          {currentScene === 0 && <Scene0 key={`scene0-${playbackCycle}`} />}
+          {currentScene === 1 && <Scene1 key={`scene1-${playbackCycle}`} />}
+          {currentScene === 2 && <Scene2 key={`scene2-${playbackCycle}`} />}
+          {currentScene === 3 && <Scene3 key={`scene3-${playbackCycle}`} />}
+          {currentScene === 4 && <Scene4 key={`scene4-${playbackCycle}`} />}
+          {currentScene === 5 && <Scene5 key={`scene5-${playbackCycle}`} />}
         </AnimatePresence>
       </div>
 
@@ -124,7 +131,7 @@ export function CreatorAppExplainer() {
         {/* Progress Bars */}
         <div className="flex-1 flex gap-1 md:gap-1.5" aria-hidden="true">
           {SCENE_DURATIONS.map((duration, i) => (
-            <div key={i} className="h-1 md:h-1.5 flex-1 bg-white/20 rounded-full overflow-hidden">
+            <div key={`${i}-${playbackCycle}`} className="h-1 md:h-1.5 flex-1 bg-white/20 rounded-full overflow-hidden">
               <motion.div 
                 className="h-full bg-white rounded-full origin-left"
                 initial={{ scaleX: i < currentScene ? 1 : 0 }}
@@ -140,14 +147,24 @@ export function CreatorAppExplainer() {
           ))}
         </div>
 
-        {/* Play/Pause Toggle - 44x44px minimum target for WCAG accessibility */}
-        <button
-          onClick={() => setIsPlaying(!isPlaying)}
-          aria-label={isPlaying ? "Pause explainer video" : "Play explainer video"}
-          className="pointer-events-auto shrink-0 flex items-center justify-center w-[44px] h-[44px] bg-black/70 hover:bg-black text-white rounded-full border border-white/30 backdrop-blur-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black shadow-lg"
-        >
-          {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
-        </button>
+        <div className="pointer-events-auto shrink-0 flex items-center gap-2">
+          <button
+            onClick={() => setIsPlaying((playing) => !playing)}
+            aria-label={isPlaying ? "Pause explainer video" : "Play explainer video"}
+            className="h-[44px] min-w-[44px] px-2.5 flex items-center justify-center gap-1.5 bg-black/80 hover:bg-black text-white rounded-full border border-white/30 backdrop-blur-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black shadow-lg font-mono text-[10px] uppercase tracking-wide"
+          >
+            {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
+            <span>{isPlaying ? 'Pause' : 'Play'}</span>
+          </button>
+          <button
+            onClick={replayExplainer}
+            aria-label="Replay explainer video from the beginning"
+            className="h-[44px] min-w-[44px] px-2.5 flex items-center justify-center gap-1.5 bg-black/80 hover:bg-black text-white rounded-full border border-white/30 backdrop-blur-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black shadow-lg font-mono text-[10px] uppercase tracking-wide"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>Replay</span>
+          </button>
+        </div>
       </div>
     </div>
   );

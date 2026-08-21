@@ -77,16 +77,25 @@ export function MarketingNav() {
           )}
         </div>
 
-        {/* Mobile toggle */}
-        <button
-          className="md:hidden p-2"
-          onClick={() => setOpen(!open)}
-          aria-label={open ? 'Close menu' : 'Open menu'}
-          aria-expanded={open}
-          aria-controls="marketing-mobile-menu"
-        >
-          {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        {/* Mobile actions: keep sign-in available without opening the menu */}
+        <div className="md:hidden flex items-center gap-1">
+          {!isSignedIn && (
+            <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+              <Button variant="outline" className="h-9 px-3 rounded-none uppercase font-mono text-[11px]">
+                Log In
+              </Button>
+            </SignInButton>
+          )}
+          <button
+            className="p-2"
+            onClick={() => setOpen(!open)}
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-expanded={open}
+            aria-controls="marketing-mobile-menu"
+          >
+            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
