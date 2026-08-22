@@ -2830,7 +2830,7 @@ components:
           maxLength: 120
         preferredArtist:
           type: string
-          enum: ["No preference", "Poncho The Artist", "Edwin", "Ashley"]
+          enum: ["No preference", "Poncho The Artist", "Edwin", "Ash"]
         website:
           type: string
           maxLength: 200

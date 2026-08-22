@@ -928,7 +928,7 @@ export const TattooBookingInputPreferredArtist = {
   No_preference: 'No preference',
   Poncho_The_Artist: 'Poncho The Artist',
   Edwin: 'Edwin',
-  Ashley: 'Ashley',
+  Ash: 'Ash',
 } as const;
 
 export interface TattooBookingInput {

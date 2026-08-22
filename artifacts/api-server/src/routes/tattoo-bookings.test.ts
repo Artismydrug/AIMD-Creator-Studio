@@ -78,7 +78,7 @@ describe("tattoo booking intake", () => {
         idea: "A geometric black and grey forearm design",
         placement: "Left forearm",
         estimatedSize: "4 x 6 inches",
-        preferredArtist: "Ashley",
+        preferredArtist: "Ash",
         website: "",
       });
 
@@ -146,7 +146,7 @@ describe("tattoo booking intake", () => {
           references: unknown[];
         }) =>
           booking.id === draft.body.id &&
-          booking.preferredArtist === "Ashley" &&
+          booking.preferredArtist === "Ash" &&
           booking.references.length === 1,
       ),
     ).toBe(true);

@@ -8,7 +8,6 @@ import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
 import { createTattooBookingDraft, submitTattooBooking } from '@workspace/api-client-react';
 import { ArrowRight, ArrowLeft, Brush, Calendar, CheckCircle2, ExternalLink, ImagePlus, Loader2, Mail, Shield, Sparkles, Users, X } from 'lucide-react';
 import tattooImg from '@assets/generated_images/tattoo-studio.jpg';
-import flashImg from '@assets/generated_images/workshop-tattoo.jpg';
 import ponchoImg from '@assets/IMG_0443_1787113468837.jpg';
 import ashleyImg from '@assets/A79EF24A-5883-4B50-9303-2DEAD60C2323_1787179907960.jpeg';
 import edwinImg from '@assets/2E8CB3C8-F080-4FA1-9C19-31C4FD0B50DD.JPG_1787180646083.jpeg';
@@ -24,7 +23,7 @@ const ARTISTS = [
   {
     name: 'Poncho The Artist',
     role: 'Founder · Lead Resident Artist',
-    styles: 'Custom work · Fine line · Black & grey · Color',
+    styles: 'Custom work · Fine line · Black & grey · Signature patterns',
     featured: true,
     available: true,
     photo: ponchoImg,
@@ -40,7 +39,7 @@ const ARTISTS = [
     portfolioUrl: EDWIN_PORTFOLIO_URL,
   },
   {
-    name: 'Ashley',
+    name: 'Ash',
     role: 'Resident Artist',
     styles: 'Tattoo work · Instagram portfolio',
     featured: true,
@@ -122,7 +121,7 @@ export default function Tattoo() {
         idea: form.idea.trim(),
         placement: form.placement.trim(),
         estimatedSize: form.size.trim(),
-        preferredArtist: form.artist as 'No preference' | 'Poncho The Artist' | 'Edwin' | 'Ashley',
+        preferredArtist: form.artist as 'No preference' | 'Poncho The Artist' | 'Edwin' | 'Ash',
         website,
       });
 
@@ -291,8 +290,26 @@ export default function Tattoo() {
                 </li>
               ))}
             </ul>
-            <div className="border border-border overflow-hidden hidden md:block">
-              <img src={flashImg} alt="Tattoo flash artwork" className="w-full object-cover" />
+            <div className="border border-border overflow-hidden hidden md:block bg-foreground">
+              <div className="grid grid-cols-3 h-72">
+                {ARTISTS.map((artist) => (
+                  <div key={artist.name} className="relative overflow-hidden">
+                    <img
+                      src={artist.photo}
+                      alt={`${artist.name}, AIMD resident tattoo artist`}
+                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/75 via-transparent to-transparent" />
+                    <span className="absolute bottom-3 left-3 font-mono text-[10px] uppercase tracking-widest text-background">
+                      {artist.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="px-4 py-3 bg-foreground text-background flex items-center justify-between">
+                <span className="font-mono text-[10px] uppercase tracking-[0.18em]">AIMD Tattoo Studio</span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-primary">The Residents</span>
+              </div>
             </div>
           </div>
 
@@ -389,7 +406,7 @@ export default function Tattoo() {
                       <option>No preference</option>
                       <option>Poncho The Artist</option>
                       <option>Edwin</option>
-                      <option>Ashley</option>
+                      <option>Ash</option>
                     </select>
                   </div>
                 </div>
