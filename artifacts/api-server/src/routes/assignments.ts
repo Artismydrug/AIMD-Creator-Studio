@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq, desc } from "drizzle-orm";
-import { db, assignmentsTable, workshopsTable } from "@workspace/db";
+import { eq, desc, and } from "drizzle-orm";
+import { db, assignmentsTable, workshopsTable, workshopModulesTable, enrollmentsTable } from "@workspace/db";
 import {
   ListAssignmentsResponse,
   SubmitAssignmentBody,
@@ -9,8 +9,11 @@ import {
   GetAssignmentResponse,
 } from "@workspace/api-zod";
 import { requireTier } from "../middleware/requireTier";
+import { ObjectStorageService } from "../lib/objectStorage";
+import { ObjectPermission } from "../lib/objectAcl";
 
 const router: IRouter = Router();
+const objectStorageService = new ObjectStorageService();
 
 router.get("/assignments", async (req, res): Promise<void> => {
   if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
@@ -43,12 +46,62 @@ router.post("/assignments", requireTier("academy"), async (req, res): Promise<vo
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+
+  const [workshop] = await db.select().from(workshopsTable).where(eq(workshopsTable.id, parsed.data.workshopId));
+  if (!workshop) {
+    res.status(404).json({ error: "Workshop not found" });
+    return;
+  }
+  const [module] = await db
+    .select({ id: workshopModulesTable.id })
+    .from(workshopModulesTable)
+    .where(and(
+      eq(workshopModulesTable.id, parsed.data.moduleId),
+      eq(workshopModulesTable.workshopId, parsed.data.workshopId),
+    ));
+  if (!module) {
+    res.status(400).json({ error: "Module does not belong to this workshop" });
+    return;
+  }
+  const [enrollment] = await db
+    .select({ id: enrollmentsTable.id })
+    .from(enrollmentsTable)
+    .where(and(
+      eq(enrollmentsTable.userId, userId),
+      eq(enrollmentsTable.workshopId, parsed.data.workshopId),
+    ));
+  if (!enrollment) {
+    res.status(403).json({ error: "Enroll in this workshop before submitting an assignment" });
+    return;
+  }
+  if (parsed.data.submissionUrl) {
+    const prefix = "/api/storage";
+    if (!parsed.data.submissionUrl.startsWith(`${prefix}/objects/`)) {
+      res.status(400).json({ error: "Assignment footage must be uploaded through The Warehouse" });
+      return;
+    }
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(parsed.data.submissionUrl.slice(prefix.length));
+      const ownsObject = await objectStorageService.canAccessObjectEntity({
+        userId: String(userId),
+        objectFile,
+        requestedPermission: ObjectPermission.WRITE,
+      });
+      if (!ownsObject) {
+        res.status(403).json({ error: "Assignment footage does not belong to this creator" });
+        return;
+      }
+    } catch {
+      res.status(400).json({ error: "Assignment footage could not be verified" });
+      return;
+    }
+  }
+
   const [assignment] = await db
     .insert(assignmentsTable)
     .values({ ...parsed.data, userId, status: "pending" })
     .returning();
 
-  const [workshop] = await db.select().from(workshopsTable).where(eq(workshopsTable.id, parsed.data.workshopId));
   res.status(201).json(
     SubmitAssignmentResponse.parse({
       ...assignment,
@@ -58,6 +111,7 @@ router.post("/assignments", requireTier("academy"), async (req, res): Promise<vo
 });
 
 router.get("/assignments/:id", async (req, res): Promise<void> => {
+  if (!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
   const params = GetAssignmentParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -69,6 +123,10 @@ router.get("/assignments/:id", async (req, res): Promise<void> => {
     .where(eq(assignmentsTable.id, params.data.id));
   if (!assignment) {
     res.status(404).json({ error: "Assignment not found" });
+    return;
+  }
+  if (assignment.userId !== req.dbUser.id && !req.dbUser.isAdmin) {
+    res.status(403).json({ error: "Forbidden" });
     return;
   }
   const [workshop] = await db.select().from(workshopsTable).where(eq(workshopsTable.id, assignment.workshopId));

@@ -5,7 +5,9 @@
  * AIMD Academy & Studio Portal API
  * OpenAPI spec version: 0.2.0
  */
+import type { ChallengeVerificationStatus } from './challengeVerificationStatus';
 
 export interface ChallengeSubmissionCreated {
   submissionId: number;
+  verificationStatus: ChallengeVerificationStatus;
 }

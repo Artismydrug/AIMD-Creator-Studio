@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/images/icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0a0a0a"
+      "backgroundColor": "#FAF8F5"
     },
     "ios": {
       "supportsTablet": false
@@ -28,7 +28,23 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow AIMD to capture live proof for challenge submissions.",
+          "microphonePermission": "Allow AIMD to record sound with challenge proof videos.",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow AIMD to attach optional process-verification media.",
+          "cameraPermission": "Allow AIMD to capture live proof for challenge submissions.",
+          "microphonePermission": "Allow AIMD to record sound with challenge proof videos."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

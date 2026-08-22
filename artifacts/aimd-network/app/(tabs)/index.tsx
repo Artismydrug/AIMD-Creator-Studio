@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Image,
   Alert,
+  Linking,
   TextInput,
   Animated,
   Easing,
@@ -24,6 +25,14 @@ import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
+import ChallengeCameraCapture from '@/components/ChallengeCameraCapture';
+import VerificationStatusTag from '@/components/VerificationStatusTag';
+import ProEcosystemPortal from '@/components/ProEcosystemPortal';
+import {
+  ChallengeProofAsset,
+  fromImagePickerAsset,
+  uploadChallengeProof,
+} from '@/lib/challengeProof';
 import {
   useGetProgress,
   getGetProgressQueryKey,
@@ -32,23 +41,16 @@ import {
   useGetCurrentChallenge,
   getGetCurrentChallengeQueryKey,
   useSubmitChallengeEntry,
-  customFetch,
-  DailySpinResult
+  getBaseUrl,
+  DailySpinResult,
+  useGetCurrentUser,
 } from '@workspace/api-client-react';
 
-async function uploadImageToServer(
-  uri: string,
-  contentType: string,
-): Promise<string> {
-  const fileResponse = await fetch(uri);
-  const arrayBuffer = await fileResponse.arrayBuffer();
-
-  const result = await customFetch<{ objectPath: string }>('/api/storage/uploads', {
-    method: 'POST',
-    headers: { 'Content-Type': contentType },
-    body: arrayBuffer,
-  });
-  return result.objectPath;
+function resolveMediaUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  const base = getBaseUrl();
+  return base ? `${base}${url}` : url;
 }
 
 export default function ProgressScreen() {
@@ -80,15 +82,16 @@ export default function ProgressScreen() {
     isError: challengeIsError,
     refetch: refetchChallenge
   } = useGetCurrentChallenge();
+  const { data: currentUser, refetch: refetchCurrentUser } = useGetCurrentUser();
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([refetchProgress(), refetchChallenge()]);
+      await Promise.all([refetchProgress(), refetchChallenge(), refetchCurrentUser()]);
     } finally {
       setRefreshing(false);
     }
-  }, [refetchProgress, refetchChallenge]);
+  }, [refetchProgress, refetchChallenge, refetchCurrentUser]);
 
   // Mutations
   const checkInMut = useCheckInProgress({
@@ -156,73 +159,91 @@ export default function ProgressScreen() {
 
   // Challenge entry state
   const [composing, setComposing] = useState(false);
+  const [cameraVisible, setCameraVisible] = useState(false);
   const [caption, setCaption] = useState('');
   const [tags, setTags] = useState('');
-  const [selectedImage, setSelectedImage] = useState<{
-    uri: string;
-    contentType: string;
-    fileName: string;
-  } | null>(null);
+  const [finalProof, setFinalProof] = useState<ChallengeProofAsset | null>(null);
+  const [processProof, setProcessProof] = useState<ChallengeProofAsset | null>(null);
   const [uploading, setUploading] = useState(false);
 
   const submitMut = useSubmitChallengeEntry({
     mutation: {
       onSuccess: () => {
+        setUploading(false);
         setComposing(false);
         setCaption('');
         setTags('');
-        setSelectedImage(null);
+        setFinalProof(null);
+        setProcessProof(null);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         queryClient.invalidateQueries({ queryKey: getGetCurrentChallengeQueryKey() });
       },
       onError: () => {
+        setUploading(false);
         Alert.alert('Submission Failed', 'We could not submit your entry right now. Please try again.');
       }
     }
   });
 
-  const handlePickImage = async () => {
+  const handlePickProcessProof = async () => {
+    if (Platform.OS === 'web') {
+      Alert.alert(
+        'Mobile app required',
+        'Process verification can be attached from the AIMD iOS or Android app.',
+      );
+      return;
+    }
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Allow access to your photo library to attach images.');
+      Alert.alert(
+        'Permission needed',
+        'Allow photo library access to attach optional process verification.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Open settings', onPress: () => Linking.openSettings() },
+        ],
+      );
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
+      mediaTypes: ['images', 'videos'],
       quality: 0.85,
+      exif: true,
+      videoMaxDuration: 60,
     });
     if (!result.canceled && result.assets[0]) {
-      const asset = result.assets[0];
-      const ext = (asset.uri.split('.').pop() ?? 'jpg').toLowerCase();
-      const mimeMap: Record<string, string> = {
-        jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', heic: 'image/heic',
-      };
-      setSelectedImage({
-        uri: asset.uri,
-        contentType: mimeMap[ext] ?? 'image/jpeg',
-        fileName: asset.fileName ?? `photo.${ext}`,
-      });
+      setProcessProof(fromImagePickerAsset(result.assets[0]));
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   };
 
   const handleSubmitChallenge = async () => {
-    if (!caption.trim()) return;
+    if (!caption.trim() || !finalProof) return;
     const tagList = tags.split(',').map((t) => t.trim()).filter(Boolean);
-    if (!selectedImage) {
-      submitMut.mutate({ data: { caption: caption.trim(), tags: tagList } });
-      return;
-    }
     setUploading(true);
     try {
-      const objectPath = await uploadImageToServer(selectedImage.uri, selectedImage.contentType);
-      const imageUrl = `/api/storage${objectPath}`;
-      submitMut.mutate({ data: { caption: caption.trim(), tags: tagList, imageUrl } });
-    } catch (err) {
-      Alert.alert('Upload failed', 'Could not upload the image. Please try again.');
-    } finally {
+      const [finalUpload, processUpload] = await Promise.all([
+        uploadChallengeProof(finalProof, 'challenge_final'),
+        processProof
+          ? uploadChallengeProof(processProof, 'challenge_process')
+          : Promise.resolve(null),
+      ]);
+      submitMut.mutate({
+        data: {
+          caption: caption.trim(),
+          tags: tagList,
+          finalMedia: { objectPath: finalUpload.objectPath },
+          processMedia: processUpload
+            ? { objectPath: processUpload.objectPath }
+            : null,
+        },
+      });
+    } catch {
       setUploading(false);
+      Alert.alert(
+        'Upload failed',
+        'Your proof could not be uploaded. Check your connection and try again.',
+      );
     }
   };
 
@@ -527,6 +548,143 @@ export default function ProgressScreen() {
       fontSize: 14,
       color: colors.foreground,
     },
+    submissionsSection: {
+      marginTop: 24,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      paddingTop: 18,
+      gap: 12,
+    },
+    submissionsHeading: {
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 16,
+      color: colors.foreground,
+    },
+    submissionCard: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.background,
+      padding: 12,
+      gap: 10,
+    },
+    submissionAuthorRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 10,
+    },
+    submissionAuthor: {
+      flex: 1,
+      fontFamily: 'DMSans_600SemiBold',
+      fontSize: 13,
+      color: colors.foreground,
+    },
+    submissionMedia: {
+      width: '100%',
+      height: 190,
+      backgroundColor: colors.muted,
+    },
+    submissionVideo: {
+      height: 150,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: colors.muted,
+    },
+    submissionVideoText: {
+      fontFamily: 'DMSans_600SemiBold',
+      fontSize: 13,
+      color: colors.mutedForeground,
+    },
+    submissionCaption: {
+      fontFamily: 'DMSans_400Regular',
+      fontSize: 14,
+      lineHeight: 20,
+      color: colors.foreground,
+    },
+    proofSection: {
+      gap: 9,
+      marginBottom: 14,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      paddingTop: 14,
+    },
+    proofLabelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+    },
+    proofLabel: {
+      fontFamily: 'DMSans_600SemiBold',
+      fontSize: 14,
+      color: colors.foreground,
+    },
+    proofRequired: {
+      fontFamily: 'DMSans_600SemiBold',
+      fontSize: 11,
+      color: colors.primary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    proofHint: {
+      fontFamily: 'DMSans_400Regular',
+      fontSize: 12,
+      lineHeight: 17,
+      color: colors.mutedForeground,
+    },
+    proofAction: {
+      minHeight: 48,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      borderWidth: 1,
+      borderColor: colors.primary,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    proofActionSecondary: {
+      borderColor: colors.border,
+    },
+    proofActionText: {
+      fontFamily: 'DMSans_600SemiBold',
+      fontSize: 13,
+      color: colors.primary,
+    },
+    proofActionTextSecondary: {
+      color: colors.mutedForeground,
+    },
+    proofPreview: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: colors.muted,
+      padding: 10,
+    },
+    proofPreviewImage: {
+      width: 64,
+      height: 64,
+      backgroundColor: colors.background,
+    },
+    proofPreviewIcon: {
+      width: 64,
+      height: 64,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.background,
+    },
+    proofPreviewCopy: { flex: 1, gap: 3 },
+    proofPreviewTitle: {
+      fontFamily: 'DMSans_600SemiBold',
+      fontSize: 13,
+      color: colors.foreground,
+    },
+    proofPreviewMeta: {
+      fontFamily: 'DMSans_400Regular',
+      fontSize: 11,
+      color: colors.mutedForeground,
+    },
     // Modal
     modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.75)' },
     modalOverlayCenter: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.85)', padding: 20 },
@@ -536,11 +694,6 @@ export default function ProgressScreen() {
     sheetTitle: { fontFamily: 'DMSans_600SemiBold', fontSize: 16, color: colors.foreground },
     postBtn: { fontFamily: 'DMSans_700Bold', fontSize: 15, color: colors.primary },
     captionInput: { fontFamily: 'DMSans_400Regular', fontSize: 16, color: colors.foreground, minHeight: 100, textAlignVertical: 'top', marginBottom: 12 },
-    imageRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12 },
-    imagePickerBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, paddingHorizontal: 10, borderWidth: 1, borderColor: colors.border },
-    imagePickerText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.mutedForeground },
-    previewThumb: { width: 56, height: 56, borderRadius: 4 },
-    removeImgBtn: { padding: 4 },
     tagsInput: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: colors.foreground, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12 },
     // Spin modal
     spinModalContent: {
@@ -590,7 +743,7 @@ export default function ProgressScreen() {
   return (
     <View style={s.container} testID="progress-screen">
       <View style={s.header}>
-        <Text style={s.title}>Studio</Text>
+        <Text style={s.title}>Journey</Text>
         <TouchableOpacity style={s.feedBtn} onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           router.push('/feed');
@@ -739,6 +892,8 @@ export default function ProgressScreen() {
             </>
           )}
 
+          <ProEcosystemPortal user={currentUser} />
+
           {challengeLoading && !challengeData && (
             <View style={s.challengeBlock}>
               <ActivityIndicator color={colors.primary} />
@@ -799,6 +954,53 @@ export default function ProgressScreen() {
                   <Text style={[s.actionBtnText, { color: colors.primary }]}>Submit Entry</Text>
                 </TouchableOpacity>
               )}
+
+              {challengeData.submissions.length > 0 && (
+                <View style={s.submissionsSection}>
+                  <Text style={s.submissionsHeading}>Community Submissions</Text>
+                  {challengeData.submissions.map((submission) => {
+                    const mediaUrl = resolveMediaUrl(
+                      submission.finalMedia?.mediaUrl ?? submission.imageUrl,
+                    );
+                    const isVideo =
+                      submission.finalMedia?.mediaType === 'video';
+                    return (
+                      <View key={submission.id} style={s.submissionCard}>
+                        <View style={s.submissionAuthorRow}>
+                          <Text style={s.submissionAuthor}>
+                            #{submission.rank} · {submission.username}
+                          </Text>
+                          <VerificationStatusTag
+                            status={submission.verificationStatus}
+                          />
+                        </View>
+                        {mediaUrl && !isVideo && (
+                          <Image
+                            source={{ uri: mediaUrl }}
+                            style={s.submissionMedia}
+                            resizeMode="cover"
+                          />
+                        )}
+                        {mediaUrl && isVideo && (
+                          <View style={s.submissionVideo}>
+                            <Feather
+                              name="video"
+                              size={26}
+                              color={colors.primary}
+                            />
+                            <Text style={s.submissionVideoText}>
+                              Proof video captured in AIMD
+                            </Text>
+                          </View>
+                        )}
+                        <Text style={s.submissionCaption}>
+                          {submission.caption}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
             </View>
           )}
         </ScrollView>
@@ -810,15 +1012,33 @@ export default function ProgressScreen() {
           <View style={s.sheet}>
             <View style={s.sheetHandle} />
             <View style={s.sheetHeader}>
-              <TouchableOpacity onPress={() => { setComposing(false); setSelectedImage(null); setCaption(''); setTags(''); }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setComposing(false);
+                  setFinalProof(null);
+                  setProcessProof(null);
+                  setCaption('');
+                  setTags('');
+                }}
+              >
                 <Feather name="x" size={22} color={colors.mutedForeground} />
               </TouchableOpacity>
               <Text style={s.sheetTitle}>Submit Challenge Entry</Text>
-              <TouchableOpacity onPress={handleSubmitChallenge} disabled={!caption.trim() || isSubmitting}>
+              <TouchableOpacity
+                onPress={handleSubmitChallenge}
+                disabled={!caption.trim() || !finalProof || isSubmitting}
+              >
                 {isSubmitting ? (
                   <ActivityIndicator size="small" color={colors.primary} />
                 ) : (
-                  <Text style={[s.postBtn, { opacity: caption.trim() ? 1 : 0.35 }]}>Submit</Text>
+                  <Text
+                    style={[
+                      s.postBtn,
+                      { opacity: caption.trim() && finalProof ? 1 : 0.35 },
+                    ]}
+                  >
+                    Submit
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -834,18 +1054,127 @@ export default function ProgressScreen() {
               autoFocus
             />
 
-            <View style={s.imageRow}>
-              <TouchableOpacity style={s.imagePickerBtn} onPress={handlePickImage}>
-                <Feather name="image" size={16} color={colors.mutedForeground} />
-                <Text style={s.imagePickerText}>{selectedImage ? 'Change photo' : 'Add photo'}</Text>
-              </TouchableOpacity>
-              {selectedImage && (
-                <>
-                  <Image source={{ uri: selectedImage.uri }} style={s.previewThumb} resizeMode="cover" />
-                  <TouchableOpacity style={s.removeImgBtn} onPress={() => setSelectedImage(null)}>
-                    <Feather name="x-circle" size={18} color={colors.mutedForeground} />
+            <View style={s.proofSection}>
+              <View style={s.proofLabelRow}>
+                <Text style={s.proofLabel}>Final proof</Text>
+                <Text style={s.proofRequired}>Required · Live capture</Text>
+              </View>
+              <Text style={s.proofHint}>
+                Take a new photo or video in AIMD. Existing library media cannot
+                be used as the final submission.
+              </Text>
+              {finalProof ? (
+                <View style={s.proofPreview}>
+                  {finalProof.mediaType === 'image' ? (
+                    <Image
+                      source={{ uri: finalProof.uri }}
+                      style={s.proofPreviewImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={s.proofPreviewIcon}>
+                      <Feather name="video" size={24} color={colors.primary} />
+                    </View>
+                  )}
+                  <View style={s.proofPreviewCopy}>
+                    <Text style={s.proofPreviewTitle}>
+                      {finalProof.mediaType === 'image'
+                        ? 'Live photo captured'
+                        : 'Live video captured'}
+                    </Text>
+                    <Text style={s.proofPreviewMeta}>
+                      {finalProof.capturedAt
+                        ? new Date(finalProof.capturedAt).toLocaleString()
+                        : 'Captured in AIMD'}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => setFinalProof(null)}
+                    accessibilityLabel="Remove final proof"
+                  >
+                    <Feather
+                      name="x-circle"
+                      size={20}
+                      color={colors.mutedForeground}
+                    />
                   </TouchableOpacity>
-                </>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={s.proofAction}
+                  onPress={() => setCameraVisible(true)}
+                  testID="challenge-open-camera"
+                >
+                  <Feather name="camera" size={18} color={colors.primary} />
+                  <Text style={s.proofActionText}>
+                    Capture final photo or video
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <View style={s.proofSection}>
+              <View style={s.proofLabelRow}>
+                <Text style={s.proofLabel}>Process verification</Text>
+                <Text style={s.proofHint}>Optional</Text>
+              </View>
+              <Text style={s.proofHint}>
+                Add a progress photo or clip from your library to show how the
+                work developed.
+              </Text>
+              {processProof ? (
+                <View style={s.proofPreview}>
+                  {processProof.mediaType === 'image' ? (
+                    <Image
+                      source={{ uri: processProof.uri }}
+                      style={s.proofPreviewImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={s.proofPreviewIcon}>
+                      <Feather name="video" size={24} color={colors.primary} />
+                    </View>
+                  )}
+                  <View style={s.proofPreviewCopy}>
+                    <Text style={s.proofPreviewTitle}>
+                      Process {processProof.mediaType}
+                    </Text>
+                    <Text style={s.proofPreviewMeta}>
+                      {processProof.exifTimestamp
+                        ? `EXIF: ${new Date(processProof.exifTimestamp).toLocaleString()}`
+                        : 'Library origin recorded'}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => setProcessProof(null)}
+                    accessibilityLabel="Remove process verification"
+                  >
+                    <Feather
+                      name="x-circle"
+                      size={20}
+                      color={colors.mutedForeground}
+                    />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={[s.proofAction, s.proofActionSecondary]}
+                  onPress={handlePickProcessProof}
+                >
+                  <Feather
+                    name="image"
+                    size={18}
+                    color={colors.mutedForeground}
+                  />
+                  <Text
+                    style={[
+                      s.proofActionText,
+                      s.proofActionTextSecondary,
+                    ]}
+                  >
+                    Add process photo or video
+                  </Text>
+                </TouchableOpacity>
               )}
             </View>
 
@@ -860,6 +1189,12 @@ export default function ProgressScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      <ChallengeCameraCapture
+        visible={cameraVisible}
+        onClose={() => setCameraVisible(false)}
+        onCaptured={setFinalProof}
+      />
 
       {/* Spin Result / Interaction Modal */}
       <Modal visible={spinModalVisible} animationType={reduceMotion ? 'none' : 'fade'} transparent>

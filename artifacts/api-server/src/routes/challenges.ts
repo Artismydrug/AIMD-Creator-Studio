@@ -12,6 +12,8 @@ import {
   GetCurrentChallengeResponse,
   SubmitChallengeEntryBody,
   SubmitChallengeEntryResponse,
+  UpdateChallengeVerificationBody,
+  UpdateChallengeVerificationResponse,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -27,6 +29,30 @@ function isoWeek(date: Date): string {
   const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
   return `${d.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
 }
+
+function challengeWeekStart(deadline: Date): Date {
+  const start = new Date(deadline);
+  start.setUTCDate(start.getUTCDate() - 6);
+  start.setUTCHours(0, 0, 0, 0);
+  return start;
+}
+
+export function isChallengeSubmissionOpen(
+  receivedAt: Date,
+  deadline: Date,
+): boolean {
+  return receivedAt.getTime() <= deadline.getTime();
+}
+
+type StoredChallengeMedia = {
+  id: number;
+  object_path: string;
+  purpose: "challenge_final" | "challenge_process";
+  media_type: "image" | "video";
+  capture_source: "native_camera" | "media_library";
+  captured_at: Date | null;
+  consumed_at: Date | null;
+};
 
 // Hard-coded current challenge brief — in a future iteration this can be
 // stored in the DB so admins can manage it from a dashboard.
@@ -56,11 +82,32 @@ router.get("/challenges/current", async (req, res): Promise<void> => {
       vote_count: number;
       created_at: string;
       username: string | null;
+      verification_status: "pending_review" | "verified_authentic" | "instructor_approved";
+      verification_reviewed_at: string | null;
+      final_object_path: string | null;
+      final_media_type: "image" | "video" | null;
+      final_capture_source: "native_camera" | "media_library" | null;
+      final_captured_at: string | null;
+      process_object_path: string | null;
+      process_media_type: "image" | "video" | null;
+      process_capture_source: "native_camera" | "media_library" | null;
+      process_captured_at: string | null;
     }>(`
       SELECT cs.id, cs.challenge_week, cs.user_id, cs.caption, cs.image_url,
-             cs.tags, cs.vote_count, cs.created_at, u.username
+             cs.tags, cs.vote_count, cs.created_at, u.username,
+             cs.verification_status, cs.verification_reviewed_at,
+             fm.object_path AS final_object_path,
+             fm.media_type AS final_media_type,
+             fm.capture_source AS final_capture_source,
+             fm.captured_at AS final_captured_at,
+             pm.object_path AS process_object_path,
+             pm.media_type AS process_media_type,
+             pm.capture_source AS process_capture_source,
+             pm.captured_at AS process_captured_at
       FROM   challenge_submissions cs
       JOIN   users u ON u.id = cs.user_id
+      LEFT JOIN challenge_media_uploads fm ON fm.id = cs.final_media_upload_id
+      LEFT JOIN challenge_media_uploads pm ON pm.id = cs.process_media_upload_id
       WHERE  cs.challenge_week = $1
       ORDER  BY cs.vote_count DESC, cs.created_at ASC
     `, [challengeWeek]);
@@ -95,6 +142,33 @@ router.get("/challenges/current", async (req, res): Promise<void> => {
         .slice(0, 2),
       caption: s.caption,
       imageUrl: s.image_url,
+      finalMedia: s.final_object_path && s.final_media_type && s.final_capture_source
+        ? {
+            mediaUrl: `/api/storage${s.final_object_path}`,
+            mediaType: s.final_media_type,
+            captureSource: s.final_capture_source,
+            capturedAt: new Date(s.final_captured_at ?? s.created_at).toISOString(),
+          }
+        : s.image_url
+          ? {
+              mediaUrl: s.image_url,
+              mediaType: "image" as const,
+              captureSource: "legacy_upload" as const,
+              capturedAt: new Date(s.created_at).toISOString(),
+            }
+          : null,
+      processMedia: s.process_object_path && s.process_media_type && s.process_capture_source
+        ? {
+            mediaUrl: `/api/storage${s.process_object_path}`,
+            mediaType: s.process_media_type,
+            captureSource: s.process_capture_source,
+            capturedAt: new Date(s.process_captured_at ?? s.created_at).toISOString(),
+          }
+        : null,
+      verificationStatus: s.verification_status,
+      verificationReviewedAt: s.verification_reviewed_at
+        ? new Date(s.verification_reviewed_at).toISOString()
+        : null,
       tags: s.tags,
       votes: s.vote_count,
       hasVoted: votedIds.has(s.id),
@@ -130,29 +204,179 @@ router.post("/challenges/submit", async (req, res): Promise<void> => {
     return;
   }
 
-  const { caption, imageUrl, tags } = parsed.data;
+  const { caption, finalMedia, processMedia, tags } = parsed.data;
   const challengeWeek = isoWeek(new Date(CURRENT_CHALLENGE.deadline));
   const tagsArr: string[] = Array.isArray(tags) ? tags.map(String) : [];
+  const deadline = new Date(CURRENT_CHALLENGE.deadline);
+  if (!isChallengeSubmissionOpen(new Date(), deadline)) {
+    res.status(410).json({ error: "This weekly challenge is closed" });
+    return;
+  }
+  const weekStart = challengeWeekStart(deadline);
+  const client = await pool.connect();
 
   try {
-    const { rows } = await pool.query<{ id: number }>(
-      `INSERT INTO challenge_submissions (challenge_week, user_id, caption, image_url, tags)
-       VALUES ($1, $2, $3, $4, $5)
+    await client.query("BEGIN");
+
+    const mediaPaths = [
+      finalMedia.objectPath,
+      ...(processMedia ? [processMedia.objectPath] : []),
+    ];
+    const { rows: uploads } = await client.query<StoredChallengeMedia>(
+      `SELECT id, object_path, purpose, media_type, capture_source, captured_at, consumed_at
+       FROM challenge_media_uploads
+       WHERE user_id = $1 AND object_path = ANY($2::text[])
+       FOR UPDATE`,
+      [req.dbUser.id, mediaPaths],
+    );
+
+    const finalUpload = uploads.find(
+      (upload) => upload.object_path === finalMedia.objectPath,
+    );
+    const processUpload = processMedia
+      ? uploads.find((upload) => upload.object_path === processMedia.objectPath)
+      : undefined;
+
+    if (
+      !finalUpload ||
+      finalUpload.purpose !== "challenge_final" ||
+      finalUpload.capture_source !== "native_camera" ||
+      !finalUpload.captured_at ||
+      finalUpload.consumed_at
+    ) {
+      await client.query("ROLLBACK");
+      res.status(400).json({ error: "A fresh in-app camera capture is required" });
+      return;
+    }
+
+    const capturedAt = new Date(finalUpload.captured_at);
+    if (capturedAt < weekStart || capturedAt > deadline) {
+      await client.query("ROLLBACK");
+      res.status(400).json({
+        error: "Final media must be captured during the active challenge window",
+      });
+      return;
+    }
+
+    if (
+      processMedia &&
+      (!processUpload ||
+        processUpload.purpose !== "challenge_process" ||
+        processUpload.consumed_at)
+    ) {
+      await client.query("ROLLBACK");
+      res.status(400).json({ error: "Process verification upload is invalid or already used" });
+      return;
+    }
+
+    const { rows } = await client.query<{ id: number }>(
+      `INSERT INTO challenge_submissions
+         (challenge_week, user_id, caption, final_media_upload_id,
+          process_media_upload_id, verification_status, tags)
+       VALUES ($1, $2, $3, $4, $5, 'pending_review', $6)
        ON CONFLICT (challenge_week, user_id) DO NOTHING
        RETURNING id`,
-      [challengeWeek, req.dbUser.id, caption.trim(), imageUrl ?? null, tagsArr]
+      [
+        challengeWeek,
+        req.dbUser.id,
+        caption.trim(),
+        finalUpload.id,
+        processUpload?.id ?? null,
+        tagsArr,
+      ],
     );
 
     if (rows.length === 0) {
+      await client.query("ROLLBACK");
       res.status(409).json({ error: "You have already submitted an entry for this week" });
       return;
     }
 
-    res.status(201).json(SubmitChallengeEntryResponse.parse({ submissionId: rows[0].id }));
+    await client.query(
+      `UPDATE challenge_media_uploads
+       SET consumed_at = NOW()
+       WHERE id = ANY($1::int[])`,
+      [[finalUpload.id, ...(processUpload ? [processUpload.id] : [])]],
+    );
+    await client.query("COMMIT");
+
+    res.status(201).json(
+      SubmitChallengeEntryResponse.parse({
+        submissionId: rows[0].id,
+        verificationStatus: "pending_review",
+      }),
+    );
   } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
     req.log.error({ err }, "submitChallengeEntry error");
     res.status(500).json({ error: "Internal server error" });
+  } finally {
+    client.release();
   }
+});
+
+// ─── PATCH /challenges/:id/verification ───────────────────────────────────────
+
+router.patch("/challenges/:id/verification", async (req, res): Promise<void> => {
+  if (!req.dbUser) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const submissionId = Number(req.params.id);
+  if (!Number.isInteger(submissionId) || submissionId <= 0) {
+    res.status(400).json({ error: "Invalid submission id" });
+    return;
+  }
+
+  const parsed = UpdateChallengeVerificationBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const { rows: reviewers } = await pool.query<{ is_admin: boolean }>(
+    `SELECT is_admin FROM users WHERE id = $1`,
+    [req.dbUser.id],
+  );
+  if (!reviewers[0]?.is_admin) {
+    res.status(403).json({ error: "Instructor review access required" });
+    return;
+  }
+
+  const { rows } = await pool.query<{
+    verification_status: "pending_review" | "verified_authentic" | "instructor_approved";
+    verification_reviewed_at: string | null;
+  }>(
+    `UPDATE challenge_submissions
+     SET verification_status = $1,
+         verification_reviewed_at = CASE
+           WHEN $1::text = 'pending_review' THEN NULL
+           ELSE NOW()
+         END,
+         verification_reviewer_id = CASE
+           WHEN $1::text = 'pending_review' THEN NULL
+           ELSE $2::integer
+         END
+     WHERE id = $3
+     RETURNING verification_status, verification_reviewed_at`,
+    [parsed.data.status, req.dbUser.id, submissionId],
+  );
+
+  if (!rows[0]) {
+    res.status(404).json({ error: "Submission not found" });
+    return;
+  }
+
+  res.json(
+    UpdateChallengeVerificationResponse.parse({
+      submissionId,
+      verificationStatus: rows[0].verification_status,
+      verificationReviewedAt: rows[0].verification_reviewed_at
+        ? new Date(rows[0].verification_reviewed_at).toISOString()
+        : null,
+    }),
+  );
 });
 
 // ─── POST /challenges/:id/vote ────────────────────────────────────────────────

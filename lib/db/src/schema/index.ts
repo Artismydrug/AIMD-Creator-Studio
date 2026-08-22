@@ -11,3 +11,4 @@ export * from "./events"; // exports communityEventsTable, eventRsvpsTable, even
 export * from "./sponsorships";
 export * from "./store";
 export * from "./progress"; // exports creatorDailyCheckinsTable, creatorRewardSpinsTable
+export * from "./challenges";

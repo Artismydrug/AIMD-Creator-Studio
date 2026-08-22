@@ -111,9 +111,9 @@ export default function RootLayout() {
           <SafeAreaProvider>
             <ErrorBoundary>
               <QueryClientProvider client={queryClient}>
-                <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0a0a0a' }}>
+                <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#FAF8F5' }}>
                   <KeyboardProvider>
-                    <StatusBar style="light" />
+                    <StatusBar style="dark" />
                     <RootLayoutNav />
                   </KeyboardProvider>
                 </GestureHandlerRootView>

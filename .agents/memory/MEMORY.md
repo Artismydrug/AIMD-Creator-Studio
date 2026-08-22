@@ -3,3 +3,4 @@
 - [Clerk auth migration](clerk-auth-migration.md) — email bridge JIT in clerkAuth.ts; web cookie session; mobile Bearer via setAuthTokenGetter; req.dbUser replaces req.user
 - [DB schema changes](db-schema-changes.md) — drizzle-kit push prompts interactively and fails headless; apply new columns/tables via manual SQL matching the drizzle schema
 - [Embedded motion accessibility](embedded-motion-accessibility.md) — autoplaying explainers need visible touch controls and a complete reduced-motion alternative.
+- [Challenge proof evidence](challenge-proof-evidence.md) — proof is self-attested and human-reviewed; sanitize public media and hash the exact stored rendition.

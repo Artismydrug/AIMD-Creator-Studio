@@ -3,6 +3,7 @@ import { getStripeSync } from './stripeClient';
 import { ensureEventTables } from './lib/ensureEventTables';
 import { ensureAuthSchema } from './lib/ensureAuthSchema';
 import { ensureChallengeTables } from './lib/ensureChallengeTables';
+import { ensureUserTierCompatibility } from './lib/ensureUserTierCompatibility';
 import app from "./app";
 import { logger } from "./lib/logger";
 
@@ -60,6 +61,10 @@ async function initStripe() {
 // Idempotent — safe across restarts and deployments.
 await ensureAuthSchema();
 logger.info('Auth schema verified');
+
+// Preserve Tier 2 entitlements created under the legacy "workshop" tier name.
+await ensureUserTierCompatibility();
+logger.info('User tier compatibility verified');
 
 // Ensure event_attendances table exists (idempotent — safe across restarts).
 // This is a hard prerequisite for the check-in feature; crash if it fails.

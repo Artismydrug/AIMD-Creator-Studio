@@ -11,8 +11,20 @@ import {
   CompleteWorkshopModuleParams,
   CompleteWorkshopModuleResponse,
 } from "@workspace/api-zod";
+import { getCurrentTier, hasRequiredTier, type Tier } from "../middleware/requireTier";
 
 const router: IRouter = Router();
+
+function minimumTierForWorkshop(tier: string): Tier {
+  return tier === "pro" ? "pro" : tier === "workshop" ? "academy" : "free";
+}
+
+async function canAccessWorkshop(req: any, workshopTier: string): Promise<boolean> {
+  const requiredTier = minimumTierForWorkshop(workshopTier);
+  if (requiredTier === "free") return true;
+  if (!req.dbUser) return false;
+  return hasRequiredTier(await getCurrentTier(req.dbUser.id), requiredTier);
+}
 
 router.get("/workshops", async (req, res): Promise<void> => {
   const parsed = ListWorkshopsQueryParams.safeParse(req.query);
@@ -55,6 +67,10 @@ router.get("/workshops/:id", async (req, res): Promise<void> => {
   const [workshop] = await db.select().from(workshopsTable).where(eq(workshopsTable.id, params.data.id));
   if (!workshop) {
     res.status(404).json({ error: "Workshop not found" });
+    return;
+  }
+  if (!(await canAccessWorkshop(req, workshop.tier))) {
+    res.status(req.dbUser ? 403 : 401).json({ error: "tier_required", requiredTier: minimumTierForWorkshop(workshop.tier) });
     return;
   }
 
@@ -104,6 +120,10 @@ router.post("/workshops/:id/enroll", async (req, res): Promise<void> => {
   const [workshop] = await db.select().from(workshopsTable).where(eq(workshopsTable.id, params.data.id));
   if (!workshop) {
     res.status(404).json({ error: "Workshop not found" });
+    return;
+  }
+  if (!(await canAccessWorkshop(req, workshop.tier))) {
+    res.status(403).json({ error: "tier_required", requiredTier: minimumTierForWorkshop(workshop.tier) });
     return;
   }
 
@@ -157,6 +177,28 @@ router.post("/workshops/:id/modules/:moduleId/complete", async (req, res): Promi
     return;
   }
 
+  const [workshop] = await db.select().from(workshopsTable).where(eq(workshopsTable.id, params.data.id));
+  if (!workshop) {
+    res.status(404).json({ error: "Workshop not found" });
+    return;
+  }
+  if (!(await canAccessWorkshop(req, workshop.tier))) {
+    res.status(403).json({ error: "tier_required", requiredTier: minimumTierForWorkshop(workshop.tier) });
+    return;
+  }
+
+  const [module] = await db
+    .select({ id: workshopModulesTable.id })
+    .from(workshopModulesTable)
+    .where(and(
+      eq(workshopModulesTable.id, params.data.moduleId),
+      eq(workshopModulesTable.workshopId, params.data.id),
+    ));
+  if (!module) {
+    res.status(400).json({ error: "Module does not belong to this workshop" });
+    return;
+  }
+
   const [enrollment] = await db
     .select()
     .from(enrollmentsTable)
@@ -165,8 +207,6 @@ router.post("/workshops/:id/modules/:moduleId/complete", async (req, res): Promi
     res.status(404).json({ error: "Enrollment not found — enroll first" });
     return;
   }
-
-  const [workshop] = await db.select().from(workshopsTable).where(eq(workshopsTable.id, params.data.id));
 
   const [alreadyDone] = await db
     .select()

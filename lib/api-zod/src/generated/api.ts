@@ -65,7 +65,13 @@ export const GetActivityFeedResponse = zod.array(GetActivityFeedResponseItem)
 /**
  * @summary List user habits
  */
-export const ListHabitsResponseItem = zod.object({
+export const listHabitsResponseMetaHabitCountMin = 0;
+
+
+
+
+export const ListHabitsResponse = zod.object({
+  "habits": zod.array(zod.object({
   "id": zod.int(),
   "userId": zod.int(),
   "name": zod.string(),
@@ -75,8 +81,14 @@ export const ListHabitsResponseItem = zod.object({
   "longestStreak": zod.int(),
   "completedToday": zod.boolean().optional(),
   "createdAt": zod.coerce.date()
+})),
+  "meta": zod.object({
+  "tier": zod.enum(['free', 'workshop', 'academy', 'pro']),
+  "habitCount": zod.int().min(listHabitsResponseMetaHabitCountMin),
+  "habitLimit": zod.int().min(1).nullable(),
+  "atLimit": zod.boolean()
 })
-export const ListHabitsResponse = zod.array(ListHabitsResponseItem)
+})
 
 
 /**
@@ -1131,7 +1143,7 @@ export const GetCurrentUserResponse = zod.object({
   "username": zod.string(),
   "email": zod.string(),
   "avatarUrl": zod.string().nullish(),
-  "tier": zod.enum(['free', 'workshop', 'pro']),
+  "tier": zod.enum(['free', 'workshop', 'academy', 'pro']),
   "studioReadyBadge": zod.boolean().optional(),
   "isAdmin": zod.boolean().optional(),
   "points": zod.int().optional(),
@@ -1166,7 +1178,7 @@ export const UpdateCurrentUserResponse = zod.object({
   "username": zod.string(),
   "email": zod.string(),
   "avatarUrl": zod.string().nullish(),
-  "tier": zod.enum(['free', 'workshop', 'pro']),
+  "tier": zod.enum(['free', 'workshop', 'academy', 'pro']),
   "studioReadyBadge": zod.boolean().optional(),
   "isAdmin": zod.boolean().optional(),
   "points": zod.int().optional(),
@@ -1549,6 +1561,20 @@ export const GetCurrentChallengeResponse = zod.object({
   "initials": zod.string(),
   "caption": zod.string(),
   "imageUrl": zod.string().nullish(),
+  "finalMedia": zod.union([zod.object({
+  "mediaUrl": zod.string(),
+  "mediaType": zod.enum(['image', 'video']),
+  "captureSource": zod.enum(['native_camera', 'media_library', 'legacy_upload']).describe('Self-attested client capture origin retained as review evidence, not cryptographic proof.'),
+  "capturedAt": zod.coerce.date()
+}),zod.null()]).optional(),
+  "processMedia": zod.union([zod.object({
+  "mediaUrl": zod.string(),
+  "mediaType": zod.enum(['image', 'video']),
+  "captureSource": zod.enum(['native_camera', 'media_library', 'legacy_upload']).describe('Self-attested client capture origin retained as review evidence, not cryptographic proof.'),
+  "capturedAt": zod.coerce.date()
+}),zod.null()]).optional(),
+  "verificationStatus": zod.enum(['pending_review', 'verified_authentic', 'instructor_approved']),
+  "verificationReviewedAt": zod.coerce.date().nullish(),
   "tags": zod.array(zod.string()).optional(),
   "votes": zod.int(),
   "hasVoted": zod.boolean()
@@ -1562,17 +1588,49 @@ export const GetCurrentChallengeResponse = zod.object({
  * One entry per creator per challenge week. Returns 409 if already submitted.
  * @summary Submit an entry to the current weekly challenge
  */
+export const submitChallengeEntryBodyCaptionMax = 500;
+
+export const submitChallengeEntryBodyFinalMediaObjectPathRegExp = new RegExp('^/objects');
+export const submitChallengeEntryBodyProcessMediaOneObjectPathRegExp = new RegExp('^/objects');
+export const submitChallengeEntryBodyTagsItemMax = 40;
+
+export const submitChallengeEntryBodyTagsMax = 10;
 
 
 
 export const SubmitChallengeEntryBody = zod.object({
-  "caption": zod.string().min(1),
-  "imageUrl": zod.string().nullish(),
-  "tags": zod.array(zod.string()).optional()
+  "caption": zod.string().min(1).max(submitChallengeEntryBodyCaptionMax),
+  "finalMedia": zod.object({
+  "objectPath": zod.string().regex(submitChallengeEntryBodyFinalMediaObjectPathRegExp)
+}),
+  "processMedia": zod.union([zod.object({
+  "objectPath": zod.string().regex(submitChallengeEntryBodyProcessMediaOneObjectPathRegExp)
+}),zod.null()]).optional(),
+  "tags": zod.array(zod.string().max(submitChallengeEntryBodyTagsItemMax)).max(submitChallengeEntryBodyTagsMax).optional()
 })
 
 export const SubmitChallengeEntryResponse = zod.object({
-  "submissionId": zod.int()
+  "submissionId": zod.int(),
+  "verificationStatus": zod.enum(['pending_review', 'verified_authentic', 'instructor_approved'])
+})
+
+
+/**
+ * Admin-only review transition for proof-of-work submissions.
+ * @summary Update a challenge submission verification status
+ */
+export const UpdateChallengeVerificationParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const UpdateChallengeVerificationBody = zod.object({
+  "status": zod.enum(['pending_review', 'verified_authentic', 'instructor_approved'])
+})
+
+export const UpdateChallengeVerificationResponse = zod.object({
+  "submissionId": zod.int(),
+  "verificationStatus": zod.enum(['pending_review', 'verified_authentic', 'instructor_approved']),
+  "verificationReviewedAt": zod.coerce.date().nullish()
 })
 
 

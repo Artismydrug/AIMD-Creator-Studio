@@ -108,11 +108,10 @@ function HeatmapSection({ heatmap, tier }: { heatmap: any[] | undefined; tier: s
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Habits() {
-  const { data: response, isLoading } = useListHabits({ query: { queryKey: ['listHabits'] } }) as any;
+  const { data: response, isLoading } = useListHabits({ query: { queryKey: ['listHabits'] } });
   const { data: heatmap } = useGetHabitHeatmap({ query: { queryKey: ['getHabitHeatmap'] } });
 
-  // API now returns { habits, meta } — support both shapes
-  const habits = response?.habits ?? response ?? [];
+  const habits = response?.habits ?? [];
   const meta   = response?.meta;
   const tier   = meta?.tier;
 

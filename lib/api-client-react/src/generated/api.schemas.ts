@@ -15,6 +15,7 @@ export type UserTier = typeof UserTier[keyof typeof UserTier];
 export const UserTier = {
   free: 'free',
   workshop: 'workshop',
+  academy: 'academy',
   pro: 'pro',
 } as const;
 
@@ -138,6 +139,33 @@ export interface Habit {
   longestStreak: number;
   completedToday?: boolean;
   createdAt: string;
+}
+
+export type HabitListMetaTier = typeof HabitListMetaTier[keyof typeof HabitListMetaTier];
+
+
+export const HabitListMetaTier = {
+  free: 'free',
+  workshop: 'workshop',
+  academy: 'academy',
+  pro: 'pro',
+} as const;
+
+export interface HabitListMeta {
+  tier: HabitListMetaTier;
+  /** @minimum 0 */
+  habitCount: number;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  habitLimit: number | null;
+  atLimit: boolean;
+}
+
+export interface HabitList {
+  habits: Habit[];
+  meta: HabitListMeta;
 }
 
 export interface HabitInput {
@@ -940,16 +968,66 @@ export interface ProgressSummary {
   todaySpin?: DailySpinResult | null;
 }
 
+export type ChallengeVerificationStatus = typeof ChallengeVerificationStatus[keyof typeof ChallengeVerificationStatus];
+
+
+export const ChallengeVerificationStatus = {
+  pending_review: 'pending_review',
+  verified_authentic: 'verified_authentic',
+  instructor_approved: 'instructor_approved',
+} as const;
+
+export interface ChallengeMediaUploadRef {
+  /** @pattern ^/objects/ */
+  objectPath: string;
+}
+
+export type ChallengeMediaEvidenceMediaType = typeof ChallengeMediaEvidenceMediaType[keyof typeof ChallengeMediaEvidenceMediaType];
+
+
+export const ChallengeMediaEvidenceMediaType = {
+  image: 'image',
+  video: 'video',
+} as const;
+
+/**
+ * Self-attested client capture origin retained as review evidence, not cryptographic proof.
+ */
+export type ChallengeMediaEvidenceCaptureSource = typeof ChallengeMediaEvidenceCaptureSource[keyof typeof ChallengeMediaEvidenceCaptureSource];
+
+
+export const ChallengeMediaEvidenceCaptureSource = {
+  native_camera: 'native_camera',
+  media_library: 'media_library',
+  legacy_upload: 'legacy_upload',
+} as const;
+
+export interface ChallengeMediaEvidence {
+  mediaUrl: string;
+  mediaType: ChallengeMediaEvidenceMediaType;
+  /** Self-attested client capture origin retained as review evidence, not cryptographic proof. */
+  captureSource: ChallengeMediaEvidenceCaptureSource;
+  capturedAt: string;
+}
+
 export interface ChallengeSubmissionInput {
-  /** @minLength 1 */
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
   caption: string;
-  /** @nullable */
-  imageUrl?: string | null;
+  finalMedia: ChallengeMediaUploadRef;
+  processMedia?: ChallengeMediaUploadRef | null;
+  /**
+     * @maxItems 10
+     * @items.maxLength 40
+     */
   tags?: string[];
 }
 
 export interface ChallengeSubmissionCreated {
   submissionId: number;
+  verificationStatus: ChallengeVerificationStatus;
 }
 
 export interface ChallengeSubmission {
@@ -959,11 +1037,30 @@ export interface ChallengeSubmission {
   username: string;
   initials: string;
   caption: string;
-  /** @nullable */
+  /**
+     * @deprecated
+     * @nullable
+     */
   imageUrl?: string | null;
+  finalMedia?: ChallengeMediaEvidence | null;
+  processMedia?: ChallengeMediaEvidence | null;
+  verificationStatus: ChallengeVerificationStatus;
+  /** @nullable */
+  verificationReviewedAt?: string | null;
   tags?: string[];
   votes: number;
   hasVoted: boolean;
+}
+
+export interface ChallengeVerificationUpdate {
+  status: ChallengeVerificationStatus;
+}
+
+export interface ChallengeVerificationResult {
+  submissionId: number;
+  verificationStatus: ChallengeVerificationStatus;
+  /** @nullable */
+  verificationReviewedAt?: string | null;
 }
 
 export interface WeeklyChallengeBrief {

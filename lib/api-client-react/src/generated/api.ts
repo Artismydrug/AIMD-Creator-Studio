@@ -27,6 +27,8 @@ import type {
   Badge,
   ChallengeSubmissionCreated,
   ChallengeSubmissionInput,
+  ChallengeVerificationResult,
+  ChallengeVerificationUpdate,
   CheckoutSession,
   CheckoutSessionInput,
   Comment,
@@ -49,6 +51,7 @@ import type {
   GetProgressParams,
   Habit,
   HabitInput,
+  HabitList,
   HabitLog,
   HabitLogInput,
   HabitUpdate,
@@ -443,9 +446,9 @@ export const getListHabitsUrl = () => {
 /**
  * @summary List user habits
  */
-export const listHabits = async ( options?: Parameters<typeof customFetch>[1]): Promise<Habit[]> => {
+export const listHabits = async ( options?: Parameters<typeof customFetch>[1]): Promise<HabitList> => {
 
-  return customFetch<Habit[]>(getListHabitsUrl(),
+  return customFetch<HabitList>(getListHabitsUrl(),
   {
     ...options,
     method: 'GET'
@@ -5056,6 +5059,79 @@ export const useSubmitChallengeEntry = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getSubmitChallengeEntryMutationOptions(options));
+    }
+
+export const getUpdateChallengeVerificationUrl = (id: number,) => {
+
+
+
+
+  return `/api/challenges/${id}/verification`
+}
+
+/**
+ * Admin-only review transition for proof-of-work submissions.
+ * @summary Update a challenge submission verification status
+ */
+export const updateChallengeVerification = async (id: number,
+    challengeVerificationUpdate: ChallengeVerificationUpdate, options?: Parameters<typeof customFetch>[1]): Promise<ChallengeVerificationResult> => {
+
+  return customFetch<ChallengeVerificationResult>(getUpdateChallengeVerificationUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(challengeVerificationUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateChallengeVerificationMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateChallengeVerification>>, TError,{id: number;data: BodyType<ChallengeVerificationUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateChallengeVerification>>, TError,{id: number;data: BodyType<ChallengeVerificationUpdate>}, TContext> => {
+
+const mutationKey = ['updateChallengeVerification'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateChallengeVerification>>, {id: number;data: BodyType<ChallengeVerificationUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateChallengeVerification(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateChallengeVerificationMutationResult = NonNullable<Awaited<ReturnType<typeof updateChallengeVerification>>>
+    export type UpdateChallengeVerificationMutationBody = BodyType<ChallengeVerificationUpdate>
+    export type UpdateChallengeVerificationMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a challenge submission verification status
+ */
+export const useUpdateChallengeVerification = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateChallengeVerification>>, TError,{id: number;data: BodyType<ChallengeVerificationUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateChallengeVerification>>,
+        TError,
+        {id: number;data: BodyType<ChallengeVerificationUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateChallengeVerificationMutationOptions(options));
     }
 
 export const getListPostCommentsUrl = (id: number,) => {

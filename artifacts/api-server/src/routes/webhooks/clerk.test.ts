@@ -94,6 +94,21 @@ async function insertTestUser(
     lastName?: string | null;
   } = {},
 ): Promise<typeof usersTable.$inferSelect> {
+  const username = overrides.username ?? "test_webhook_user";
+  const email = overrides.email ?? "test@example.com";
+  const clerkId = overrides.clerkId ?? null;
+
+  // A prior interrupted test run may leave one of these synthetic rows behind.
+  // Remove only the exact test identity so the suite is repeatable against the
+  // shared development database.
+  await pool.query(
+    `DELETE FROM users
+     WHERE username = $1
+        OR email = $2
+        OR ($3::text IS NOT NULL AND clerk_id = $3)`,
+    [username, email, clerkId],
+  );
+
   // Insert via raw SQL to avoid Drizzle using schema columns that may not
   // exist yet in the live DB (first_name / last_name are added by ensureAuthSchema
   // at app startup; in tests we add them in beforeAll).
@@ -102,9 +117,9 @@ async function insertTestUser(
      VALUES ($1, $2, $3, $4, $5)
      RETURNING *`,
     [
-      overrides.username ?? "test_webhook_user",
-      overrides.email ?? "test@example.com",
-      overrides.clerkId ?? null,
+      username,
+      email,
+      clerkId,
       overrides.firstName ?? null,
       overrides.lastName ?? null,
     ],

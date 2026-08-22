@@ -80,15 +80,15 @@ router.get("/habits", async (req, res): Promise<void> => {
   const tier = user?.tier ?? "free";
   const limitedTier = tier === "free";
 
-  res.json({
-    habits: ListHabitsResponse.parse(result),
+  res.json(ListHabitsResponse.parse({
+    habits: result,
     meta: {
       tier,
       habitCount:  habits.length,
       habitLimit:  limitedTier ? FREE_HABIT_LIMIT : null,
       atLimit:     limitedTier && habits.length >= FREE_HABIT_LIMIT,
     },
-  });
+  }));
 });
 
 router.post("/habits", async (req, res): Promise<void> => {

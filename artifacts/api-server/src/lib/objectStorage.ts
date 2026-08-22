@@ -121,6 +121,7 @@ export class ObjectStorageService {
     buffer: Buffer,
     contentType: string,
     ownerId: string,
+    visibility: 'public' | 'private' = 'public',
   ): Promise<string> {
     const privateObjectDir = this.getPrivateObjectDir();
     const objectId = randomUUID();
@@ -133,7 +134,7 @@ export class ObjectStorageService {
     await file.save(buffer, { contentType, resumable: false });
 
     // Mark the object as public-read so the ACL-gated serving route allows it.
-    await setObjectAclPolicy(file, { owner: ownerId, visibility: 'public' });
+    await setObjectAclPolicy(file, { owner: ownerId, visibility });
 
     return `/objects/uploads/${objectId}`;
   }

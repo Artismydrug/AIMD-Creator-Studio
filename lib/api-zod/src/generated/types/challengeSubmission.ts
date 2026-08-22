@@ -5,6 +5,8 @@
  * AIMD Academy & Studio Portal API
  * OpenAPI spec version: 0.2.0
  */
+import type { ChallengeMediaEvidence } from './challengeMediaEvidence';
+import type { ChallengeVerificationStatus } from './challengeVerificationStatus';
 
 export interface ChallengeSubmission {
   id: number;
@@ -13,8 +15,16 @@ export interface ChallengeSubmission {
   username: string;
   initials: string;
   caption: string;
-  /** @nullable */
+  /**
+     * @deprecated
+     * @nullable
+     */
   imageUrl?: string | null;
+  finalMedia?: ChallengeMediaEvidence | null;
+  processMedia?: ChallengeMediaEvidence | null;
+  verificationStatus: ChallengeVerificationStatus;
+  /** @nullable */
+  verificationReviewedAt?: Date | null;
   tags?: string[];
   votes: number;
   hasVoted: boolean;

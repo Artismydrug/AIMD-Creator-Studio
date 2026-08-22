@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Platform } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { Tabs, Redirect } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { useAuth } from '@clerk/expo';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import FrostedTabBar from '@/components/FrostedTabBar';
 
 export default function TabLayout() {
   const colors = useColors();
@@ -26,23 +26,28 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      tabBar={(props) => <FrostedTabBar {...props} />}
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
-        tabBarStyle: {
-          backgroundColor: colors.background,
-          borderTopColor: colors.border,
-          height: Platform.OS === 'web' ? 60 : undefined,
-        },
         headerShown: false,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Progress',
+          title: 'Journey',
           tabBarIcon: ({ color, size }) => (
             <Feather name="target" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="workshops"
+        options={{
+          title: 'Mastery',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="play-circle" size={size} color={color} />
           ),
         }}
       />

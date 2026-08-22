@@ -139,13 +139,11 @@ paths:
       summary: List user habits
       responses:
         "200":
-          description: List of habits
+          description: User habits with tier limit metadata
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Habit"
+                $ref: "#/components/schemas/HabitList"
     post:
       operationId: createHabit
       tags: [habits]
@@ -1367,6 +1365,40 @@ paths:
           description: Authentication required
         "409":
           description: Already submitted for this week
+        "410":
+          description: The current weekly challenge has closed
+
+  /challenges/{id}/verification:
+    patch:
+      operationId: updateChallengeVerification
+      tags: [challenges]
+      summary: Update a challenge submission verification status
+      description: Admin-only review transition for proof-of-work submissions.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChallengeVerificationUpdate"
+      responses:
+        "200":
+          description: Verification status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChallengeVerificationResult"
+        "401":
+          description: Authentication required
+        "403":
+          description: Admin review access required
+        "404":
+          description: Submission not found
 
   # ── Post Comments ─────────────────────────────────────────────────────────
   /studio-posts/{id}/comments:
@@ -1447,7 +1479,7 @@ components:
           type: ["string", "null"]
         tier:
           type: string
-          enum: ["free", "workshop", "pro"]
+          enum: ["free", "workshop", "academy", "pro"]
         studioReadyBadge:
           type: boolean
         isAdmin:
@@ -1625,6 +1657,33 @@ components:
         createdAt:
           type: string
           format: date-time
+
+    HabitList:
+      type: object
+      required: [habits, meta]
+      properties:
+        habits:
+          type: array
+          items:
+            $ref: "#/components/schemas/Habit"
+        meta:
+          $ref: "#/components/schemas/HabitListMeta"
+
+    HabitListMeta:
+      type: object
+      required: [tier, habitCount, habitLimit, atLimit]
+      properties:
+        tier:
+          type: string
+          enum: ["free", "workshop", "academy", "pro"]
+        habitCount:
+          type: integer
+          minimum: 0
+        habitLimit:
+          type: ["integer", "null"]
+          minimum: 1
+        atLimit:
+          type: boolean
 
     HabitInput:
       type: object
@@ -2697,30 +2756,68 @@ components:
             - type: "null"
 
     # ── Weekly Challenges ─────────────────────────────────────────────────
+    ChallengeVerificationStatus:
+      type: string
+      enum: ["pending_review", "verified_authentic", "instructor_approved"]
+
+    ChallengeMediaUploadRef:
+      type: object
+      required: [objectPath]
+      properties:
+        objectPath:
+          type: string
+          pattern: "^/objects/"
+
+    ChallengeMediaEvidence:
+      type: object
+      required: [mediaUrl, mediaType, captureSource, capturedAt]
+      properties:
+        mediaUrl:
+          type: string
+        mediaType:
+          type: string
+          enum: ["image", "video"]
+        captureSource:
+          type: string
+          description: Self-attested client capture origin retained as review evidence, not cryptographic proof.
+          enum: ["native_camera", "media_library", "legacy_upload"]
+        capturedAt:
+          type: string
+          format: date-time
+
     ChallengeSubmissionInput:
       type: object
-      required: [caption]
+      required: [caption, finalMedia]
       properties:
         caption:
           type: string
           minLength: 1
-        imageUrl:
-          type: ["string", "null"]
+          maxLength: 500
+        finalMedia:
+          $ref: "#/components/schemas/ChallengeMediaUploadRef"
+        processMedia:
+          oneOf:
+            - $ref: "#/components/schemas/ChallengeMediaUploadRef"
+            - type: "null"
         tags:
           type: array
+          maxItems: 10
           items:
             type: string
+            maxLength: 40
 
     ChallengeSubmissionCreated:
       type: object
-      required: [submissionId]
+      required: [submissionId, verificationStatus]
       properties:
         submissionId:
           type: integer
+        verificationStatus:
+          $ref: "#/components/schemas/ChallengeVerificationStatus"
 
     ChallengeSubmission:
       type: object
-      required: [id, rank, challengeWeek, username, initials, caption, votes, hasVoted]
+      required: [id, rank, challengeWeek, username, initials, caption, verificationStatus, votes, hasVoted]
       properties:
         id:
           type: integer
@@ -2736,6 +2833,20 @@ components:
           type: string
         imageUrl:
           type: ["string", "null"]
+          deprecated: true
+        finalMedia:
+          oneOf:
+            - $ref: "#/components/schemas/ChallengeMediaEvidence"
+            - type: "null"
+        processMedia:
+          oneOf:
+            - $ref: "#/components/schemas/ChallengeMediaEvidence"
+            - type: "null"
+        verificationStatus:
+          $ref: "#/components/schemas/ChallengeVerificationStatus"
+        verificationReviewedAt:
+          type: ["string", "null"]
+          format: date-time
         tags:
           type: array
           items:
@@ -2744,6 +2855,25 @@ components:
           type: integer
         hasVoted:
           type: boolean
+
+    ChallengeVerificationUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: "#/components/schemas/ChallengeVerificationStatus"
+
+    ChallengeVerificationResult:
+      type: object
+      required: [submissionId, verificationStatus]
+      properties:
+        submissionId:
+          type: integer
+        verificationStatus:
+          $ref: "#/components/schemas/ChallengeVerificationStatus"
+        verificationReviewedAt:
+          type: ["string", "null"]
+          format: date-time
 
     WeeklyChallengeBrief:
       type: object

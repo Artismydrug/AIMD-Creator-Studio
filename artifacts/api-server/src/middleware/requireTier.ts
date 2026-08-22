@@ -4,13 +4,18 @@ import { db, usersTable } from "@workspace/db";
 
 // ─── Tier rank map ────────────────────────────────────────────────────────────
 
-export type Tier = "free" | "academy" | "pro";
+export type Tier = "free" | "workshop" | "academy" | "pro";
 
 const TIER_RANK: Record<string, number> = {
   free:    0,
+  workshop: 1,
   academy: 1,
   pro:     2,
 };
+
+export function hasRequiredTier(currentTier: string, minTier: Tier): boolean {
+  return (TIER_RANK[currentTier] ?? 0) >= (TIER_RANK[minTier] ?? 0);
+}
 
 /**
  * Express middleware that enforces a minimum subscription tier.
@@ -33,10 +38,7 @@ export function requireTier(minTier: Tier) {
       .where(eq(usersTable.id, req.dbUser.id));
 
     const currentTier = (user?.tier ?? "free") as Tier;
-    const currentRank = TIER_RANK[currentTier] ?? 0;
-    const requiredRank = TIER_RANK[minTier] ?? 0;
-
-    if (currentRank < requiredRank) {
+    if (!hasRequiredTier(currentTier, minTier)) {
       res.status(403).json({
         error: "tier_required",
         requiredTier: minTier,

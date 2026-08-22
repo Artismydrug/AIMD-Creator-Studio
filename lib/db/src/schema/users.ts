@@ -8,7 +8,7 @@ export const usersTable = pgTable("users", {
   username: text("username").notNull(),
   email: text("email").notNull().unique(),
   avatarUrl: text("avatar_url"),
-  tier: text("tier").notNull().default("free"), // free | workshop | pro
+  tier: text("tier").notNull().default("free"), // free | legacy workshop | academy | pro
   studioReadyBadge: boolean("studio_ready_badge").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   // Public profile fields

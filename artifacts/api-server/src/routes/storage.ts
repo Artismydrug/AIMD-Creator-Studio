@@ -1,10 +1,13 @@
 import express, { Router, type IRouter, type Request, type Response } from 'express';
 import { Readable } from 'stream';
+import { createHash } from 'node:crypto';
+import { pool } from '@workspace/db';
 import {
   ObjectNotFoundError,
   ObjectStorageService,
 } from '../lib/objectStorage';
 import { ObjectPermission } from '../lib/objectAcl';
+import { sanitizeChallengeMedia } from '../lib/sanitizeChallengeMedia';
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -34,6 +37,29 @@ const MAX_VIDEO_UPLOAD_BYTES = 100 * 1024 * 1024;
 
 function hasAuthenticatedSession(req: Request): boolean {
   return !!(req as any).dbUser;
+}
+
+const CHALLENGE_UPLOAD_PURPOSES = new Set([
+  'challenge_final',
+  'challenge_process',
+]);
+const ASSIGNMENT_UPLOAD_PURPOSE = 'assignment';
+
+function getHeader(req: Request, name: string): string | null {
+  const value = req.headers[name];
+  return typeof value === 'string' ? value.trim() : null;
+}
+
+function sanitizeMetadataText(value: string | null): string | null {
+  if (!value) return null;
+  return value.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 120) || null;
+}
+
+function parseCaptureTimestamp(value: string | null): Date | null {
+  if (!value) return null;
+  const time = Date.parse(value);
+  if (!Number.isFinite(time)) return null;
+  return new Date(time);
 }
 
 /**
@@ -92,14 +118,107 @@ router.post(
       return;
     }
 
+    const purpose = getHeader(req, 'x-aimd-upload-purpose');
+    const isChallengeProof = purpose !== null && CHALLENGE_UPLOAD_PURPOSES.has(purpose);
+    const isAssignmentFootage = purpose === ASSIGNMENT_UPLOAD_PURPOSE;
+    const captureSource = getHeader(req, 'x-aimd-capture-source');
+    const capturedAt = parseCaptureTimestamp(getHeader(req, 'x-aimd-captured-at'));
+    const exifTimestamp = parseCaptureTimestamp(getHeader(req, 'x-aimd-exif-timestamp'));
+    const devicePlatform = getHeader(req, 'x-aimd-device-platform');
+    const cameraFacing = getHeader(req, 'x-aimd-camera-facing');
+
+    if (purpose && !isChallengeProof && !isAssignmentFootage) {
+      res.status(400).json({ error: 'Invalid proof upload purpose' });
+      return;
+    }
+    if (isAssignmentFootage && !isVideo) {
+      res.status(400).json({ error: 'Assignment uploads must be video footage' });
+      return;
+    }
+
+    if (isChallengeProof) {
+      const allowedSource =
+        captureSource === 'native_camera' || captureSource === 'media_library';
+      if (!allowedSource) {
+        res.status(400).json({ error: 'Capture source is required for proof uploads' });
+        return;
+      }
+      if (purpose === 'challenge_final' && captureSource !== 'native_camera') {
+        res.status(400).json({ error: 'Final challenge media must be captured in the app' });
+        return;
+      }
+      if (purpose === 'challenge_final' && !capturedAt) {
+        res.status(400).json({ error: 'Final challenge media requires a native capture timestamp' });
+        return;
+      }
+      if (capturedAt && capturedAt.getTime() > Date.now() + 5 * 60 * 1000) {
+        res.status(400).json({ error: 'Capture timestamp cannot be in the future' });
+        return;
+      }
+      if (devicePlatform !== 'ios' && devicePlatform !== 'android') {
+        res.status(400).json({ error: 'Proof uploads require a supported native platform' });
+        return;
+      }
+      if (
+        cameraFacing &&
+        cameraFacing !== 'front' &&
+        cameraFacing !== 'back'
+      ) {
+        res.status(400).json({ error: 'Invalid camera-facing value' });
+        return;
+      }
+    }
+
     try {
       const ownerId = String((req as any).dbUser.id);
+      const storedMedia = isChallengeProof || isAssignmentFootage
+        ? await sanitizeChallengeMedia(req.body, contentType)
+        : { buffer: req.body, contentType };
+      const sha256 = createHash('sha256')
+        .update(storedMedia.buffer)
+        .digest('hex');
       const objectPath = await objectStorageService.uploadObjectEntity(
-        req.body,
-        contentType,
+        storedMedia.buffer,
+        storedMedia.contentType,
         ownerId,
+        isAssignmentFootage ? 'private' : 'public',
       );
-      res.json({ objectPath, mediaType: isVideo ? 'video' : 'image' });
+
+      if (isChallengeProof) {
+        const captureMetadata = {
+          evidenceLevel: 'self_attested',
+          devicePlatform,
+          cameraFacing: cameraFacing ?? undefined,
+          deviceMake: sanitizeMetadataText(getHeader(req, 'x-aimd-device-make')) ?? undefined,
+          deviceModel: sanitizeMetadataText(getHeader(req, 'x-aimd-device-model')) ?? undefined,
+          software: sanitizeMetadataText(getHeader(req, 'x-aimd-device-software')) ?? undefined,
+        };
+        await pool.query(
+          `INSERT INTO challenge_media_uploads
+             (user_id, object_path, purpose, media_type, content_type, sha256,
+              capture_source, captured_at, exif_timestamp, capture_metadata)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb)`,
+          [
+            Number(ownerId),
+            objectPath,
+            purpose,
+            isVideo ? 'video' : 'image',
+            storedMedia.contentType,
+            sha256,
+            captureSource,
+            capturedAt,
+            exifTimestamp,
+            JSON.stringify(captureMetadata),
+          ],
+        );
+      }
+
+      res.json({
+        objectPath,
+        mediaType: isVideo ? 'video' : 'image',
+        sha256,
+        proofRecorded: isChallengeProof,
+      });
     } catch (error) {
       req.log.error({ err: error }, 'Error uploading object');
       res.status(500).json({ error: 'Failed to upload image' });
@@ -160,7 +279,8 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
 
     // Enforce ACL: only objects with an explicit public-read policy are served.
     // Objects without an ACL (unrelated private uploads) are rejected.
-    const canAccess = await objectStorageService.canAccessObjectEntity({
+    const canAccess = (req.dbUser as any)?.isAdmin === true || await objectStorageService.canAccessObjectEntity({
+      userId: req.dbUser ? String(req.dbUser.id) : undefined,
       objectFile,
       requestedPermission: ObjectPermission.READ,
     });

@@ -5,11 +5,19 @@
  * AIMD Academy & Studio Portal API
  * OpenAPI spec version: 0.2.0
  */
+import type { ChallengeMediaUploadRef } from './challengeMediaUploadRef';
 
 export interface ChallengeSubmissionInput {
-  /** @minLength 1 */
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
   caption: string;
-  /** @nullable */
-  imageUrl?: string | null;
+  finalMedia: ChallengeMediaUploadRef;
+  processMedia?: ChallengeMediaUploadRef | null;
+  /**
+     * @maxItems 10
+     * @items.maxLength 40
+     */
   tags?: string[];
 }

@@ -35,8 +35,9 @@ export default function HabitsScreen() {
   const [targetMinutes, setTargetMinutes] = useState('30');
   const [refreshing, setRefreshing] = useState(false);
 
-  const { data: habits, isLoading, isError, refetch } = useListHabits();
+  const { data: habitsResponse, isLoading, isError, refetch } = useListHabits();
   const { data: summary } = useGetDashboardSummary();
+  const habits = habitsResponse?.habits ?? [];
 
   const createMutation = useCreateHabit({
     mutation: {
@@ -270,7 +271,7 @@ export default function HabitsScreen() {
             <Text style={s.statLabel}>Done Today</Text>
           </View>
           <View style={s.statBox}>
-            <Text style={s.statNumber}>{Math.round((summary?.completionRate ?? 0) * 100)}%</Text>
+            <Text style={s.statNumber}>{Math.round(summary?.completionRate ?? 0)}%</Text>
             <Text style={s.statLabel}>Rate</Text>
           </View>
         </View>
