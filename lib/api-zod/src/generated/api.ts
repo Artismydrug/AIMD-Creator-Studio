@@ -1678,3 +1678,149 @@ export const AddPostCommentResponse = zod.object({
 })
 
 
+/**
+ * @summary Start a public tattoo booking intake
+ */
+export const createTattooBookingDraftBodyNameMax = 120;
+
+export const createTattooBookingDraftBodyEmailMax = 254;
+
+export const createTattooBookingDraftBodyPhoneMax = 40;
+
+export const createTattooBookingDraftBodyIdeaMin = 10;
+export const createTattooBookingDraftBodyIdeaMax = 4000;
+
+export const createTattooBookingDraftBodyPlacementMax = 160;
+
+export const createTattooBookingDraftBodyEstimatedSizeMax = 120;
+
+export const createTattooBookingDraftBodyWebsiteMax = 200;
+
+
+
+export const CreateTattooBookingDraftBody = zod.object({
+  "name": zod.string().min(1).max(createTattooBookingDraftBodyNameMax),
+  "email": zod.email().max(createTattooBookingDraftBodyEmailMax),
+  "phone": zod.string().max(createTattooBookingDraftBodyPhoneMax).nullish(),
+  "idea": zod.string().min(createTattooBookingDraftBodyIdeaMin).max(createTattooBookingDraftBodyIdeaMax),
+  "placement": zod.string().min(1).max(createTattooBookingDraftBodyPlacementMax),
+  "estimatedSize": zod.string().min(1).max(createTattooBookingDraftBodyEstimatedSizeMax),
+  "preferredArtist": zod.enum(['No preference', 'Poncho The Artist', 'Edwin', 'Ashley']),
+  "website": zod.string().max(createTattooBookingDraftBodyWebsiteMax).optional().describe('Honeypot field; must remain empty.')
+})
+
+export const CreateTattooBookingDraftResponse = zod.object({
+  "id": zod.int(),
+  "uploadToken": zod.string(),
+  "expiresAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Upload one private reference image to a booking draft
+ */
+export const UploadTattooBookingReferenceParams = zod.object({
+  "bookingId": zod.coerce.number().int()
+})
+
+export const UploadTattooBookingReferenceHeader = zod.object({
+  "X-Booking-Token": zod.string(),
+  "X-File-Name": zod.string()
+})
+
+export const UploadTattooBookingReferenceResponse = zod.object({
+  "id": zod.int(),
+  "url": zod.string(),
+  "originalName": zod.string(),
+  "contentType": zod.string(),
+  "sizeBytes": zod.int()
+})
+
+
+/**
+ * @summary Finalize a tattoo booking and notify the studio
+ */
+export const SubmitTattooBookingParams = zod.object({
+  "bookingId": zod.coerce.number().int()
+})
+
+export const submitTattooBookingBodyUploadTokenMin = 32;
+
+
+
+export const SubmitTattooBookingBody = zod.object({
+  "uploadToken": zod.string().min(submitTattooBookingBodyUploadTokenMin)
+})
+
+export const SubmitTattooBookingResponse = zod.object({
+  "id": zod.int(),
+  "status": zod.enum(['new', 'contacted', 'scheduled', 'completed', 'declined']),
+  "notificationStatus": zod.enum(['pending', 'sent', 'failed'])
+})
+
+
+/**
+ * @summary List submitted tattoo bookings for admins
+ */
+export const ListAdminTattooBookingsResponseItem = zod.object({
+  "id": zod.int(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().nullable(),
+  "idea": zod.string(),
+  "placement": zod.string(),
+  "estimatedSize": zod.string(),
+  "preferredArtist": zod.string(),
+  "status": zod.enum(['new', 'contacted', 'scheduled', 'completed', 'declined']),
+  "notificationStatus": zod.enum(['pending', 'sent', 'failed']),
+  "notificationError": zod.string().nullable(),
+  "references": zod.array(zod.object({
+  "id": zod.int(),
+  "url": zod.string(),
+  "originalName": zod.string(),
+  "contentType": zod.string(),
+  "sizeBytes": zod.int()
+})),
+  "submittedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListAdminTattooBookingsResponse = zod.array(ListAdminTattooBookingsResponseItem)
+
+
+/**
+ * @summary Update a tattoo booking status
+ */
+export const UpdateAdminTattooBookingParams = zod.object({
+  "bookingId": zod.coerce.number().int()
+})
+
+export const UpdateAdminTattooBookingBody = zod.object({
+  "status": zod.enum(['new', 'contacted', 'scheduled', 'completed', 'declined'])
+})
+
+export const UpdateAdminTattooBookingResponse = zod.object({
+  "id": zod.int(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().nullable(),
+  "idea": zod.string(),
+  "placement": zod.string(),
+  "estimatedSize": zod.string(),
+  "preferredArtist": zod.string(),
+  "status": zod.enum(['new', 'contacted', 'scheduled', 'completed', 'declined']),
+  "notificationStatus": zod.enum(['pending', 'sent', 'failed']),
+  "notificationError": zod.string().nullable(),
+  "references": zod.array(zod.object({
+  "id": zod.int(),
+  "url": zod.string(),
+  "originalName": zod.string(),
+  "contentType": zod.string(),
+  "sizeBytes": zod.int()
+})),
+  "submittedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+

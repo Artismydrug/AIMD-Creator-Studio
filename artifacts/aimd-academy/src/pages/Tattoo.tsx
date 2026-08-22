@@ -5,14 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
-import { ArrowRight, ArrowLeft, Brush, Calendar, ExternalLink, ImagePlus, Mail, Shield, Sparkles, Users, X } from 'lucide-react';
+import { createTattooBookingDraft, submitTattooBooking } from '@workspace/api-client-react';
+import { ArrowRight, ArrowLeft, Brush, Calendar, CheckCircle2, ExternalLink, ImagePlus, Loader2, Mail, Shield, Sparkles, Users, X } from 'lucide-react';
 import tattooImg from '@assets/generated_images/tattoo-studio.jpg';
 import flashImg from '@assets/generated_images/workshop-tattoo.jpg';
 import ponchoImg from '@assets/IMG_0443_1787113468837.jpg';
 import ashleyImg from '@assets/A79EF24A-5883-4B50-9303-2DEAD60C2323_1787179907960.jpeg';
 import edwinImg from '@assets/2E8CB3C8-F080-4FA1-9C19-31C4FD0B50DD.JPG_1787180646083.jpeg';
 
-const BOOKING_EMAIL = 'booking@artismydrug.com';
+const BOOKING_EMAIL = 'info@artismydrug.com';
+const MAX_REFERENCE_BYTES = 10 * 1024 * 1024;
 
 const PORTFOLIO_URL = 'https://ponchotheartist.com/tattoo';
 const ASHLEY_PORTFOLIO_URL = 'https://www.instagram.com/ashole.inkz/';
@@ -32,8 +34,8 @@ const ARTISTS = [
     name: 'Edwin',
     role: 'Resident Artist',
     styles: 'Tattoo work · Instagram portfolio',
-    featured: false,
-    available: false,
+    featured: true,
+    available: true,
     photo: edwinImg,
     portfolioUrl: EDWIN_PORTFOLIO_URL,
   },
@@ -41,8 +43,8 @@ const ARTISTS = [
     name: 'Ashley',
     role: 'Resident Artist',
     styles: 'Tattoo work · Instagram portfolio',
-    featured: false,
-    available: false,
+    featured: true,
+    available: true,
     photo: ashleyImg,
     portfolioUrl: ASHLEY_PORTFOLIO_URL,
   },
@@ -74,6 +76,11 @@ export default function Tattoo() {
   const [form, setForm] = useState<BookingForm>(EMPTY_FORM);
   const [step, setStep] = useState(0);
   const [references, setReferences] = useState<File[]>([]);
+  const [website, setWebsite] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [submittedBookingId, setSubmittedBookingId] = useState<number | null>(null);
+  const [notificationStatus, setNotificationStatus] = useState<'pending' | 'sent' | 'failed' | null>(null);
 
   const set = (key: keyof BookingForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -86,34 +93,74 @@ export default function Tattoo() {
         : true;
 
   const addReferences = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
+    const files = Array.from(e.target.files ?? []).filter((file) => {
+      return file.type.startsWith('image/') && file.size <= MAX_REFERENCE_BYTES;
+    });
+    if (files.length !== (e.target.files?.length ?? 0)) {
+      setSubmissionError('Reference files must be supported images no larger than 10 MB each.');
+    } else {
+      setSubmissionError(null);
+    }
     setReferences((prev) => [...prev, ...files].slice(0, 6));
     e.target.value = '';
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (step < STEPS.length - 1) {
       if (stepValid) setStep(step + 1);
       return;
     }
-    const body = [
-      `Name: ${form.name}`,
-      `Email: ${form.email}`,
-      `Phone: ${form.phone}`,
-      `Preferred artist: ${form.artist}`,
-      `Body placement: ${form.placement}`,
-      `Estimated size: ${form.size}`,
-      '',
-      'Tattoo idea:',
-      form.idea,
-      '',
-      references.length > 0
-        ? `Reference images selected (${references.length}): ${references.map((f) => f.name).join(', ')}\n(Please attach these files to this email before sending.)`
-        : '(Please attach any reference images to this email before sending.)',
-    ].join('\n');
-    const mailto = `mailto:${BOOKING_EMAIL}?subject=${encodeURIComponent(`Tattoo Booking Request — ${form.name || 'New Client'}`)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailto;
+    setIsSubmitting(true);
+    setSubmissionError(null);
+
+    try {
+      const draft = await createTattooBookingDraft({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim() || null,
+        idea: form.idea.trim(),
+        placement: form.placement.trim(),
+        estimatedSize: form.size.trim(),
+        preferredArtist: form.artist as 'No preference' | 'Poncho The Artist' | 'Edwin' | 'Ashley',
+        website,
+      });
+
+      for (const file of references) {
+        const response = await fetch(`/api/tattoo-bookings/${draft.id}/references`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': file.type || 'application/octet-stream',
+            'X-Booking-Token': draft.uploadToken,
+            'X-File-Name': encodeURIComponent(file.name),
+          },
+          body: file,
+        });
+        if (!response.ok) {
+          const error = await response.json().catch(() => null);
+          throw new Error(error?.error || `Could not upload ${file.name}`);
+        }
+      }
+
+      const result = await submitTattooBooking(draft.id, {
+        uploadToken: draft.uploadToken,
+      });
+      setSubmittedBookingId(result.id);
+      setNotificationStatus(result.notificationStatus);
+      setForm(EMPTY_FORM);
+      setReferences([]);
+      setWebsite('');
+      setStep(0);
+    } catch (error) {
+      setSubmissionError(
+        error instanceof Error
+          ? error.message
+          : 'We could not submit your request. Please try again.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -167,7 +214,7 @@ export default function Tattoo() {
             {ARTISTS.map((a) => (
               <div
                 key={a.name}
-                className={`glass-card p-6 flex flex-col ${a.featured ? 'glow-magenta border-2' : ''} ${!a.available ? 'opacity-70' : ''}`}
+                className={`glass-card p-6 flex flex-col ${a.featured ? 'glow-magenta border-2' : ''}`}
                 style={a.featured ? { borderColor: 'var(--vibrant-magenta)' } : undefined}
               >
                 {a.featured && (
@@ -202,17 +249,13 @@ export default function Tattoo() {
                       </a>
                     </Button>
                   )}
-                  {a.available ? (
-                    <Button
-                      className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono text-xs"
-                      onClick={() => setForm((f) => ({ ...f, artist: a.name }))}
-                      asChild
-                    >
-                      <a href="#booking">Book with {a.name.split(' ')[0]}</a>
-                    </Button>
-                  ) : (
-                  <p className="mt-auto font-mono text-xs uppercase text-muted-foreground">Books opening soon</p>
-                  )}
+                  <Button
+                    className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono text-xs"
+                    onClick={() => setForm((f) => ({ ...f, artist: a.name }))}
+                    asChild
+                  >
+                    <a href="#booking">Book with {a.name.split(' ')[0]}</a>
+                  </Button>
                 </div>
               </div>
             ))}
@@ -253,7 +296,56 @@ export default function Tattoo() {
             </div>
           </div>
 
+          {submittedBookingId ? (
+            <div className="glass-card p-8 md:p-10 border-2 border-primary/40" aria-live="polite">
+              <CheckCircle2 className="w-12 h-12 text-primary mb-5" />
+              <p className="font-mono text-xs uppercase tracking-widest text-primary mb-2">Request received</p>
+              <h3 className="font-display font-black uppercase tracking-tight text-2xl mb-3">
+                You're in the studio queue.
+              </h3>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                Your request #{submittedBookingId} and private reference images are saved. The AIMD team will review your idea and contact you about availability, deposit, and scheduling.
+              </p>
+              {notificationStatus === 'failed' ? (
+                <p className="text-sm border border-amber-500/40 bg-amber-500/10 p-3 mb-6">
+                  Your booking is safe in our dashboard. The inbox notice was delayed, so you can also reach us at{' '}
+                  <a className="underline font-medium" href={`mailto:${BOOKING_EMAIL}`}>{BOOKING_EMAIL}</a>.
+                </p>
+              ) : notificationStatus === 'pending' ? (
+                <p className="text-sm text-muted-foreground mb-6">
+                  Your booking is saved and the studio inbox notification is processing.
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground mb-6">
+                  A notification was sent to the studio inbox.
+                </p>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-none uppercase font-mono text-xs"
+                onClick={() => {
+                  setSubmittedBookingId(null);
+                  setNotificationStatus(null);
+                }}
+              >
+                Start another request
+              </Button>
+            </div>
+          ) : (
           <form onSubmit={handleSubmit} className="glass-card p-6 md:p-8 space-y-5">
+            <div className="absolute -left-[9999px] h-px w-px overflow-hidden" aria-hidden="true">
+              <Label htmlFor="booking-website">Website</Label>
+              <Input
+                id="booking-website"
+                name="website"
+                type="text"
+                value={website}
+                onChange={(event) => setWebsite(event.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+              />
+            </div>
             {/* Step indicator */}
             <div className="flex items-center gap-2">
               {STEPS.map((label, i) => (
@@ -383,7 +475,7 @@ export default function Tattoo() {
               <Button
                 type="submit"
                 size="lg"
-                disabled={!stepValid}
+                disabled={!stepValid || isSubmitting}
                 className="flex-1 h-14 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono font-bold group"
               >
                 {step < STEPS.length - 1 ? (
@@ -393,8 +485,12 @@ export default function Tattoo() {
                   </>
                 ) : (
                   <>
-                    <Mail className="w-4 h-4 mr-2" />
-                    Send Booking Request
+                    {isSubmitting ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Mail className="w-4 h-4 mr-2" />
+                    )}
+                    {isSubmitting ? 'Submitting…' : 'Send Booking Request'}
                     <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
@@ -402,10 +498,16 @@ export default function Tattoo() {
             </div>
             {step === STEPS.length - 1 && (
               <p className="font-mono text-xs text-muted-foreground">
-                This opens your email app with everything filled in — attach your selected reference images before sending. Or email us directly: {BOOKING_EMAIL}
+                Your request and reference images are sent securely to the AIMD studio. Questions? Email {BOOKING_EMAIL}.
+              </p>
+            )}
+            {submissionError && (
+              <p className="text-sm border border-destructive/40 bg-destructive/10 text-destructive p-3" role="alert">
+                {submissionError}
               </p>
             )}
           </form>
+          )}
         </div>
       </section>
 

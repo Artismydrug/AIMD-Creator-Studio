@@ -901,6 +901,127 @@ export interface ErrorEnvelope {
   error: string;
 }
 
+export type TattooBookingStatus = typeof TattooBookingStatus[keyof typeof TattooBookingStatus];
+
+
+export const TattooBookingStatus = {
+  new: 'new',
+  contacted: 'contacted',
+  scheduled: 'scheduled',
+  completed: 'completed',
+  declined: 'declined',
+} as const;
+
+export type TattooBookingNotificationStatus = typeof TattooBookingNotificationStatus[keyof typeof TattooBookingNotificationStatus];
+
+
+export const TattooBookingNotificationStatus = {
+  pending: 'pending',
+  sent: 'sent',
+  failed: 'failed',
+} as const;
+
+export type TattooBookingInputPreferredArtist = typeof TattooBookingInputPreferredArtist[keyof typeof TattooBookingInputPreferredArtist];
+
+
+export const TattooBookingInputPreferredArtist = {
+  No_preference: 'No preference',
+  Poncho_The_Artist: 'Poncho The Artist',
+  Edwin: 'Edwin',
+  Ashley: 'Ashley',
+} as const;
+
+export interface TattooBookingInput {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  /** @maxLength 254 */
+  email: string;
+  /**
+     * @maxLength 40
+     * @nullable
+     */
+  phone?: string | null;
+  /**
+     * @minLength 10
+     * @maxLength 4000
+     */
+  idea: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  placement: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  estimatedSize: string;
+  preferredArtist: TattooBookingInputPreferredArtist;
+  /**
+     * Honeypot field; must remain empty.
+     * @maxLength 200
+     */
+  website?: string;
+}
+
+export interface TattooBookingDraft {
+  id: number;
+  uploadToken: string;
+  expiresAt: string;
+}
+
+/**
+ * Raw image bytes; uploaded with an image Content-Type header.
+ */
+export type TattooBookingReferenceUpload = string;
+
+export interface TattooBookingReference {
+  id: number;
+  url: string;
+  originalName: string;
+  contentType: string;
+  sizeBytes: number;
+}
+
+export interface TattooBookingFinalizeInput {
+  /** @minLength 32 */
+  uploadToken: string;
+}
+
+export interface TattooBookingSubmissionResult {
+  id: number;
+  status: TattooBookingStatus;
+  notificationStatus: TattooBookingNotificationStatus;
+}
+
+export interface TattooBooking {
+  id: number;
+  name: string;
+  email: string;
+  /** @nullable */
+  phone: string | null;
+  idea: string;
+  placement: string;
+  estimatedSize: string;
+  preferredArtist: string;
+  status: TattooBookingStatus;
+  notificationStatus: TattooBookingNotificationStatus;
+  /** @nullable */
+  notificationError: string | null;
+  references: TattooBookingReference[];
+  /** @nullable */
+  submittedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TattooBookingUpdate {
+  status: TattooBookingStatus;
+}
+
 export interface ProgressDayInput {
   /**
      * IANA timezone string, e.g. "America/New_York"

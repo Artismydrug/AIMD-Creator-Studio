@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  getListAdminTattooBookingsQueryKey,
   useGetCurrentUser,
   useCreateEvent,
   useAwardChallengeWinner,
   useListAdminUsers,
+  useListAdminTattooBookings,
+  useUpdateAdminTattooBooking,
 } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { MediaUpload } from '@/components/MediaUpload';
-import { Calendar, ShieldCheck, Trophy, ThumbsUp, Users, Search, Crown } from 'lucide-react';
+import { AlertTriangle, Calendar, ClipboardList, Crown, Image as ImageIcon, Mail, Phone, Search, ShieldCheck, ThumbsUp, Trophy, Users } from 'lucide-react';
 
 // ─── Challenge data (same shape the Studio Log uses) ─────────────────────────
 
@@ -341,6 +344,158 @@ function MembersCard() {
   );
 }
 
+// ─── Tattoo bookings ─────────────────────────────────────────────────────────
+
+const BOOKING_STATUSES = ['new', 'contacted', 'scheduled', 'completed', 'declined'] as const;
+
+function TattooBookingsCard() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { data: bookings = [], isLoading, isError } = useListAdminTattooBookings();
+  const updateBooking = useUpdateAdminTattooBooking();
+
+  const updateStatus = (bookingId: number, status: (typeof BOOKING_STATUSES)[number]) => {
+    updateBooking.mutate(
+      { bookingId, data: { status } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListAdminTattooBookingsQueryKey() });
+          toast({ title: 'Booking updated', description: `Status changed to ${status}.` });
+        },
+        onError: (error: any) => {
+          toast({
+            title: 'Could not update booking',
+            description: String(error?.message ?? error),
+            variant: 'destructive',
+          });
+        },
+      },
+    );
+  };
+
+  return (
+    <section className="border border-border bg-card p-6 md:p-8">
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-1">
+        <h2 className="font-display font-bold text-xl uppercase flex items-center gap-2">
+          <ClipboardList className="w-5 h-5 text-primary" /> Tattoo Bookings
+        </h2>
+        <span className="font-mono text-xs text-muted-foreground border border-border px-2 py-1">
+          {bookings.length} requests
+        </span>
+      </div>
+      <p className="text-sm text-muted-foreground mb-6">
+        Private booking intakes and reference images. New requests also notify info@artismydrug.com.
+      </p>
+
+      {isLoading ? (
+        <p className="font-mono text-sm text-muted-foreground animate-pulse py-8 text-center">Loading bookings…</p>
+      ) : isError ? (
+        <div className="py-8 text-center border border-destructive/30 bg-destructive/5">
+          <p className="font-mono text-sm text-destructive">Could not load booking requests.</p>
+        </div>
+      ) : bookings.length === 0 ? (
+        <div className="py-10 text-center border border-dashed border-border">
+          <ClipboardList className="w-7 h-7 text-muted-foreground mx-auto mb-3" />
+          <p className="font-mono text-sm text-muted-foreground">No tattoo booking requests yet.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {bookings.map((booking) => (
+            <details key={booking.id} className="group border border-border bg-background">
+              <summary className="list-none cursor-pointer p-4 md:p-5 flex flex-col md:flex-row md:items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-primary">#{booking.id}</span>
+                    <h3 className="font-display font-bold uppercase tracking-tight">{booking.name}</h3>
+                    <span className="font-mono text-[10px] uppercase tracking-wide border border-primary/30 text-primary px-1.5 py-0.5">
+                      {booking.preferredArtist}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {booking.placement} · {booking.estimatedSize} ·{' '}
+                    {booking.submittedAt ? new Date(booking.submittedAt).toLocaleString() : 'Just submitted'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2" onClick={(event) => event.stopPropagation()}>
+                  {booking.notificationStatus === 'failed' && (
+                    <span title="Email notification failed; booking is saved in Admin">
+                      <AlertTriangle className="w-4 h-4 text-amber-500" />
+                    </span>
+                  )}
+                  <select
+                    className="h-9 px-2 bg-card border border-border text-xs font-mono uppercase"
+                    value={booking.status}
+                    onChange={(event) => updateStatus(booking.id, event.target.value as (typeof BOOKING_STATUSES)[number])}
+                    disabled={updateBooking.isPending}
+                    aria-label={`Status for booking ${booking.id}`}
+                  >
+                    {BOOKING_STATUSES.map((status) => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                </div>
+              </summary>
+
+              <div className="border-t border-border p-4 md:p-5 grid md:grid-cols-[1fr_240px] gap-6">
+                <div className="space-y-5">
+                  <div className="flex flex-wrap gap-3 text-sm">
+                    <a href={`mailto:${booking.email}`} className="inline-flex items-center gap-1.5 text-primary hover:underline">
+                      <Mail className="w-4 h-4" /> {booking.email}
+                    </a>
+                    {booking.phone && (
+                      <a href={`tel:${booking.phone}`} className="inline-flex items-center gap-1.5 text-primary hover:underline">
+                        <Phone className="w-4 h-4" /> {booking.phone}
+                      </a>
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Tattoo idea</p>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{booking.idea}</p>
+                  </div>
+                  {booking.notificationStatus === 'failed' && (
+                    <div className="text-xs border border-amber-500/40 bg-amber-500/10 p-3">
+                      <p className="font-medium">The automatic inbox notice failed, but this request and its images are safely stored here.</p>
+                      {booking.notificationError && (
+                        <p className="mt-1 font-mono text-[10px] break-words text-muted-foreground">
+                          {booking.notificationError}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
+                    <ImageIcon className="w-3.5 h-3.5" /> Private references
+                  </p>
+                  {booking.references.length === 0 ? (
+                    <p className="text-xs text-muted-foreground border border-dashed border-border p-4">No images attached.</p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {booking.references.map((reference) => (
+                        <a
+                          key={reference.id}
+                          href={reference.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block border border-border bg-muted aspect-square overflow-hidden"
+                          title={reference.originalName}
+                        >
+                          <img src={reference.url} alt="" className="w-full h-full object-cover" />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </details>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Admin() {
@@ -372,13 +527,14 @@ export default function Admin() {
           </div>
           <h1 className="font-display font-black text-4xl md:text-5xl uppercase tracking-tight">Admin Dashboard</h1>
           <p className="text-muted-foreground font-mono text-sm mt-1">
-            Post events · Pick challenge winners · Award points
+            Manage bookings · Post events · Pick challenge winners
           </p>
         </div>
       </div>
 
       <div className="px-6 md:px-10 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
+          <TattooBookingsCard />
           <MembersCard />
           <CreateEventCard />
           <ChallengeWinnerCard />

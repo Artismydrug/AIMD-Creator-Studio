@@ -21,6 +21,7 @@ import challengesRouter from "./challenges";
 import rewardsRouter from "./rewards";
 import storeRouter from "./store";
 import progressRouter from "./progress";
+import tattooBookingsRouter from "./tattoo-bookings";
 
 const router: IRouter = Router();
 
@@ -46,5 +47,6 @@ router.use(checkinRouter);
 router.use(challengesRouter);
 router.use(rewardsRouter);
 router.use(progressRouter);
+router.use(tattooBookingsRouter);
 
 export default router;

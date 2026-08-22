@@ -12,3 +12,4 @@ export * from "./sponsorships";
 export * from "./store";
 export * from "./progress"; // exports creatorDailyCheckinsTable, creatorRewardSpinsTable
 export * from "./challenges";
+export * from "./tattoo-bookings";

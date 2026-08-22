@@ -85,6 +85,13 @@ import type {
   StoreProduct,
   StudioPost,
   StudioPostInput,
+  TattooBooking,
+  TattooBookingDraft,
+  TattooBookingFinalizeInput,
+  TattooBookingInput,
+  TattooBookingReference,
+  TattooBookingSubmissionResult,
+  TattooBookingUpdate,
   User,
   UserUpdate,
   WeeklyChallengeResult,
@@ -5281,5 +5288,369 @@ export const useAddPostComment = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getAddPostCommentMutationOptions(options));
+    }
+
+export const getCreateTattooBookingDraftUrl = () => {
+
+
+
+
+  return `/api/tattoo-bookings`
+}
+
+/**
+ * @summary Start a public tattoo booking intake
+ */
+export const createTattooBookingDraft = async (tattooBookingInput: TattooBookingInput, options?: Parameters<typeof customFetch>[1]): Promise<TattooBookingDraft> => {
+
+  return customFetch<TattooBookingDraft>(getCreateTattooBookingDraftUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(tattooBookingInput)
+  }
+);}
+
+
+
+
+
+export const getCreateTattooBookingDraftMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTattooBookingDraft>>, TError,{data: BodyType<TattooBookingInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTattooBookingDraft>>, TError,{data: BodyType<TattooBookingInput>}, TContext> => {
+
+const mutationKey = ['createTattooBookingDraft'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTattooBookingDraft>>, {data: BodyType<TattooBookingInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createTattooBookingDraft(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTattooBookingDraftMutationResult = NonNullable<Awaited<ReturnType<typeof createTattooBookingDraft>>>
+    export type CreateTattooBookingDraftMutationBody = BodyType<TattooBookingInput>
+    export type CreateTattooBookingDraftMutationError = ErrorType<void>
+
+    /**
+ * @summary Start a public tattoo booking intake
+ */
+export const useCreateTattooBookingDraft = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTattooBookingDraft>>, TError,{data: BodyType<TattooBookingInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createTattooBookingDraft>>,
+        TError,
+        {data: BodyType<TattooBookingInput>},
+        TContext
+      > => {
+      return useMutation(getCreateTattooBookingDraftMutationOptions(options));
+    }
+
+export const getUploadTattooBookingReferenceUrl = (bookingId: number,) => {
+
+
+
+
+  return `/api/tattoo-bookings/${bookingId}/references`
+}
+
+/**
+ * @summary Upload one private reference image to a booking draft
+ */
+export const uploadTattooBookingReference = async (bookingId: number,
+    uploadTattooBookingReferenceBody: Blob, options?: Parameters<typeof customFetch>[1]): Promise<TattooBookingReference> => {
+
+  return customFetch<TattooBookingReference>(getUploadTattooBookingReferenceUrl(bookingId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/octet-stream', ...options?.headers },
+    body: uploadTattooBookingReferenceBody
+  }
+);}
+
+
+
+
+
+export const getUploadTattooBookingReferenceMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadTattooBookingReference>>, TError,{bookingId: number;data: BodyType<Blob>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof uploadTattooBookingReference>>, TError,{bookingId: number;data: BodyType<Blob>}, TContext> => {
+
+const mutationKey = ['uploadTattooBookingReference'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadTattooBookingReference>>, {bookingId: number;data: BodyType<Blob>}> = (props) => {
+          const {bookingId,data} = props ?? {};
+
+          return  uploadTattooBookingReference(bookingId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadTattooBookingReferenceMutationResult = NonNullable<Awaited<ReturnType<typeof uploadTattooBookingReference>>>
+    export type UploadTattooBookingReferenceMutationBody = BodyType<Blob>
+    export type UploadTattooBookingReferenceMutationError = ErrorType<void>
+
+    /**
+ * @summary Upload one private reference image to a booking draft
+ */
+export const useUploadTattooBookingReference = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadTattooBookingReference>>, TError,{bookingId: number;data: BodyType<Blob>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof uploadTattooBookingReference>>,
+        TError,
+        {bookingId: number;data: BodyType<Blob>},
+        TContext
+      > => {
+      return useMutation(getUploadTattooBookingReferenceMutationOptions(options));
+    }
+
+export const getSubmitTattooBookingUrl = (bookingId: number,) => {
+
+
+
+
+  return `/api/tattoo-bookings/${bookingId}/submit`
+}
+
+/**
+ * @summary Finalize a tattoo booking and notify the studio
+ */
+export const submitTattooBooking = async (bookingId: number,
+    tattooBookingFinalizeInput: TattooBookingFinalizeInput, options?: Parameters<typeof customFetch>[1]): Promise<TattooBookingSubmissionResult> => {
+
+  return customFetch<TattooBookingSubmissionResult>(getSubmitTattooBookingUrl(bookingId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(tattooBookingFinalizeInput)
+  }
+);}
+
+
+
+
+
+export const getSubmitTattooBookingMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitTattooBooking>>, TError,{bookingId: number;data: BodyType<TattooBookingFinalizeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitTattooBooking>>, TError,{bookingId: number;data: BodyType<TattooBookingFinalizeInput>}, TContext> => {
+
+const mutationKey = ['submitTattooBooking'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitTattooBooking>>, {bookingId: number;data: BodyType<TattooBookingFinalizeInput>}> = (props) => {
+          const {bookingId,data} = props ?? {};
+
+          return  submitTattooBooking(bookingId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitTattooBookingMutationResult = NonNullable<Awaited<ReturnType<typeof submitTattooBooking>>>
+    export type SubmitTattooBookingMutationBody = BodyType<TattooBookingFinalizeInput>
+    export type SubmitTattooBookingMutationError = ErrorType<void>
+
+    /**
+ * @summary Finalize a tattoo booking and notify the studio
+ */
+export const useSubmitTattooBooking = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitTattooBooking>>, TError,{bookingId: number;data: BodyType<TattooBookingFinalizeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitTattooBooking>>,
+        TError,
+        {bookingId: number;data: BodyType<TattooBookingFinalizeInput>},
+        TContext
+      > => {
+      return useMutation(getSubmitTattooBookingMutationOptions(options));
+    }
+
+export const getListAdminTattooBookingsUrl = () => {
+
+
+
+
+  return `/api/admin/tattoo-bookings`
+}
+
+/**
+ * @summary List submitted tattoo bookings for admins
+ */
+export const listAdminTattooBookings = async ( options?: Parameters<typeof customFetch>[1]): Promise<TattooBooking[]> => {
+
+  return customFetch<TattooBooking[]>(getListAdminTattooBookingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminTattooBookingsQueryKey = () => {
+    return [
+    `/api/admin/tattoo-bookings`
+    ] as const;
+    }
+
+
+export const getListAdminTattooBookingsQueryOptions = <TData = Awaited<ReturnType<typeof listAdminTattooBookings>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminTattooBookings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminTattooBookingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminTattooBookings>>> = ({ signal }) => listAdminTattooBookings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminTattooBookings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminTattooBookingsQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminTattooBookings>>>
+export type ListAdminTattooBookingsQueryError = ErrorType<void>
+
+
+/**
+ * @summary List submitted tattoo bookings for admins
+ */
+
+export function useListAdminTattooBookings<TData = Awaited<ReturnType<typeof listAdminTattooBookings>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminTattooBookings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminTattooBookingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateAdminTattooBookingUrl = (bookingId: number,) => {
+
+
+
+
+  return `/api/admin/tattoo-bookings/${bookingId}`
+}
+
+/**
+ * @summary Update a tattoo booking status
+ */
+export const updateAdminTattooBooking = async (bookingId: number,
+    tattooBookingUpdate: TattooBookingUpdate, options?: Parameters<typeof customFetch>[1]): Promise<TattooBooking> => {
+
+  return customFetch<TattooBooking>(getUpdateAdminTattooBookingUrl(bookingId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(tattooBookingUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateAdminTattooBookingMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminTattooBooking>>, TError,{bookingId: number;data: BodyType<TattooBookingUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAdminTattooBooking>>, TError,{bookingId: number;data: BodyType<TattooBookingUpdate>}, TContext> => {
+
+const mutationKey = ['updateAdminTattooBooking'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAdminTattooBooking>>, {bookingId: number;data: BodyType<TattooBookingUpdate>}> = (props) => {
+          const {bookingId,data} = props ?? {};
+
+          return  updateAdminTattooBooking(bookingId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAdminTattooBookingMutationResult = NonNullable<Awaited<ReturnType<typeof updateAdminTattooBooking>>>
+    export type UpdateAdminTattooBookingMutationBody = BodyType<TattooBookingUpdate>
+    export type UpdateAdminTattooBookingMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a tattoo booking status
+ */
+export const useUpdateAdminTattooBooking = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminTattooBooking>>, TError,{bookingId: number;data: BodyType<TattooBookingUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAdminTattooBooking>>,
+        TError,
+        {bookingId: number;data: BodyType<TattooBookingUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateAdminTattooBookingMutationOptions(options));
     }
 

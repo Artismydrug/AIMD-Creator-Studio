@@ -1445,6 +1445,150 @@ paths:
               schema:
                 $ref: "#/components/schemas/Comment"
 
+  # ── Tattoo Bookings ──────────────────────────────────────────────────────
+  /tattoo-bookings:
+    post:
+      operationId: createTattooBookingDraft
+      tags: [tattoo-bookings]
+      summary: Start a public tattoo booking intake
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TattooBookingInput"
+      responses:
+        "201":
+          description: Booking draft created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TattooBookingDraft"
+        "400":
+          description: Invalid booking details
+        "429":
+          description: Too many booking requests
+
+  /tattoo-bookings/{bookingId}/references:
+    post:
+      operationId: uploadTattooBookingReference
+      tags: [tattoo-bookings]
+      summary: Upload one private reference image to a booking draft
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: X-Booking-Token
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-File-Name
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              $ref: "#/components/schemas/TattooBookingReferenceUpload"
+      responses:
+        "201":
+          description: Reference image stored privately
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TattooBookingReference"
+        "400":
+          description: Invalid image
+        "401":
+          description: Invalid or expired booking token
+        "413":
+          description: Image is too large
+
+  /tattoo-bookings/{bookingId}/submit:
+    post:
+      operationId: submitTattooBooking
+      tags: [tattoo-bookings]
+      summary: Finalize a tattoo booking and notify the studio
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TattooBookingFinalizeInput"
+      responses:
+        "200":
+          description: Booking submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TattooBookingSubmissionResult"
+        "401":
+          description: Invalid or expired booking token
+        "404":
+          description: Booking draft not found
+
+  /admin/tattoo-bookings:
+    get:
+      operationId: listAdminTattooBookings
+      tags: [tattoo-bookings]
+      summary: List submitted tattoo bookings for admins
+      responses:
+        "200":
+          description: Submitted bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TattooBooking"
+        "401":
+          description: Authentication required
+        "403":
+          description: Admin access required
+
+  /admin/tattoo-bookings/{bookingId}:
+    patch:
+      operationId: updateAdminTattooBooking
+      tags: [tattoo-bookings]
+      summary: Update a tattoo booking status
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TattooBookingUpdate"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TattooBooking"
+        "401":
+          description: Authentication required
+        "403":
+          description: Admin access required
+        "404":
+          description: Booking not found
+
 components:
   securitySchemes:
     OrganizerKey:
@@ -2647,6 +2791,162 @@ components:
       properties:
         error:
           type: string
+
+    # ── Tattoo Bookings ────────────────────────────────────────────────────
+    TattooBookingStatus:
+      type: string
+      enum: ["new", "contacted", "scheduled", "completed", "declined"]
+
+    TattooBookingNotificationStatus:
+      type: string
+      enum: ["pending", "sent", "failed"]
+
+    TattooBookingInput:
+      type: object
+      required: [name, email, idea, placement, estimatedSize, preferredArtist]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: ["string", "null"]
+          maxLength: 40
+        idea:
+          type: string
+          minLength: 10
+          maxLength: 4000
+        placement:
+          type: string
+          minLength: 1
+          maxLength: 160
+        estimatedSize:
+          type: string
+          minLength: 1
+          maxLength: 120
+        preferredArtist:
+          type: string
+          enum: ["No preference", "Poncho The Artist", "Edwin", "Ashley"]
+        website:
+          type: string
+          maxLength: 200
+          description: Honeypot field; must remain empty.
+
+    TattooBookingDraft:
+      type: object
+      required: [id, uploadToken, expiresAt]
+      properties:
+        id:
+          type: integer
+        uploadToken:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+
+    TattooBookingReferenceUpload:
+      type: string
+      description: Raw image bytes; uploaded with an image Content-Type header.
+
+    TattooBookingReference:
+      type: object
+      required: [id, url, originalName, contentType, sizeBytes]
+      properties:
+        id:
+          type: integer
+        url:
+          type: string
+        originalName:
+          type: string
+        contentType:
+          type: string
+        sizeBytes:
+          type: integer
+
+    TattooBookingFinalizeInput:
+      type: object
+      required: [uploadToken]
+      properties:
+        uploadToken:
+          type: string
+          minLength: 32
+
+    TattooBookingSubmissionResult:
+      type: object
+      required: [id, status, notificationStatus]
+      properties:
+        id:
+          type: integer
+        status:
+          $ref: "#/components/schemas/TattooBookingStatus"
+        notificationStatus:
+          $ref: "#/components/schemas/TattooBookingNotificationStatus"
+
+    TattooBooking:
+      type: object
+      required:
+        - id
+        - name
+        - email
+        - phone
+        - idea
+        - placement
+        - estimatedSize
+        - preferredArtist
+        - status
+        - notificationStatus
+        - notificationError
+        - references
+        - submittedAt
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: ["string", "null"]
+        idea:
+          type: string
+        placement:
+          type: string
+        estimatedSize:
+          type: string
+        preferredArtist:
+          type: string
+        status:
+          $ref: "#/components/schemas/TattooBookingStatus"
+        notificationStatus:
+          $ref: "#/components/schemas/TattooBookingNotificationStatus"
+        notificationError:
+          type: ["string", "null"]
+        references:
+          type: array
+          items:
+            $ref: "#/components/schemas/TattooBookingReference"
+        submittedAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TattooBookingUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: "#/components/schemas/TattooBookingStatus"
 
     # ── Creator Progress ──────────────────────────────────────────────────
     ProgressDayInput:
