@@ -185,23 +185,6 @@ export default function Tattoo() {
         </div>
       </section>
 
-      {/* What we do */}
-      <section className="py-16 px-6 border-b border-border">
-        <div className="container mx-auto grid md:grid-cols-3 gap-6">
-          {[
-            { icon: Users, title: 'Resident Artists', text: 'A rotating roster of resident and guest artists across styles — fine line, traditional, black & grey, and more.' },
-            { icon: Sparkles, title: 'Custom Flash', text: 'Original flash sheets drawn in-house. Walk-in friendly when the books are open — first come, first inked.' },
-            { icon: Shield, title: 'Clean & Licensed', text: 'A professional, licensed setup with single-use needles and hospital-grade sterilization. Your skin is the canvas; we treat it that way.' },
-          ].map(({ icon: Icon, title, text }) => (
-            <div key={title} className="border border-border bg-card p-6">
-              <Icon className="w-6 h-6 text-primary mb-3" />
-              <h3 className="font-display font-black uppercase tracking-tight text-xl mb-2">{title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{text}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Artists */}
       <section className="py-16 px-6 border-b border-border">
         <div className="container mx-auto">
@@ -525,6 +508,23 @@ export default function Tattoo() {
             )}
           </form>
           )}
+        </div>
+      </section>
+
+      {/* What we do */}
+      <section className="py-16 px-6 border-b border-border">
+        <div className="container mx-auto grid md:grid-cols-3 gap-6">
+          {[
+            { icon: Users, title: 'Resident Artists', text: 'A rotating roster of resident and guest artists across styles — fine line, traditional, black & grey, and more.' },
+            { icon: Sparkles, title: 'Custom Flash', text: 'Original flash sheets drawn in-house. Walk-in friendly when the books are open — first come, first inked.' },
+            { icon: Shield, title: 'Clean & Licensed', text: 'A professional, licensed setup with single-use needles and hospital-grade sterilization. Your skin is the canvas; we treat it that way.' },
+          ].map(({ icon: Icon, title, text }) => (
+            <div key={title} className="border border-border bg-card p-6">
+              <Icon className="w-6 h-6 text-primary mb-3" />
+              <h3 className="font-display font-black uppercase tracking-tight text-xl mb-2">{title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{text}</p>
+            </div>
+          ))}
         </div>
       </section>
 
