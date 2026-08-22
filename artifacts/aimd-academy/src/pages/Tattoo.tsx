@@ -41,7 +41,7 @@ const ARTISTS = [
   {
     name: 'Ash',
     role: 'Resident Artist',
-    styles: 'Tattoo work · Instagram portfolio',
+    styles: 'Custom work · Fine line · Stipple · Realism · Color',
     featured: true,
     available: true,
     photo: ashleyImg,
