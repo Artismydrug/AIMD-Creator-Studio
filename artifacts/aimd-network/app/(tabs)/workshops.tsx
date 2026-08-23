@@ -42,7 +42,7 @@ const featuredTracks = [
   },
   {
     icon: 'edit-3' as const,
-    title: 'Tattoo Apprenticeship Prep',
+    title: 'Tattoo Apprenticeship Prep with Poncho The Artist',
     instructor: 'Poncho The Artist',
     accent: 'magenta' as const,
   },

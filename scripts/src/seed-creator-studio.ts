@@ -3,7 +3,8 @@
  *
  * Creates a genuinely multi-medium curriculum spanning tattooing, athletics,
  * visual arts, audio production, and garment design:
- *   - Poncho The Artist  / Tattoo Apprenticeship Prep   (Visual Art & Tattooing)
+ *   - Poncho The Artist  / Tattoo Apprenticeship Prep with Poncho The Artist
+ *     (Visual Art & Tattooing)
  *   - Poncho The Artist  / Fine Art Foundations          (Visual Art & Tattooing)
  *   - David Singleton    / The Art of Basketball         (Athletic Creativity)
  *   - AIMD Creative Faculty / Audio Production Essentials (Music & Sound)
@@ -81,50 +82,74 @@ const INSTRUCTORS = [
 
 const WORKSHOPS = [
   {
-    title: "Tattoo Apprenticeship Prep",
+    title: "Tattoo Apprenticeship Prep with Poncho The Artist",
     description:
-      "A structured pre-apprenticeship blueprint for aspiring tattoo artists: professional expectations, portfolio strategy, safe studio practice, equipment literacy, and a sustainable career plan. Instructor videos and feedback checkpoints are published module by module.",
+      "The official AIMD tattoo apprenticeship curriculum with Poncho The Artist. Build safe station habits, understand your equipment, practice foundational techniques on fake skin, and prepare a professional portfolio. Instructor videos and feedback checkpoints are published module by module.",
     instructorSlug: "poncho-the-artist",
     instructorName: "Poncho The Artist",
     tier: "workshop" as const, // paid Dedicated Artist tier (API vocabulary: "workshop")
     category: "Visual Art & Tattooing",
-    durationMinutes: 240,
+    durationMinutes: 255,
     modules: [
       {
-        title: "Introduction to Tattoo Artistry",
-        description: "Objective: identify the apprenticeship path that fits your practice and explain what a professional studio expects. Study tattoo lineages, core styles, apprentice responsibilities, and the difference between a portfolio and a flash book. Checkpoint: write a one-page apprenticeship intention.",
+        title: "Sanitation, Bloodborne Pathogens & Station Setup Protocols",
+        description: "Objective: prepare a safe, professional station before any practice begins. Cover cross-contamination awareness, bloodborne-pathogen education, barriers, sharps awareness, clean-to-dirty flow, and the limits of this course: this is preparation, not a safety certification.",
         order: 1,
-        durationMinutes: 30,
+        durationMinutes: 35,
+        drills: [
+          "Set up and break down a mock station in the correct clean-to-dirty order (30 seconds).",
+          "Point out every barrier, disposable, and sharps-safety step in a station walkthrough (30 seconds).",
+        ],
       },
       {
-        title: "Building Your Portfolio",
-        description: "Objective: assemble a focused, honest portfolio for a studio review. Learn to edit your strongest work, organize flash, photograph it clearly, and tailor a short introduction for each studio. Checkpoint: select 12 pieces and write captions that explain your decisions.",
+        title: "Equipment Mechanics, Rotary/Coil Tuning & Voltage Setup",
+        description: "Objective: build equipment literacy before touching skin. Compare rotary and coil mechanics, identify machine components, understand voltage as a setup variable, and document a safe practice configuration. Never tattoo a person without qualified, in-person supervision.",
         order: 2,
-        durationMinutes: 45,
+        durationMinutes: 40,
+        drills: [
+          "Identify rotary and coil machine components and explain their function in a 30-second walkthrough.",
+          "Demonstrate a documented fake-skin voltage setup and explain what you would adjust (30 seconds).",
+        ],
       },
       {
-        title: "Studio Etiquette & Professionalism",
-        description: "Objective: demonstrate reliable studio habits before you ask for a chair. Cover client privacy, cleanup routines, punctuality, consent, communication, and how to observe without disrupting an artist. Checkpoint: create your first-week studio etiquette plan.",
+        title: "Needle Groupings (RL, RS, M1, RM) & Stencil Application",
+        description: "Objective: recognize common needle groupings and place a clean stencil on fake skin. Learn RL, RS, M1, and RM terminology, cartridge checks, stencil alignment, transfer pressure, and how to avoid practicing on people before supervised training.",
         order: 3,
-        durationMinutes: 30,
+        durationMinutes: 40,
+        drills: [
+          "Identify RL, RS, M1, and RM groupings from a prepared reference set (30 seconds).",
+          "Apply and smooth a stencil onto fake skin with clean alignment and no lifted edges (30 seconds).",
+        ],
       },
       {
-        title: "Hygiene & Safety Standards",
-        description: "Objective: understand why safety training is non-negotiable and where your responsibility starts. Covers cross-contamination awareness, bloodborne-pathogen education, surface barriers, and the limits of this course: this is preparation, not a safety certification. Checkpoint: map a clean-to-dirty workflow for a mock station.",
+        title: "Lining Consistency & Hand Speed Drills (Fake Skin Practice)",
+        description: "Objective: develop controlled hand movement on fake skin. Practice consistent depth awareness, hand speed, stretch, angle, and breathing through repeatable lines. All drills are on fake skin and are reviewed as technique practice, not permission to tattoo clients.",
         order: 4,
         durationMinutes: 45,
+        drills: [
+          "Pull three consistent straight lines and three controlled curves on fake skin (30 seconds).",
+          "Complete a slow-to-fast hand-speed ladder while keeping line spacing consistent (30 seconds).",
+        ],
       },
       {
-        title: "Equipment & Supplies Overview",
-        description: "Objective: build a vocabulary for professional tools without purchasing blindly. Compare machine categories, needle configurations, inks, power supplies, disposables, and documentation. Checkpoint: make a starter-kit research list with safety and supplier questions.",
+        title: "Whip Shading, Black & Grey Transitions & Color Packing",
+        description: "Objective: practice smooth value transitions and controlled saturation on fake skin. Explore whip-shading motion, black-and-grey gradients, packing consistency, and color theory while keeping setup and cleanup protocols intact.",
         order: 5,
-        durationMinutes: 30,
+        durationMinutes: 50,
+        drills: [
+          "Create a light-to-dark whip-shade gradient on fake skin in one controlled pass (30 seconds).",
+          "Pack a small test block evenly and show a black-to-grey transition without overworking it (30 seconds).",
+        ],
       },
       {
-        title: "The Business of Tattooing",
-        description: "Objective: plan a career that protects your practice and your clients. Explore employment versus booth rental, transparent pricing, client communication, booking policies, image rights, and sustainable social media. Checkpoint: draft a first-year professional development plan.",
+        title: "Client Consultations, Aftercare & Portfolio Building",
+        description: "Objective: communicate professionally and present your work responsibly. Practice a respectful consultation, explain aftercare without making medical claims, photograph fake-skin studies clearly, and assemble a focused portfolio for a studio review.",
         order: 6,
-        durationMinutes: 60,
+        durationMinutes: 45,
+        drills: [
+          "Role-play a concise client consultation: idea, placement, expectations, consent, and next step (30 seconds).",
+          "Show a documented fake-skin study and explain the portfolio caption and aftercare handoff (30 seconds).",
+        ],
       },
     ],
   },
@@ -396,14 +421,16 @@ async function ensureWorkshop(
   for (const mod of spec.modules) {
     const { rows: existingMod } = await client.query<{ id: number }>(
       `SELECT id FROM workshop_modules
-       WHERE workshop_id = $1 AND title = $2 LIMIT 1`,
-      [workshopId, mod.title],
+       WHERE workshop_id = $1 AND "order" = $2 LIMIT 1`,
+      [workshopId, mod.order],
     );
+    let moduleId: number;
     if (existingMod.length === 0) {
-      await client.query(
+      const { rows: createdModule } = await client.query<{ id: number }>(
         `INSERT INTO workshop_modules
            (workshop_id, title, description, "order", duration_minutes, created_at)
-         VALUES ($1, $2, $3, $4, $5, NOW())`,
+         VALUES ($1, $2, $3, $4, $5, NOW())
+         RETURNING id`,
         [
           workshopId,
           mod.title,
@@ -412,15 +439,31 @@ async function ensureWorkshop(
           mod.durationMinutes,
         ],
       );
+      moduleId = createdModule[0].id;
       console.log(`    + Added module: "${mod.title}"`);
     } else {
       await client.query(
         `UPDATE workshop_modules
-         SET description = $2, "order" = $3, duration_minutes = $4
+         SET title = $2, description = $3, "order" = $4, duration_minutes = $5
          WHERE id = $1`,
-        [existingMod[0].id, mod.description, mod.order, mod.durationMinutes],
+        [existingMod[0].id, mod.title, mod.description, mod.order, mod.durationMinutes],
       );
+      moduleId = existingMod[0].id;
       console.log(`    ✓ Module exists: "${mod.title}"`);
+    }
+
+    for (const prompt of mod.drills ?? []) {
+      const { rowCount: drillExists } = await client.query(
+        `SELECT 1 FROM drill_prompts WHERE module_id = $1 AND prompt = $2 LIMIT 1`,
+        [moduleId, prompt],
+      );
+      if (!drillExists) {
+        await client.query(
+          `INSERT INTO drill_prompts (module_id, prompt, max_duration_seconds, created_by, created_at)
+           VALUES ($1, $2, 30, $3, NOW())`,
+          [moduleId, prompt, instructorId],
+        );
+      }
     }
   }
 
