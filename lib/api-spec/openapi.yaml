@@ -2296,6 +2296,11 @@ components:
           type: integer
         isCompleted:
           type: boolean
+        drills:
+          type: array
+          description: Practice prompts published by the assigned instructor for this module.
+          items:
+            $ref: "#/components/schemas/DrillPromptDetail"
 
     WorkshopDetail:
       type: object

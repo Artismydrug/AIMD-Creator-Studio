@@ -323,6 +323,8 @@ const WORKSHOPS = [
   },
 ];
 
+const LEGACY_TATTOO_TRACK_TITLE = "Tattoo Apprenticeship Prep";
+
 // ── Seed logic ────────────────────────────────────────────────────────────────
 
 async function ensureInstructor(
@@ -356,10 +358,26 @@ async function ensureWorkshop(
   spec: typeof WORKSHOPS[number],
   instructorId: number,
 ): Promise<number> {
-  const { rows } = await client.query<{ id: number }>(
+  let { rows } = await client.query<{ id: number }>(
     `SELECT id FROM workshops WHERE title = $1 LIMIT 1`,
     [spec.title],
   );
+  // The first Creator Studio seed used a shorter tattoo-track name. Rename
+  // that original row rather than silently starting a second course, keeping
+  // enrollments, assignments, uploaded videos, and module IDs intact.
+  if (rows.length === 0 && spec.title === "Tattoo Apprenticeship Prep with Poncho The Artist") {
+    const legacy = await client.query<{ id: number }>(
+      `SELECT id FROM workshops WHERE title = $1 LIMIT 1`,
+      [LEGACY_TATTOO_TRACK_TITLE],
+    );
+    if (legacy.rows.length > 0) {
+      await client.query(`UPDATE workshops SET title = $2 WHERE id = $1`, [
+        legacy.rows[0].id,
+        spec.title,
+      ]);
+      rows = legacy.rows;
+    }
+  }
 
   let workshopId: number;
   if (rows.length > 0) {
@@ -452,7 +470,8 @@ async function ensureWorkshop(
       console.log(`    ✓ Module exists: "${mod.title}"`);
     }
 
-    for (const prompt of mod.drills ?? []) {
+    const drills = "drills" in mod ? mod.drills : [];
+    for (const prompt of drills) {
       const { rowCount: drillExists } = await client.query(
         `SELECT 1 FROM drill_prompts WHERE module_id = $1 AND prompt = $2 LIMIT 1`,
         [moduleId, prompt],

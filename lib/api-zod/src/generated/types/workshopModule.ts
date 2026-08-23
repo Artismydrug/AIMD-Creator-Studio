@@ -5,6 +5,7 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+import type { DrillPromptDetail } from './drillPromptDetail';
 
 export interface WorkshopModule {
   id: number;
@@ -17,4 +18,6 @@ export interface WorkshopModule {
   order: number;
   durationMinutes: number;
   isCompleted?: boolean;
+  /** Practice prompts published by the assigned instructor for this module. */
+  drills?: DrillPromptDetail[];
 }

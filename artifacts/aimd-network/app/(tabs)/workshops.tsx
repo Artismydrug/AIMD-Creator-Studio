@@ -364,8 +364,8 @@ export default function WorkshopsScreen() {
 
             <View style={s.submissionHub} testID="assignment-hub">
               <Text style={s.submissionHubEyebrow}>Assignment Submission</Text>
-              <Text style={s.submissionHubTitle}>Record and submit footage</Text>
-              <Text style={s.submissionHubBody}>Select a module, record a short clip live in the app, and place it in the instructor review queue.</Text>
+              <Text style={s.submissionHubTitle}>Submit a 30-second practice drill</Text>
+              <Text style={s.submissionHubBody}>Select an official drill, record one focused fake-skin or station-practice clip live in the app, and receive a master-instructor video breakdown and critique.</Text>
               <View style={s.selector}>
                 {workshopDetail?.modules.map((module) => (
                   <TouchableOpacity

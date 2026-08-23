@@ -21,6 +21,11 @@ export type WorkshopLesson = {
   videoUrl?: string | null;
   durationMinutes?: number | null;
   isCompleted?: boolean;
+  drills?: Array<{
+    id: number;
+    prompt: string;
+    maxDurationSeconds: number;
+  }>;
 };
 
 type Props = {
@@ -149,6 +154,16 @@ export default function WorkshopLessonPlayer({
           gap: 8,
         },
         secondaryText: { color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 13 },
+        drill: {
+          flexDirection: 'row',
+          alignItems: 'flex-start',
+          gap: 9,
+          paddingTop: 9,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+        },
+        drillText: { flex: 1, color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 12, lineHeight: 18 },
+        drillTime: { color: colors.electricMagenta, fontFamily: 'DMSans_700Bold', fontSize: 11 },
       }),
     [colors, insets],
   );
@@ -196,8 +211,15 @@ export default function WorkshopLessonPlayer({
             <View style={style.note}>
               <Text style={style.noteTitle}>Practice checkpoint</Text>
               <Text style={style.noteBody}>
-                Watch the demonstration, make a study note, then submit a short piece of practice footage when you are ready for instructor feedback.
+                Record one focused practice clip (30 seconds maximum) after the lesson. Your submission enters the master-instructor review queue for a video breakdown and critique.
               </Text>
+              {(lesson.drills ?? []).map((drill) => (
+                <View key={drill.id} style={style.drill}>
+                  <Feather name="target" size={15} color={colors.cyan} />
+                  <Text style={style.drillText}>{drill.prompt}</Text>
+                  <Text style={style.drillTime}>≤{drill.maxDurationSeconds}s</Text>
+                </View>
+              ))}
             </View>
             {lesson.videoUrl ? (
               <TouchableOpacity

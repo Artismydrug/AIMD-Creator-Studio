@@ -402,7 +402,14 @@ export const GetWorkshopResponse = zod.object({
   "videoUrl": zod.string().nullish(),
   "order": zod.int(),
   "durationMinutes": zod.int(),
-  "isCompleted": zod.boolean().optional()
+  "isCompleted": zod.boolean().optional(),
+  "drills": zod.array(zod.object({
+  "id": zod.int(),
+  "moduleId": zod.int(),
+  "prompt": zod.string(),
+  "maxDurationSeconds": zod.int(),
+  "createdAt": zod.coerce.date()
+})).optional().describe('Practice prompts published by the assigned instructor for this module.')
 })),
   "createdAt": zod.coerce.date()
 })

@@ -1,11 +1,12 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import {
   db,
   workshopsTable,
   workshopModulesTable,
   enrollmentsTable,
   completedModulesTable,
+  drillPromptsTable,
   workshopInstructorsTable,
   instructorProfilesTable,
 } from "@workspace/db";
@@ -186,7 +187,23 @@ router.get("/workshops/:id", async (req, res): Promise<void> => {
   // the client never receives later module metadata or media URLs to unlock
   // through a UI-only check.
   const readableModules = hasFullAccess || requiredTier === "free" ? modules : modules.slice(0, 1);
-  const modulesWithStatus = readableModules.map((m) => ({ ...m, isCompleted: completedSet.has(m.id) }));
+  const drills = readableModules.length > 0
+    ? await db
+        .select()
+        .from(drillPromptsTable)
+        .where(inArray(drillPromptsTable.moduleId, readableModules.map((module) => module.id)))
+    : [];
+  const drillsByModule = new Map<number, typeof drills>();
+  for (const drill of drills) {
+    const current = drillsByModule.get(drill.moduleId) ?? [];
+    current.push(drill);
+    drillsByModule.set(drill.moduleId, current);
+  }
+  const modulesWithStatus = readableModules.map((m) => ({
+    ...m,
+    isCompleted: completedSet.has(m.id),
+    drills: drillsByModule.get(m.id) ?? [],
+  }));
 
   res.json(
     GetWorkshopResponse.parse(

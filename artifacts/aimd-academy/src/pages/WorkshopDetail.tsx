@@ -230,7 +230,18 @@ export default function WorkshopDetail() {
                 {activeModule.description && <p className="text-muted-foreground leading-relaxed">{activeModule.description}</p>}
                 <div className="border border-border bg-muted/30 p-4">
                   <p className="font-mono text-xs uppercase text-primary mb-2">Practice checkpoint</p>
-                  <p className="text-sm text-muted-foreground">Watch the demonstration, make a study note, then record a concise assignment for instructor feedback.</p>
+                  <p className="text-sm text-muted-foreground">Choose a published drill, then submit one focused 30-second fake-skin or station-practice clip for a master-instructor video breakdown and critique.</p>
+                  {(activeModule.drills?.length ?? 0) > 0 && (
+                    <div className="mt-4 space-y-3">
+                      {activeModule.drills?.map((drill: any) => (
+                        <div key={drill.id} className="flex items-start gap-3 border-t border-border pt-3">
+                          <span className="font-mono text-[10px] uppercase text-cyan-500 shrink-0 pt-0.5">Drill</span>
+                          <p className="flex-1 text-sm text-muted-foreground leading-relaxed">{drill.prompt}</p>
+                          <span className="font-mono text-xs text-primary whitespace-nowrap">≤{drill.maxDurationSeconds}s</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {activeModule.videoUrl && workshop.isEnrolled && !activeModule.isCompleted && (
                   <Button

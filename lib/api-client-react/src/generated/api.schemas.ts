@@ -272,6 +272,14 @@ export interface Workshop {
   createdAt: string;
 }
 
+export interface DrillPromptDetail {
+  id: number;
+  moduleId: number;
+  prompt: string;
+  maxDurationSeconds: number;
+  createdAt: string;
+}
+
 export interface WorkshopModule {
   id: number;
   workshopId: number;
@@ -283,6 +291,8 @@ export interface WorkshopModule {
   order: number;
   durationMinutes: number;
   isCompleted?: boolean;
+  /** Practice prompts published by the assigned instructor for this module. */
+  drills?: DrillPromptDetail[];
 }
 
 export type WorkshopDetailTier = typeof WorkshopDetailTier[keyof typeof WorkshopDetailTier];
@@ -1305,14 +1315,6 @@ export interface DrillPromptInput {
      * @maximum 30
      */
   maxDurationSeconds?: number;
-}
-
-export interface DrillPromptDetail {
-  id: number;
-  moduleId: number;
-  prompt: string;
-  maxDurationSeconds: number;
-  createdAt: string;
 }
 
 export type AssignmentReviewItemStatus = typeof AssignmentReviewItemStatus[keyof typeof AssignmentReviewItemStatus];
