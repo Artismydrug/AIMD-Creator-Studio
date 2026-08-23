@@ -28,6 +28,7 @@
           "origin": "https://replit.com/"
         }
       ],
+      "@clerk/expo",
       "expo-font",
       "expo-web-browser",
       "expo-video",

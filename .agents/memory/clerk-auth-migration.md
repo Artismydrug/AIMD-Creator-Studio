@@ -17,6 +17,13 @@ Declared in `artifacts/api-server/src/middlewares/clerkAuth.ts`. Routes use `req
 - Web (aimd-academy): Clerk cookie session. Never add getToken() or Authorization: Bearer to browser API calls.
 - Mobile (aimd-network): No cookie jar. setAuthTokenGetter(() => getToken()) wired in (tabs)/_layout.tsx via useAuth().getToken from @clerk/expo.
 
+## Mobile native build configuration
+Explicitly register `@clerk/expo` as an Expo config plugin when shipping an iOS build, and keep it on a release compatible with the app's Expo SDK.
+
+**Why:** JavaScript-level autolinking alone can leave the Clerk pod absent from the generated CocoaPods target graph while React Native still tries to attach Clerk’s Swift Package dependencies, causing an iOS publish-time CocoaPods failure.
+
+**How to apply:** After a Clerk Expo upgrade or native build failure, verify the plugin loads during the Expo workflow and rerun the production bundles before retrying the remote iOS build.
+
 ## Programmatic test identity resolution
 Always resolve the active Clerk session's local user before changing roles or tiers in an authenticated test.
 
