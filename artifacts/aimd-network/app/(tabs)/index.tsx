@@ -269,6 +269,14 @@ export default function ProgressScreen() {
       color: colors.foreground,
       letterSpacing: -0.5,
     },
+    tagline: {
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 10,
+      color: colors.sunsetCoral,
+      letterSpacing: 1.8,
+      textTransform: 'uppercase',
+      marginTop: 2,
+    },
     feedBtn: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -744,11 +752,14 @@ export default function ProgressScreen() {
   return (
     <View style={s.container} testID="progress-screen">
       <View style={s.header}>
-        <Text style={s.title}>Journey</Text>
+        <View>
+          <Text style={s.title}>Journey</Text>
+          <Text style={s.tagline}>Discipline Eats Talent</Text>
+        </View>
         <TouchableOpacity style={s.feedBtn} onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           router.push('/feed');
-        }}>
+        }} testID="dashboard-feed-button">
           <Feather name="image" size={14} color={colors.primaryForeground} />
           <Text style={s.feedBtnText}>Feed</Text>
         </TouchableOpacity>

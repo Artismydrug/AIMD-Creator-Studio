@@ -99,7 +99,8 @@ export default function SignUpScreen() {
   ) {
     return (
       <View style={[s.container, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 16 }]}>
-        <Text style={s.title}>AIMD</Text>
+        <Text style={s.title}>Creator Studio</Text>
+        <Text style={s.appSubtitle}>by AIMD</Text>
         <Text style={s.subtitle}>Check your email for a code</Text>
 
         <TextInput
@@ -142,8 +143,10 @@ export default function SignUpScreen() {
         contentContainerStyle={[s.container, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 16 }]}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={s.title}>AIMD</Text>
-        <Text style={s.subtitle}>Join the creator network — free forever</Text>
+        <Text style={s.title}>Creator Studio</Text>
+        <Text style={s.appSubtitle}>by AIMD</Text>
+        <Text style={s.tagline}>Discipline Eats Talent</Text>
+        <Text style={s.subtitle}>Start free — no credit card required</Text>
 
         {/* OAuth buttons */}
         <Pressable
@@ -246,11 +249,28 @@ const s = StyleSheet.create({
   },
   title: {
     fontFamily: 'DMSans_700Bold',
-    fontSize: 36,
+    fontSize: 32,
     color: '#e8e3d5',
-    letterSpacing: 6,
+    letterSpacing: 4,
     textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: 2,
+  },
+  appSubtitle: {
+    fontFamily: 'DMSans_400Regular',
+    fontSize: 13,
+    color: '#555',
+    textAlign: 'center',
+    letterSpacing: 2,
+    marginBottom: 8,
+  },
+  tagline: {
+    fontFamily: 'DMSans_700Bold',
+    fontSize: 15,
+    color: '#b8532d',
+    textAlign: 'center',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 8,
   },
   subtitle: {
     fontFamily: 'DMSans_400Regular',

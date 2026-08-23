@@ -40,6 +40,21 @@ stripeSync.syncBackfill({ object: 'all' } as any)
 
 **Why:** The TypeScript types may not expose `object: "all"` but the JS switch case requires the string `"all"` to trigger the full sync.
 
+## Managed Payments constraints on Checkout
+
+This Stripe account has Managed Payments enabled. `checkout.sessions.create` rejects `payment_method_types` entirely, and every product sold (including ad-hoc `price_data.product_data`) must carry a `tax_code` (memberships use `txcd_10000000`, electronically supplied services).
+
+**How to apply:** Never pass `payment_method_types`; set `tax_code` on all Stripe products and inline product_data, or session creation fails at runtime.
+
+## Product renames evade sync and search
+
+The incremental `syncBackfill` cursor is creation-based, so product RENAMES don't propagate to the DB mirror until a product.updated webhook lands. Separately, `stripe.products.search` matches loosely and its index lags — it can return "X Annual" when queried for "X". List products and match names exactly instead of trusting search.
+
+## Web entitlement principles
+
+**Why:** delayed/reordered Stripe events can otherwise re-grant cancelled tiers or clobber concurrent upgrades.
+**How to apply:** trust only signature-verified webhooks or server-retrieved sessions; verify the subscription is still active before granting; make tier writes rank-conditional in SQL (never downgrade on grant); reuse one Stripe customer per user so cancellation reconciles across all their subscriptions.
+
 ## Catalog seeding must run in the managed workflow
 
 Stripe catalog writes through the Replit connector do not work from a plain shell process because connector identity is only injected into the managed workflow environment.

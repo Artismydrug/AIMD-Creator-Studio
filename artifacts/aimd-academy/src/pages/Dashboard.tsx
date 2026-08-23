@@ -17,8 +17,9 @@ export default function Dashboard() {
     <div className="p-6 md:p-10 space-y-12">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border">
         <div>
-          <h1 className="text-4xl md:text-6xl font-black font-display uppercase tracking-tight">Creator Hub</h1>
-          <p className="text-muted-foreground font-mono mt-2">Welcome back to the grind.</p>
+          <h1 className="text-4xl md:text-6xl font-black font-display uppercase tracking-tight">Creator Studio</h1>
+          <p className="text-muted-foreground font-mono mt-2 font-bold text-primary">Discipline Eats Talent.</p>
+          <p className="text-muted-foreground font-mono mt-1 text-xs uppercase tracking-wider">Welcome back to the grind.</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="px-4 py-2 border border-primary/30 bg-primary/5 flex items-center gap-3">

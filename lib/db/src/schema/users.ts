@@ -30,6 +30,9 @@ export const usersTable = pgTable("users", {
   points: integer("points").notNull().default(0),
   // Creator's IANA timezone saved from first check-in; used for local-date calculations
   timezone: text("timezone"),
+  // Stripe: set when a web subscription checkout completes; used to reconcile
+  // tier changes from subscription lifecycle webhooks
+  stripeCustomerId: text("stripe_customer_id").unique(),
 });
 
 // Ledger of every point award — auditable history behind users.points

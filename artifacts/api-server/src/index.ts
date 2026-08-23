@@ -4,6 +4,7 @@ import { ensureEventTables } from './lib/ensureEventTables';
 import { ensureAuthSchema } from './lib/ensureAuthSchema';
 import { ensureChallengeTables } from './lib/ensureChallengeTables';
 import { ensureUserTierCompatibility } from './lib/ensureUserTierCompatibility';
+import { ensureCreatorStudioSchema } from './lib/ensureCreatorStudioSchema';
 import app from "./app";
 import { logger } from "./lib/logger";
 
@@ -74,6 +75,11 @@ logger.info('Event tables verified');
 // Ensure challenge_submissions, challenge_votes, and badges.event_code exist.
 await ensureChallengeTables();
 logger.info('Challenge tables verified');
+
+// Ensure users.stripe_customer_id plus the instructor/assignment extension
+// tables exist before any route references them (idempotent).
+await ensureCreatorStudioSchema();
+logger.info('Creator Studio schema verified');
 
 // Stripe init is non-fatal — the server must start even if Stripe is unavailable
 try {

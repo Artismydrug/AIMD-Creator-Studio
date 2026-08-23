@@ -104,7 +104,7 @@ router.post("/habits", async (req, res): Promise<void> => {
       res.status(403).json({
         error: "habit_limit",
         limit: FREE_HABIT_LIMIT,
-        message: `Free tier is limited to ${FREE_HABIT_LIMIT} habits. Upgrade to Academy Pass for unlimited tracking.`,
+        message: `Free tier is limited to ${FREE_HABIT_LIMIT} habits. Upgrade to Dedicated Artist for unlimited tracking.`,
       });
       return;
     }

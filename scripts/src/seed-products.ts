@@ -1,8 +1,11 @@
 /**
- * AIMD Academy — Stripe product seeder
+ * AIMD Creator Studio — Stripe product seeder
  *
- * Creates the Workshop Academy ($39/mo) and Pro Studio ($99/mo) subscription
- * products in Stripe. Idempotent — safe to run multiple times.
+ * Idempotently creates subscription products for:
+ *   - Dedicated Artist     $39/mo monthly  (legacy name: Workshop Academy)
+ *   - Dedicated Artist Annual $399/yr
+ *   - Professional Artist  $99/mo monthly  (legacy name: Pro Studio)
+ *   - Professional Artist Annual $999/yr   (NEW: aimd_pro_annual)
  *
  * Run with:
  *   pnpm --filter @workspace/scripts exec tsx src/seed-products.ts
@@ -46,45 +49,132 @@ async function getUncachableStripeClient(): Promise<Stripe> {
   return new Stripe(secretKey);
 }
 
-const PRODUCTS = [
+/**
+ * Each entry describes a product + one price.
+ * Rename fields: if oldName is set and a product with that name exists and no
+ * product with `name` exists, the old product is used and its display name is
+ * updated. This preserves existing Stripe product IDs.
+ */
+type ProductSpec = {
+  name: string;
+  oldName: string | null;
+  description: string;
+  unitAmount: number;
+  interval: 'month' | 'year';
+  metadata: Record<string, string>;
+};
+
+// Managed Payments (enabled on this Stripe account) requires every product to
+// carry a tax code. Memberships are electronically supplied services.
+const MEMBERSHIP_TAX_CODE = 'txcd_10000000';
+
+const PRODUCTS: ProductSpec[] = [
+  // ── Dedicated Artist (formerly Workshop Academy) ─────────────────────────
   {
-    name: 'Workshop Academy',
-    description: 'Full access to AIMD\'s structured workshop and apprenticeship curriculum.',
-    unitAmount: 3900,    // $39.00
+    name: 'Dedicated Artist',
+    oldName: 'Workshop Academy',          // preserve existing Stripe product
+    description: 'Full access to AIMD\'s Workshops & Masterclasses curriculum.',
+    unitAmount: 3900,                     // $39.00/month
+    interval: 'month',
     metadata: { tier: 'academy', plan_id: 'plan_academy' },
   },
   {
-    name: 'Pro Studio',
-    description: 'The complete AIMD career pipeline for serious creators going professional.',
-    unitAmount: 9900,    // $99.00
+    name: 'Dedicated Artist Annual',
+    oldName: 'Academy Pass Annual',       // preserve existing Stripe product
+    description: 'Dedicated Artist plan billed annually — save vs monthly.',
+    unitAmount: 39900,                    // $399.00/year
+    interval: 'year',
+    metadata: { tier: 'academy', plan_id: 'plan_academy', billing: 'annual' },
+  },
+  // ── Professional Artist (formerly Pro Studio) ─────────────────────────────
+  {
+    name: 'Professional Artist',
+    oldName: 'Pro Studio',                // preserve existing Stripe product
+    description: 'The complete AIMD career pipeline for serious creators.',
+    unitAmount: 9900,                     // $99.00/month
+    interval: 'month',
     metadata: { tier: 'pro', plan_id: 'plan_pro' },
+  },
+  {
+    name: 'Professional Artist Annual',
+    oldName: null,                        // brand-new product
+    description: 'Professional Artist plan billed annually — save vs monthly.',
+    unitAmount: 99900,                    // $999.00/year
+    interval: 'year',
+    metadata: { tier: 'pro', plan_id: 'plan_pro', billing: 'annual', lookup_key: 'aimd_pro_annual' },
   },
 ];
 
 async function seedProducts() {
   const stripe = await getUncachableStripeClient();
 
-  for (const product of PRODUCTS) {
-    // Check if already exists
-    const existing = await stripe.products.search({
-      query: `name:'${product.name}' AND active:'true'`,
-    });
+  // Stripe search matches loosely (and its index lags), so never trust
+  // search results directly — list all active products once and match names
+  // exactly.
+  const allProducts: Stripe.Product[] = [];
+  for await (const p of stripe.products.list({ active: true, limit: 100 })) {
+    allProducts.push(p);
+  }
 
-    if (existing.data.length > 0) {
-      console.log(`✓ "${product.name}" already exists (${existing.data[0].id})`);
+  for (const product of PRODUCTS) {
+    // 1. Look for existing product by canonical name (exact match)
+    let existing = allProducts.find((p) => p.name === product.name);
+
+    // 2. Fallback: look by legacy name (idempotent rename path)
+    if (!existing && product.oldName) {
+      const legacyExact = allProducts.find((p) => p.name === product.oldName);
+      if (legacyExact) {
+        existing = legacyExact;
+        // Rename the product to the new canonical name
+        await stripe.products.update(existing.id, {
+          name: product.name,
+          metadata: product.metadata,
+          tax_code: MEMBERSHIP_TAX_CODE,
+        });
+        console.log(`✓ Renamed "${product.oldName}" → "${product.name}" (${existing.id})`);
+      }
+    }
+
+    if (existing) {
+      console.log(`✓ "${product.name}" already exists (${existing.id})`);
+
+      // Managed Payments requires a tax code on every product sold.
+      if (existing.tax_code !== MEMBERSHIP_TAX_CODE) {
+        await stripe.products.update(existing.id, { tax_code: MEMBERSHIP_TAX_CODE });
+        console.log(`  + Set tax code ${MEMBERSHIP_TAX_CODE}`);
+      }
 
       // Show its prices
-      const prices = await stripe.prices.list({ product: existing.data[0].id, active: true });
+      const prices = await stripe.prices.list({ product: existing.id, active: true });
       for (const p of prices.data) {
         console.log(`  price: ${p.id} — $${(p.unit_amount ?? 0) / 100}/${p.recurring?.interval}`);
+      }
+
+      // Ensure the correct price exists for this product/interval pair
+      const hasCorrectPrice = prices.data.some(
+        (p) =>
+          p.unit_amount === product.unitAmount &&
+          p.recurring?.interval === product.interval,
+      );
+      if (!hasCorrectPrice) {
+        const price = await stripe.prices.create({
+          product: existing.id,
+          unit_amount: product.unitAmount,
+          currency: 'usd',
+          recurring: { interval: product.interval },
+          metadata: product.metadata,
+        });
+        console.log(`  + Added missing price: ${price.id} — $${product.unitAmount / 100}/${product.interval}`);
       }
       continue;
     }
 
+    // 3. Create brand-new product + price
     const created = await stripe.products.create({
       name: product.name,
       description: product.description,
       metadata: product.metadata,
+      tax_code: MEMBERSHIP_TAX_CODE,
     });
     console.log(`✓ Created product: "${created.name}" (${created.id})`);
 
@@ -92,9 +182,10 @@ async function seedProducts() {
       product: created.id,
       unit_amount: product.unitAmount,
       currency: 'usd',
-      recurring: { interval: 'month' },
+      recurring: { interval: product.interval },
+      metadata: product.metadata,
     });
-    console.log(`  price: ${price.id} — $${product.unitAmount / 100}/month`);
+    console.log(`  price: ${price.id} — $${product.unitAmount / 100}/${product.interval}`);
   }
 
   console.log('\n✅ Done. Webhooks will sync these products to your database automatically.');

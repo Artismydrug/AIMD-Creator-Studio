@@ -20,9 +20,9 @@ import { MediaUpload } from '@/components/MediaUpload';
 
 
 const TIER_LABELS: Record<string, { label: string; color: string }> = {
-  free:    { label: 'Studio Starter',    color: 'text-muted-foreground border-border' },
-  academy: { label: 'Academy Pass',      color: 'text-primary border-emerald-500/50' },
-  pro:     { label: 'Pro / Career',      color: 'text-violet-400 border-violet-500/50' },
+  free:    { label: 'Discovering Artist',   color: 'text-muted-foreground border-border' },
+  academy: { label: 'Dedicated Artist',     color: 'text-primary border-emerald-500/50' },
+  pro:     { label: 'Professional Artist',  color: 'text-violet-400 border-violet-500/50' },
 };
 
 const DISCIPLINE_COLORS: Record<string, string> = {

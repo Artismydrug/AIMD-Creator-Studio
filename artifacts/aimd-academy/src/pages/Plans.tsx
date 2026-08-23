@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useListPlans, useCreateCheckoutSession } from '@workspace/api-client-react';
 import { useGetCurrentUser } from '@workspace/api-client-react';
 import { Check, HeartHandshake, Lock, Sparkles, Zap } from 'lucide-react';
@@ -8,6 +9,7 @@ import { Link } from 'wouter';
 // ─── Tier rank helper ─────────────────────────────────────────────────────────
 
 const TIER_RANK: Record<string, number> = { free: 0, academy: 1, pro: 2 };
+const TIER_DISPLAY_NAMES: Record<string, string> = { free: 'Discovering Artist', academy: 'Dedicated Artist', pro: 'Professional Artist' };
 
 // ─── Plan card ────────────────────────────────────────────────────────────────
 
@@ -29,25 +31,24 @@ function PlanCard({
   const planRank      = TIER_RANK[plan.tier]  ?? 0;
   const isDowngrade   = planRank < userRank;
 
-  const displayPrice = annual && plan.priceAnnual
-    ? Math.round(plan.priceAnnual / 12)
-    : plan.priceMonthly;
+  // Enforce requested prices locally based on tier
+  const localPriceMonthly = plan.tier === 'academy' ? 39 : plan.tier === 'pro' ? 99 : 0;
+  const localPriceAnnual = plan.tier === 'academy' ? 399 : plan.tier === 'pro' ? 999 : 0;
 
-  const annualSavings = plan.priceAnnual
-    ? plan.priceMonthly * 12 - plan.priceAnnual
+  const displayPrice = annual && localPriceAnnual
+    ? Math.round(localPriceAnnual / 12)
+    : localPriceMonthly;
+
+  const annualSavings = localPriceAnnual
+    ? localPriceMonthly * 12 - localPriceAnnual
     : 0;
 
   return (
     <div className={`relative flex flex-col border transition-all duration-200 ${
       plan.featured
-        ? 'border-primary/50 bg-muted/40 shadow-[0_0_40px_rgba(16,185,129,0.08)]'
-        : 'border-border bg-muted/40/50'
+        ? 'border-primary/50 bg-muted shadow-[0_0_40px_rgba(16,185,129,0.08)]'
+        : 'border-border bg-background'
     }`}>
-      {/* Top accent line */}
-      {plan.featured && (
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500 to-transparent" />
-      )}
-
       {/* Most Popular badge */}
       {plan.featured && (
         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -62,7 +63,7 @@ function PlanCard({
         <div className="mb-6">
           <div className="flex items-center justify-between gap-2 mb-2">
             <h3 className="font-display font-black text-xl uppercase tracking-tight text-white">
-              {plan.name}
+              {TIER_DISPLAY_NAMES[plan.tier] ?? plan.name}
             </h3>
             {isCurrentPlan && (
               <span className="font-mono text-[10px] uppercase tracking-widest text-primary border border-primary/30 bg-primary/10 px-2 py-0.5">
@@ -77,10 +78,10 @@ function PlanCard({
         <div className="mb-6">
           <div className="flex items-end gap-2">
             <span className="text-5xl font-black font-display leading-none text-white">
-              ${displayPrice}
+              ${annual && localPriceAnnual ? localPriceAnnual : localPriceMonthly}
             </span>
             <span className="text-muted-foreground font-mono text-sm pb-1.5">
-              {plan.priceMonthly === 0 ? 'forever' : annual && plan.priceAnnual ? '/mo, billed annually' : '/mo'}
+              {localPriceMonthly === 0 ? 'forever' : annual && localPriceAnnual ? '/year' : '/mo'}
             </span>
           </div>
           {annual && annualSavings > 0 && (
@@ -105,13 +106,13 @@ function PlanCard({
           <div className="flex items-center gap-2 mb-6 px-3 py-2 bg-muted border border-border">
             <Lock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
             <span className="font-mono text-xs text-muted-foreground">
-              3 habit limit · Module 1 only
+              Habits limit · Module 1 preview only
             </span>
           </div>
         )}
 
         {/* CTA */}
-        {plan.priceMonthly === 0 ? (
+        {localPriceMonthly === 0 ? (
           isCurrentPlan ? (
             <Button disabled className="w-full h-12 rounded-none font-mono font-bold uppercase tracking-wider opacity-50">
               Current Plan
@@ -139,7 +140,7 @@ function PlanCard({
           </Button>
         ) : (
           <Button
-            onClick={() => onSubscribe(plan.id, annual && plan.priceAnnual ? 'annual' : 'monthly')}
+            onClick={() => onSubscribe(plan.id, annual && localPriceAnnual ? 'annual' : 'monthly')}
             disabled={isPending}
             className={`w-full h-12 rounded-none font-mono font-bold uppercase tracking-wider ${
               plan.featured
@@ -178,7 +179,7 @@ function SponsorSection() {
   }
 
   return (
-    <section className="border border-border bg-muted/40/50 p-8 md:p-10">
+    <section className="border border-border bg-muted p-8 md:p-10">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center gap-3 mb-2">
           <HeartHandshake className="w-6 h-6 text-primary" />
@@ -190,7 +191,7 @@ function SponsorSection() {
           Sponsor a Creator
         </h2>
         <p className="text-muted-foreground text-sm leading-relaxed mb-8 max-w-xl">
-          Gift an Academy Pass or Pro / Career membership to a deserving Free-tier artist. 100% goes directly to the creator's access.
+          Gift a Dedicated Artist or Professional Artist membership to a deserving Discovering Artist. 100% goes directly to the creator's access.
         </p>
 
         {/* Optional fields */}
@@ -224,14 +225,14 @@ function SponsorSection() {
           {[
             {
               amount: '39' as const,
-              label: 'Academy Pass',
+              label: 'Dedicated Artist',
               desc: 'Unlimited habits, full workshop access, certification path — 1 month.',
               color: 'border-primary/30 hover:border-primary/50',
             },
             {
               amount: '99' as const,
-              label: 'Pro / Career',
-              desc: 'Everything in Academy + Studio Ready badge, directory listing, placement priority — 1 month.',
+              label: 'Professional Artist',
+              desc: 'Everything in Dedicated + Studio Ready badge, directory listing, placement priority — 1 month.',
               color: 'border-violet-500/30 hover:border-violet-500/60',
             },
           ].map(({ amount, label, desc, color }) => (
@@ -265,6 +266,33 @@ export default function Plans() {
   const { data: user } = useGetCurrentUser();
   const checkout = useCreateCheckoutSession();
   const [annual, setAnnual] = useState(false);
+  const queryClient = useQueryClient();
+  const [upgradeStatus, setUpgradeStatus] = useState<'verifying' | 'done' | 'failed' | null>(null);
+
+  // Returning from a successful Stripe Checkout: verify the session with the
+  // server (which confirms payment with Stripe) so the new tier applies
+  // immediately, even if the webhook hasn't landed yet.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+    if (params.get('success') !== '1' || !sessionId) return;
+
+    setUpgradeStatus('verifying');
+    fetch('/api/payments/verify-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId }),
+    })
+      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+      .then(() => {
+        setUpgradeStatus('done');
+        queryClient.invalidateQueries();
+      })
+      .catch(() => setUpgradeStatus('failed'));
+
+    // Clean the query params so refreshes don't re-verify.
+    window.history.replaceState({}, '', window.location.pathname);
+  }, [queryClient]);
 
   const handleSubscribe = (planId: string, billing: 'monthly' | 'annual') => {
     checkout.mutate(
@@ -283,6 +311,23 @@ export default function Plans() {
     <div className="min-h-screen bg-background text-white">
       <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-16 py-16">
 
+        {/* Post-checkout status */}
+        {upgradeStatus === 'verifying' && (
+          <div data-testid="upgrade-verifying" className="max-w-2xl mx-auto p-4 border border-border bg-muted/40 font-mono text-sm text-muted-foreground text-center animate-pulse">
+            Confirming your payment with Stripe…
+          </div>
+        )}
+        {upgradeStatus === 'done' && (
+          <div data-testid="upgrade-success" className="max-w-2xl mx-auto p-4 border border-primary/40 bg-primary/10 font-mono text-sm text-primary text-center">
+            Payment confirmed — your membership is now active. Welcome to the next level.
+          </div>
+        )}
+        {upgradeStatus === 'failed' && (
+          <div data-testid="upgrade-failed" className="max-w-2xl mx-auto p-4 border border-destructive/40 bg-destructive/10 font-mono text-sm text-destructive text-center">
+            We couldn't confirm the payment yet. If you completed checkout, your membership will activate automatically within a few minutes.
+          </div>
+        )}
+
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/30 text-primary font-mono text-[11px] uppercase tracking-widest mb-2">
@@ -293,7 +338,7 @@ export default function Plans() {
             Invest in the Grind
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Select your tier. Access the academy. Build your career.
+            Select your tier. Workshops & Masterclasses. Build your career.
           </p>
 
           {/* Billing toggle */}
@@ -314,7 +359,7 @@ export default function Plans() {
             >
               Annual
               <span className="ml-1.5 text-[10px] bg-primary/15 text-primary border border-primary/30 px-1 py-0.5">
-                Save $69
+                Save up to $189
               </span>
             </button>
           </div>
@@ -338,7 +383,7 @@ export default function Plans() {
         <div className="text-center text-xs font-mono text-muted-foreground space-y-1">
           <p>All plans include access to the AIMD community. Cancel anytime.</p>
           <p>
-            Academy Pass annual billing: $399/year (equivalent to ~$33/mo).{' '}
+            Dedicated Artist annual billing: $399/year (equivalent to ~$33/mo).{' '}
             <Link href="/mission" className="text-primary underline">Learn about our mission →</Link>
           </p>
         </div>

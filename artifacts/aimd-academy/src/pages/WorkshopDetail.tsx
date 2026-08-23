@@ -32,7 +32,7 @@ export default function WorkshopDetail() {
   const handleEnroll = () => {
     // Free tier can only enroll if workshop is "free" tier
     if (isFree && workshop.tier !== 'free') {
-      toast({ title: 'Academy Pass Required', description: 'Full workshop access requires an Academy Pass or above.', variant: 'destructive' });
+      toast({ title: 'Upgrade Required', description: 'Full workshop access requires a Dedicated Artist plan or above.', variant: 'destructive' });
       return;
     }
     enroll.mutate({ id: Number(id) }, {
@@ -64,7 +64,7 @@ export default function WorkshopDetail() {
         <div className="relative z-10 p-6 md:p-10 w-full max-w-5xl">
           <Link href="/workshops">
             <Button variant="ghost" className="mb-6 rounded-none font-mono uppercase text-xs pl-0 hover:bg-transparent hover:text-primary">
-              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Academy
+              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Workshops
             </Button>
           </Link>
           <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -99,14 +99,14 @@ export default function WorkshopDetail() {
             <div className="border border-amber-500/30 bg-amber-500/5 p-5 flex items-start gap-4">
               <Lock className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="font-bold text-white mb-1">Module 1 Preview — Academy Pass Required</p>
+                <p className="font-bold text-white mb-1">Module 1 Preview — Dedicated Artist Required</p>
                 <p className="text-sm text-muted-foreground mb-3">
-                  Free members can preview Module 1 of every course. Upgrade to Academy Pass for full access to all modules, assignment submission, and instructor feedback.
+                  Discovering Artists can preview Module 1 of every course. Upgrade to Dedicated Artist for full access to all modules, drills, assignment submission, and direct verified instructor feedback.
                 </p>
                 <Button asChild className="rounded-none bg-primary hover:bg-primary/90 text-zinc-950 font-bold text-xs uppercase h-8 px-4">
                   <Link href="/plans">
                     <Sparkles className="w-3 h-3 mr-1.5" />
-                    Upgrade to Academy Pass →
+                    Upgrade to Dedicated Artist →
                   </Link>
                 </Button>
               </div>
@@ -166,7 +166,7 @@ export default function WorkshopDetail() {
                       {isLockedForFree ? (
                         <Link href="/plans">
                           <span className="inline-flex items-center gap-1.5 font-mono text-xs text-amber-400 hover:text-amber-300 transition-colors">
-                            <Lock className="w-3 h-3" /> Academy Pass required · Upgrade →
+                            <Lock className="w-3 h-3" /> Dedicated Artist required · Upgrade →
                           </span>
                         </Link>
                       ) : workshop.isEnrolled && !mod.isCompleted ? (
@@ -227,7 +227,7 @@ export default function WorkshopDetail() {
                       Preview Module 1
                     </Button>
                     <div className="border border-amber-500/20 bg-amber-500/5 p-4 text-center">
-                      <p className="font-mono text-xs text-amber-400 mb-3">Full access on Academy Pass ($39/mo)</p>
+                      <p className="font-mono text-xs text-amber-400 mb-3">Full access on Dedicated Artist ($39/mo)</p>
                       <Button asChild className="w-full rounded-none bg-muted hover:bg-zinc-700 text-white font-mono text-xs uppercase h-9">
                         <Link href="/plans">Upgrade Plan →</Link>
                       </Button>

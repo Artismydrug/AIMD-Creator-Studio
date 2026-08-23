@@ -100,6 +100,14 @@ export default function HabitsScreen() {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    tagline: {
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 11,
+      color: colors.sunsetCoral,
+      letterSpacing: 2,
+      textTransform: 'uppercase',
+      marginBottom: 10,
+    },
     statsRow: {
       flexDirection: 'row',
       gap: 12,
@@ -257,20 +265,22 @@ export default function HabitsScreen() {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             }}
             testID="add-habit-button"
+            accessibilityLabel="Add habit"
           >
             <Feather name="plus" size={20} color={colors.primaryForeground} />
           </TouchableOpacity>
         </View>
+        <Text style={s.tagline}>Discipline Eats Talent</Text>
         <View style={s.statsRow}>
-          <View style={s.statBox}>
+          <View style={s.statBox} testID="habits-streak-stat">
             <Text style={s.statNumber}>{summary?.currentStreakDays ?? 0}</Text>
             <Text style={s.statLabel}>Day Streak</Text>
           </View>
-          <View style={s.statBox}>
+          <View style={s.statBox} testID="habits-today-stat">
             <Text style={s.statNumber}>{todayCount}/{totalCount}</Text>
             <Text style={s.statLabel}>Done Today</Text>
           </View>
-          <View style={s.statBox}>
+          <View style={s.statBox} testID="habits-rate-stat">
             <Text style={s.statNumber}>{Math.round(summary?.completionRate ?? 0)}%</Text>
             <Text style={s.statLabel}>Rate</Text>
           </View>

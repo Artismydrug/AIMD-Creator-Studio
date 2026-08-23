@@ -32,13 +32,13 @@ const SLIDES = [
     body: 'Log your studio practice every day. Track streaks, build deep work habits, and stay accountable to your craft — whether you tattoo, paint, sculpt, or design.',
   },
   {
-    badge: 'ACADEMY & PLACEMENT',
+    badge: 'WORKSHOPS & MASTERCLASSES',
     icon: BookOpen,
     iconBg: 'bg-violet-50',
     iconColor: 'text-violet-500',
     accent: '#7C3AED',
     title: 'Learn & Grow',
-    body: 'Access live masterclasses, earn verifiable certifications, and land studio chair placements, guest spots, and mural commissions through the AIMD career pipeline.',
+    body: 'Access multi-medium curriculum with verified instructors, earn verifiable certifications, and land opportunities through the AIMD career pipeline.',
   },
   {
     badge: 'ART RIGHTS ENGINE',

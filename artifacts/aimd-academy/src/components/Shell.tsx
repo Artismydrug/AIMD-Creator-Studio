@@ -1,26 +1,8 @@
 import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import {
-  Award,
-  Briefcase,
-  Calendar,
-  Flame,
-  GraduationCap,
-  HeartHandshake,
-  ImagePlus,
-  MapPin,
-  Menu,
-  MessageSquare,
-  QrCode,
-  ShieldCheck,
-  Sparkles,
-  Timer,
-  User,
-  Users,
-  X,
-} from 'lucide-react';
+import { Award, Briefcase, Calendar, Flame, GraduationCap, HeartHandshake, ImagePlus, MapPin, Menu, MessageSquare, QrCode, ShieldCheck, Sparkles, Timer, User, Users, X, Video } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useGetCurrentUser } from '@workspace/api-client-react';
+import { useGetCurrentUser, useGetInstructorSelf } from '@workspace/api-client-react';
 import { useAuth, useClerk } from '@clerk/react';
 import { LogIn, LogOut } from 'lucide-react';
 
@@ -52,9 +34,9 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    heading: 'Academy & Education',
+    heading: 'Workshops & Masterclasses',
     items: [
-      { href: '/workshops',   label: 'Active Workshops',         icon: GraduationCap },
+      { href: '/workshops',   label: 'Workshops & Masterclasses',         icon: GraduationCap },
       { href: '/skill-tracks',label: 'Certifications & Badges',  icon: Award },
     ],
   },
@@ -184,21 +166,24 @@ function LogModal({
 function SidebarContent({
   location,
   user,
+  isInstructor,
   onNav,
 }: {
   location: string;
   user: { username?: string; avatarUrl?: string | null; tier?: string; studioReadyBadge?: boolean; isAdmin?: boolean } | undefined;
+  isInstructor?: boolean;
   onNav?: () => void;
 }) {
-  const navSections: NavSection[] = user?.isAdmin
-    ? [
-        ...NAV_SECTIONS,
-        {
-          heading: 'Admin',
-          items: [{ href: '/admin', label: 'Admin Dashboard', icon: ShieldCheck }],
-        },
-      ]
-    : NAV_SECTIONS;
+  let navSections = NAV_SECTIONS;
+  if (user?.isAdmin || isInstructor) {
+    navSections = [...navSections, {
+      heading: 'Workspace',
+      items: [
+        ...(isInstructor || user?.isAdmin ? [{ href: '/instructor', label: 'Instructor Workspace', icon: Video }] : []),
+        ...(user?.isAdmin ? [{ href: '/admin', label: 'Admin Dashboard', icon: ShieldCheck }] : []),
+      ],
+    }];
+  }
 
   return (
     <div className="flex flex-col h-full bg-zinc-950">
@@ -323,11 +308,13 @@ function MobileDrawer({
   onClose,
   location,
   user,
+  isInstructor,
 }: {
   open: boolean;
   onClose: () => void;
   location: string;
   user: Parameters<typeof SidebarContent>[0]['user'];
+  isInstructor: boolean;
 }) {
   return (
     <>
@@ -353,7 +340,7 @@ function MobileDrawer({
           <X className="w-5 h-5" />
         </button>
 
-        <SidebarContent location={location} user={user} onNav={onClose} />
+        <SidebarContent location={location} user={user} isInstructor={isInstructor} onNav={onClose} />
       </div>
     </>
   );
@@ -453,6 +440,8 @@ export function Shell({ children }: { children: ReactNode }) {
   const [logModalOpen, setLogModalOpen] = useState(false);
 
   const { data: user } = useGetCurrentUser();
+  const { data: instructorData } = useGetInstructorSelf({ query: { queryKey: ['getInstructorSelf'], retry: false } });
+  const isInstructor = !!instructorData || !!user?.isAdmin;
 
   // Landing page renders full-bleed, no chrome
   if (location === '/') {
@@ -470,6 +459,7 @@ export function Shell({ children }: { children: ReactNode }) {
         onClose={() => setDrawerOpen(false)}
         location={location}
         user={user}
+        isInstructor={isInstructor}
       />
 
       {/* ── Root layout ── */}
@@ -477,7 +467,7 @@ export function Shell({ children }: { children: ReactNode }) {
 
         {/* Desktop sidebar — hidden on mobile */}
         <aside className="hidden md:flex flex-col w-64 flex-shrink-0 sticky top-0 h-screen bg-sidebar border-r border-border overflow-hidden shadow-sm">
-          <SidebarContent location={location} user={user} />
+          <SidebarContent location={location} user={user} isInstructor={isInstructor} />
         </aside>
 
         {/* Main column */}

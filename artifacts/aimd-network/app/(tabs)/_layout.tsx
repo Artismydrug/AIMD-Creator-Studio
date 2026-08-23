@@ -45,7 +45,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="workshops"
         options={{
-          title: 'Mastery',
+          title: 'Workshops',
           tabBarIcon: ({ color, size }) => (
             <Feather name="play-circle" size={size} color={color} />
           ),

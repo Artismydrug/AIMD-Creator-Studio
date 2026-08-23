@@ -1,6 +1,14 @@
 import { Router, type IRouter } from "express";
-import { eq, desc, and } from "drizzle-orm";
-import { db, assignmentsTable, workshopsTable, workshopModulesTable, enrollmentsTable } from "@workspace/db";
+import { eq, desc, and, isNull } from "drizzle-orm";
+import {
+  db,
+  assignmentsTable,
+  workshopsTable,
+  workshopModulesTable,
+  enrollmentsTable,
+  assignmentExtensionsTable,
+  assignmentMediaUploadsTable,
+} from "@workspace/db";
 import {
   ListAssignmentsResponse,
   SubmitAssignmentBody,
@@ -9,11 +17,23 @@ import {
   GetAssignmentResponse,
 } from "@workspace/api-zod";
 import { requireTier } from "../middleware/requireTier";
-import { ObjectStorageService } from "../lib/objectStorage";
-import { ObjectPermission } from "../lib/objectAcl";
 
 const router: IRouter = Router();
-const objectStorageService = new ObjectStorageService();
+
+/** Prefix the client uses to reference a served private object. */
+const STORAGE_URL_PREFIX = "/api/storage";
+
+/**
+ * Normalize a client submissionUrl to the stored object_path form.
+ * Accepts `/api/storage/objects/...` and returns `/objects/...`; returns null
+ * if the URL is not a private served-object reference.
+ */
+function submissionUrlToObjectPath(submissionUrl: string): string | null {
+  if (submissionUrl.startsWith(`${STORAGE_URL_PREFIX}/objects/`)) {
+    return submissionUrl.slice(STORAGE_URL_PREFIX.length); // -> /objects/...
+  }
+  return null;
+}
 
 router.get("/assignments", async (req, res): Promise<void> => {
   if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
@@ -36,7 +56,7 @@ router.get("/assignments", async (req, res): Promise<void> => {
   res.json(ListAssignmentsResponse.parse(result));
 });
 
-// Assignment submission requires Academy Pass or above
+// Assignment submission requires the Dedicated Artist plan or above
 router.post("/assignments", requireTier("academy"), async (req, res): Promise<void> => {
   if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
   const userId = req.dbUser!.id;
@@ -44,6 +64,13 @@ router.post("/assignments", requireTier("academy"), async (req, res): Promise<vo
   const parsed = SubmitAssignmentBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  // A recorded, ffprobe-gated upload is REQUIRED. This is what enforces that
+  // the submission is an actual drill video that passed the 30-second check.
+  if (!parsed.data.submissionUrl) {
+    res.status(400).json({ error: "Assignment footage is required" });
     return;
   }
 
@@ -74,33 +101,90 @@ router.post("/assignments", requireTier("academy"), async (req, res): Promise<vo
     res.status(403).json({ error: "Enroll in this workshop before submitting an assignment" });
     return;
   }
-  if (parsed.data.submissionUrl) {
-    const prefix = "/api/storage";
-    if (!parsed.data.submissionUrl.startsWith(`${prefix}/objects/`)) {
-      res.status(400).json({ error: "Assignment footage must be uploaded through The Warehouse" });
-      return;
-    }
-    try {
-      const objectFile = await objectStorageService.getObjectEntityFile(parsed.data.submissionUrl.slice(prefix.length));
-      const ownsObject = await objectStorageService.canAccessObjectEntity({
-        userId: String(userId),
-        objectFile,
-        requestedPermission: ObjectPermission.WRITE,
-      });
-      if (!ownsObject) {
-        res.status(403).json({ error: "Assignment footage does not belong to this creator" });
-        return;
-      }
-    } catch {
-      res.status(400).json({ error: "Assignment footage could not be verified" });
-      return;
-    }
+
+  // The submissionUrl must be a private served-object reference.
+  const objectPath = submissionUrlToObjectPath(parsed.data.submissionUrl);
+  if (!objectPath) {
+    res.status(400).json({ error: "Assignment footage must be uploaded through the Workshops & Masterclasses upload service" });
+    return;
   }
 
-  const [assignment] = await db
-    .insert(assignmentsTable)
-    .values({ ...parsed.data, userId, status: "pending" })
-    .returning();
+  // Look up the durable, ffprobe-gated upload record. It must:
+  //   1. exist, 2. be owned by this user, 3. be unconsumed.
+  // We never trust a client-supplied duration; the recorded value is authoritative.
+  const [upload] = await db
+    .select()
+    .from(assignmentMediaUploadsTable)
+    .where(eq(assignmentMediaUploadsTable.objectPath, objectPath))
+    .limit(1);
+
+  if (!upload) {
+    res.status(400).json({ error: "Assignment footage was not recorded as a valid drill upload" });
+    return;
+  }
+  if (upload.userId !== userId) {
+    res.status(403).json({ error: "Assignment footage does not belong to this creator" });
+    return;
+  }
+  if (upload.consumedAt !== null || upload.claimedAssignmentId !== null) {
+    res.status(409).json({ error: "This assignment footage has already been submitted" });
+    return;
+  }
+
+  // Create the assignment, its extension row, and consume the upload atomically.
+  // If the upload was consumed concurrently, the guarded UPDATE affects 0 rows
+  // and the whole transaction is rolled back.
+  let assignment: typeof assignmentsTable.$inferSelect;
+  try {
+    assignment = await db.transaction(async (tx) => {
+      const [inserted] = await tx
+        .insert(assignmentsTable)
+        .values({
+          userId,
+          workshopId: parsed.data.workshopId,
+          moduleId: parsed.data.moduleId,
+          submissionUrl: parsed.data.submissionUrl,
+          submissionNote: parsed.data.submissionNote ?? null,
+          status: "pending",
+        })
+        .returning();
+
+      // Bind + consume the upload with a guard so concurrent submissions can't
+      // reuse the same footage. Only an unconsumed row owned by the user matches.
+      const consumed = await tx
+        .update(assignmentMediaUploadsTable)
+        .set({ claimedAssignmentId: inserted.id, consumedAt: new Date() })
+        .where(
+          and(
+            eq(assignmentMediaUploadsTable.id, upload.id),
+            eq(assignmentMediaUploadsTable.userId, userId),
+            isNull(assignmentMediaUploadsTable.consumedAt),
+            isNull(assignmentMediaUploadsTable.claimedAssignmentId),
+          ),
+        )
+        .returning({ id: assignmentMediaUploadsTable.id });
+
+      if (consumed.length === 0) {
+        // Lost the race — abort so no assignment references reused footage.
+        throw new Error("UPLOAD_ALREADY_CONSUMED");
+      }
+
+      // Persist authoritative capture metadata from the SERVER record.
+      await tx.insert(assignmentExtensionsTable).values({
+        assignmentId: inserted.id,
+        captureSource: upload.captureSource,
+        measuredDurationSeconds: upload.measuredDurationSeconds,
+      });
+
+      return inserted;
+    });
+  } catch (err: any) {
+    if (err?.message === "UPLOAD_ALREADY_CONSUMED") {
+      res.status(409).json({ error: "This assignment footage has already been submitted" });
+      return;
+    }
+    throw err;
+  }
 
   res.status(201).json(
     SubmitAssignmentResponse.parse({

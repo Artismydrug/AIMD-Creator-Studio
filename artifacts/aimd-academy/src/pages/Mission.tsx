@@ -71,7 +71,7 @@ const FAQS = [
   },
   {
     q: 'How do I apply for an open resident chair or guest spot?',
-    a: 'Once you have a Workshop Academy or Pro Studio membership, the Studio Chairs & Opportunity Board is unlocked. You apply directly to partner studios through the platform — no cold emails, no middlemen.',
+    a: 'Once you have a Dedicated Artist or Professional Artist membership, the Studio Chairs & Opportunity Board is unlocked. You apply directly to partner studios through the platform — no cold emails, no middlemen.',
   },
   {
     q: 'Can I cancel my membership at any time?',

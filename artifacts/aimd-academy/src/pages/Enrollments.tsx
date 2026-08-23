@@ -18,7 +18,7 @@ export default function Enrollments() {
         </div>
         <Link href="/workshops">
           <Button variant="outline" className="rounded-none font-mono uppercase text-xs border-primary/50 text-primary">
-            Browse Academy
+            Browse Workshops
           </Button>
         </Link>
       </header>
@@ -29,7 +29,7 @@ export default function Enrollments() {
           <h3 className="text-xl font-bold font-display uppercase mb-2">No Active Enrollments</h3>
           <p className="text-muted-foreground font-mono text-sm mb-6">Enroll in a workshop to start learning.</p>
           <Link href="/workshops">
-            <Button className="rounded-none bg-primary text-primary-foreground font-mono uppercase">Go to Academy</Button>
+            <Button className="rounded-none bg-primary text-primary-foreground font-mono uppercase">Go to Workshops</Button>
           </Link>
         </div>
       ) : (

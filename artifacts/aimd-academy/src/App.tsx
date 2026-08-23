@@ -47,6 +47,7 @@ import Admin from '@/pages/Admin';
 import Onboarding from '@/pages/Onboarding';
 import Tattoo from '@/pages/Tattoo';
 import Gallery from '@/pages/Gallery';
+import Instructor from '@/pages/Instructor';
 
 // ─── Clerk setup ──────────────────────────────────────────────────────────────
 // REQUIRED — resolves the publishable key from the request host so the same
@@ -232,6 +233,7 @@ function AuthenticatedShell() {
           <Route path="/directory"      component={Directory} />
           <Route path="/messages"       component={Messages} />
           <Route path="/admin"          component={Admin} />
+          <Route path="/instructor"     component={Instructor} />
           <Route                        component={NotFound} />
         </Switch>
       </RoutedErrorBoundary>
@@ -281,13 +283,13 @@ function ClerkProviderWithRoutes() {
         signIn: {
           start: {
             title: 'Welcome back',
-            subtitle: 'Sign in to your AIMD creator account',
+            subtitle: 'Discipline Eats Talent. Sign in to Creator Studio by AIMD',
           },
         },
         signUp: {
           start: {
-            title: 'Join Open Studio',
-            subtitle: 'Create your AIMD Network account — free forever',
+            title: 'Creator Studio by AIMD',
+            subtitle: 'Discipline Eats Talent. Join the community — free forever',
           },
         },
       }}

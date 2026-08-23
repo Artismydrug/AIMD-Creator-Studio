@@ -11,6 +11,10 @@ import {
 import { clerkAuth } from "./middlewares/clerkAuth";
 import router from "./routes";
 import { WebhookHandlers } from "./webhookHandlers";
+import {
+  grantTierFromCheckoutSession,
+  reconcileTierAfterSubscriptionEnd,
+} from "./lib/stripeEntitlements";
 import { handleClerkWebhook } from "./routes/webhooks/clerk";
 import { logger } from "./lib/logger";
 
@@ -42,7 +46,27 @@ app.post(
     }
     try {
       const sig = Array.isArray(signature) ? signature[0] : signature;
+      // Verifies the signature and mirrors Stripe data into the stripe.* schema.
       await WebhookHandlers.processWebhook(req.body as Buffer, sig);
+
+      // Entitlements: the body is trusted here because processWebhook above
+      // rejected any payload with an invalid Stripe signature.
+      try {
+        const event = JSON.parse((req.body as Buffer).toString('utf8'));
+        if (event?.type === 'checkout.session.completed') {
+          await grantTierFromCheckoutSession(event.data?.object ?? {});
+        } else if (event?.type === 'customer.subscription.deleted') {
+          const customerId = event.data?.object?.customer;
+          if (typeof customerId === 'string') {
+            await reconcileTierAfterSubscriptionEnd(customerId);
+          }
+        }
+      } catch (entitlementError) {
+        // Never fail the webhook over entitlement post-processing — Stripe
+        // would retry and the verify-session fallback also covers upgrades.
+        logger.error({ err: entitlementError }, 'Stripe entitlement processing error');
+      }
+
       res.status(200).json({ received: true });
     } catch (error: any) {
       logger.error({ err: error }, 'Stripe webhook error');

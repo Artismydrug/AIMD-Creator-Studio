@@ -19,16 +19,25 @@ import { useColors } from '@/hooks/useColors';
 import { safeImpact } from '@/lib/haptics';
 import { useSubscription } from '@/lib/revenuecat';
 
-const academyBenefits = [
-  'All workshop videos and practical modules',
-  'The Warehouse assignment review',
+const discoveringBenefits = [
+  'Community feed, habits, and check-in streaks',
+  'Daily reward wheel and gallery drops',
+  'Creator directory and events',
+];
+
+const dedicatedBenefits = [
+  'Everything in Discovering Artist',
+  'Multi-medium masterclass library — visual arts, tattoo prep, audio production, garment design, and more',
+  'Direct instructor feedback on assignments',
   'Badges, certification, and priority events',
 ];
 
 const proBenefits = [
-  'Everything in Academy',
-  'Studio Ready and booking directory access',
-  'Monthly coaching and partner introductions',
+  'Everything in Dedicated Artist',
+  'Monthly coaching sessions',
+  'Ecosystem Partner and Affiliate Pipeline access',
+  'Priority affiliate tracking and confirmed earnings',
+  'Brand partnership and resident artist applications',
 ];
 
 function periodLabel(subscriptionPeriod: string | null | undefined): string {
@@ -67,8 +76,17 @@ export default function MembershipScreen() {
   const [notice, setNotice] = useState<string | null>(null);
 
   const orderedPackages = useMemo(() => [...packages].sort((first, second) => {
-    const order = ['academy_monthly', 'academy_annual', 'pro_monthly'];
-    return order.indexOf(first.identifier) - order.indexOf(second.identifier);
+    const order = [
+      'dedicated_monthly',
+      'dedicated_annual',
+      'academy_monthly',
+      'academy_annual',
+      'pro_monthly',
+      'pro_annual',
+    ];
+    const ai = order.indexOf(first.identifier);
+    const bi = order.indexOf(second.identifier);
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
   }), [packages]);
 
   const styles = useMemo(() => StyleSheet.create({
@@ -357,10 +375,10 @@ export default function MembershipScreen() {
   }
 
   const activeLabel = hasProAccess
-    ? 'Pro / Career access active'
+    ? 'Professional Artist plan active'
     : hasAcademyAccess
-      ? 'Academy access active'
-      : 'Studio Starter access';
+      ? 'Dedicated Artist plan active'
+      : 'Discovering Artist — free access';
 
   const buySelectedPackage = async () => {
     if (!selectedPackage) return;
@@ -414,10 +432,11 @@ export default function MembershipScreen() {
 
         <View style={styles.hero}>
           <Text style={styles.eyebrow}>Build the whole creative life</Text>
-          <Text style={styles.heroTitle}>Learn. Prove the work. Move forward.</Text>
+          <Text style={styles.heroTitle}>Discipline Eats Talent</Text>
           <Text style={styles.heroBody}>
-            Upgrade through Apple to unlock AIMD Mastery, instructor feedback,
-            and the professional creator pathway.
+            Free discovery access is always available. Upgrade to unlock the
+            full masterclass library, instructor feedback, and the professional
+            creator pathway.
           </Text>
           <View style={styles.status}>
             <Feather name="check-circle" size={15} color={colors.gold} />
@@ -426,6 +445,26 @@ export default function MembershipScreen() {
         </View>
 
         <Text style={styles.sectionTitle}>Choose your path</Text>
+
+        <View style={[styles.plan, { borderColor: colors.border }]} testID="membership-free-tier">
+          <View style={styles.planTop}>
+            <View style={styles.planCopy}>
+              <Text style={styles.planTitle}>Discovering Artist</Text>
+              <Text style={styles.planDescription}>Free forever — start here</Text>
+            </View>
+            <View>
+              <Text style={styles.price}>Free</Text>
+            </View>
+          </View>
+          <View style={styles.benefits}>
+            {discoveringBenefits.map((benefit) => (
+              <View key={benefit} style={styles.benefit}>
+                <Feather name="check" size={16} color={colors.sunsetCoral} />
+                <Text style={styles.benefitText}>{benefit}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
 
         {isLoading ? (
           <View style={styles.centerCard}>
@@ -447,11 +486,22 @@ export default function MembershipScreen() {
           <View style={styles.plans}>
             {orderedPackages.map((item) => {
               const isPro = item.identifier.startsWith('pro_');
+              const isDedicated =
+                item.identifier.startsWith('dedicated_') ||
+                item.identifier.startsWith('academy_');
               const isAnnual = item.identifier.includes('annual');
               const isCurrent =
-                hasProAccess ||
-                (!isPro && hasAcademyAccess);
-              const benefits = isPro ? proBenefits : academyBenefits;
+                (isPro && hasProAccess) ||
+                (isDedicated && !isPro && hasAcademyAccess);
+              const benefits = isPro
+                ? proBenefits
+                : dedicatedBenefits;
+              const displayTitle = isPro
+                ? 'Professional Artist'
+                : 'Dedicated Artist';
+              const displayPriceHint = isPro
+                ? (isAnnual ? '$999/yr' : '$99/mo')
+                : (isAnnual ? '$399/yr' : '$39/mo');
 
               return (
                 <View
@@ -466,12 +516,10 @@ export default function MembershipScreen() {
                   )}
                   <View style={styles.planTop}>
                     <View style={styles.planCopy}>
-                      <Text style={styles.planTitle}>{item.product.title}</Text>
-                      {!!item.product.description && (
-                        <Text style={styles.planDescription}>
-                          {item.product.description}
-                        </Text>
-                      )}
+                      <Text style={styles.planTitle}>{displayTitle}</Text>
+                      <Text style={styles.planDescription}>
+                        {displayPriceHint} — {isAnnual ? 'billed annually' : 'billed monthly'}
+                      </Text>
                     </View>
                     <View>
                       <Text style={styles.price}>{item.product.priceString}</Text>
@@ -504,7 +552,7 @@ export default function MembershipScreen() {
                     }}
                   >
                     <Text style={styles.chooseText}>
-                      {isCurrent ? 'Included in your membership' : `Choose ${item.product.title}`}
+                      {isCurrent ? 'Your current plan' : `Choose ${displayTitle}`}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -563,10 +611,13 @@ export default function MembershipScreen() {
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>
-              Confirm {selectedPackage?.product.title}
+              Confirm{' '}
+              {selectedPackage?.identifier.startsWith('pro_')
+                ? 'Professional Artist'
+                : 'Dedicated Artist'}
             </Text>
             <Text style={styles.sheetBody}>
-              Continue to Apple’s purchase confirmation for{' '}
+              Continue to Apple's purchase confirmation for{' '}
               {selectedPackage?.product.priceString}{' '}
               {periodLabel(selectedPackage?.product.subscriptionPeriod)}.
             </Text>

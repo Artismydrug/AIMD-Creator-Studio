@@ -1,6 +1,14 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq, and, desc } from "drizzle-orm";
-import { db, workshopsTable, workshopModulesTable, enrollmentsTable, completedModulesTable } from "@workspace/db";
+import {
+  db,
+  workshopsTable,
+  workshopModulesTable,
+  enrollmentsTable,
+  completedModulesTable,
+  workshopInstructorsTable,
+  instructorProfilesTable,
+} from "@workspace/db";
 import {
   ListWorkshopsQueryParams,
   ListWorkshopsResponse,
@@ -16,7 +24,47 @@ import { getCurrentTier, hasRequiredTier, type Tier } from "../middleware/requir
 const router: IRouter = Router();
 
 function minimumTierForWorkshop(tier: string): Tier {
-  return tier === "pro" ? "pro" : tier === "workshop" ? "academy" : "free";
+  if (tier === "pro") return "pro";
+  // Paid non-pro workshops are stored under both legacy vocabularies:
+  // "workshop" (legacy Warehouse era) and "academy" (Creator Studio seeds).
+  // Both require the Dedicated Artist (academy) membership.
+  if (tier === "workshop" || tier === "academy") return "academy";
+  return "free";
+}
+
+/**
+ * The public API's workshop tier vocabulary is "free" | "workshop" | "pro".
+ * Any stored legacy "academy" row is presented as "workshop" so response
+ * validation never fails on old data (access checks treat both as paid).
+ */
+function normalizeWorkshopTier<T extends { tier: string }>(workshop: T): T {
+  return workshop.tier === "academy" ? { ...workshop, tier: "workshop" } : workshop;
+}
+
+/**
+ * Assigned instructors (and admins) may READ a workshop's curriculum
+ * regardless of their own membership tier — teaching a workshop must not
+ * require paying for it. Write access is still governed by the instructor
+ * routes' own assignment checks.
+ */
+async function canReadWorkshopAsStaff(req: Request, workshopId: number): Promise<boolean> {
+  if (!req.dbUser) return false;
+  if (req.dbUser.isAdmin) return true;
+  const [assigned] = await db
+    .select({ id: workshopInstructorsTable.id })
+    .from(workshopInstructorsTable)
+    .innerJoin(
+      instructorProfilesTable,
+      eq(instructorProfilesTable.id, workshopInstructorsTable.instructorId),
+    )
+    .where(
+      and(
+        eq(workshopInstructorsTable.workshopId, workshopId),
+        eq(instructorProfilesTable.userId, req.dbUser.id),
+      ),
+    )
+    .limit(1);
+  return !!assigned;
 }
 
 async function ensureWorkshopAccess(
@@ -75,7 +123,7 @@ router.get("/workshops", async (req, res): Promise<void> => {
     enrollments.forEach((e) => enrolledSet.add(e.workshopId));
   }
 
-  const result = workshops.map((w) => ({ ...w, isEnrolled: enrolledSet.has(w.id) }));
+  const result = workshops.map((w) => normalizeWorkshopTier({ ...w, isEnrolled: enrolledSet.has(w.id) }));
   res.json(ListWorkshopsResponse.parse(result));
 });
 
@@ -91,7 +139,9 @@ router.get("/workshops/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Workshop not found" });
     return;
   }
-  if (!(await ensureWorkshopAccess(req, res, workshop.tier))) return;
+  if (!(await canReadWorkshopAsStaff(req, workshop.id))) {
+    if (!(await ensureWorkshopAccess(req, res, workshop.tier))) return;
+  }
 
   const modules = await db
     .select()
@@ -118,11 +168,13 @@ router.get("/workshops/:id", async (req, res): Promise<void> => {
   const modulesWithStatus = modules.map((m) => ({ ...m, isCompleted: completedSet.has(m.id) }));
 
   res.json(
-    GetWorkshopResponse.parse({
-      ...workshop,
-      modules: modulesWithStatus,
-      isEnrolled: !!enrollment,
-    })
+    GetWorkshopResponse.parse(
+      normalizeWorkshopTier({
+        ...workshop,
+        modules: modulesWithStatus,
+        isEnrolled: !!enrollment,
+      })
+    )
   );
 });
 

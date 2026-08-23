@@ -7,10 +7,16 @@
     "hello": "tsx ./src/hello.ts",
     "seed:store": "tsx ./src/seed-store-products.ts",
     "seed:revenuecat": "tsx ./src/seed-revenuecat.ts",
+    "seed:products": "tsx ./src/seed-products.ts",
+    "seed:creator-studio": "tsx ./src/seed-creator-studio.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "pg": "^8.22.0"
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "@types/pg": "^8.20.0",
     "tsx": "catalog:"
   }
 }

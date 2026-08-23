@@ -3,7 +3,7 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.2.0
-  description: AIMD Academy & Studio Portal API
+  description: Creator Studio by AIMD API
 servers:
   - url: /api
     description: Base API path
@@ -52,6 +52,8 @@ tags:
     description: Daily reward spin and AIMD Points
   - name: challenges
     description: Weekly creative challenge submissions and voting
+  - name: instructor
+    description: Instructor self-service, curriculum management, submission review, and admin mentor linking
 
 paths:
   # ── Storage ───────────────────────────────────────────────────────────────────
@@ -389,13 +391,13 @@ paths:
     get:
       operationId: listWorkshops
       tags: [workshops]
-      summary: List available workshops
+      summary: List available workshops & masterclasses
       parameters:
         - name: tier
           in: query
           schema:
             type: ["string", "null"]
-            enum: ["free", "workshop", "pro", null]
+            enum: ["free", "workshop", "academy", "pro", null]
         - name: category
           in: query
           schema:
@@ -1589,6 +1591,300 @@ paths:
         "404":
           description: Booking not found
 
+  # ── Instructor ────────────────────────────────────────────────────────────────
+
+  /instructor/me:
+    get:
+      operationId: getInstructorSelf
+      tags: [instructor]
+      summary: Get the authenticated instructor's own profile
+      responses:
+        "200":
+          description: Instructor profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstructorProfile"
+        "401":
+          description: Authentication required
+        "403":
+          description: Instructor role required
+    patch:
+      operationId: updateInstructorSelf
+      tags: [instructor]
+      summary: Update own instructor profile (bio, avatar, specialties)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstructorProfileUpdate"
+      responses:
+        "200":
+          description: Updated instructor profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstructorProfile"
+        "401":
+          description: Authentication required
+        "403":
+          description: Instructor role required
+
+  /instructor/curriculum:
+    get:
+      operationId: getInstructorCurriculum
+      tags: [instructor]
+      summary: List workshops and modules assigned to the authenticated instructor
+      responses:
+        "200":
+          description: Assigned curriculum
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InstructorWorkshopSummary"
+        "401":
+          description: Authentication required
+        "403":
+          description: Instructor role required
+
+  /instructor/workshops/{workshopId}/modules:
+    post:
+      operationId: createWorkshopModule
+      tags: [instructor]
+      summary: Create a new module in an assigned workshop
+      parameters:
+        - name: workshopId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkshopModuleInput"
+      responses:
+        "201":
+          description: Created module
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkshopModuleDetail"
+        "401":
+          description: Authentication required
+        "403":
+          description: Not assigned to this workshop
+
+  /instructor/workshops/{workshopId}/modules/{moduleId}/drills:
+    post:
+      operationId: createDrillPrompt
+      tags: [instructor]
+      summary: Create a drill prompt for a module (max 30 seconds enforced)
+      parameters:
+        - name: workshopId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: moduleId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DrillPromptInput"
+      responses:
+        "201":
+          description: Created drill prompt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DrillPromptDetail"
+        "400":
+          description: maxDurationSeconds exceeds 30-second limit
+        "401":
+          description: Authentication required
+        "403":
+          description: Not assigned to this workshop
+
+  /instructor/submissions:
+    get:
+      operationId: listSubmissionQueue
+      tags: [instructor]
+      summary: List pending assignment submissions for review
+      parameters:
+        - name: workshopId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: status
+          in: query
+          schema:
+            type: ["string", "null"]
+            enum: ["pending", "reviewed", "approved", "revision_requested", null]
+      responses:
+        "200":
+          description: Submission queue
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AssignmentReviewItem"
+        "401":
+          description: Authentication required
+        "403":
+          description: Instructor role required
+
+  /instructor/submissions/{assignmentId}/feedback:
+    post:
+      operationId: submitAssignmentFeedback
+      tags: [instructor]
+      summary: Submit text, audio, or video feedback on an assignment
+      parameters:
+        - name: assignmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentFeedbackInput"
+      responses:
+        "200":
+          description: Feedback recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignmentReviewItem"
+        "401":
+          description: Authentication required
+        "403":
+          description: Not assigned to this workshop or not instructor
+        "404":
+          description: Assignment not found
+
+  /admin/instructors:
+    get:
+      operationId: listInstructors
+      tags: [instructor]
+      summary: (Admin) List all instructor profiles
+      responses:
+        "200":
+          description: Instructor list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InstructorProfile"
+        "401":
+          description: Authentication required
+        "403":
+          description: Admin access required
+    post:
+      operationId: createInstructor
+      tags: [instructor]
+      summary: (Admin) Create a new instructor profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstructorProfileInput"
+      responses:
+        "201":
+          description: Created instructor profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstructorProfile"
+        "401":
+          description: Authentication required
+        "403":
+          description: Admin access required
+
+  /admin/instructors/{instructorId}/link-user:
+    post:
+      operationId: linkInstructorUser
+      tags: [instructor]
+      summary: (Admin) Link an instructor profile to a user account
+      description: |
+        Links a verified instructor profile to a DB user account.
+        This is the only way to grant the instructor role — metadata never
+        bypasses this admin-controlled link validation.
+      parameters:
+        - name: instructorId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LinkInstructorUserInput"
+      responses:
+        "200":
+          description: Instructor profile updated with linked user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstructorProfile"
+        "400":
+          description: User already linked to a different instructor profile
+        "401":
+          description: Authentication required
+        "403":
+          description: Admin access required
+        "404":
+          description: Instructor or user not found
+
+  /admin/instructors/{instructorId}/assign-workshop:
+    post:
+      operationId: assignInstructorToWorkshop
+      tags: [instructor]
+      summary: (Admin) Assign an instructor to a workshop
+      parameters:
+        - name: instructorId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignInstructorWorkshopInput"
+      responses:
+        "201":
+          description: Assignment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstructorWorkshopAssignment"
+        "401":
+          description: Authentication required
+        "403":
+          description: Admin access required
+        "404":
+          description: Instructor or workshop not found
+        "409":
+          description: Already assigned
+
 components:
   securitySchemes:
     OrganizerKey:
@@ -2418,15 +2714,24 @@ components:
           type: string
         tier:
           type: string
-          enum: ["community", "academy", "pro"]
+          enum: ["free", "workshop", "academy", "pro"]
         priceMonthly:
           type: number
+        priceAnnual:
+          type: ["number", "null"]
         description:
           type: string
         features:
           type: array
           items:
             type: string
+        limits:
+          type: object
+          properties:
+            habits:
+              type: ["integer", "null"]
+            workshopModules:
+              type: ["integer", "null"]
 
     CheckoutSessionInput:
       type: object
@@ -3209,3 +3514,236 @@ components:
           type: boolean
         mySubmissionId:
           type: ["integer", "null"]
+
+    # ── Instructor ─────────────────────────────────────────────────────────
+    InstructorProfile:
+      type: object
+      required: [id, displayName, mentorSlug, verified, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: ["integer", "null"]
+        displayName:
+          type: string
+        bio:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        mentorSlug:
+          type: string
+        verified:
+          type: boolean
+        specialties:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    InstructorProfileInput:
+      type: object
+      required: [displayName, mentorSlug]
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 120
+        bio:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        mentorSlug:
+          type: string
+          minLength: 2
+          maxLength: 60
+          pattern: "^[a-z0-9-]+$"
+        verified:
+          type: boolean
+        specialties:
+          type: ["string", "null"]
+
+    InstructorProfileUpdate:
+      type: object
+      properties:
+        bio:
+          type: ["string", "null"]
+          maxLength: 1000
+        avatarUrl:
+          type: ["string", "null"]
+        specialties:
+          type: ["string", "null"]
+
+    InstructorWorkshopSummary:
+      type: object
+      required: [workshopId, workshopTitle, moduleCount, pendingSubmissions]
+      properties:
+        workshopId:
+          type: integer
+        workshopTitle:
+          type: string
+        workshopTier:
+          type: string
+        moduleCount:
+          type: integer
+        pendingSubmissions:
+          type: integer
+
+    WorkshopModuleInput:
+      type: object
+      required: [title, order]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: ["string", "null"]
+        videoUrl:
+          type: ["string", "null"]
+        order:
+          type: integer
+          minimum: 0
+        durationMinutes:
+          type: integer
+          minimum: 0
+
+    WorkshopModuleDetail:
+      type: object
+      required: [id, workshopId, title, order, durationMinutes, createdAt]
+      properties:
+        id:
+          type: integer
+        workshopId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        videoUrl:
+          type: ["string", "null"]
+        order:
+          type: integer
+        durationMinutes:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    DrillPromptInput:
+      type: object
+      required: [prompt]
+      properties:
+        prompt:
+          type: string
+          minLength: 1
+        maxDurationSeconds:
+          type: integer
+          minimum: 1
+          maximum: 30
+          default: 30
+
+    DrillPromptDetail:
+      type: object
+      required: [id, moduleId, prompt, maxDurationSeconds, createdAt]
+      properties:
+        id:
+          type: integer
+        moduleId:
+          type: integer
+        prompt:
+          type: string
+        maxDurationSeconds:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    AssignmentReviewItem:
+      type: object
+      required: [id, userId, workshopId, moduleId, status, submittedAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        workshopId:
+          type: integer
+        moduleId:
+          type: integer
+        workshopTitle:
+          type: ["string", "null"]
+        submissionUrl:
+          type: ["string", "null"]
+        submissionNote:
+          type: ["string", "null"]
+        captureSource:
+          type: ["string", "null"]
+        measuredDurationSeconds:
+          type: ["integer", "null"]
+        feedbackText:
+          type: ["string", "null"]
+        feedbackAudioUrl:
+          type: ["string", "null"]
+        feedbackVideoUrl:
+          type: ["string", "null"]
+        reviewedBy:
+          type: ["integer", "null"]
+        reviewedAt:
+          type: ["string", "null"]
+          format: date-time
+        grade:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: ["pending", "reviewed", "approved", "revision_requested"]
+        submittedAt:
+          type: string
+          format: date-time
+
+    AssignmentFeedbackInput:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: ["reviewed", "approved", "revision_requested"]
+        feedbackText:
+          type: ["string", "null"]
+        feedbackAudioUrl:
+          type: ["string", "null"]
+          description: Object path of a private audio feedback recording
+        feedbackVideoUrl:
+          type: ["string", "null"]
+          description: Object path of a private video feedback recording
+        grade:
+          type: ["string", "null"]
+
+    LinkInstructorUserInput:
+      type: object
+      required: [userId]
+      properties:
+        userId:
+          type: integer
+
+    AssignInstructorWorkshopInput:
+      type: object
+      required: [workshopId]
+      properties:
+        workshopId:
+          type: integer
+
+    InstructorWorkshopAssignment:
+      type: object
+      required: [id, workshopId, instructorId, assignedAt]
+      properties:
+        id:
+          type: integer
+        workshopId:
+          type: integer
+        instructorId:
+          type: integer
+        assignedAt:
+          type: string
+          format: date-time

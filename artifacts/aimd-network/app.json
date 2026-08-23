@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "AIMD Network",
+    "name": "Creator Studio by AIMD",
     "slug": "aimd-network",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -30,20 +30,21 @@
       ],
       "expo-font",
       "expo-web-browser",
+      "expo-video",
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow AIMD to capture live proof for challenge submissions.",
-          "microphonePermission": "Allow AIMD to record sound with challenge proof videos.",
+          "cameraPermission": "Allow Creator Studio by AIMD to record live drill and challenge footage.",
+          "microphonePermission": "Allow Creator Studio by AIMD to record sound with drill and challenge footage.",
           "recordAudioAndroid": true
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow AIMD to attach optional process-verification media.",
-          "cameraPermission": "Allow AIMD to capture live proof for challenge submissions.",
-          "microphonePermission": "Allow AIMD to record sound with challenge proof videos."
+          "photosPermission": "Allow Creator Studio by AIMD to attach optional creator media.",
+          "cameraPermission": "Allow Creator Studio by AIMD to capture live proof for challenge submissions.",
+          "microphonePermission": "Allow Creator Studio by AIMD to record sound with creator videos."
         }
       ]
     ],

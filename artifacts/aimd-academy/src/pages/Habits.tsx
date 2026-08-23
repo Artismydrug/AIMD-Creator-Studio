@@ -29,11 +29,11 @@ function TierLimitBanner({ habitCount, limit }: { habitCount: number; limit: num
         <Lock className={`w-4 h-4 flex-shrink-0 ${isAtLimit ? 'text-amber-400' : 'text-muted-foreground'}`} />
         <div>
           <p className={`font-mono text-xs font-bold uppercase tracking-wider ${isAtLimit ? 'text-amber-400' : 'text-muted-foreground'}`}>
-            Studio Starter Pass — {habitCount}/{limit} Habits
+            Discovering Artist — {habitCount}/{limit} Habits
           </p>
           <p className="text-xs text-muted-foreground">
             {isAtLimit
-              ? 'Habit limit reached. Upgrade to Academy Pass for unlimited habit tracking.'
+              ? 'Habit limit reached. Upgrade to Dedicated Artist for unlimited habit tracking.'
               : `${limit - habitCount} habit slot${limit - habitCount !== 1 ? 's' : ''} remaining on your free plan.`}
           </p>
         </div>
@@ -63,7 +63,7 @@ function HeatmapSection({ heatmap, tier }: { heatmap: any[] | undefined; tier: s
         </h3>
         {isLocked && (
           <span className="font-mono text-[10px] text-amber-400 border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 uppercase tracking-widest flex items-center gap-1">
-            <Lock className="w-2.5 h-2.5" /> Academy+
+            <Lock className="w-2.5 h-2.5" /> Dedicated+
           </span>
         )}
       </div>
@@ -78,7 +78,7 @@ function HeatmapSection({ heatmap, tier }: { heatmap: any[] | undefined; tier: s
             ))}
           </div>
           <p className="text-xs text-muted-foreground font-mono text-center">
-            Visual heatmaps & session analytics unlock on Academy Pass.{' '}
+            Visual heatmaps & session analytics unlock on Dedicated Artist.{' '}
             <Link href="/plans" className="text-primary underline">Upgrade →</Link>
           </p>
         </div>
@@ -122,7 +122,8 @@ export default function Habits() {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border">
         <div>
           <h1 className="text-4xl md:text-5xl font-black font-display uppercase tracking-tight">Discipline Tracker</h1>
-          <p className="text-muted-foreground font-mono mt-2">Log your daily grinds. Build the habit.</p>
+          <p className="text-muted-foreground font-mono mt-2 font-bold text-primary">Discipline Eats Talent.</p>
+          <p className="text-muted-foreground font-mono mt-1 text-xs uppercase tracking-wider">Log your daily grinds. Build the habit.</p>
         </div>
         {/* Hide create button if free + at limit */}
         {(!meta || !meta.atLimit) && <CreateHabitDialog />}
@@ -162,7 +163,7 @@ export default function Habits() {
             <Lock className="w-6 h-6 text-amber-400" />
             <div>
               <p className="font-display font-bold uppercase text-sm text-white mb-1">Habit Limit Reached</p>
-              <p className="font-mono text-xs text-muted-foreground">Upgrade to Academy Pass for unlimited habits.</p>
+              <p className="font-mono text-xs text-muted-foreground">Upgrade to Dedicated Artist for unlimited habits.</p>
             </div>
             <Button asChild className="rounded-none bg-primary hover:bg-primary/90 text-zinc-950 font-bold text-xs uppercase h-8 px-4">
               <Link href="/plans">Upgrade →</Link>

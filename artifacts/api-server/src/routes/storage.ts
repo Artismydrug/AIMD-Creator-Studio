@@ -1,6 +1,10 @@
 import express, { Router, type IRouter, type Request, type Response } from 'express';
 import { Readable } from 'stream';
 import { createHash } from 'node:crypto';
+import { execFile } from 'node:child_process';
+import { writeFile, unlink, mkdtemp } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { pool } from '@workspace/db';
 import {
   ObjectNotFoundError,
@@ -30,13 +34,61 @@ const ALLOWED_VIDEO_TYPES = new Set([
   'video/webm',
 ]);
 
+/**
+ * Allowed MIME types for instructor audio feedback.
+ * Only used for instructor_feedback purpose — not accepted for general uploads.
+ */
+const ALLOWED_AUDIO_TYPES = new Set([
+  'audio/mpeg',     // MP3
+  'audio/mp4',      // M4A / AAC in MP4
+  'audio/aac',      // raw AAC
+  'audio/ogg',      // OGG Vorbis/Opus
+  'audio/webm',     // WebM audio
+  'audio/wav',      // PCM WAV
+  'audio/x-wav',    // alternate WAV MIME
+]);
+
 /** 20 MB hard cap for images. */
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 /** 100 MB hard cap for videos. */
 const MAX_VIDEO_UPLOAD_BYTES = 100 * 1024 * 1024;
+/** 25 MB cap for instructor audio feedback. */
+const MAX_AUDIO_UPLOAD_BYTES = 25 * 1024 * 1024;
 
 function hasAuthenticatedSession(req: Request): boolean {
   return !!(req as any).dbUser;
+}
+
+/**
+ * Instructor read-access to student assignment footage.
+ *
+ * Assignment submissions are private objects owned by the student, so the
+ * standard ACL only admits the owner (or an admin). An instructor who is
+ * ASSIGNED to the workshop of the assignment must also be able to stream the
+ * footage to review it. This checks, DB-authoritatively:
+ *
+ *   requesting user → instructor_profiles.user_id
+ *     → workshop_instructors (assigned to workshop W)
+ *     → assignments in W whose submission_url references this object
+ *
+ * Exported for integration tests.
+ */
+export async function canInstructorAccessSubmission(
+  userId: number,
+  objectPath: string,
+): Promise<boolean> {
+  const submissionUrl = `/api/storage${objectPath}`;
+  const { rows } = await pool.query(
+    `SELECT 1
+       FROM assignments a
+       JOIN workshop_instructors wi ON wi.workshop_id = a.workshop_id
+       JOIN instructor_profiles ip ON ip.id = wi.instructor_id
+      WHERE a.submission_url = $1
+        AND ip.user_id = $2
+      LIMIT 1`,
+    [submissionUrl, userId],
+  );
+  return rows.length > 0;
 }
 
 const CHALLENGE_UPLOAD_PURPOSES = new Set([
@@ -44,6 +96,77 @@ const CHALLENGE_UPLOAD_PURPOSES = new Set([
   'challenge_process',
 ]);
 const ASSIGNMENT_UPLOAD_PURPOSE = 'assignment';
+const INSTRUCTOR_FEEDBACK_PURPOSE = 'instructor_feedback';
+
+/** Hard cap for assignment drill submissions. */
+const ASSIGNMENT_MAX_DURATION_SECONDS = 30;
+
+/**
+ * Discriminated result from ffprobe measurement.
+ * - ok: true  → duration was measured successfully
+ * - ok: false → ffprobe failed, the upload is unreadable (fail-closed)
+ */
+type DurationResult =
+  | { ok: true; seconds: number }
+  | { ok: false; reason: 'ffprobe_unavailable' | 'no_video_stream' | 'unreadable' };
+
+/**
+ * Use ffprobe to measure the actual duration of a video buffer.
+ * Writes to a temp file, runs ffprobe, cleans up, and returns a discriminated result.
+ *
+ * FAIL CLOSED: returns { ok: false } when ffprobe is unavailable, the file is
+ * unreadable, or no video stream is present — callers must reject the upload.
+ */
+async function measureVideoDurationSeconds(
+  videoBuffer: Buffer,
+): Promise<DurationResult> {
+  let tmpDir: string | null = null;
+  let tmpPath: string | null = null;
+  try {
+    tmpDir = await mkdtemp(join(tmpdir(), 'aimd-video-'));
+    tmpPath = join(tmpDir, 'upload.bin');
+    await writeFile(tmpPath, videoBuffer);
+
+    return await new Promise<DurationResult>((resolve) => {
+      execFile(
+        'ffprobe',
+        [
+          '-v', 'error',
+          '-select_streams', 'v:0',
+          '-show_entries', 'format=duration',
+          '-of', 'default=noprint_wrappers=1:nokey=1',
+          tmpPath!,
+        ],
+        { timeout: 15_000 },
+        (err, stdout, stderr) => {
+          if (err) {
+            // ffprobe process failed — could be unavailable or file unreadable
+            const reason =
+              err.code === 'ENOENT' ? 'ffprobe_unavailable' : 'unreadable';
+            resolve({ ok: false, reason });
+            return;
+          }
+          const trimmed = stdout.trim();
+          // Empty output from -select_streams v:0 means no video stream found
+          if (!trimmed) {
+            resolve({ ok: false, reason: 'no_video_stream' });
+            return;
+          }
+          const parsed = parseFloat(trimmed);
+          if (!Number.isFinite(parsed)) {
+            resolve({ ok: false, reason: 'unreadable' });
+            return;
+          }
+          resolve({ ok: true, seconds: parsed });
+        },
+      );
+    });
+  } catch {
+    return { ok: false, reason: 'unreadable' };
+  } finally {
+    if (tmpPath) await unlink(tmpPath).catch(() => undefined);
+  }
+}
 
 function getHeader(req: Request, name: string): string | null {
   const value = req.headers[name];
@@ -65,10 +188,16 @@ function parseCaptureTimestamp(value: string | null): Date | null {
 /**
  * POST /storage/uploads
  *
- * Accepts a raw image binary (Content-Type: image/*) directly from the client.
- * Enforces MIME allowlist and 20 MB byte limit at the Express layer — not via
- * client-supplied metadata — before writing to GCS.
+ * Accepts a raw image/video/audio binary (Content-Type: image/*, video/*, or audio/*)
+ * directly from the client. Enforces MIME allowlist and byte limits at the Express
+ * layer — not via client-supplied metadata — before writing to GCS.
  * Requires authentication so arbitrary callers cannot consume storage quota.
+ *
+ * Purpose-specific rules:
+ *   - assignment:           video only; server-side ffprobe enforces ≤30 s (FAIL CLOSED)
+ *   - instructor_feedback:  video OR audio; private ACL
+ *   - challenge_final/process: video only; native-camera rules apply
+ *   - (no purpose):         image only; public ACL
  */
 router.post(
   '/storage/uploads',
@@ -84,7 +213,7 @@ router.post(
   express.raw({
     type: (req) => {
       const ct = (req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
-      return ALLOWED_IMAGE_TYPES.has(ct) || ALLOWED_VIDEO_TYPES.has(ct);
+      return ALLOWED_IMAGE_TYPES.has(ct) || ALLOWED_VIDEO_TYPES.has(ct) || ALLOWED_AUDIO_TYPES.has(ct);
     },
     limit: MAX_VIDEO_UPLOAD_BYTES,
   }),
@@ -93,26 +222,41 @@ router.post(
 
     // Reject if express.raw declined to parse (unsupported content-type)
     if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
-      res.status(400).json({ error: 'Only image (jpeg, png, webp, gif, heic) or video (mp4, mov, webm) uploads are allowed' });
+      res.status(400).json({
+        error: 'Only image (jpeg, png, webp, gif, heic), video (mp4, mov, webm), or audio (mp3, aac, ogg, wav, webm) uploads are allowed',
+      });
       return;
     }
 
     const isImage = ALLOWED_IMAGE_TYPES.has(contentType);
     const isVideo = ALLOWED_VIDEO_TYPES.has(contentType);
-    if (!isImage && !isVideo) {
-      res.status(400).json({ error: 'Only image or video uploads are allowed' });
+    const isAudio = ALLOWED_AUDIO_TYPES.has(contentType);
+
+    if (!isImage && !isVideo && !isAudio) {
+      res.status(400).json({ error: 'Only image, video, or audio uploads are allowed' });
       return;
     }
 
+    // Enforce per-type size limits
     if (isImage && req.body.length > MAX_UPLOAD_BYTES) {
       res.status(413).json({ error: 'Images must be 20 MB or smaller' });
       return;
     }
+    if (isAudio && req.body.length > MAX_AUDIO_UPLOAD_BYTES) {
+      res.status(413).json({ error: 'Audio files must be 25 MB or smaller' });
+      return;
+    }
+    // Videos: already capped by express.raw limit (100 MB)
 
-    // Validate first bytes as a known image/video magic number
-    const magic = isImage
-      ? validateImageMagicBytes(req.body)
-      : validateVideoMagicBytes(req.body);
+    // Validate first bytes as a known magic number
+    let magic: string | null;
+    if (isImage) {
+      magic = validateImageMagicBytes(req.body);
+    } else if (isVideo) {
+      magic = validateVideoMagicBytes(req.body);
+    } else {
+      magic = validateAudioMagicBytes(req.body);
+    }
     if (!magic) {
       res.status(400).json({ error: 'File content does not match a supported format' });
       return;
@@ -121,19 +265,59 @@ router.post(
     const purpose = getHeader(req, 'x-aimd-upload-purpose');
     const isChallengeProof = purpose !== null && CHALLENGE_UPLOAD_PURPOSES.has(purpose);
     const isAssignmentFootage = purpose === ASSIGNMENT_UPLOAD_PURPOSE;
+    const isInstructorFeedback = purpose === INSTRUCTOR_FEEDBACK_PURPOSE;
     const captureSource = getHeader(req, 'x-aimd-capture-source');
     const capturedAt = parseCaptureTimestamp(getHeader(req, 'x-aimd-captured-at'));
     const exifTimestamp = parseCaptureTimestamp(getHeader(req, 'x-aimd-exif-timestamp'));
     const devicePlatform = getHeader(req, 'x-aimd-device-platform');
     const cameraFacing = getHeader(req, 'x-aimd-camera-facing');
 
-    if (purpose && !isChallengeProof && !isAssignmentFootage) {
-      res.status(400).json({ error: 'Invalid proof upload purpose' });
+    if (purpose && !isChallengeProof && !isAssignmentFootage && !isInstructorFeedback) {
+      res.status(400).json({ error: 'Invalid upload purpose' });
       return;
     }
     if (isAssignmentFootage && !isVideo) {
       res.status(400).json({ error: 'Assignment uploads must be video footage' });
       return;
+    }
+    if (isInstructorFeedback && !isVideo && !isAudio) {
+      res.status(400).json({ error: 'Instructor feedback media must be video or audio' });
+      return;
+    }
+    if (!isInstructorFeedback && isAudio) {
+      // Audio is only permitted for instructor_feedback
+      res.status(400).json({ error: 'Audio uploads are only allowed for instructor feedback' });
+      return;
+    }
+
+    // ── Server-side 30-second enforcement for assignment drill submissions ──────
+    // FAIL CLOSED: if ffprobe cannot determine duration, we reject the upload.
+    // This prevents bypass via corrupt containers or missing video streams.
+    let measuredDurationSeconds: number | null = null;
+    if (isAssignmentFootage) {
+      const durationResult = await measureVideoDurationSeconds(req.body);
+      if (!durationResult.ok) {
+        const detail =
+          durationResult.reason === 'ffprobe_unavailable'
+            ? 'Duration measurement service unavailable'
+            : durationResult.reason === 'no_video_stream'
+              ? 'No video stream found in uploaded file'
+              : 'Uploaded file is unreadable or corrupt';
+        res.status(422).json({
+          error: `Assignment video could not be validated: ${detail}`,
+          reason: durationResult.reason,
+        });
+        return;
+      }
+      measuredDurationSeconds = durationResult.seconds;
+      if (measuredDurationSeconds > ASSIGNMENT_MAX_DURATION_SECONDS) {
+        res.status(422).json({
+          error: `Assignment video exceeds the ${ASSIGNMENT_MAX_DURATION_SECONDS}-second limit`,
+          measuredDurationSeconds,
+          maxAllowed: ASSIGNMENT_MAX_DURATION_SECONDS,
+        });
+        return;
+      }
     }
 
     if (isChallengeProof) {
@@ -169,19 +353,23 @@ router.post(
       }
     }
 
+    // Determine media type label for response
+    const mediaType: 'image' | 'video' | 'audio' = isAudio ? 'audio' : isVideo ? 'video' : 'image';
+
     try {
       const ownerId = String((req as any).dbUser.id);
-      const storedMedia = isChallengeProof || isAssignmentFootage
+      const storedMedia = isChallengeProof || isAssignmentFootage || isInstructorFeedback
         ? await sanitizeChallengeMedia(req.body, contentType)
         : { buffer: req.body, contentType };
       const sha256 = createHash('sha256')
         .update(storedMedia.buffer)
         .digest('hex');
+      const isPrivate = isAssignmentFootage || isInstructorFeedback;
       const objectPath = await objectStorageService.uploadObjectEntity(
         storedMedia.buffer,
         storedMedia.contentType,
         ownerId,
-        isAssignmentFootage ? 'private' : 'public',
+        isPrivate ? 'private' : 'public',
       );
 
       if (isChallengeProof) {
@@ -202,7 +390,7 @@ router.post(
             Number(ownerId),
             objectPath,
             purpose,
-            isVideo ? 'video' : 'image',
+            mediaType,
             storedMedia.contentType,
             sha256,
             captureSource,
@@ -213,15 +401,38 @@ router.post(
         );
       }
 
+      // Record the assignment media upload durably so POST /assignments can
+      // verify the submission passed the ffprobe drill gate. The measured
+      // duration stored here is authoritative (ceil to whole seconds).
+      let recordedDurationSeconds: number | null = null;
+      if (isAssignmentFootage && measuredDurationSeconds !== null) {
+        recordedDurationSeconds = Math.ceil(measuredDurationSeconds);
+        await pool.query(
+          `INSERT INTO assignment_media_uploads
+             (user_id, object_path, measured_duration_seconds, capture_source, sha256, content_type)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           ON CONFLICT (object_path) DO NOTHING`,
+          [
+            Number(ownerId),
+            objectPath,
+            recordedDurationSeconds,
+            captureSource,
+            sha256,
+            storedMedia.contentType,
+          ],
+        );
+      }
+
       res.json({
         objectPath,
-        mediaType: isVideo ? 'video' : 'image',
+        mediaType,
         sha256,
         proofRecorded: isChallengeProof,
+        measuredDurationSeconds: isAssignmentFootage ? recordedDurationSeconds : undefined,
       });
     } catch (error) {
       req.log.error({ err: error }, 'Error uploading object');
-      res.status(500).json({ error: 'Failed to upload image' });
+      res.status(500).json({ error: 'Failed to upload file' });
     }
   },
 );
@@ -266,8 +477,8 @@ router.get(
 /**
  * GET /storage/objects/*
  *
- * Serve user-uploaded image objects from PRIVATE_OBJECT_DIR.
- * Content-Type is validated against the image allowlist before serving.
+ * Serve user-uploaded image/video/audio objects from PRIVATE_OBJECT_DIR.
+ * Content-Type is validated against the media allowlists before serving.
  * Security headers prevent content sniffing and script execution.
  */
 router.get('/storage/objects/*path', async (req: Request, res: Response) => {
@@ -279,11 +490,15 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
 
     // Enforce ACL: only objects with an explicit public-read policy are served.
     // Objects without an ACL (unrelated private uploads) are rejected.
-    const canAccess = (req.dbUser as any)?.isAdmin === true || await objectStorageService.canAccessObjectEntity({
+    let canAccess = (req.dbUser as any)?.isAdmin === true || await objectStorageService.canAccessObjectEntity({
       userId: req.dbUser ? String(req.dbUser.id) : undefined,
       objectFile,
       requestedPermission: ObjectPermission.READ,
     });
+    // Assigned instructors may read student assignment footage for review.
+    if (!canAccess && req.dbUser) {
+      canAccess = await canInstructorAccessSubmission(req.dbUser.id, objectPath);
+    }
     if (!canAccess) {
       res.status(403).json({ error: 'Forbidden' });
       return;
@@ -291,10 +506,10 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
 
     const response = await objectStorageService.downloadObject(objectFile);
 
-    // Validate stored content type is an image before serving.
+    // Validate stored content type is an allowed media type before serving.
     const contentType = response.headers.get('content-type') ?? '';
     const baseType = contentType.split(';')[0].trim().toLowerCase();
-    if (!ALLOWED_IMAGE_TYPES.has(baseType) && !ALLOWED_VIDEO_TYPES.has(baseType)) {
+    if (!ALLOWED_IMAGE_TYPES.has(baseType) && !ALLOWED_VIDEO_TYPES.has(baseType) && !ALLOWED_AUDIO_TYPES.has(baseType)) {
       res.status(415).json({ error: 'Object is not a permitted media type' });
       return;
     }
@@ -374,6 +589,41 @@ function validateVideoMagicBytes(buf: Buffer): string | null {
   if (
     buf[0] === 0x1a && buf[1] === 0x45 && buf[2] === 0xdf && buf[3] === 0xa3
   ) return 'video/webm';
+
+  return null;
+}
+
+/**
+ * Validate that the buffer starts with a known audio format magic-byte signature.
+ * Returns the detected MIME type or null if unrecognized.
+ */
+function validateAudioMagicBytes(buf: Buffer): string | null {
+  if (buf.length < 4) return null;
+
+  // MP3: ID3 tag (49 44 33) or MPEG sync frame (FF FB / FF F3 / FF F2)
+  if (buf[0] === 0x49 && buf[1] === 0x44 && buf[2] === 0x33) return 'audio/mpeg'; // ID3
+  if (buf[0] === 0xff && (buf[1] === 0xfb || buf[1] === 0xf3 || buf[1] === 0xf2)) return 'audio/mpeg'; // MPEG frame
+
+  // M4A / AAC in MP4 container: ISO BMFF ftyp (same as MP4 video, MIME differs)
+  if (
+    buf.length >= 8 &&
+    buf[4] === 0x66 && buf[5] === 0x74 && buf[6] === 0x79 && buf[7] === 0x70
+  ) return 'audio/mp4';
+
+  // OGG: 4F 67 67 53
+  if (buf[0] === 0x4f && buf[1] === 0x67 && buf[2] === 0x67 && buf[3] === 0x53) return 'audio/ogg';
+
+  // WAV: RIFF ... WAVE
+  if (
+    buf.length >= 12 &&
+    buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
+    buf[8] === 0x57 && buf[9] === 0x41 && buf[10] === 0x56 && buf[11] === 0x45
+  ) return 'audio/wav';
+
+  // WebM audio: EBML header (same as WebM video — MIME type set by Content-Type header)
+  if (
+    buf[0] === 0x1a && buf[1] === 0x45 && buf[2] === 0xdf && buf[3] === 0xa3
+  ) return 'audio/webm';
 
   return null;
 }

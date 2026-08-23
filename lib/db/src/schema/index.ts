@@ -13,3 +13,4 @@ export * from "./store";
 export * from "./progress"; // exports creatorDailyCheckinsTable, creatorRewardSpinsTable
 export * from "./challenges";
 export * from "./tattoo-bookings";
+export * from "./instructor"; // userRolesTable, instructorProfilesTable, workshopInstructorsTable, drillPromptsTable, assignmentExtensionsTable, assignmentMediaUploadsTable

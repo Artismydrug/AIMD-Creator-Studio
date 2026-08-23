@@ -8,6 +8,11 @@ import {
   useListAdminUsers,
   useListAdminTattooBookings,
   useUpdateAdminTattooBooking,
+  useListInstructors,
+  useCreateInstructor,
+  useLinkInstructorUser,
+  useAssignInstructorToWorkshop,
+  useListWorkshops,
 } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -255,7 +260,7 @@ function ChallengeWinnerCard() {
 
 const TIER_LABELS: Record<string, string> = {
   free: 'Starter',
-  workshop: 'Academy',
+  workshop: 'Workshops & Masterclasses',
   pro: 'Pro',
 };
 
@@ -340,6 +345,227 @@ function MembersCard() {
           </table>
         </div>
       )}
+    </section>
+  );
+}
+
+// ─── Instructor Management ───────────────────────────────────────────────────
+
+function InstructorManagementCard() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: instructors = [], isLoading: loadingInstructors } = useListInstructors();
+  const { data: usersData, isLoading: loadingUsers } = useListAdminUsers();
+  const { data: workshops = [], isLoading: loadingWorkshops } = useListWorkshops();
+
+  const createInstructor = useCreateInstructor();
+  const linkUser = useLinkInstructorUser();
+  const assignWorkshop = useAssignInstructorToWorkshop();
+
+  const [displayName, setDisplayName] = useState('');
+  const [bio, setBio] = useState('');
+  const [selectedInstructorId, setSelectedInstructorId] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [selectedWorkshopId, setSelectedWorkshopId] = useState('');
+
+  const handleCreate = () => {
+    if (!displayName.trim()) return;
+    createInstructor.mutate(
+      { data: { displayName, mentorSlug: displayName.toLowerCase().replace(/[^a-z0-9]/g, '-'), bio: bio || undefined } },
+      {
+        onSuccess: () => {
+          toast({ title: 'Instructor Created', description: `${displayName} has been added.` });
+          setDisplayName('');
+          setBio('');
+          queryClient.invalidateQueries({ queryKey: ['listInstructors'] });
+        },
+        onError: (err: any) => {
+          toast({ title: 'Error', description: err.message, variant: 'destructive' });
+        }
+      }
+    );
+  };
+
+  const handleLink = () => {
+    if (!selectedInstructorId || !selectedUserId) return;
+    linkUser.mutate(
+      { instructorId: parseInt(selectedInstructorId, 10), data: { userId: parseInt(selectedUserId, 10) } },
+      {
+        onSuccess: () => {
+          toast({ title: 'Account Linked', description: 'Instructor successfully linked to user account.' });
+          setSelectedInstructorId('');
+          setSelectedUserId('');
+          queryClient.invalidateQueries({ queryKey: ['listInstructors'] });
+        },
+        onError: (err: any) => {
+          toast({ title: 'Error', description: err.message, variant: 'destructive' });
+        }
+      }
+    );
+  };
+
+  const handleAssign = () => {
+    if (!selectedInstructorId || !selectedWorkshopId) return;
+    assignWorkshop.mutate(
+      { instructorId: parseInt(selectedInstructorId, 10), data: { workshopId: parseInt(selectedWorkshopId, 10) } },
+      {
+        onSuccess: () => {
+          toast({ title: 'Workshop Assigned', description: 'Instructor assigned to workshop.' });
+          setSelectedInstructorId('');
+          setSelectedWorkshopId('');
+          queryClient.invalidateQueries({ queryKey: ['listInstructors'] });
+        },
+        onError: (err: any) => {
+          toast({ title: 'Error', description: err.message, variant: 'destructive' });
+        }
+      }
+    );
+  };
+
+  return (
+    <section className="border border-border bg-card p-6 md:p-8">
+      <div className="flex items-center gap-2 mb-6">
+        <Users className="w-5 h-5 text-primary" />
+        <h2 className="font-display font-bold text-xl uppercase">Instructor Management</h2>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Create Instructor */}
+        <div className="space-y-4">
+          <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground border-b border-border pb-2">1. Create Instructor Profile</h3>
+          <div className="space-y-2">
+            <label className="text-xs uppercase font-mono text-muted-foreground">Display Name</label>
+            <Input 
+              placeholder="e.g. Poncho The Artist" 
+              className="rounded-none bg-background border-border" 
+              value={displayName} 
+              onChange={e => setDisplayName(e.target.value)} 
+              data-testid="admin-instructor-name-input"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs uppercase font-mono text-muted-foreground">Bio (Optional)</label>
+            <Textarea 
+              placeholder="Instructor credentials..." 
+              className="rounded-none bg-background border-border resize-none" 
+              value={bio} 
+              onChange={e => setBio(e.target.value)}
+              data-testid="admin-instructor-bio-input"
+            />
+          </div>
+          <Button 
+            onClick={handleCreate} 
+            disabled={!displayName || createInstructor.isPending}
+            className="w-full rounded-none bg-primary text-primary-foreground font-mono uppercase"
+            data-testid="admin-create-instructor-btn"
+          >
+            Create Instructor
+          </Button>
+        </div>
+
+        <div className="space-y-8">
+          {/* Link to Account */}
+          <div className="space-y-4">
+            <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground border-b border-border pb-2">2. Link to User Account</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <select 
+                className="h-10 px-3 bg-background border border-border text-sm font-mono focus:outline-none"
+                value={selectedInstructorId}
+                onChange={e => setSelectedInstructorId(e.target.value)}
+                data-testid="admin-link-instructor-select"
+              >
+                <option value="">Select Instructor...</option>
+                {instructors.map(inst => (
+                  <option key={inst.id} value={inst.id}>{inst.displayName}</option>
+                ))}
+              </select>
+              <select 
+                className="h-10 px-3 bg-background border border-border text-sm font-mono focus:outline-none"
+                value={selectedUserId}
+                onChange={e => setSelectedUserId(e.target.value)}
+                data-testid="admin-link-user-select"
+              >
+                <option value="">Select User...</option>
+                {usersData?.members?.map((m: any) => (
+                  <option key={m.id} value={m.id}>{m.username} ({m.email})</option>
+                ))}
+              </select>
+            </div>
+            <Button 
+              onClick={handleLink} 
+              disabled={!selectedInstructorId || !selectedUserId || linkUser.isPending}
+              variant="outline"
+              className="w-full rounded-none font-mono uppercase"
+              data-testid="admin-link-btn"
+            >
+              Link Account
+            </Button>
+          </div>
+
+          {/* Assign to Workshop */}
+          <div className="space-y-4">
+            <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground border-b border-border pb-2">3. Assign to Workshop</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <select 
+                className="h-10 px-3 bg-background border border-border text-sm font-mono focus:outline-none"
+                value={selectedInstructorId}
+                onChange={e => setSelectedInstructorId(e.target.value)}
+                data-testid="admin-assign-instructor-select"
+              >
+                <option value="">Select Instructor...</option>
+                {instructors.map(inst => (
+                  <option key={inst.id} value={inst.id}>{inst.displayName}</option>
+                ))}
+              </select>
+              <select 
+                className="h-10 px-3 bg-background border border-border text-sm font-mono focus:outline-none"
+                value={selectedWorkshopId}
+                onChange={e => setSelectedWorkshopId(e.target.value)}
+                data-testid="admin-assign-workshop-select"
+              >
+                <option value="">Select Workshop...</option>
+                {workshops.map(w => (
+                  <option key={w.id} value={w.id}>{w.title}</option>
+                ))}
+              </select>
+            </div>
+            <Button 
+              onClick={handleAssign} 
+              disabled={!selectedInstructorId || !selectedWorkshopId || assignWorkshop.isPending}
+              variant="outline"
+              className="w-full rounded-none font-mono uppercase"
+              data-testid="admin-assign-btn"
+            >
+              Assign Workshop
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Existing Instructors List */}
+      <div className="mt-8 pt-6 border-t border-border">
+        <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-4">Current Instructors</h3>
+        {loadingInstructors ? (
+          <p className="font-mono text-sm text-muted-foreground animate-pulse">Loading...</p>
+        ) : instructors.length === 0 ? (
+          <p className="font-mono text-sm text-muted-foreground">No instructors created yet.</p>
+        ) : (
+          <div className="space-y-3">
+            {instructors.map(inst => (
+              <div key={inst.id} className="p-4 border border-border bg-background flex items-center justify-between">
+                <div>
+                  <p className="font-bold">{inst.displayName}</p>
+                  <p className="text-xs text-muted-foreground font-mono">ID: {inst.id} {inst.userId ? `· Linked to User: ${inst.userId}` : '· Unlinked'}</p>
+                </div>
+                <div className="text-xs font-mono text-primary bg-primary/10 px-2 py-1">
+                  ID: {inst.id}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   );
 }
@@ -527,13 +753,14 @@ export default function Admin() {
           </div>
           <h1 className="font-display font-black text-4xl md:text-5xl uppercase tracking-tight">Admin Dashboard</h1>
           <p className="text-muted-foreground font-mono text-sm mt-1">
-            Manage bookings · Post events · Pick challenge winners
+            Manage bookings · Post events · Pick challenge winners · Manage instructors
           </p>
         </div>
       </div>
 
       <div className="px-6 md:px-10 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
+          <InstructorManagementCard />
           <TattooBookingsCard />
           <MembersCard />
           <CreateEventCard />

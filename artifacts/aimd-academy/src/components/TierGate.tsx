@@ -11,9 +11,9 @@ type Tier = 'free' | 'academy' | 'pro';
 const TIER_RANK: Record<string, number> = { free: 0, academy: 1, pro: 2 };
 
 const TIER_LABELS: Record<Tier, string> = {
-  free:    'Studio Starter Pass',
-  academy: 'Academy Pass',
-  pro:     'Pro / Career',
+  free:    'Discovering Artist',
+  academy: 'Dedicated Artist',
+  pro:     'Professional Artist',
 };
 
 const TIER_PRICES: Record<Tier, string> = {

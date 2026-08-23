@@ -69,14 +69,15 @@ export default function ProEcosystemPortal({ user }: Props) {
 
   return (
     <View style={s.wrapper} testID="pro-ecosystem-portal">
-      <Text style={s.eyebrow}>Phase 3 · Pro Ecosystem</Text>
+      <Text style={s.eyebrow}>Professional Artist · Ecosystem Partner Pipeline</Text>
       <Text style={s.title}>{isPro ? 'Your professional runway' : 'Professional access, when you are ready'}</Text>
       {!isPro ? (
         <View style={s.locked}>
           <Feather name="lock" size={22} color={colors.gold} />
           <Text style={s.body}>
-            Phase 3 unlocks affiliate tracking, physical studio applications,
-            resident opportunities, and priority brand partnerships.
+            Professional Artist unlocks monthly coaching sessions, the Ecosystem
+            Partner and Affiliate Pipeline, priority affiliate tracking, studio
+            applications, and resident opportunities.
           </Text>
         </View>
       ) : (

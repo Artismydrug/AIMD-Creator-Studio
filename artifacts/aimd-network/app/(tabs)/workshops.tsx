@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  Linking,
   Platform,
   RefreshControl,
   ScrollView,
@@ -14,8 +13,8 @@ import {
   View,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import DrillCameraCapture from '@/components/DrillCameraCapture';
 import {
   customFetch,
   getGetWorkshopQueryKey,
@@ -34,6 +33,12 @@ import { useSubscription } from '@/lib/revenuecat';
 
 const featuredTracks = [
   {
+    icon: 'feather' as const,
+    title: 'Visual Arts Foundations',
+    instructor: 'Drawing, painting, and mixed media',
+    accent: 'coral' as const,
+  },
+  {
     icon: 'edit-3' as const,
     title: 'Tattoo Apprenticeship Prep',
     instructor: 'Poncho The Artist',
@@ -41,23 +46,29 @@ const featuredTracks = [
   },
   {
     icon: 'headphones' as const,
-    title: 'Music Production',
-    instructor: 'Production fundamentals',
+    title: 'Audio Production',
+    instructor: 'Beat-making and studio fundamentals',
     accent: 'cyan' as const,
   },
   {
-    icon: 'droplet' as const,
-    title: 'Custom Painting',
-    instructor: 'Surface, color, and finish',
+    icon: 'scissors' as const,
+    title: 'Garment Design',
+    instructor: 'Pattern, construction, and finish',
     accent: 'coral' as const,
+  },
+  {
+    icon: 'activity' as const,
+    title: 'The Art of Basketball',
+    instructor: 'David Singleton',
+    accent: 'magenta' as const,
   },
 ];
 
-type SelectedVideo = {
+type CapturedVideo = {
   uri: string;
   contentType: string;
   fileName: string;
-  fileSize: number;
+  durationSecs: number;
 };
 
 export default function WorkshopsScreen() {
@@ -69,7 +80,8 @@ export default function WorkshopsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedWorkshopId, setSelectedWorkshopId] = useState<number | null>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
-  const [selectedVideo, setSelectedVideo] = useState<SelectedVideo | null>(null);
+  const [capturedVideo, setCapturedVideo] = useState<CapturedVideo | null>(null);
+  const [drillCameraVisible, setDrillCameraVisible] = useState(false);
   const [submissionNote, setSubmissionNote] = useState('');
   const [uploading, setUploading] = useState(false);
 
@@ -114,7 +126,7 @@ export default function WorkshopsScreen() {
     mutation: {
       onSuccess: () => {
         setUploading(false);
-        setSelectedVideo(null);
+        setCapturedVideo(null);
         setSubmissionNote('');
         void safeImpact();
         queryClient.invalidateQueries({ queryKey: getListAssignmentsQueryKey() });
@@ -127,53 +139,22 @@ export default function WorkshopsScreen() {
     },
   });
 
-  const pickAssignmentVideo = async () => {
-    if (Platform.OS === 'web') {
-      Alert.alert('Mobile app required', 'Upload assignment footage from the AIMD iOS or Android app.');
-      return;
-    }
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert(
-        'Library permission needed',
-        'Allow video library access to submit footage to The Warehouse.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Open settings', onPress: () => Linking.openSettings() },
-        ],
-      );
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['videos'],
-      videoMaxDuration: 180,
-    });
-    const asset = !result.canceled ? result.assets[0] : undefined;
-    if (!asset) return;
-    if ((asset.fileSize ?? 0) > 50 * 1024 * 1024) {
-      Alert.alert('Video is too large', 'Choose a clip under 50 MB.');
-      return;
-    }
-    setSelectedVideo({
-      uri: asset.uri,
-      contentType: asset.mimeType ?? 'video/mp4',
-      fileName: asset.fileName ?? 'assignment-footage.mp4',
-      fileSize: asset.fileSize ?? 0,
-    });
-    void safeImpact();
-  };
-
   const handleSubmit = async () => {
-    if (!selectedVideo || !selectedWorkshopId || !selectedModuleId) return;
+    if (!capturedVideo || !selectedWorkshopId || !selectedModuleId) return;
     setUploading(true);
     try {
-      const response = await fetch(selectedVideo.uri);
+      const response = await fetch(capturedVideo.uri);
       const body = await response.arrayBuffer();
-      const uploaded = await customFetch<{ objectPath: string }>('/api/storage/uploads', {
+      const uploaded = await customFetch<{
+        objectPath: string;
+        measuredDurationSeconds: number;
+      }>('/api/storage/uploads', {
         method: 'POST',
         headers: {
-          'Content-Type': selectedVideo.contentType,
+          'Content-Type': capturedVideo.contentType,
           'X-AIMD-Upload-Purpose': 'assignment',
+          'X-AIMD-Capture-Source': 'native_camera',
+          'X-AIMD-Capture-Duration': String(capturedVideo.durationSecs),
         },
         body,
       });
@@ -221,10 +202,10 @@ export default function WorkshopsScreen() {
     cardBody: { fontFamily: 'DMSans_400Regular', fontSize: 13, lineHeight: 19, color: colors.mutedForeground },
     metaRow: { flexDirection: 'row', gap: 14 },
     meta: { fontFamily: 'DMSans_500Medium', fontSize: 11, color: colors.mutedForeground },
-    warehouse: { marginHorizontal: 20, marginTop: 4, padding: 18, borderRadius: colors.radius, backgroundColor: colors.foreground, gap: 14 },
-    warehouseEyebrow: { fontFamily: 'DMSans_700Bold', color: colors.cyan, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.5 },
-    warehouseTitle: { fontFamily: 'DMSans_700Bold', color: colors.background, fontSize: 24 },
-    warehouseBody: { fontFamily: 'DMSans_400Regular', color: colors.background, opacity: 0.78, fontSize: 13, lineHeight: 19 },
+    submissionHub: { marginHorizontal: 20, marginTop: 4, padding: 18, borderRadius: colors.radius, backgroundColor: colors.foreground, gap: 14 },
+    submissionHubEyebrow: { fontFamily: 'DMSans_700Bold', color: colors.cyan, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.5 },
+    submissionHubTitle: { fontFamily: 'DMSans_700Bold', color: colors.background, fontSize: 24 },
+    submissionHubBody: { fontFamily: 'DMSans_400Regular', color: colors.background, opacity: 0.78, fontSize: 13, lineHeight: 19 },
     selector: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
     chip: { paddingVertical: 7, paddingHorizontal: 10, borderRadius: 99, borderWidth: 1, borderColor: 'rgba(250,248,245,0.25)' },
     chipActive: { backgroundColor: colors.cyan, borderColor: colors.cyan },
@@ -257,16 +238,16 @@ export default function WorkshopsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
         <View style={s.header}>
-          <Text style={s.eyebrow}>Phase 2 · Workshops & Mastery</Text>
+          <Text style={s.eyebrow}>Dedicated Artist · Workshops & Masterclasses</Text>
           <Text style={s.title}>Build mastery. Show the work.</Text>
-          <Text style={s.intro}>Video-led instruction, practical modules, and direct instructor feedback in one creator workspace.</Text>
+          <Text style={s.intro}>Video-led instruction across visual arts, tattoo prep, audio production, garment design, and more — with direct instructor feedback.</Text>
         </View>
 
         {!hasPhaseTwo ? (
           <View style={s.locked}>
             <Feather name="lock" size={28} color={colors.gold} />
-            <Text style={s.lockedTitle}>Phase 2 access required</Text>
-            <Text style={s.lockedBody}>Upgrade to Workshops & Mastery to unlock the full masterclass library and The Warehouse submission hub.</Text>
+            <Text style={s.lockedTitle}>Dedicated Artist access required</Text>
+            <Text style={s.lockedBody}>Upgrade to Dedicated Artist to unlock the full Workshops and Masterclasses library and assignment submission with direct instructor feedback.</Text>
             <TouchableOpacity
               style={s.upgrade}
               testID="mastery-upgrade"
@@ -289,9 +270,9 @@ export default function WorkshopsScreen() {
                 {featuredTracks.map((track) => {
                   const accent = track.accent === 'magenta' ? colors.electricMagenta : track.accent === 'cyan' ? colors.cyan : colors.sunsetCoral;
                   return (
-                    <View key={track.title} style={s.track}>
+                    <View key={track.title} style={s.track} testID={`track-${track.title.replace(/\s+/g, '-').toLowerCase()}`}>
                       <View style={[s.trackIcon, { backgroundColor: accent }]}><Feather name={track.icon} size={19} color={colors.primaryForeground} /></View>
-                      <View>
+                      <View style={{ flex: 1 }}>
                         <Text style={s.trackTitle}>{track.title}</Text>
                         <Text style={s.trackMeta}>{track.instructor}</Text>
                       </View>
@@ -307,6 +288,7 @@ export default function WorkshopsScreen() {
                 <TouchableOpacity
                   key={workshop.id}
                   style={[s.card, selectedWorkshopId === workshop.id && s.selectedCard]}
+                  testID={`workshop-card-${workshop.id}`}
                   onPress={() => {
                     setSelectedWorkshopId(workshop.id);
                     setSelectedModuleId(null);
@@ -326,24 +308,35 @@ export default function WorkshopsScreen() {
               ))}
             </View>
 
-            <View style={s.warehouse} testID="warehouse-hub">
-              <Text style={s.warehouseEyebrow}>The Warehouse</Text>
-              <Text style={s.warehouseTitle}>Submit assignment footage</Text>
-              <Text style={s.warehouseBody}>Choose a module, attach a short process or final clip, and place it in the instructor review queue.</Text>
+            <View style={s.submissionHub} testID="assignment-hub">
+              <Text style={s.submissionHubEyebrow}>Assignment Submission</Text>
+              <Text style={s.submissionHubTitle}>Record and submit footage</Text>
+              <Text style={s.submissionHubBody}>Select a module, record a short clip live in the app, and place it in the instructor review queue.</Text>
               <View style={s.selector}>
                 {workshopDetail?.modules.map((module) => (
                   <TouchableOpacity
                     key={module.id}
                     style={[s.chip, selectedModuleId === module.id && s.chipActive]}
+                    testID={`module-chip-${module.id}`}
                     onPress={() => setSelectedModuleId(module.id)}
                   >
                     <Text style={[s.chipText, selectedModuleId === module.id && s.chipTextActive]}>{module.order}. {module.title}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
-              <TouchableOpacity style={s.picker} onPress={pickAssignmentVideo} testID="warehouse-pick-video">
-                <Feather name={selectedVideo ? 'check-circle' : 'upload-cloud'} size={24} color={colors.gold} />
-                <Text style={s.pickerText}>{selectedVideo ? selectedVideo.fileName : 'Choose assignment footage'}</Text>
+              <TouchableOpacity
+                style={s.picker}
+                onPress={() => setDrillCameraVisible(true)}
+                testID="assignment-record-video"
+                accessibilityRole="button"
+                accessibilityLabel="Record assignment footage"
+              >
+                <Feather name={capturedVideo ? 'check-circle' : 'video'} size={24} color={colors.gold} />
+                <Text style={s.pickerText}>
+                  {capturedVideo
+                    ? `Footage recorded — ${Math.round(capturedVideo.durationSecs)}s`
+                    : 'Record assignment footage'}
+                </Text>
               </TouchableOpacity>
               <TextInput
                 style={s.note}
@@ -355,19 +348,21 @@ export default function WorkshopsScreen() {
                 maxLength={500}
               />
               <TouchableOpacity
-                style={[s.submit, { opacity: selectedVideo && selectedModuleId ? 1 : 0.4 }]}
-                disabled={!selectedVideo || !selectedModuleId || uploading || submitAssignment.isPending}
+                style={[s.submit, { opacity: capturedVideo && selectedModuleId ? 1 : 0.4 }]}
+                disabled={!capturedVideo || !selectedModuleId || uploading || submitAssignment.isPending}
                 onPress={handleSubmit}
-                testID="warehouse-submit"
+                testID="assignment-submit"
               >
-                {uploading || submitAssignment.isPending ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={s.submitText}>Send to instructor review</Text>}
+                {uploading || submitAssignment.isPending
+                  ? <ActivityIndicator color={colors.primaryForeground} />
+                  : <Text style={s.submitText}>Send to instructor review</Text>}
               </TouchableOpacity>
 
               {(assignments?.length ?? 0) > 0 && (
                 <>
-                  <Text style={s.warehouseEyebrow}>Recent submissions</Text>
+                  <Text style={s.submissionHubEyebrow}>Recent submissions</Text>
                   {assignments?.slice(0, 3).map((assignment) => (
-                    <View key={assignment.id} style={s.assignment}>
+                    <View key={assignment.id} style={s.assignment} testID={`assignment-item-${assignment.id}`}>
                       <Feather name={assignment.status === 'reviewed' ? 'check-circle' : 'clock'} size={18} color={assignment.status === 'reviewed' ? colors.cyan : colors.gold} />
                       <View style={s.assignmentCopy}>
                         <Text style={s.assignmentTitle}>{assignment.workshopTitle ?? 'Workshop assignment'}</Text>
@@ -381,6 +376,16 @@ export default function WorkshopsScreen() {
           </>
         )}
       </ScrollView>
+
+      <DrillCameraCapture
+        visible={drillCameraVisible}
+        onClose={() => setDrillCameraVisible(false)}
+        onCaptured={(video) => {
+          setCapturedVideo(video);
+          setDrillCameraVisible(false);
+          void safeImpact();
+        }}
+      />
     </View>
   );
 }

@@ -1,9 +1,9 @@
 /**
  * Clerk webhook handler.
  *
- * Handles `user.updated` and `user.deleted` events delivered by Clerk via Svix.
- * The raw request body must be passed through unchanged (no JSON body parser
- * before this route) so that Svix can verify the HMAC signature.
+ * Handles `user.created`, `user.updated`, and `user.deleted` events delivered
+ * by Clerk via Svix. The raw request body must be passed through unchanged (no
+ * JSON body parser before this route) so that Svix can verify the HMAC signature.
  *
  * Environment variable required:
  *   CLERK_WEBHOOK_SECRET  — the "Signing Secret" shown in the Clerk dashboard
@@ -12,9 +12,16 @@
 
 import type { Request, Response } from "express";
 import { Webhook } from "svix";
-import { db, usersTable, eventRsvpsTable, eventAttendancesTable, sponsorshipsTable } from "@workspace/db";
+import {
+  db,
+  usersTable,
+  eventRsvpsTable,
+  eventAttendancesTable,
+  sponsorshipsTable,
+} from "@workspace/db";
 import { and, eq, isNull } from "drizzle-orm";
 import { logger } from "../../lib/logger";
+import { validateRoleMetadataHints } from "../../lib/roleMetadataSync";
 
 // ── Clerk event payload types (minimal) ──────────────────────────────────────
 
@@ -31,6 +38,16 @@ interface ClerkUserPayload {
   first_name: string | null;
   last_name: string | null;
   deleted?: boolean;
+  /**
+   * Clerk public_metadata — written ONLY by server-side admin actions.
+   * Values are advisory/display hints. DB is always authoritative for auth.
+   * See roleMetadataSync.ts for the shared validation logic.
+   */
+  public_metadata?: {
+    aimdRole?: string;
+    mentorSlug?: string;
+    [key: string]: unknown;
+  };
 }
 
 interface ClerkWebhookEvent {
@@ -39,14 +56,6 @@ interface ClerkWebhookEvent {
 }
 
 // ── Svix signature verification ───────────────────────────────────────────────
-
-function getWebhookSecret(): string {
-  const secret = process.env.CLERK_WEBHOOK_SECRET;
-  if (!secret) {
-    throw new Error("CLERK_WEBHOOK_SECRET environment variable is not set");
-  }
-  return secret;
-}
 
 // ── Express route handler (exported for app.ts) ───────────────────────────────
 
@@ -90,7 +99,7 @@ export async function handleClerkWebhook(req: Request, res: Response): Promise<v
   logger.info({ eventType: type, clerkUserId: data.id }, "Clerk webhook received");
 
   try {
-    if (type === "user.updated") {
+    if (type === "user.created" || type === "user.updated") {
       await handleUserUpdated(data);
     } else if (type === "user.deleted") {
       await handleUserDeleted(data);
@@ -141,6 +150,7 @@ async function handleUserUpdated(data: ClerkUserPayload): Promise<void> {
     return;
   }
 
+  // ── Sync basic identity fields ─────────────────────────────────────────────
   const updates: Partial<typeof usersTable.$inferInsert> = {};
 
   // Always back-fill clerkId if missing (covers the migration window).
@@ -166,13 +176,32 @@ async function handleUserUpdated(data: ClerkUserPayload): Promise<void> {
     updates.lastName = lastName;
   }
 
-  if (Object.keys(updates).length === 0) {
+  if (Object.keys(updates).length > 0) {
+    await db.update(usersTable).set(updates).where(eq(usersTable.id, existing.id));
+    logger.info({ clerkUserId: data.id, updates }, "user.updated: local row synced");
+  } else {
     logger.info({ clerkUserId: data.id }, "user.updated: no tracked fields changed");
-    return;
   }
 
-  await db.update(usersTable).set(updates).where(eq(usersTable.id, existing.id));
-  logger.info({ clerkUserId: data.id, updates }, "user.updated: local row synced");
+  // ── Validate public_metadata role hints (shared with JIT auth) ─────────────
+  //
+  // Uses the SAME validateRoleMetadataHints() function used in clerkAuth.ts so
+  // both paths share identical validation logic.
+  //
+  // This does NOT create or modify any DB rows. It only:
+  //  1. Verifies mentorSlug is backed by an already DB-linked instructor profile.
+  //  2. Checks that aimdRole claims are consistent with the DB role table.
+  //  3. Logs discrepancies — admin must explicitly link/grant via the admin API.
+  const metaRole = data.public_metadata?.aimdRole;
+  const metaMentorSlug = data.public_metadata?.mentorSlug;
+
+  if (metaRole || metaMentorSlug) {
+    await validateRoleMetadataHints(
+      existing.id,
+      data.id,
+      { aimdRole: metaRole, mentorSlug: metaMentorSlug },
+    );
+  }
 }
 
 async function handleUserDeleted(data: ClerkUserPayload): Promise<void> {

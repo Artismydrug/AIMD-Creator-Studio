@@ -62,7 +62,7 @@ export function requireTier(minTier: Tier) {
         error: "tier_required",
         requiredTier: minTier,
         currentTier,
-        message: `This feature requires the ${minTier === "academy" ? "Academy Pass" : "Pro / Career"} plan or above.`,
+        message: `This feature requires the ${minTier === "academy" ? "Dedicated Artist" : "Professional Artist"} plan or above.`,
       });
       return;
     }

@@ -15,38 +15,51 @@ const IOS_APP_NAME = "AIMD Network iOS";
 const IOS_BUNDLE_ID = "com.artismydrug.aimdnetwork";
 
 const productSpecs = [
+  // ── Dedicated Artist (formerly Academy) ─────────────────────────────────────
   {
     storeIdentifier: "aimd_academy_monthly",
-    displayName: "Academy Monthly",
-    title: "Academy Pass Monthly",
+    displayName: "Dedicated Artist Monthly",
+    title: "Dedicated Artist Monthly",
     duration: "P1M",
     amountMicros: 39_000_000,
     entitlement: "academy",
     packageLookupKey: "academy_monthly",
-    packageDisplayName: "Academy Monthly",
+    packageDisplayName: "Dedicated Artist Monthly",
     position: 0,
   },
   {
     storeIdentifier: "aimd_academy_annual",
-    displayName: "Academy Annual",
-    title: "Academy Pass Annual",
+    displayName: "Dedicated Artist Annual",
+    title: "Dedicated Artist Annual",
     duration: "P1Y",
     amountMicros: 399_000_000,
     entitlement: "academy",
     packageLookupKey: "academy_annual",
-    packageDisplayName: "Academy Annual",
+    packageDisplayName: "Dedicated Artist Annual",
     position: 1,
   },
+  // ── Professional Artist (formerly Pro) ───────────────────────────────────────
   {
     storeIdentifier: "aimd_pro_monthly",
-    displayName: "Pro Monthly",
-    title: "Pro / Career Monthly",
+    displayName: "Professional Artist Monthly",
+    title: "Professional Artist Monthly",
     duration: "P1M",
     amountMicros: 99_000_000,
     entitlement: "pro",
     packageLookupKey: "pro_monthly",
-    packageDisplayName: "Pro Monthly",
+    packageDisplayName: "Professional Artist Monthly",
     position: 2,
+  },
+  {
+    storeIdentifier: "aimd_pro_annual",          // NEW: Professional annual
+    displayName: "Professional Artist Annual",
+    title: "Professional Artist Annual",
+    duration: "P1Y",
+    amountMicros: 999_000_000,
+    entitlement: "pro",
+    packageLookupKey: "pro_annual",
+    packageDisplayName: "Professional Artist Annual",
+    position: 3,
   },
 ] as const;
 
@@ -243,7 +256,7 @@ async function seedRevenueCat() {
   );
   const proEntitlement = await ensureEntitlement(
     "pro",
-    "Pro / Career Access",
+    "Professional Artist Access",
   );
 
   async function attachMissingEntitlementProducts(

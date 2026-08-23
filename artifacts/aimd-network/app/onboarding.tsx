@@ -77,7 +77,9 @@ export default function OnboardingScreen() {
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={s.logo}>AIMD</Text>
+        <Text style={s.logo}>Creator Studio</Text>
+        <Text style={s.logoSub}>by AIMD</Text>
+        <Text style={s.tagline}>Discipline Eats Talent</Text>
 
         <Text style={s.heading}>Choose your username</Text>
         <Text style={s.subheading}>
@@ -141,11 +143,28 @@ const s = StyleSheet.create({
   },
   logo: {
     fontFamily: 'DMSans_700Bold',
-    fontSize: 28,
+    fontSize: 26,
     color: '#e8e3d5',
-    letterSpacing: 6,
+    letterSpacing: 4,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: 2,
+  },
+  logoSub: {
+    fontFamily: 'DMSans_400Regular',
+    fontSize: 13,
+    color: '#555',
+    textAlign: 'center',
+    letterSpacing: 2,
+    marginBottom: 10,
+  },
+  tagline: {
+    fontFamily: 'DMSans_700Bold',
+    fontSize: 14,
+    color: '#b8532d',
+    textAlign: 'center',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 28,
   },
   heading: {
     fontFamily: 'DMSans_700Bold',

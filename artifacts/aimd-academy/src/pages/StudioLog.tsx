@@ -616,7 +616,7 @@ function CreatePostDialog() {
   const [open, setOpen] = useState(false);
   const [caption, setCaption] = useState('');
   const [mediaUrl, setMediaUrl] = useState('');
-  const [mediaType, setMediaType] = useState<MediaType>('image');
+  const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   const [tagsStr, setTagsStr] = useState('');
   const createPost = useCreateStudioPost();
   const queryClient = useQueryClient();
@@ -647,7 +647,7 @@ function CreatePostDialog() {
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <label className="font-mono text-xs uppercase text-muted-foreground">Photo or Video (Optional)</label>
-            <MediaUpload url={mediaUrl} mediaType={mediaType} allowVideo onChange={(u, t) => { setMediaUrl(u); setMediaType(t); }} />
+            <MediaUpload url={mediaUrl} mediaType={mediaType} allowVideo onChange={(u, t) => { setMediaUrl(u); setMediaType(t as 'image'|'video'); }} />
           </div>
           <div className="space-y-2">
             <label className="font-mono text-xs uppercase text-muted-foreground">Caption</label>

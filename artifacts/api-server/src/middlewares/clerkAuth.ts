@@ -2,6 +2,7 @@ import { getAuth } from "@clerk/express";
 import { db, usersTable } from "@workspace/db";
 import { and, eq, isNull } from "drizzle-orm";
 import type { Request, Response, NextFunction } from "express";
+import { validateRoleMetadataHints } from "../lib/roleMetadataSync";
 
 // ── Type augmentation ─────────────────────────────────────────────────────────
 declare global {
@@ -20,6 +21,12 @@ declare global {
  * email (fallback for rows created before clerkId was added) and attaches
  * it as `req.dbUser`. Unauthenticated requests pass through — individual
  * route handlers that require auth check `if (!req.dbUser)`.
+ *
+ * SECURITY: Clerk public_metadata.aimdRole and mentorSlug are server-controlled
+ * fields written only by admin actions. They are NEVER used for authorization.
+ * `validateRoleMetadataHints` is called to log consistency between metadata and
+ * DB state, but it cannot create, modify, or grant any role row. The DB tables
+ * `user_roles` and `instructor_profiles` are always authoritative.
  */
 export async function clerkAuth(
   req: Request,
@@ -60,6 +67,7 @@ export async function clerkAuth(
     }
 
     // 2. JIT provision: create a new row on first Clerk login.
+    let isNewUser = false;
     if (!dbUser) {
       if (!email) {
         return next(); // can't provision without an email
@@ -82,6 +90,7 @@ export async function clerkAuth(
 
       if (inserted) {
         dbUser = inserted;
+        isNewUser = true;
       } else if (clerkUserId) {
         // Race condition: another concurrent request may have just inserted the
         // same Clerk account. Re-fetch strictly by Clerk ID — never by email,
@@ -105,6 +114,19 @@ export async function clerkAuth(
         .where(eq(usersTable.id, dbUser.id))
         .returning();
       if (updated) dbUser = updated;
+    }
+
+    // 4. On new user provision (or any session), validate Clerk metadata hints
+    //    against DB state. This is purely informational — it logs consistency
+    //    and never creates or modifies roles.
+    if (dbUser && clerkUserId && isNewUser) {
+      const metaRole = auth.sessionClaims?.["public_metadata"] as Record<string, unknown> | undefined;
+      const aimdRole = typeof metaRole?.["aimdRole"] === "string" ? metaRole["aimdRole"] : undefined;
+      const mentorSlug = typeof metaRole?.["mentorSlug"] === "string" ? metaRole["mentorSlug"] : undefined;
+      if (aimdRole || mentorSlug) {
+        // Fire-and-forget: validation is advisory only; errors must not block auth
+        validateRoleMetadataHints(dbUser.id, clerkUserId, { aimdRole, mentorSlug }).catch(() => undefined);
+      }
     }
 
     req.dbUser = dbUser ?? undefined;

@@ -41,7 +41,7 @@ export default function Sponsor() {
           title="Workshop Tuition" 
           price={199} 
           icon={HeartHandshake} 
-          desc="Funds full access to the Academy curriculum and mentorship for a rising creator." 
+          desc="Funds full access to the Workshops & Masterclasses curriculum and mentorship for a rising creator." 
           featured 
         />
         <SponsorCard 
