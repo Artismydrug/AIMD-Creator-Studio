@@ -5,12 +5,12 @@ import { pool } from "@workspace/db";
 import workshopsRouter from "./workshops";
 
 /**
- * Integration coverage for paid-workshop tier gating (Task #64 hardening).
+ * Integration coverage for paid-workshop full-access and Module 1 preview gating.
  *
  * The seeded Creator Studio workshops use tier = "academy" while legacy
- * Warehouse-era rows use tier = "workshop". BOTH vocabularies must require
- * the Dedicated Artist (academy) membership — a free user must never be able
- * to fetch modules for, or enroll in, a paid workshop.
+ * Warehouse-era rows use tier = "workshop". BOTH vocabularies require the
+ * Dedicated Artist (academy) membership for full curriculum and enrollment.
+ * Signed-in non-members receive only the first module as a preview.
  *
  * Test users are created with clerk_id NULL so the membership check resolves
  * from the local tier only (no RevenueCat network calls).
@@ -91,9 +91,11 @@ beforeAll(async () => {
   legacyPaidWorkshopId = ws.find((w) => w.tier === "workshop")!.id;
   proWorkshopId = ws.find((w) => w.tier === "pro")!.id;
 
-  // Add a module to the academy workshop so a leak would expose real content.
+  // Add two modules so the preview test can verify that later content remains
+  // server-side protected rather than merely hidden in the client.
   await pool.query(
-    `INSERT INTO workshop_modules (workshop_id, title, "order") VALUES ($1, 'M1', 1)`,
+    `INSERT INTO workshop_modules (workshop_id, title, "order")
+     VALUES ($1, 'M1', 1), ($1, 'M2 — paid curriculum', 2)`,
     [academyWorkshopId],
   );
 });
@@ -119,11 +121,11 @@ describe("paid workshop tier gating", () => {
     expect(res.status).toBe(401);
   });
 
-  it("free users cannot fetch modules of an academy-tier workshop (403)", async () => {
+  it("free users receive only Module 1 of an academy-tier workshop", async () => {
     const res = await request(appFor(freeUser)).get(`/api/workshops/${academyWorkshopId}`);
-    expect(res.status).toBe(403);
-    expect(res.body.error).toBe("tier_required");
-    expect(res.body.requiredTier).toBe("academy");
+    expect(res.status).toBe(200);
+    expect(res.body.modules).toHaveLength(1);
+    expect(res.body.modules[0].title).toBe("M1");
   });
 
   it("free users cannot enroll in an academy-tier workshop (403)", async () => {
@@ -138,9 +140,9 @@ describe("paid workshop tier gating", () => {
     expect(rows).toHaveLength(0);
   });
 
-  it("free users cannot fetch or enroll in a legacy 'workshop'-tier workshop (403)", async () => {
+  it("free users can preview but cannot enroll in a legacy 'workshop'-tier workshop", async () => {
     const get = await request(appFor(freeUser)).get(`/api/workshops/${legacyPaidWorkshopId}`);
-    expect(get.status).toBe(403);
+    expect(get.status).toBe(200);
 
     const enroll = await request(appFor(freeUser)).post(`/api/workshops/${legacyPaidWorkshopId}/enroll`);
     expect(enroll.status).toBe(403);
@@ -157,7 +159,7 @@ describe("paid workshop tier gating", () => {
   it("academy (Dedicated Artist) users can fetch and enroll in an academy-tier workshop", async () => {
     const get = await request(appFor(academyUser)).get(`/api/workshops/${academyWorkshopId}`);
     expect(get.status).toBe(200);
-    expect(get.body.modules).toHaveLength(1);
+    expect(get.body.modules).toHaveLength(2);
 
     const enroll = await request(appFor(academyUser)).post(`/api/workshops/${academyWorkshopId}/enroll`);
     expect(enroll.status).toBe(201);
@@ -168,9 +170,9 @@ describe("paid workshop tier gating", () => {
     expect(res.status).toBe(200);
   });
 
-  it("academy users cannot access a pro-tier workshop (403)", async () => {
+  it("academy users receive a Module 1 preview of a pro-tier workshop", async () => {
     const res = await request(appFor(academyUser)).get(`/api/workshops/${proWorkshopId}`);
-    expect(res.status).toBe(403);
-    expect(res.body.requiredTier).toBe("pro");
+    expect(res.status).toBe(200);
+    expect(res.body.modules).toHaveLength(0);
   });
 });

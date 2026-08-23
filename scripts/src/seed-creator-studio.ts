@@ -83,7 +83,7 @@ const WORKSHOPS = [
   {
     title: "Tattoo Apprenticeship Prep",
     description:
-      "Everything you need to enter a professional tattoo apprenticeship. From building a portfolio to understanding studio etiquette, professional hygiene, and the business of tattooing.",
+      "A structured pre-apprenticeship blueprint for aspiring tattoo artists: professional expectations, portfolio strategy, safe studio practice, equipment literacy, and a sustainable career plan. Instructor videos and feedback checkpoints are published module by module.",
     instructorSlug: "poncho-the-artist",
     instructorName: "Poncho The Artist",
     tier: "workshop" as const, // paid Dedicated Artist tier (API vocabulary: "workshop")
@@ -92,37 +92,37 @@ const WORKSHOPS = [
     modules: [
       {
         title: "Introduction to Tattoo Artistry",
-        description: "History, styles, and what studios look for in an apprentice.",
+        description: "Objective: identify the apprenticeship path that fits your practice and explain what a professional studio expects. Study tattoo lineages, core styles, apprentice responsibilities, and the difference between a portfolio and a flash book. Checkpoint: write a one-page apprenticeship intention.",
         order: 1,
         durationMinutes: 30,
       },
       {
         title: "Building Your Portfolio",
-        description: "Selecting and presenting your best work for apprenticeship applications.",
+        description: "Objective: assemble a focused, honest portfolio for a studio review. Learn to edit your strongest work, organize flash, photograph it clearly, and tailor a short introduction for each studio. Checkpoint: select 12 pieces and write captions that explain your decisions.",
         order: 2,
         durationMinutes: 45,
       },
       {
         title: "Studio Etiquette & Professionalism",
-        description: "How to conduct yourself in a professional tattoo studio environment.",
+        description: "Objective: demonstrate reliable studio habits before you ask for a chair. Cover client privacy, cleanup routines, punctuality, consent, communication, and how to observe without disrupting an artist. Checkpoint: create your first-week studio etiquette plan.",
         order: 3,
         durationMinutes: 30,
       },
       {
         title: "Hygiene & Safety Standards",
-        description: "Cross-contamination prevention, bloodborne pathogen awareness, and OSHA basics.",
+        description: "Objective: understand why safety training is non-negotiable and where your responsibility starts. Covers cross-contamination awareness, bloodborne-pathogen education, surface barriers, and the limits of this course: this is preparation, not a safety certification. Checkpoint: map a clean-to-dirty workflow for a mock station.",
         order: 4,
         durationMinutes: 45,
       },
       {
         title: "Equipment & Supplies Overview",
-        description: "Machine types, needles, inks, and understanding your tools.",
+        description: "Objective: build a vocabulary for professional tools without purchasing blindly. Compare machine categories, needle configurations, inks, power supplies, disposables, and documentation. Checkpoint: make a starter-kit research list with safety and supplier questions.",
         order: 5,
         durationMinutes: 30,
       },
       {
         title: "The Business of Tattooing",
-        description: "Booth rental vs. employment, pricing, client communication, and social media.",
+        description: "Objective: plan a career that protects your practice and your clients. Explore employment versus booth rental, transparent pricing, client communication, booking policies, image rights, and sustainable social media. Checkpoint: draft a first-year professional development plan.",
         order: 6,
         durationMinutes: 60,
       },
@@ -339,6 +339,21 @@ async function ensureWorkshop(
   let workshopId: number;
   if (rows.length > 0) {
     workshopId = rows[0].id;
+    await client.query(
+      `UPDATE workshops
+       SET description = $2, instructor_name = $3, tier = $4, category = $5,
+           duration_minutes = $6, total_modules = $7
+       WHERE id = $1`,
+      [
+        workshopId,
+        spec.description,
+        spec.instructorName,
+        spec.tier,
+        spec.category,
+        spec.durationMinutes,
+        spec.modules.length,
+      ],
+    );
     console.log(`  ✓ Workshop exists: "${spec.title}" (id=${workshopId})`);
   } else {
     const { rows: created } = await client.query<{ id: number }>(
@@ -399,6 +414,12 @@ async function ensureWorkshop(
       );
       console.log(`    + Added module: "${mod.title}"`);
     } else {
+      await client.query(
+        `UPDATE workshop_modules
+         SET description = $2, "order" = $3, duration_minutes = $4
+         WHERE id = $1`,
+        [existingMod[0].id, mod.description, mod.order, mod.durationMinutes],
+      );
       console.log(`    ✓ Module exists: "${mod.title}"`);
     }
   }

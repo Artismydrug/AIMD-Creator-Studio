@@ -23,6 +23,7 @@ import {
   useGetWorkshop,
   useListAssignments,
   useListWorkshops,
+  useCompleteWorkshopModule,
   useSubmitAssignment,
 } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -30,6 +31,7 @@ import { useColors } from '@/hooks/useColors';
 import { safeImpact } from '@/lib/haptics';
 import { useRouter } from 'expo-router';
 import { useSubscription } from '@/lib/revenuecat';
+import WorkshopLessonPlayer, { type WorkshopLesson } from '@/components/WorkshopLessonPlayer';
 
 const featuredTracks = [
   {
@@ -80,6 +82,7 @@ export default function WorkshopsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedWorkshopId, setSelectedWorkshopId] = useState<number | null>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
+  const [selectedLesson, setSelectedLesson] = useState<WorkshopLesson | null>(null);
   const [capturedVideo, setCapturedVideo] = useState<CapturedVideo | null>(null);
   const [drillCameraVisible, setDrillCameraVisible] = useState(false);
   const [submissionNote, setSubmissionNote] = useState('');
@@ -101,7 +104,8 @@ export default function WorkshopsScreen() {
   const workshopQueryId = selectedWorkshopId ?? 0;
   const { data: workshopDetail } = useGetWorkshop(workshopQueryId, {
     query: {
-      enabled: selectedWorkshopId !== null && hasPhaseTwo,
+      // Signed-in free members receive the server-enforced Module 1 preview.
+      enabled: selectedWorkshopId !== null,
       queryKey: getGetWorkshopQueryKey(workshopQueryId),
     },
   });
@@ -109,6 +113,15 @@ export default function WorkshopsScreen() {
     data: assignments,
     refetch: refetchAssignments,
   } = useListAssignments();
+  const completeModule = useCompleteWorkshopModule({
+    mutation: {
+      onSuccess: () => {
+        void safeImpact();
+        queryClient.invalidateQueries({ queryKey: getGetWorkshopQueryKey(workshopQueryId) });
+      },
+      onError: () => Alert.alert('Could not update progress', 'Please check your connection and try again.'),
+    },
+  });
 
   useEffect(() => {
     if (selectedWorkshopId === null && workshops?.[0]) {
@@ -181,6 +194,21 @@ export default function WorkshopsScreen() {
     }
   };
 
+  const openLesson = (module: WorkshopLesson) => {
+    setSelectedModuleId(module.id);
+    setSelectedLesson(module);
+    void safeImpact();
+  };
+
+  const completeLesson = (moduleId: number) => {
+    if (!selectedWorkshopId) return;
+    completeModule.mutate({ id: selectedWorkshopId, moduleId }, {
+      onSuccess: () => {
+        setSelectedLesson((current) => current?.id === moduleId ? { ...current, isCompleted: true } : current);
+      },
+    });
+  };
+
   const s = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     content: { paddingBottom: Platform.OS === 'web' ? 120 : insets.bottom + 110 },
@@ -245,11 +273,37 @@ export default function WorkshopsScreen() {
 
         {!hasPhaseTwo ? (
           <View style={s.locked}>
-            <Feather name="lock" size={28} color={colors.gold} />
-            <Text style={s.lockedTitle}>Dedicated Artist access required</Text>
-            <Text style={s.lockedBody}>Upgrade to Dedicated Artist to unlock the full Workshops and Masterclasses library and assignment submission with direct instructor feedback.</Text>
+            <Feather name="play-circle" size={28} color={colors.gold} />
+            <Text style={s.lockedTitle}>Start with a real Module 1 preview</Text>
+            <Text style={s.lockedBody}>Choose a workshop, then open its first lesson. Dedicated Artist unlocks every remaining module, progress tracking, and direct instructor feedback.</Text>
+            <View style={{ alignSelf: 'stretch', gap: 8 }}>
+              {workshops?.map((workshop) => (
+                <TouchableOpacity
+                  key={workshop.id}
+                  style={[s.card, selectedWorkshopId === workshop.id && s.selectedCard]}
+                  onPress={() => {
+                    setSelectedWorkshopId(workshop.id);
+                    setSelectedModuleId(null);
+                  }}
+                  testID={`workshop-preview-${workshop.id}`}
+                >
+                  <Text style={s.cardTitle}>{workshop.title}</Text>
+                  <Text style={s.cardBody}>Module 1 preview · {workshop.instructorName ?? 'AIMD Faculty'}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            {workshopDetail?.modules[0] && (
+              <TouchableOpacity
+                style={s.upgrade}
+                onPress={() => openLesson(workshopDetail.modules[0])}
+                testID="workshop-preview-open"
+              >
+                <Feather name="play" size={17} color={colors.primaryForeground} />
+                <Text style={s.upgradeText}>Open Module 1 preview</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
-              style={s.upgrade}
+              style={[s.upgrade, { backgroundColor: colors.foreground }]}
               testID="mastery-upgrade"
               accessibilityRole="button"
               accessibilityLabel="View AIMD membership options"
@@ -318,9 +372,11 @@ export default function WorkshopsScreen() {
                     key={module.id}
                     style={[s.chip, selectedModuleId === module.id && s.chipActive]}
                     testID={`module-chip-${module.id}`}
-                    onPress={() => setSelectedModuleId(module.id)}
+                    onPress={() => openLesson(module)}
                   >
-                    <Text style={[s.chipText, selectedModuleId === module.id && s.chipTextActive]}>{module.order}. {module.title}</Text>
+                    <Text style={[s.chipText, selectedModuleId === module.id && s.chipTextActive]}>
+                      {module.isCompleted ? '✓ ' : ''}{module.order}. {module.title}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -384,6 +440,19 @@ export default function WorkshopsScreen() {
           setCapturedVideo(video);
           setDrillCameraVisible(false);
           void safeImpact();
+        }}
+      />
+      <WorkshopLessonPlayer
+        visible={selectedLesson !== null}
+        lesson={selectedLesson}
+        workshopTitle={workshopDetail?.title}
+        completing={completeModule.isPending}
+        onClose={() => setSelectedLesson(null)}
+        onComplete={completeLesson}
+        onStartAssignment={(moduleId) => {
+          setSelectedModuleId(moduleId);
+          setSelectedLesson(null);
+          setDrillCameraVisible(true);
         }}
       />
     </View>

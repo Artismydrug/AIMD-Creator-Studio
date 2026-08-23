@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, Link, useLocation } from 'wouter';
 import { useGetWorkshop, useEnrollInWorkshop, useCompleteWorkshopModule, useGetCurrentUser } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -18,6 +19,7 @@ export default function WorkshopDetail() {
   const enroll        = useEnrollInWorkshop();
   const completeModule = useCompleteWorkshopModule();
   const { toast }     = useToast();
+  const [activeModuleId, setActiveModuleId] = useState<number | null>(null);
 
   if (isLoading) return <div className="p-8 font-mono animate-pulse">Loading curriculum...</div>;
   if (!workshop)  return <div className="p-8 font-mono">Course not found.</div>;
@@ -51,6 +53,8 @@ export default function WorkshopDetail() {
       }
     });
   };
+
+  const activeModule = workshop.modules.find((module: any) => module.id === activeModuleId);
 
   return (
     <div className="pb-24">
@@ -169,14 +173,15 @@ export default function WorkshopDetail() {
                             <Lock className="w-3 h-3" /> Dedicated Artist required · Upgrade →
                           </span>
                         </Link>
-                      ) : workshop.isEnrolled && !mod.isCompleted ? (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                      ) : workshop.isEnrolled || (isFree && index === 0) ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
                           className="rounded-none font-mono uppercase text-xs border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                          onClick={() => handleComplete(mod.id)}
+                          onClick={() => setActiveModuleId(mod.id)}
                         >
-                          Mark Completed
+                          <PlayCircle className="w-3.5 h-3.5 mr-1.5" />
+                          {mod.isCompleted ? 'Review lesson' : 'Open lesson'}
                         </Button>
                       ) : null}
                     </div>
@@ -185,6 +190,63 @@ export default function WorkshopDetail() {
               })}
             </div>
           </section>
+
+          {activeModule && (
+            <section className="border border-border bg-card">
+              <div className="p-5 md:p-7 border-b border-border flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="font-mono text-xs text-primary uppercase tracking-widest mb-2">
+                    Module {activeModule.order} · {activeModule.durationMinutes} minutes
+                  </p>
+                  <h2 className="text-2xl font-display font-bold uppercase">{activeModule.title}</h2>
+                </div>
+                <Button variant="ghost" className="rounded-none font-mono text-xs uppercase" onClick={() => setActiveModuleId(null)}>
+                  Close lesson
+                </Button>
+              </div>
+              {activeModule.videoUrl ? (
+                <div className="aspect-video bg-black">
+                  <video
+                    src={activeModule.videoUrl}
+                    controls
+                    playsInline
+                    className="w-full h-full object-contain"
+                  >
+                    Your browser cannot play this lesson video.
+                  </video>
+                </div>
+              ) : (
+                <div className="aspect-video bg-muted flex items-center justify-center p-8 text-center">
+                  <div className="max-w-md">
+                    <PlayCircle className="w-10 h-10 mx-auto mb-4 text-primary/70" />
+                    <h3 className="font-display font-bold uppercase text-xl mb-2">Lesson video is being prepared</h3>
+                    <p className="text-sm text-muted-foreground">
+                      This is a published curriculum blueprint. The instructor video will appear here when it is ready; progress cannot be marked complete before then.
+                    </p>
+                  </div>
+                </div>
+              )}
+              <div className="p-5 md:p-7 space-y-5">
+                {activeModule.description && <p className="text-muted-foreground leading-relaxed">{activeModule.description}</p>}
+                <div className="border border-border bg-muted/30 p-4">
+                  <p className="font-mono text-xs uppercase text-primary mb-2">Practice checkpoint</p>
+                  <p className="text-sm text-muted-foreground">Watch the demonstration, make a study note, then record a concise assignment for instructor feedback.</p>
+                </div>
+                {activeModule.videoUrl && workshop.isEnrolled && !activeModule.isCompleted && (
+                  <Button
+                    className="rounded-none bg-primary text-primary-foreground font-mono uppercase text-xs"
+                    onClick={() => handleComplete(activeModule.id)}
+                    disabled={completeModule.isPending}
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" /> Mark lesson complete
+                  </Button>
+                )}
+                {!workshop.isEnrolled && !isFree && (
+                  <p className="font-mono text-xs text-muted-foreground">Enroll to save progress and submit assignments.</p>
+                )}
+              </div>
+            </section>
+          )}
         </div>
 
         {/* Sidebar */}

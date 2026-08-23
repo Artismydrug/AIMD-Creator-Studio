@@ -139,8 +139,24 @@ router.get("/workshops/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Workshop not found" });
     return;
   }
-  if (!(await canReadWorkshopAsStaff(req, workshop.id))) {
-    if (!(await ensureWorkshopAccess(req, res, workshop.tier))) return;
+  let hasFullAccess = await canReadWorkshopAsStaff(req, workshop.id);
+  const requiredTier = minimumTierForWorkshop(workshop.tier);
+  if (!hasFullAccess && requiredTier !== "free") {
+    if (!req.dbUser) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    try {
+      const currentTier = await getCurrentTier(req.dbUser.id, requiredTier);
+      hasFullAccess = hasRequiredTier(currentTier, requiredTier);
+    } catch (error) {
+      console.error("RevenueCat workshop access check failed", error);
+      res.status(503).json({
+        error: "membership_check_unavailable",
+        message: "Membership access could not be verified. Please try again.",
+      });
+      return;
+    }
   }
 
   const modules = await db
@@ -165,7 +181,12 @@ router.get("/workshops/:id", async (req, res): Promise<void> => {
     completedSet = new Set(completed.map((c) => c.moduleId));
   }
 
-  const modulesWithStatus = modules.map((m) => ({ ...m, isCompleted: completedSet.has(m.id) }));
+  // A signed-in creator without the required membership can inspect the first
+  // module only. This is deliberately shaped as a partial curriculum response:
+  // the client never receives later module metadata or media URLs to unlock
+  // through a UI-only check.
+  const readableModules = hasFullAccess || requiredTier === "free" ? modules : modules.slice(0, 1);
+  const modulesWithStatus = readableModules.map((m) => ({ ...m, isCompleted: completedSet.has(m.id) }));
 
   res.json(
     GetWorkshopResponse.parse(

@@ -199,23 +199,34 @@ export default function WorkshopLessonPlayer({
                 Watch the demonstration, make a study note, then submit a short piece of practice footage when you are ready for instructor feedback.
               </Text>
             </View>
-            <TouchableOpacity
-              style={[style.action, lesson.isCompleted && { backgroundColor: colors.cyan }]}
-              onPress={() => onComplete(lesson.id)}
-              disabled={lesson.isCompleted || completing}
-              testID="workshop-lesson-complete"
-            >
-              {completing ? <ActivityIndicator color={colors.primaryForeground} /> : <Feather name={lesson.isCompleted ? 'check-circle' : 'check'} size={17} color={colors.primaryForeground} />}
-              <Text style={style.actionText}>{lesson.isCompleted ? 'Lesson completed' : 'Mark lesson complete'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={style.secondary}
-              onPress={() => onStartAssignment(lesson.id)}
-              testID="workshop-lesson-assignment"
-            >
-              <Feather name="video" size={17} color={colors.electricMagenta} />
-              <Text style={style.secondaryText}>Record assignment for this module</Text>
-            </TouchableOpacity>
+            {lesson.videoUrl ? (
+              <TouchableOpacity
+                style={[style.action, lesson.isCompleted && { backgroundColor: colors.cyan }]}
+                onPress={() => onComplete(lesson.id)}
+                disabled={lesson.isCompleted || completing}
+                testID="workshop-lesson-complete"
+              >
+                {completing ? <ActivityIndicator color={colors.primaryForeground} /> : <Feather name={lesson.isCompleted ? 'check-circle' : 'check'} size={17} color={colors.primaryForeground} />}
+                <Text style={style.actionText}>{lesson.isCompleted ? 'Lesson completed' : 'Mark lesson complete'}</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={style.note}>
+                <Text style={style.noteTitle}>Completion is not open yet</Text>
+                <Text style={style.noteBody}>
+                  This module is a published curriculum blueprint, not a completed lesson. Progress opens when its instructor media is available.
+                </Text>
+              </View>
+            )}
+            {lesson.videoUrl && (
+              <TouchableOpacity
+                style={style.secondary}
+                onPress={() => onStartAssignment(lesson.id)}
+                testID="workshop-lesson-assignment"
+              >
+                <Feather name="video" size={17} color={colors.electricMagenta} />
+                <Text style={style.secondaryText}>Record assignment for this module</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </View>

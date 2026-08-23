@@ -257,9 +257,9 @@ describe("assigned instructors can read curriculum regardless of membership tier
     expect(res.body.modules.length).toBeGreaterThan(0);
   });
 
-  it("free-tier UNASSIGNED instructor is still tier-gated (403)", async () => {
+  it("free-tier UNASSIGNED instructor receives only the public Module 1 preview", async () => {
     const res = await request(appFor(unassignedInstructor)).get(`/api/workshops/${otherWorkshopId}`);
-    expect(res.status).toBe(403);
-    expect(res.body.error).toBe("tier_required");
+    expect(res.status).toBe(200);
+    expect(res.body.modules).toHaveLength(1);
   });
 });
