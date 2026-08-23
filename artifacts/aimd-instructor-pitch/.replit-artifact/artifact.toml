@@ -1,0 +1,28 @@
+kind = "slides"
+previewPath = "/aimd-instructor-pitch/"
+title = "Creator Studio by AIMD — Instructor Pitch"
+description = "A detailed pitch presentation for instructors explaining Creator Studio by AIMD, the learner journey, teaching standards, instructor responsibilities, social community, and the pilot partnership model."
+version = "1.0.0"
+id = "artifacts/aimd-instructor-pitch"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/aimd-instructor-pitch/" ]
+localPort = 23862
+
+[services.development]
+run = "pnpm --filter @workspace/aimd-instructor-pitch run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aimd-instructor-pitch", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/aimd-instructor-pitch/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23862"
+BASE_PATH = "/aimd-instructor-pitch/"

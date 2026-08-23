@@ -1,0 +1,82 @@
+[
+  {
+    "id": "b1d85e1f-9b6c-4f23-92de-1a8b2e4f0001",
+    "position": 1,
+    "filepath": "src/pages/slides/Slide1.tsx",
+    "title": "Creator Studio by AIMD",
+    "description": "The instructor opportunity",
+    "speakerNotes": ""
+  },
+  {
+    "id": "b1d85e1f-9b6c-4f23-92de-1a8b2e4f0002",
+    "position": 2,
+    "filepath": "src/pages/slides/Slide2.tsx",
+    "title": "From instruction to evidence",
+    "description": "Turn expertise into a guided learning path",
+    "speakerNotes": ""
+  },
+  {
+    "id": "b1d85e1f-9b6c-4f23-92de-1a8b2e4f0003",
+    "position": 3,
+    "filepath": "src/pages/slides/Slide3.tsx",
+    "title": "One platform. Four connected experiences.",
+    "description": "Learn, practice, share, and connect",
+    "speakerNotes": ""
+  },
+  {
+    "id": "b1d85e1f-9b6c-4f23-92de-1a8b2e4f0004",
+    "position": 4,
+    "filepath": "src/pages/slides/Slide4.tsx",
+    "title": "The learner journey",
+    "description": "A focused path from lesson to visible progress",
+    "speakerNotes": ""
+  },
+  {
+    "id": "b1d85e1f-9b6c-4f23-92de-1a8b2e4f0005",
+    "position": 5,
+    "filepath": "src/pages/slides/Slide5.tsx",
+    "title": "What instructors can shape",
+    "description": "The parts of the experience that carry your voice",
+    "speakerNotes": ""
+  },
+  {
+    "id": "b1d85e1f-9b6c-4f23-92de-1a8b2e4f0006",
+    "position": 6,
+    "filepath": "src/pages/slides/Slide6.tsx",
+    "title": "The teaching standard",
+    "description": "The constraints that keep learning focused and trustworthy",
+    "speakerNotes": ""
+  },
+  {
+    "id": "b1d85e1f-9b6c-4f23-92de-1a8b2e4f0007",
+    "position": 7,
+    "filepath": "src/pages/slides/Slide7.tsx",
+    "title": "A social layer built for the studio",
+    "description": "A community layer that makes creators discoverable",
+    "speakerNotes": ""
+  },
+  {
+    "id": "b1d85e1f-9b6c-4f23-92de-1a8b2e4f0008",
+    "position": 8,
+    "filepath": "src/pages/slides/Slide8.tsx",
+    "title": "What you are getting into",
+    "description": "The instructor commitment",
+    "speakerNotes": ""
+  },
+  {
+    "id": "b1d85e1f-9b6c-4f23-92de-1a8b2e4f0009",
+    "position": 9,
+    "filepath": "src/pages/slides/Slide9.tsx",
+    "title": "The partnership model",
+    "description": "A focused path from pilot to expansion",
+    "speakerNotes": ""
+  },
+  {
+    "id": "b1d85e1f-9b6c-4f23-92de-1a8b2e4f0010",
+    "position": 10,
+    "filepath": "src/pages/slides/Slide10.tsx",
+    "title": "Teach what lasts.",
+    "description": "The invitation to build the first workshop together",
+    "speakerNotes": ""
+  }
+]

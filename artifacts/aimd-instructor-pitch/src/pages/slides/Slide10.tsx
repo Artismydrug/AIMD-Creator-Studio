@@ -1,0 +1,10 @@
+export default function Slide10() {
+  return <div className="relative w-screen h-screen overflow-hidden" style={{background:'#FFFBF0',fontFamily:"'DM Sans', sans-serif"}}>
+    <div className="absolute" style={{top:0,right:0,width:'46vw',height:'100vh',background:'#FF4D00'}} /><div className="absolute" style={{top:'21vh',right:'32vw',width:'18vw',height:'18vw',border:'4px solid #12110F',borderRadius:'50%'}} /><div className="absolute" style={{bottom:'12vh',right:'8vw',width:'12vw',height:'12vw',border:'4px solid #FFFBF0',transform:'rotate(45deg)'}} />
+    <div className="relative flex flex-col justify-between h-full" style={{padding:'6vh 6vw'}}>
+      <div className="flex justify-between items-start"><div style={{fontSize:'1.3vw',fontWeight:700}}>AIMD</div><div style={{fontSize:'0.9vw',textTransform:'uppercase',letterSpacing:'0.2em'}}>09 / The invitation</div></div>
+      <div style={{flex:1,marginTop:'9vh',maxWidth:'51vw'}}><div style={{fontSize:'0.9vw',textTransform:'uppercase',letterSpacing:'0.25em',color:'#FF4D00',fontWeight:600,marginBottom:'1.5vh'}}>The invitation</div><h2 style={{fontSize:'6.5vw',fontWeight:700,lineHeight:0.9,letterSpacing:'-0.06em',margin:0}}>Teach what<br/>lasts.</h2><p style={{fontSize:'1.75vw',color:'#6D6A64',lineHeight:1.4,marginTop:'4vh',maxWidth:'38vw'}}>Creator Studio by AIMD gives your knowledge a home—and gives artists a way to practice it.</p><p style={{fontSize:'1.75vw',color:'#6D6A64',lineHeight:1.4,marginTop:'2vh',maxWidth:'38vw'}}>Bring your method. We will help turn it into a learning experience artists can return to.</p><p style={{fontSize:'1.75vw',fontWeight:700,lineHeight:1.4,marginTop:'3vh',maxWidth:'38vw'}}>Next conversation: choose the first workshop to build together.</p></div>
+      <div className="flex justify-between" style={{fontSize:'0.9vw',color:'#999',textTransform:'uppercase',letterSpacing:'0.1em'}}><span>Creator Studio by AIMD</span><span>10</span></div>
+    </div>
+  </div>;
+}
