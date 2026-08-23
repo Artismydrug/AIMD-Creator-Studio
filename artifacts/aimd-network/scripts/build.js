@@ -1,10 +1,12 @@
 const fs = require('fs');
+const net = require('net');
 const path = require('path');
 const { spawn } = require('child_process');
 const { Readable } = require('stream');
 const { pipeline } = require('stream/promises');
 
 let metroProcess = null;
+let metroPort = Number(process.env.METRO_PORT || 8081);
 
 const projectRoot = path.resolve(__dirname, '..');
 
@@ -114,15 +116,46 @@ function clearMetroCache() {
   console.log('Cache cleared');
 }
 
+function metroBaseUrl() {
+  return `http://localhost:${metroPort}`;
+}
+
 async function checkMetroHealth() {
   try {
-    const response = await fetch('http://localhost:8081/status', {
+    const response = await fetch(`${metroBaseUrl()}/status`, {
       signal: AbortSignal.timeout(5000),
     });
     return response.ok;
   } catch {
     return false;
   }
+}
+
+function canListenOnPort(port) {
+  return new Promise((resolve) => {
+    const probe = net.createServer();
+    probe.once('error', () => resolve(false));
+    probe.once('listening', () => {
+      probe.close(() => resolve(true));
+    });
+    probe.listen(port, '127.0.0.1');
+  });
+}
+
+async function chooseMetroPort() {
+  if (await canListenOnPort(metroPort)) {
+    return metroPort;
+  }
+
+  return new Promise((resolve, reject) => {
+    const probe = net.createServer();
+    probe.once('error', reject);
+    probe.once('listening', () => {
+      const selectedPort = probe.address().port;
+      probe.close(() => resolve(selectedPort));
+    });
+    probe.listen(0, '127.0.0.1');
+  });
 }
 
 function getExpoPublicReplId() {
@@ -136,7 +169,9 @@ async function startMetro(expoPublicDomain, expoPublicReplId) {
     return;
   }
 
+  metroPort = await chooseMetroPort();
   console.log('Starting Metro...');
+  console.log(`Using Metro port ${metroPort}`);
   console.log(`Setting EXPO_PUBLIC_DOMAIN=${expoPublicDomain}`);
   const env = {
     ...process.env,
@@ -150,7 +185,16 @@ async function startMetro(expoPublicDomain, expoPublicReplId) {
 
   metroProcess = spawn(
     'pnpm',
-    ['exec', 'expo', 'start', '--no-dev', '--minify', '--localhost'],
+    [
+      'exec',
+      'expo',
+      'start',
+      '--no-dev',
+      '--minify',
+      '--localhost',
+      '--port',
+      String(metroPort),
+    ],
     {
       stdio: ['ignore', 'pipe', 'pipe'],
       detached: false,
