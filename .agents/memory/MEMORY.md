@@ -6,3 +6,4 @@
 - [Challenge proof evidence](challenge-proof-evidence.md) — proof is self-attested and human-reviewed; sanitize public media and hash the exact stored rendition.
 - [Tattoo booking workflow](tattoo-booking-workflow.md) — Admin records are authoritative; email failure never loses a request; reference images remain private.
 - [RevenueCat connector quirks](revenuecat-connector-quirks.md) — sandbox access uses direct proxyFetch; package-product lists wrap products in associations.
+- [Paid membership rollout](paid-membership-rollout.md) — public launch stays free-only until filmed lessons and career pipelines are ready.

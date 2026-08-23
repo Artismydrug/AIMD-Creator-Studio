@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -202,12 +203,22 @@ export default function WorkshopLessonPlayer({
           )}
         </View>
 
-        <View style={[style.scroll, { paddingBottom: Math.max(insets.bottom, 18) }]}>
+        <ScrollView
+          style={style.scroll}
+          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 18) }}
+          showsVerticalScrollIndicator
+        >
           <View style={style.body}>
             <Text style={style.lessonNumber}>Module {lesson.order}</Text>
             <Text style={style.lessonTitle}>{lesson.title}</Text>
             <Text style={style.duration}>{lesson.durationMinutes ?? 0} minutes</Text>
             {!!lesson.description && <Text style={style.description}>{lesson.description}</Text>}
+            <View style={style.note}>
+              <Text style={style.noteTitle}>How this module works</Text>
+              <Text style={style.noteBody}>
+                1. Read the objective and safety notes.  2. Watch the instructor demonstration when it is released.  3. Complete one focused practice drill.  4. Submit one clip of 30 seconds or less for critique.
+              </Text>
+            </View>
             <View style={style.note}>
               <Text style={style.noteTitle}>Practice checkpoint</Text>
               <Text style={style.noteBody}>
@@ -250,7 +261,7 @@ export default function WorkshopLessonPlayer({
               </TouchableOpacity>
             )}
           </View>
-        </View>
+        </ScrollView>
       </View>
     </Modal>
   );

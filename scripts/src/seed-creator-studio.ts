@@ -3,7 +3,7 @@
  *
  * Creates a genuinely multi-medium curriculum spanning tattooing, athletics,
  * visual arts, audio production, and garment design:
- *   - Poncho The Artist  / Tattoo Apprenticeship Prep with Poncho The Artist
+ *   - Poncho The Artist  / Tattoo Apprenticeship with Poncho The Artist
  *     (Visual Art & Tattooing)
  *   - Poncho The Artist  / Fine Art Foundations          (Visual Art & Tattooing)
  *   - David Singleton    / The Art of Basketball         (Athletic Creativity)
@@ -82,7 +82,7 @@ const INSTRUCTORS = [
 
 const WORKSHOPS = [
   {
-    title: "Tattoo Apprenticeship Prep with Poncho The Artist",
+    title: "Tattoo Apprenticeship with Poncho The Artist",
     description:
       "The official AIMD tattoo apprenticeship curriculum with Poncho The Artist. Build safe station habits, understand your equipment, practice foundational techniques on fake skin, and prepare a professional portfolio. Instructor videos and feedback checkpoints are published module by module.",
     instructorSlug: "poncho-the-artist",
@@ -323,7 +323,10 @@ const WORKSHOPS = [
   },
 ];
 
-const LEGACY_TATTOO_TRACK_TITLE = "Tattoo Apprenticeship Prep";
+const LEGACY_TATTOO_TRACK_TITLES = [
+  "Tattoo Apprenticeship Prep",
+  "Tattoo Apprenticeship Prep with Poncho The Artist",
+];
 
 // ── Seed logic ────────────────────────────────────────────────────────────────
 
@@ -365,10 +368,10 @@ async function ensureWorkshop(
   // The first Creator Studio seed used a shorter tattoo-track name. Rename
   // that original row rather than silently starting a second course, keeping
   // enrollments, assignments, uploaded videos, and module IDs intact.
-  if (rows.length === 0 && spec.title === "Tattoo Apprenticeship Prep with Poncho The Artist") {
+  if (rows.length === 0 && spec.title === "Tattoo Apprenticeship with Poncho The Artist") {
     const legacy = await client.query<{ id: number }>(
-      `SELECT id FROM workshops WHERE title = $1 LIMIT 1`,
-      [LEGACY_TATTOO_TRACK_TITLE],
+      `SELECT id FROM workshops WHERE title = ANY($1::text[]) LIMIT 1`,
+      [LEGACY_TATTOO_TRACK_TITLES],
     );
     if (legacy.rows.length > 0) {
       await client.query(`UPDATE workshops SET title = $2 WHERE id = $1`, [

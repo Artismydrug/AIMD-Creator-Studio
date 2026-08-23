@@ -10,6 +10,7 @@ import { Link } from 'wouter';
 
 const TIER_RANK: Record<string, number> = { free: 0, academy: 1, pro: 2 };
 const TIER_DISPLAY_NAMES: Record<string, string> = { free: 'Discovering Artist', academy: 'Dedicated Artist', pro: 'Professional Artist' };
+const PAID_MEMBERSHIPS_COMING_SOON = true;
 
 // ─── Plan card ────────────────────────────────────────────────────────────────
 
@@ -30,6 +31,7 @@ function PlanCard({
   const userRank      = TIER_RANK[userTier ?? 'free'] ?? 0;
   const planRank      = TIER_RANK[plan.tier]  ?? 0;
   const isDowngrade   = planRank < userRank;
+  const isPaidLaunchPending = PAID_MEMBERSHIPS_COMING_SOON && plan.tier !== 'free' && !isCurrentPlan;
 
   // Enforce requested prices locally based on tier
   const localPriceMonthly = plan.tier === 'academy' ? 39 : plan.tier === 'pro' ? 99 : 0;
@@ -65,11 +67,15 @@ function PlanCard({
             <h3 className="font-display font-black text-xl uppercase tracking-tight text-white">
               {TIER_DISPLAY_NAMES[plan.tier] ?? plan.name}
             </h3>
-            {isCurrentPlan && (
+            {isCurrentPlan ? (
               <span className="font-mono text-[10px] uppercase tracking-widest text-primary border border-primary/30 bg-primary/10 px-2 py-0.5">
                 Current
               </span>
-            )}
+            ) : isPaidLaunchPending ? (
+              <span className="font-mono text-[10px] uppercase tracking-widest text-amber-300 border border-amber-400/30 bg-amber-400/10 px-2 py-0.5">
+                Coming soon
+              </span>
+            ) : null}
           </div>
           <p className="text-muted-foreground text-sm leading-relaxed">{plan.description}</p>
         </div>
@@ -110,6 +116,13 @@ function PlanCard({
             </span>
           </div>
         )}
+        {isPaidLaunchPending && (
+          <div className="mb-6 px-3 py-2 border border-amber-400/30 bg-amber-400/5">
+            <p className="font-mono text-xs text-amber-200">
+              Paid memberships open with the first filmed learning releases and career pipeline launch.
+            </p>
+          </div>
+        )}
 
         {/* CTA */}
         {localPriceMonthly === 0 ? (
@@ -126,6 +139,10 @@ function PlanCard({
               <Link href="/studio-log">Start Free</Link>
             </Button>
           )
+        ) : isPaidLaunchPending ? (
+          <Button disabled className="w-full h-12 rounded-none font-mono font-bold uppercase tracking-wider border border-amber-400/30 bg-amber-400/10 text-amber-200 opacity-100">
+            Membership coming soon
+          </Button>
         ) : isCurrentPlan ? (
           <Button disabled className="w-full h-12 rounded-none font-mono font-bold uppercase tracking-wider opacity-50">
             Current Plan
@@ -164,6 +181,7 @@ function SponsorSection() {
   const [message, setMessage] = useState('');
 
   async function startCheckout(amount: '39' | '99') {
+    if (PAID_MEMBERSHIPS_COMING_SOON) return;
     setLoading(amount);
     try {
       const res = await fetch('/api/payments/create-sponsor-checkout', {
@@ -239,8 +257,8 @@ function SponsorSection() {
             <button
               key={amount}
               onClick={() => startCheckout(amount)}
-              disabled={!!loading}
-              className={`text-left p-5 border ${color} bg-background transition-all group`}
+              disabled={PAID_MEMBERSHIPS_COMING_SOON || !!loading}
+              className={`text-left p-5 border ${color} bg-background transition-all group disabled:cursor-not-allowed disabled:opacity-60`}
             >
               <div className="flex items-start justify-between gap-2 mb-2">
                 <span className="font-display font-black text-lg uppercase text-white">{label}</span>
@@ -249,7 +267,7 @@ function SponsorSection() {
               <p className="text-xs text-muted-foreground leading-relaxed mb-4">{desc}</p>
               <div className="flex items-center gap-1.5 font-mono text-xs text-primary group-hover:gap-2 transition-all">
                 <Sparkles className="w-3.5 h-3.5" />
-                {loading === amount ? 'Redirecting…' : 'Donate & Sponsor →'}
+                {PAID_MEMBERSHIPS_COMING_SOON ? 'Sponsorship coming soon' : loading === amount ? 'Redirecting…' : 'Donate & Sponsor →'}
               </div>
             </button>
           ))}

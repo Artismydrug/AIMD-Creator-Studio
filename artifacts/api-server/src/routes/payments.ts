@@ -6,6 +6,9 @@ import { grantTierFromCheckoutSession } from "../lib/stripeEntitlements";
 import { CreateCheckoutSessionBody } from "@workspace/api-zod";
 
 const router = Router();
+// The app is public in its free-launch phase. Paid checkout reopens only after
+// the first filmed course releases and career-pipeline experience are ready.
+const PAID_MEMBERSHIPS_COMING_SOON = true;
 
 // ─── Plan registry ─────────────────────────────────────────────────────────────
 //
@@ -141,6 +144,13 @@ router.post("/create-checkout-session", async (req, res): Promise<void> => {
 
     if (plan.priceMonthly === 0) {
       res.json({ sessionId: null, checkoutUrl: null, message: "Discovering Artist plan is free — no checkout needed." });
+      return;
+    }
+    if (PAID_MEMBERSHIPS_COMING_SOON) {
+      res.status(503).json({
+        error: "paid_memberships_coming_soon",
+        message: "Dedicated Artist and Professional Artist memberships are coming soon.",
+      });
       return;
     }
 

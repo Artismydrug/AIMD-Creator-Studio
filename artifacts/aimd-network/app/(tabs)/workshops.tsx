@@ -253,6 +253,7 @@ export default function WorkshopsScreen() {
     lockedBody: { fontFamily: 'DMSans_400Regular', color: colors.mutedForeground, fontSize: 14, lineHeight: 21, textAlign: 'center' },
     upgrade: { minHeight: 46, marginTop: 4, paddingHorizontal: 18, borderRadius: 10, backgroundColor: colors.electricMagenta, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
     upgradeText: { fontFamily: 'DMSans_700Bold', color: colors.primaryForeground, fontSize: 14 },
+    previewActions: { gap: 8, marginBottom: 8 },
   }), [colors, insets]);
 
   if (userLoading || (!hasLocalPhaseTwo && membershipLoading)) {
@@ -277,44 +278,50 @@ export default function WorkshopsScreen() {
             <Text style={s.lockedTitle}>Start with a real Module 1 preview</Text>
             <Text style={s.lockedBody}>Choose a workshop, then open its first lesson. Dedicated Artist unlocks every remaining module, progress tracking, and direct instructor feedback.</Text>
             <View style={{ alignSelf: 'stretch', gap: 8 }}>
-              {workshops?.map((workshop) => (
-                <TouchableOpacity
-                  key={workshop.id}
-                  style={[s.card, selectedWorkshopId === workshop.id && s.selectedCard]}
-                  onPress={() => {
-                    setSelectedWorkshopId(workshop.id);
-                    setSelectedModuleId(null);
-                  }}
-                  testID={`workshop-preview-${workshop.id}`}
-                >
-                  <Text style={s.cardTitle}>{workshop.title}</Text>
-                  <Text style={s.cardBody}>Module 1 preview · {workshop.instructorName ?? 'AIMD Faculty'}</Text>
-                </TouchableOpacity>
-              ))}
+              {workshops?.map((workshop) => {
+                const isSelected = selectedWorkshopId === workshop.id;
+                return (
+                  <View key={workshop.id} style={{ gap: 8 }}>
+                    <TouchableOpacity
+                      style={[s.card, isSelected && s.selectedCard]}
+                      onPress={() => {
+                        setSelectedWorkshopId(workshop.id);
+                        setSelectedModuleId(null);
+                      }}
+                      testID={`workshop-preview-${workshop.id}`}
+                    >
+                      <Text style={s.cardTitle}>{workshop.title}</Text>
+                      <Text style={s.cardBody}>Module 1 preview · {workshop.instructorName ?? 'AIMD Faculty'}</Text>
+                    </TouchableOpacity>
+                    {isSelected && workshopDetail?.modules[0] && (
+                      <View style={s.previewActions}>
+                        <TouchableOpacity
+                          style={s.upgrade}
+                          onPress={() => openLesson(workshopDetail.modules[0])}
+                          testID="workshop-preview-open"
+                        >
+                          <Feather name="play" size={17} color={colors.primaryForeground} />
+                          <Text style={s.upgradeText}>Open Module 1 preview</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[s.upgrade, { backgroundColor: colors.foreground }]}
+                          testID="mastery-upgrade"
+                          accessibilityRole="button"
+                          accessibilityLabel="View AIMD membership options"
+                          onPress={() => {
+                            void safeImpact();
+                            router.push('/membership');
+                          }}
+                        >
+                          <Feather name="arrow-up-right" size={17} color={colors.primaryForeground} />
+                          <Text style={s.upgradeText}>View membership options</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
             </View>
-            {workshopDetail?.modules[0] && (
-              <TouchableOpacity
-                style={s.upgrade}
-                onPress={() => openLesson(workshopDetail.modules[0])}
-                testID="workshop-preview-open"
-              >
-                <Feather name="play" size={17} color={colors.primaryForeground} />
-                <Text style={s.upgradeText}>Open Module 1 preview</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              style={[s.upgrade, { backgroundColor: colors.foreground }]}
-              testID="mastery-upgrade"
-              accessibilityRole="button"
-              accessibilityLabel="View AIMD membership options"
-              onPress={() => {
-                void safeImpact();
-                router.push('/membership');
-              }}
-            >
-              <Feather name="arrow-up-right" size={17} color={colors.primaryForeground} />
-              <Text style={s.upgradeText}>View membership options</Text>
-            </TouchableOpacity>
           </View>
         ) : (
           <>
