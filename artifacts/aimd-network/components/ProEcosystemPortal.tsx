@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { getBaseUrl, type User } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import { safeImpact } from '@/lib/haptics';
+import { useSubscription } from '@/lib/revenuecat';
 
 type Props = { user: User | undefined };
 
@@ -36,7 +37,8 @@ const opportunities = [
 
 export default function ProEcosystemPortal({ user }: Props) {
   const colors = useColors();
-  const isPro = user?.tier === 'pro';
+  const { hasProAccess } = useSubscription();
+  const isPro = user?.tier === 'pro' || hasProAccess;
   const referralLink = useMemo(() => {
     const base = (getBaseUrl() ?? 'aimd-network://').replace(/\/$/, '');
     return `${base}/?ref=${encodeURIComponent(user?.username ?? 'creator')}`;

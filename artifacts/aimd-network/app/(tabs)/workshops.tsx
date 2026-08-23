@@ -29,6 +29,8 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useColors } from '@/hooks/useColors';
 import { safeImpact } from '@/lib/haptics';
+import { useRouter } from 'expo-router';
+import { useSubscription } from '@/lib/revenuecat';
 
 const featuredTracks = [
   {
@@ -61,6 +63,8 @@ type SelectedVideo = {
 export default function WorkshopsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { hasAcademyAccess, isLoading: membershipLoading } = useSubscription();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedWorkshopId, setSelectedWorkshopId] = useState<number | null>(null);
@@ -70,10 +74,11 @@ export default function WorkshopsScreen() {
   const [uploading, setUploading] = useState(false);
 
   const { data: user, isLoading: userLoading, refetch: refetchUser } = useGetCurrentUser();
-  const hasPhaseTwo =
+  const hasLocalPhaseTwo =
     user?.tier === 'workshop' ||
     user?.tier === 'academy' ||
     user?.tier === 'pro';
+  const hasPhaseTwo = hasLocalPhaseTwo || hasAcademyAccess;
   const {
     data: workshops,
     isLoading: workshopsLoading,
@@ -237,9 +242,11 @@ export default function WorkshopsScreen() {
     locked: { margin: 20, padding: 22, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, alignItems: 'center', gap: 10 },
     lockedTitle: { fontFamily: 'DMSans_700Bold', color: colors.foreground, fontSize: 21, textAlign: 'center' },
     lockedBody: { fontFamily: 'DMSans_400Regular', color: colors.mutedForeground, fontSize: 14, lineHeight: 21, textAlign: 'center' },
+    upgrade: { minHeight: 46, marginTop: 4, paddingHorizontal: 18, borderRadius: 10, backgroundColor: colors.electricMagenta, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+    upgradeText: { fontFamily: 'DMSans_700Bold', color: colors.primaryForeground, fontSize: 14 },
   }), [colors, insets]);
 
-  if (userLoading) {
+  if (userLoading || (!hasLocalPhaseTwo && membershipLoading)) {
     return <View style={[s.container, { alignItems: 'center', justifyContent: 'center' }]}><ActivityIndicator color={colors.primary} /></View>;
   }
 
@@ -260,6 +267,19 @@ export default function WorkshopsScreen() {
             <Feather name="lock" size={28} color={colors.gold} />
             <Text style={s.lockedTitle}>Phase 2 access required</Text>
             <Text style={s.lockedBody}>Upgrade to Workshops & Mastery to unlock the full masterclass library and The Warehouse submission hub.</Text>
+            <TouchableOpacity
+              style={s.upgrade}
+              testID="mastery-upgrade"
+              accessibilityRole="button"
+              accessibilityLabel="View AIMD membership options"
+              onPress={() => {
+                void safeImpact();
+                router.push('/membership');
+              }}
+            >
+              <Feather name="arrow-up-right" size={17} color={colors.primaryForeground} />
+              <Text style={s.upgradeText}>View membership options</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           <>

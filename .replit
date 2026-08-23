@@ -22,3 +22,14 @@ timeoutMs = 20000
 [nix]
 channel = "stable-25_05"
 packages = ["ffmpeg"]
+
+[userenv]
+
+[userenv.shared]
+EXPO_PUBLIC_REVENUECAT_IOS_API_KEY = "appl_gaZCJhQrWznvmyNQqCpyNBuYsjG"
+EXPO_PUBLIC_REVENUECAT_TEST_API_KEY = "test_slWEFggtpJaUuAfgffMSwHTskBZ"
+REVENUECAT_APPLE_APP_STORE_APP_ID = "appb8fd995bb9"
+REVENUECAT_PROJECT_ID = "proj04da7090"
+REVENUECAT_TEST_STORE_APP_ID = "app0e01189c75"
+REVENUECAT_ACADEMY_ENTITLEMENT_ID = "entle6663f1821"
+REVENUECAT_PRO_ENTITLEMENT_ID = "entlcec82665af"

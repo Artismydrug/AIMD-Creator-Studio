@@ -5,3 +5,4 @@
 - [Embedded motion accessibility](embedded-motion-accessibility.md) — autoplaying explainers need visible touch controls and a complete reduced-motion alternative.
 - [Challenge proof evidence](challenge-proof-evidence.md) — proof is self-attested and human-reviewed; sanitize public media and hash the exact stored rendition.
 - [Tattoo booking workflow](tattoo-booking-workflow.md) — Admin records are authoritative; email failure never loses a request; reference images remain private.
+- [RevenueCat connector quirks](revenuecat-connector-quirks.md) — sandbox access uses direct proxyFetch; package-product lists wrap products in associations.

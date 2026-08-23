@@ -17,6 +17,10 @@ import { setAuthTokenGetter, setBaseUrl } from '@workspace/api-client-react';
 import { StatusBar } from 'expo-status-bar';
 import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/expo';
 import { tokenCache } from '@clerk/expo/token-cache';
+import {
+  initializeRevenueCat,
+  SubscriptionProvider,
+} from '@/lib/revenuecat';
 
 // Set API base URL before any component renders
 const domain = process.env.EXPO_PUBLIC_DOMAIN;
@@ -27,6 +31,12 @@ const proxyUrl = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+try {
+  initializeRevenueCat();
+} catch (error) {
+  console.warn('RevenueCat initialization deferred', error);
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,6 +75,7 @@ function RootLayoutNav() {
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
       <Stack.Screen name="feed" options={{ headerShown: false }} />
+      <Stack.Screen name="membership" options={{ headerShown: false }} />
       <Stack.Screen
         name="conversation/[id]"
         options={{
@@ -111,12 +122,14 @@ export default function RootLayout() {
           <SafeAreaProvider>
             <ErrorBoundary>
               <QueryClientProvider client={queryClient}>
-                <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#FAF8F5' }}>
-                  <KeyboardProvider>
-                    <StatusBar style="dark" />
-                    <RootLayoutNav />
-                  </KeyboardProvider>
-                </GestureHandlerRootView>
+                <SubscriptionProvider>
+                  <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#FAF8F5' }}>
+                    <KeyboardProvider>
+                      <StatusBar style="dark" />
+                      <RootLayoutNav />
+                    </KeyboardProvider>
+                  </GestureHandlerRootView>
+                </SubscriptionProvider>
               </QueryClientProvider>
             </ErrorBoundary>
           </SafeAreaProvider>

@@ -1,20 +1,20 @@
 import { Request, Response, NextFunction } from "express";
 import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
+import {
+  getEffectiveMembershipTier,
+  membershipTierMeetsRequirement,
+  normalizeMembershipTier,
+  type MembershipTier,
+} from "../lib/revenueCatMembership";
 
-// ─── Tier rank map ────────────────────────────────────────────────────────────
-
-export type Tier = "free" | "workshop" | "academy" | "pro";
-
-const TIER_RANK: Record<string, number> = {
-  free:    0,
-  workshop: 1,
-  academy: 1,
-  pro:     2,
-};
+export type Tier = MembershipTier;
 
 export function hasRequiredTier(currentTier: string, minTier: Tier): boolean {
-  return (TIER_RANK[currentTier] ?? 0) >= (TIER_RANK[minTier] ?? 0);
+  return membershipTierMeetsRequirement(
+    normalizeMembershipTier(currentTier),
+    minTier,
+  );
 }
 
 /**
@@ -33,11 +33,30 @@ export function requireTier(minTier: Tier) {
     }
 
     const [user] = await db
-      .select({ tier: usersTable.tier })
+      .select({ clerkId: usersTable.clerkId, tier: usersTable.tier })
       .from(usersTable)
       .where(eq(usersTable.id, req.dbUser.id));
 
-    const currentTier = (user?.tier ?? "free") as Tier;
+    const localTier = normalizeMembershipTier(user?.tier);
+    let currentTier = localTier;
+
+    if (!hasRequiredTier(localTier, minTier)) {
+      try {
+        currentTier = await getEffectiveMembershipTier(
+          localTier,
+          user?.clerkId,
+          minTier,
+        );
+      } catch (error) {
+        console.error("RevenueCat membership check failed", error);
+        res.status(503).json({
+          error: "membership_check_unavailable",
+          message: "Membership access could not be verified. Please try again.",
+        });
+        return;
+      }
+    }
+
     if (!hasRequiredTier(currentTier, minTier)) {
       res.status(403).json({
         error: "tier_required",
@@ -55,12 +74,19 @@ export function requireTier(minTier: Tier) {
 /**
  * Returns the current user's tier from req.user.id.
  */
-export async function getCurrentTier(userId: number): Promise<Tier> {
+export async function getCurrentTier(
+  userId: number,
+  requiredTier?: Tier,
+): Promise<Tier> {
   const [user] = await db
-    .select({ tier: usersTable.tier })
+    .select({ clerkId: usersTable.clerkId, tier: usersTable.tier })
     .from(usersTable)
     .where(eq(usersTable.id, userId));
-  return (user?.tier ?? "free") as Tier;
+  return getEffectiveMembershipTier(
+    user?.tier,
+    user?.clerkId,
+    requiredTier,
+  );
 }
 
 export const FREE_HABIT_LIMIT = 3;

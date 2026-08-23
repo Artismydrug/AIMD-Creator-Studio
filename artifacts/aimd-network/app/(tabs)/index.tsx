@@ -28,6 +28,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import ChallengeCameraCapture from '@/components/ChallengeCameraCapture';
 import VerificationStatusTag from '@/components/VerificationStatusTag';
 import ProEcosystemPortal from '@/components/ProEcosystemPortal';
+import MoreFromAimd from '@/components/MoreFromAimd';
 import {
   ChallengeProofAsset,
   fromImagePickerAsset,
@@ -893,6 +894,7 @@ export default function ProgressScreen() {
           )}
 
           <ProEcosystemPortal user={currentUser} />
+          <MoreFromAimd />
 
           {challengeLoading && !challengeData && (
             <View style={s.challengeBlock}>

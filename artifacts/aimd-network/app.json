@@ -14,7 +14,8 @@
       "backgroundColor": "#FAF8F5"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.artismydrug.aimdnetwork"
     },
     "android": {},
     "web": {

@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request, type Response } from "express";
 import { eq, and, desc } from "drizzle-orm";
 import { db, workshopsTable, workshopModulesTable, enrollmentsTable, completedModulesTable } from "@workspace/db";
 import {
@@ -19,11 +19,33 @@ function minimumTierForWorkshop(tier: string): Tier {
   return tier === "pro" ? "pro" : tier === "workshop" ? "academy" : "free";
 }
 
-async function canAccessWorkshop(req: any, workshopTier: string): Promise<boolean> {
+async function ensureWorkshopAccess(
+  req: Request,
+  res: Response,
+  workshopTier: string,
+): Promise<boolean> {
   const requiredTier = minimumTierForWorkshop(workshopTier);
   if (requiredTier === "free") return true;
-  if (!req.dbUser) return false;
-  return hasRequiredTier(await getCurrentTier(req.dbUser.id), requiredTier);
+  if (!req.dbUser) {
+    res.status(401).json({ error: "Unauthorized" });
+    return false;
+  }
+
+  try {
+    const currentTier = await getCurrentTier(req.dbUser.id, requiredTier);
+    if (!hasRequiredTier(currentTier, requiredTier)) {
+      res.status(403).json({ error: "tier_required", requiredTier });
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("RevenueCat workshop access check failed", error);
+    res.status(503).json({
+      error: "membership_check_unavailable",
+      message: "Membership access could not be verified. Please try again.",
+    });
+    return false;
+  }
 }
 
 router.get("/workshops", async (req, res): Promise<void> => {
@@ -69,10 +91,7 @@ router.get("/workshops/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Workshop not found" });
     return;
   }
-  if (!(await canAccessWorkshop(req, workshop.tier))) {
-    res.status(req.dbUser ? 403 : 401).json({ error: "tier_required", requiredTier: minimumTierForWorkshop(workshop.tier) });
-    return;
-  }
+  if (!(await ensureWorkshopAccess(req, res, workshop.tier))) return;
 
   const modules = await db
     .select()
@@ -122,10 +141,7 @@ router.post("/workshops/:id/enroll", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Workshop not found" });
     return;
   }
-  if (!(await canAccessWorkshop(req, workshop.tier))) {
-    res.status(403).json({ error: "tier_required", requiredTier: minimumTierForWorkshop(workshop.tier) });
-    return;
-  }
+  if (!(await ensureWorkshopAccess(req, res, workshop.tier))) return;
 
   const [existing] = await db
     .select()
@@ -182,10 +198,7 @@ router.post("/workshops/:id/modules/:moduleId/complete", async (req, res): Promi
     res.status(404).json({ error: "Workshop not found" });
     return;
   }
-  if (!(await canAccessWorkshop(req, workshop.tier))) {
-    res.status(403).json({ error: "tier_required", requiredTier: minimumTierForWorkshop(workshop.tier) });
-    return;
-  }
+  if (!(await ensureWorkshopAccess(req, res, workshop.tier))) return;
 
   const [module] = await db
     .select({ id: workshopModulesTable.id })
