@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Platform,
+  Image,
 } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
@@ -17,7 +18,12 @@ import {
   getGetUserProfileQueryKey,
   useListStudioPosts,
   getListStudioPostsQueryKey,
+  useFollowUser,
+  useUnfollowUser,
+  useGetCurrentUser,
+  getBaseUrl,
 } from '@workspace/api-client-react';
+import { useQueryClient } from '@tanstack/react-query';
 
 const TIER_COLORS: Record<string, string> = {
   pro: '#a855f7',
@@ -33,11 +39,20 @@ function formatDate(dateStr: string): string {
   });
 }
 
+function resolveImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url)) return url;
+  const base = getBaseUrl();
+  return base ? `${base}${url}` : url;
+}
+
 export default function CreatorProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
+  const { data: me } = useGetCurrentUser();
 
   const creatorId = id ? Number(id) : undefined;
 
@@ -45,6 +60,7 @@ export default function CreatorProfileScreen() {
     data: profile,
     isLoading: profileLoading,
     isError: profileError,
+    refetch: refetchProfile,
   } = useGetUserProfile(creatorId as number, {
     query: { enabled: creatorId != null, queryKey: creatorId != null ? getGetUserProfileQueryKey(creatorId) : [] },
   });
@@ -56,6 +72,22 @@ export default function CreatorProfileScreen() {
     { userId: creatorId, limit: 10 },
     { query: { enabled: creatorId != null, queryKey: creatorId != null ? getListStudioPostsQueryKey({ userId: creatorId, limit: 10 }) : [] } }
   );
+  const followMutation = useFollowUser({
+    mutation: {
+      onSuccess: () => {
+        refetchProfile();
+        queryClient.invalidateQueries({ queryKey: ['/api/studio-posts'] });
+      },
+    },
+  });
+  const unfollowMutation = useUnfollowUser({
+    mutation: {
+      onSuccess: () => {
+        refetchProfile();
+        queryClient.invalidateQueries({ queryKey: ['/api/studio-posts'] });
+      },
+    },
+  });
 
   const tierColor = profile ? (TIER_COLORS[profile.tier] ?? colors.mutedForeground) : colors.mutedForeground;
   const initials = profile ? profile.username.slice(0, 2).toUpperCase() : '??';
@@ -124,6 +156,23 @@ export default function CreatorProfileScreen() {
       fontFamily: 'DMSans_700Bold',
       fontSize: 28,
       color: colors.primary,
+    },
+    avatarImage: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+    },
+    followButton: {
+      borderWidth: 1,
+      borderColor: colors.primary,
+      borderRadius: colors.radius,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      marginTop: 2,
+    },
+    followButtonText: {
+      fontFamily: 'DMSans_600SemiBold',
+      fontSize: 13,
     },
     usernameRow: {
       flexDirection: 'row',
@@ -363,6 +412,17 @@ export default function CreatorProfileScreen() {
     },
   }), [colors, topPad]);
 
+  const isOwnProfile = !!me && me.id === profile?.id;
+  const followPending = followMutation.isPending || unfollowMutation.isPending;
+  const handleFollow = () => {
+    if (!profile || isOwnProfile) return;
+    if (profile.followedByMe) {
+      unfollowMutation.mutate({ id: profile.id });
+    } else {
+      followMutation.mutate({ id: profile.id });
+    }
+  };
+
   return (
     <View style={s.container}>
       {/* Nav bar */}
@@ -390,7 +450,11 @@ export default function CreatorProfileScreen() {
           {/* Hero */}
           <View style={s.hero}>
             <View style={s.avatar}>
-              <Text style={s.avatarText}>{initials}</Text>
+                {resolveImageUrl(profile.avatarUrl) ? (
+                  <Image source={{ uri: resolveImageUrl(profile.avatarUrl)! }} style={s.avatarImage} />
+                ) : (
+                  <Text style={s.avatarText}>{initials}</Text>
+                )}
             </View>
 
             <View style={s.usernameRow}>
@@ -398,6 +462,21 @@ export default function CreatorProfileScreen() {
               <View style={s.tierBadge}>
                 <Text style={[s.tierText, { color: tierColor }]}>{profile.tier}</Text>
               </View>
+              {!isOwnProfile && (
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={`${profile.followedByMe ? 'Unfollow' : 'Follow'} ${profile.username}`}
+                  accessibilityState={{ selected: profile.followedByMe, busy: followPending }}
+                  disabled={followPending}
+                  onPress={handleFollow}
+                  style={[s.followButton, profile.followedByMe && { backgroundColor: colors.primary }]}
+                  testID={`creator-follow-${profile.id}`}
+                >
+                  <Text style={[s.followButtonText, { color: profile.followedByMe ? colors.primaryForeground : colors.primary }]}>
+                    {profile.followedByMe ? 'Following' : 'Follow'}
+                  </Text>
+                </TouchableOpacity>
+              )}
               <View style={[s.tierBadge, { backgroundColor: colors.primary + '20' }]}>
                 <Text style={[s.tierText, { color: colors.primary }]}>{phase}</Text>
               </View>
@@ -455,18 +534,18 @@ export default function CreatorProfileScreen() {
             </View>
             <View style={s.statDivider} />
             <View style={s.stat}>
-              <Text style={s.statValue}>{profile?.recentBadges ? profile.recentBadges.length : 0}</Text>
-              <Text style={s.statLabel}>Badges</Text>
+                <Text style={s.statValue}>{profile.followerCount ?? 0}</Text>
+                <Text style={s.statLabel}>Followers</Text>
             </View>
             <View style={s.statDivider} />
             <View style={s.stat}>
-              <Text style={s.statValue}>{profile?.currentStreak ?? 0}</Text>
-              <Text style={s.statLabel}>Streak</Text>
+                <Text style={s.statValue}>{profile.followingCount ?? 0}</Text>
+                <Text style={s.statLabel}>Following</Text>
             </View>
             <View style={s.statDivider} />
             <View style={s.stat}>
-              <Text style={s.statValue}>{profile?.workshopsEnrolled ?? 0}</Text>
-              <Text style={s.statLabel}>Workshops</Text>
+                <Text style={s.statValue}>{profile?.currentStreak ?? 0}</Text>
+                <Text style={s.statLabel}>Streak</Text>
             </View>
           </View>
 

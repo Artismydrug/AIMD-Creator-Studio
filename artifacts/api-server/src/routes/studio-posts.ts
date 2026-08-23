@@ -15,17 +15,8 @@ import {
 
 const router: IRouter = Router();
 
-router.get("/studio-posts", async (req, res): Promise<void> => {
-  const parsed = ListStudioPostsQueryParams.safeParse(req.query);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-  const limit = parsed.data.limit ?? 20;
-  const offset = parsed.data.offset ?? 0;
-  const filterUserId = parsed.data.userId ?? null;
-
-  const baseSelect = {
+function buildPostSelect(viewerUserId: number) {
+  return {
     id: studioPostsTable.id,
     userId: studioPostsTable.userId,
     username: usersTable.username,
@@ -36,14 +27,68 @@ router.get("/studio-posts", async (req, res): Promise<void> => {
     tags: studioPostsTable.tags,
     likes: studioPostsTable.likes,
     createdAt: studioPostsTable.createdAt,
+    followerCount: sql<number>`(
+      SELECT COUNT(*)::int FROM user_follows
+      WHERE following_id = ${usersTable.id}
+    )`,
+    followingCount: sql<number>`(
+      SELECT COUNT(*)::int FROM user_follows
+      WHERE follower_id = ${usersTable.id}
+    )`,
+    followedByMe: sql<boolean>`EXISTS(
+      SELECT 1 FROM user_follows
+      WHERE follower_id = ${viewerUserId}
+        AND following_id = ${usersTable.id}
+    )`,
   };
+}
 
-  const posts = filterUserId
+router.get("/studio-posts", async (req, res): Promise<void> => {
+  const parsed = ListStudioPostsQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const limit = parsed.data.limit ?? 20;
+  const offset = parsed.data.offset ?? 0;
+  const filterUserId = parsed.data.userId ?? null;
+  const followingOnly = parsed.data.followingOnly ?? false;
+  const viewerUserId = req.dbUser?.id ?? -1;
+
+  if (followingOnly && !req.dbUser) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const baseSelect = buildPostSelect(viewerUserId);
+
+  const followingCondition = sql`${studioPostsTable.userId} IN (
+    SELECT following_id FROM user_follows WHERE follower_id = ${viewerUserId}
+  )`;
+  const posts = filterUserId && followingOnly
+    ? await db
+        .select(baseSelect)
+        .from(studioPostsTable)
+        .innerJoin(usersTable, eq(studioPostsTable.userId, usersTable.id))
+        .where(and(eq(studioPostsTable.userId, filterUserId), followingCondition))
+        .orderBy(desc(studioPostsTable.createdAt))
+        .limit(limit)
+        .offset(offset)
+    : filterUserId
     ? await db
         .select(baseSelect)
         .from(studioPostsTable)
         .innerJoin(usersTable, eq(studioPostsTable.userId, usersTable.id))
         .where(eq(studioPostsTable.userId, filterUserId))
+        .orderBy(desc(studioPostsTable.createdAt))
+        .limit(limit)
+        .offset(offset)
+    : followingOnly
+    ? await db
+        .select(baseSelect)
+        .from(studioPostsTable)
+        .innerJoin(usersTable, eq(studioPostsTable.userId, usersTable.id))
+        .where(followingCondition)
         .orderBy(desc(studioPostsTable.createdAt))
         .limit(limit)
         .offset(offset)
@@ -85,12 +130,18 @@ router.post("/studio-posts", async (req, res): Promise<void> => {
     .values({ ...parsed.data, userId, tags: parsed.data.tags ?? [] })
     .returning();
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  const [freshPost] = await db
+    .select(buildPostSelect(userId))
+    .from(studioPostsTable)
+    .innerJoin(usersTable, eq(studioPostsTable.userId, usersTable.id))
+    .where(eq(studioPostsTable.id, post.id));
+  if (!freshPost) {
+    res.status(500).json({ error: "Created post could not be loaded" });
+    return;
+  }
   res.status(201).json(
     CreateStudioPostResponse.parse({
-      ...post,
-      username: user?.username ?? "creator",
-      userAvatarUrl: user?.avatarUrl ?? null,
+      ...freshPost,
       likedByMe: false,
     })
   );
@@ -102,19 +153,9 @@ router.get("/studio-posts/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
+  const viewerUserId = req.dbUser?.id ?? -1;
   const [post] = await db
-    .select({
-      id: studioPostsTable.id,
-      userId: studioPostsTable.userId,
-      username: usersTable.username,
-      userAvatarUrl: usersTable.avatarUrl,
-      imageUrl: studioPostsTable.imageUrl,
-      mediaType: studioPostsTable.mediaType,
-      caption: studioPostsTable.caption,
-      tags: studioPostsTable.tags,
-      likes: studioPostsTable.likes,
-      createdAt: studioPostsTable.createdAt,
-    })
+    .select(buildPostSelect(viewerUserId))
     .from(studioPostsTable)
     .innerJoin(usersTable, eq(studioPostsTable.userId, usersTable.id))
     .where(eq(studioPostsTable.id, params.data.id));
@@ -188,18 +229,7 @@ router.post("/studio-posts/:id/like", async (req, res): Promise<void> => {
   }
 
   const [post] = await db
-    .select({
-      id: studioPostsTable.id,
-      userId: studioPostsTable.userId,
-      username: usersTable.username,
-      userAvatarUrl: usersTable.avatarUrl,
-      imageUrl: studioPostsTable.imageUrl,
-      mediaType: studioPostsTable.mediaType,
-      caption: studioPostsTable.caption,
-      tags: studioPostsTable.tags,
-      likes: studioPostsTable.likes,
-      createdAt: studioPostsTable.createdAt,
-    })
+    .select(buildPostSelect(userId))
     .from(studioPostsTable)
     .innerJoin(usersTable, eq(studioPostsTable.userId, usersTable.id))
     .where(eq(studioPostsTable.id, params.data.id));

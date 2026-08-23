@@ -219,6 +219,9 @@ export interface StudioPost {
   username?: string;
   /** @nullable */
   userAvatarUrl?: string | null;
+  followerCount: number;
+  followingCount: number;
+  followedByMe: boolean;
   /** @nullable */
   imageUrl?: string | null;
   mediaType?: StudioPostMediaType;
@@ -848,6 +851,48 @@ export interface DirectoryCreator {
   recentBadges?: DirectoryCreatorRecentBadgesItem[];
 }
 
+export type PublicCreatorProfileRecentBadgesItem = {
+  id: number;
+  name: string;
+  /** @nullable */
+  imageUrl?: string | null;
+  earnedAt: string;
+};
+
+export interface PublicCreatorProfile {
+  id: number;
+  username: string;
+  /** @nullable */
+  avatarUrl?: string | null;
+  tier: string;
+  studioReadyBadge?: boolean;
+  points?: number;
+  /** @nullable */
+  discipline?: string | null;
+  /** @nullable */
+  bio?: string | null;
+  /** @nullable */
+  location?: string | null;
+  bookingOpen: boolean;
+  /** @nullable */
+  portfolioUrl?: string | null;
+  postCount: number;
+  badgesEarned: number;
+  currentStreak: number;
+  workshopsEnrolled: number;
+  followerCount: number;
+  followingCount: number;
+  followedByMe: boolean;
+  recentBadges: PublicCreatorProfileRecentBadgesItem[];
+}
+
+export interface FollowRelationship {
+  targetUserId: number;
+  followerCount: number;
+  followingCount: number;
+  followedByMe: boolean;
+}
+
 export interface ConversationParticipant {
   userId: number;
   username: string;
@@ -1416,6 +1461,10 @@ offset?: number;
  * @nullable
  */
 userId?: number | null;
+/**
+ * Return posts from creators followed by the signed-in user. Requires authentication when true.
+ */
+followingOnly?: boolean;
 };
 
 export type ListWorkshopsParams = {

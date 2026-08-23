@@ -1,13 +1,79 @@
 import { Router, type IRouter } from "express";
 import { eq, sql } from "drizzle-orm";
-import { db, usersTable } from "@workspace/db";
+import { db, pool, usersTable } from "@workspace/db";
 import {
+  FollowUserParams,
+  FollowUserResponse,
   GetCurrentUserResponse,
+  GetUserProfileResponse,
+  UnfollowUserParams,
+  UnfollowUserResponse,
   UpdateCurrentUserBody,
   UpdateCurrentUserResponse,
 } from "@workspace/api-zod";
+import { ObjectPermission, getObjectAclPolicy } from "../lib/objectAcl";
+import { ObjectNotFoundError, ObjectStorageService } from "../lib/objectStorage";
 
 const router: IRouter = Router();
+const objectStorageService = new ObjectStorageService();
+
+type FollowSnapshot = {
+  targetExists: boolean;
+  followerCount: number;
+  followingCount: number;
+  followedByMe: boolean;
+};
+
+async function getFollowSnapshot(
+  targetUserId: number,
+  viewerUserId: number,
+): Promise<FollowSnapshot> {
+  const { rows } = await pool.query<FollowSnapshot>(
+    `SELECT
+       EXISTS(SELECT 1 FROM users WHERE id = $1) AS "targetExists",
+       (SELECT COUNT(*)::int FROM user_follows WHERE following_id = $1) AS "followerCount",
+       (SELECT COUNT(*)::int FROM user_follows WHERE follower_id = $1) AS "followingCount",
+       EXISTS(
+         SELECT 1 FROM user_follows
+         WHERE follower_id = $2 AND following_id = $1
+       ) AS "followedByMe"`,
+    [targetUserId, viewerUserId],
+  );
+  return rows[0] ?? {
+    targetExists: false,
+    followerCount: 0,
+    followingCount: 0,
+    followedByMe: false,
+  };
+}
+
+/**
+ * Profile avatars are public by design, but must still belong to the creator
+ * updating their profile. This rejects another creator's upload and anything
+ * with a private ACL, including assignment footage.
+ */
+async function isOwnedPublicAvatar(userId: number, avatarUrl: string): Promise<boolean> {
+  const storagePrefix = "/api/storage";
+  if (!avatarUrl.startsWith(`${storagePrefix}/objects/`)) return false;
+
+  try {
+    const objectFile = await objectStorageService.getObjectEntityFile(
+      avatarUrl.slice(storagePrefix.length),
+    );
+    const canWrite = await objectStorageService.canAccessObjectEntity({
+      userId: String(userId),
+      objectFile,
+      requestedPermission: ObjectPermission.WRITE,
+    });
+    const policy = await getObjectAclPolicy(objectFile);
+    return canWrite && policy?.owner === String(userId) && policy.visibility === "public";
+  } catch (error) {
+    if (!(error instanceof ObjectNotFoundError)) {
+      console.warn("Unable to validate avatar object", error);
+    }
+    return false;
+  }
+}
 
 router.get("/users/me", async (req, res): Promise<void> => {
   if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
@@ -49,7 +115,8 @@ router.patch("/users/me", async (req, res): Promise<void> => {
     }
   }
 
-  // URL validation: portfolio must be http(s); avatar must be our own storage path or https
+  // URL validation: portfolio must be http(s); avatars must be creator-owned
+  // public uploads returned by our authenticated storage endpoint.
   if (parsed.data.portfolioUrl) {
     if (!/^https?:\/\//i.test(parsed.data.portfolioUrl)) {
       res.status(400).json({ error: "Portfolio link must start with http:// or https://" });
@@ -57,9 +124,9 @@ router.patch("/users/me", async (req, res): Promise<void> => {
     }
   }
   if (parsed.data.avatarUrl) {
-    const a = parsed.data.avatarUrl;
-    if (!a.startsWith("/api/storage/") && !/^https:\/\//i.test(a)) {
-      res.status(400).json({ error: "Invalid avatar URL." });
+    const isAllowedAvatar = await isOwnedPublicAvatar(userId, parsed.data.avatarUrl);
+    if (!isAllowedAvatar) {
+      res.status(400).json({ error: "Avatar must be one of your public image uploads." });
       return;
     }
   }
@@ -117,10 +184,10 @@ router.get("/users/:id/profile", async (req, res): Promise<void> => {
   const userId = parseInt(rawId, 10);
   if (isNaN(userId)) { res.status(400).json({ error: "Invalid id" }); return; }
 
+  const viewerUserId = req.dbUser?.id ?? -1;
   const rows = await db.execute(sql`
     SELECT
-      u.id, u.username, u.email,
-      u.first_name AS "firstName", u.last_name AS "lastName",
+      u.id, u.username,
       u.avatar_url AS "avatarUrl",
       u.tier, u.studio_ready_badge AS "studioReadyBadge", u.points,
       u.discipline, u.bio, u.location,
@@ -146,14 +213,21 @@ router.get("/users/:id/profile", async (req, res): Promise<void> => {
       ), 0)::int AS "currentStreak",
       (SELECT COUNT(*)::int FROM badges b WHERE b.user_id = u.id) AS "badgesEarned",
       (SELECT COUNT(*)::int FROM enrollments e WHERE e.user_id = u.id) AS "workshopsEnrolled",
-      (
+      (SELECT COUNT(*)::int FROM user_follows uf WHERE uf.following_id = u.id) AS "followerCount",
+      (SELECT COUNT(*)::int FROM user_follows uf WHERE uf.follower_id = u.id) AS "followingCount",
+      EXISTS(
+        SELECT 1 FROM user_follows viewer_follow
+        WHERE viewer_follow.follower_id = ${viewerUserId}
+          AND viewer_follow.following_id = u.id
+      ) AS "followedByMe",
+      COALESCE((
         SELECT json_agg(json_build_object(
           'id', b2.id, 'name', b2.name,
           'imageUrl', b2.image_url,
           'earnedAt', b2.earned_at
         ) ORDER BY b2.earned_at DESC)
         FROM badges b2 WHERE b2.user_id = u.id
-      ) AS "recentBadges"
+      ), '[]'::json) AS "recentBadges"
     FROM users u
     LEFT JOIN studio_posts p ON p.user_id = u.id
     WHERE u.id = ${userId}
@@ -165,7 +239,66 @@ router.get("/users/:id/profile", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json(rows.rows[0]);
+  res.json(GetUserProfileResponse.parse(rows.rows[0]));
+});
+
+router.post("/users/:id/follow", async (req, res): Promise<void> => {
+  if (!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const parsed = FollowUserParams.safeParse(req.params);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  const targetUserId = parsed.data.id;
+  const followerUserId = req.dbUser.id;
+  if (targetUserId === followerUserId) {
+    res.status(400).json({ error: "You cannot follow yourself." });
+    return;
+  }
+
+  const snapshotBeforeInsert = await getFollowSnapshot(targetUserId, followerUserId);
+  if (!snapshotBeforeInsert.targetExists) {
+    res.status(404).json({ error: "Creator not found" });
+    return;
+  }
+
+  await pool.query(
+    `INSERT INTO user_follows (follower_id, following_id)
+     VALUES ($1, $2)
+     ON CONFLICT (follower_id, following_id) DO NOTHING`,
+    [followerUserId, targetUserId],
+  );
+  const snapshot = await getFollowSnapshot(targetUserId, followerUserId);
+  res.json(FollowUserResponse.parse({
+    targetUserId,
+    followerCount: snapshot.followerCount,
+    followingCount: snapshot.followingCount,
+    followedByMe: snapshot.followedByMe,
+  }));
+});
+
+router.delete("/users/:id/follow", async (req, res): Promise<void> => {
+  if (!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const parsed = UnfollowUserParams.safeParse(req.params);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  const targetUserId = parsed.data.id;
+  const followerUserId = req.dbUser.id;
+  const snapshotBeforeDelete = await getFollowSnapshot(targetUserId, followerUserId);
+  if (!snapshotBeforeDelete.targetExists) {
+    res.status(404).json({ error: "Creator not found" });
+    return;
+  }
+
+  await pool.query(
+    `DELETE FROM user_follows WHERE follower_id = $1 AND following_id = $2`,
+    [followerUserId, targetUserId],
+  );
+  const snapshot = await getFollowSnapshot(targetUserId, followerUserId);
+  res.json(UnfollowUserResponse.parse({
+    targetUserId,
+    followerCount: snapshot.followerCount,
+    followingCount: snapshot.followingCount,
+    followedByMe: snapshot.followedByMe,
+  }));
 });
 
 export default router;

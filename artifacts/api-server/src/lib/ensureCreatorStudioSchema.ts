@@ -14,6 +14,7 @@ type SqlExecutor = {
  *  - drill_prompts             (30-second drill prompts)
  *  - assignment_media_uploads  (ffprobe-verified drill videos)
  *  - assignment_extensions     (capture metadata + instructor feedback)
+ *  - user_follows              (creator social graph)
  *
  * Statements mirror lib/db/src/schema/{users,instructor}.ts exactly and are
  * safe to run on every boot (IF NOT EXISTS everywhere, additive only). This
@@ -96,6 +97,23 @@ export async function ensureCreatorStudioSchema(
   await database.query(`
     CREATE UNIQUE INDEX IF NOT EXISTS assignment_media_uploads_object_path_unique
       ON assignment_media_uploads (object_path)
+  `);
+
+  await database.query(`
+    CREATE TABLE IF NOT EXISTS user_follows (
+      follower_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      following_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      CONSTRAINT user_follows_no_self_follow CHECK (follower_id <> following_id)
+    )
+  `);
+  await database.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS user_follows_follower_following_unique
+      ON user_follows (follower_id, following_id)
+  `);
+  await database.query(`
+    CREATE INDEX IF NOT EXISTS user_follows_following_idx
+      ON user_follows (following_id)
   `);
 
   await database.query(`

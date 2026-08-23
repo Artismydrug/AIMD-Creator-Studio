@@ -13,6 +13,9 @@ export interface StudioPost {
   username?: string;
   /** @nullable */
   userAvatarUrl?: string | null;
+  followerCount: number;
+  followingCount: number;
+  followedByMe: boolean;
   /** @nullable */
   imageUrl?: string | null;
   mediaType?: StudioPostMediaType;

@@ -75,6 +75,7 @@ function RootLayoutNav() {
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
       <Stack.Screen name="feed" options={{ headerShown: false }} />
+       <Stack.Screen name="profile" options={{ headerShown: false }} />
       <Stack.Screen name="membership" options={{ headerShown: false }} />
       <Stack.Screen
         name="conversation/[id]"

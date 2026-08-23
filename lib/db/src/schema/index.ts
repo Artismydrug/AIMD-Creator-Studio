@@ -1,4 +1,5 @@
 export * from "./users";
+export * from "./user-follows";
 export * from "./auth";
 export * from "./habits";
 export * from "./studio-posts";

@@ -52,6 +52,7 @@ import type {
   EventCheckInInput,
   EventCheckInResult,
   EventQrToken,
+  FollowRelationship,
   GetActivityFeedParams,
   GetProgressParams,
   Habit,
@@ -84,6 +85,7 @@ import type {
   PointAwardResult,
   ProgressDayInput,
   ProgressSummary,
+  PublicCreatorProfile,
   RewardsInfo,
   SkillTrack,
   SkillTrackInput,
@@ -4319,9 +4321,9 @@ export const getGetUserProfileUrl = (id: number,) => {
 /**
  * @summary Get a creator's public profile
  */
-export const getUserProfile = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<DirectoryCreator> => {
+export const getUserProfile = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<PublicCreatorProfile> => {
 
-  return customFetch<DirectoryCreator>(getGetUserProfileUrl(id),
+  return customFetch<PublicCreatorProfile>(getGetUserProfileUrl(id),
   {
     ...options,
     method: 'GET'
@@ -4384,6 +4386,148 @@ export function useGetUserProfile<TData = Awaited<ReturnType<typeof getUserProfi
 
 
 
+
+export const getFollowUserUrl = (id: number,) => {
+
+
+
+
+  return `/api/users/${id}/follow`
+}
+
+/**
+ * @summary Follow a creator
+ */
+export const followUser = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<FollowRelationship> => {
+
+  return customFetch<FollowRelationship>(getFollowUserUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getFollowUserMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof followUser>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof followUser>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['followUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof followUser>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  followUser(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FollowUserMutationResult = NonNullable<Awaited<ReturnType<typeof followUser>>>
+
+    export type FollowUserMutationError = ErrorType<void>
+
+    /**
+ * @summary Follow a creator
+ */
+export const useFollowUser = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof followUser>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof followUser>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getFollowUserMutationOptions(options));
+    }
+
+export const getUnfollowUserUrl = (id: number,) => {
+
+
+
+
+  return `/api/users/${id}/follow`
+}
+
+/**
+ * @summary Unfollow a creator
+ */
+export const unfollowUser = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<FollowRelationship> => {
+
+  return customFetch<FollowRelationship>(getUnfollowUserUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getUnfollowUserMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unfollowUser>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unfollowUser>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['unfollowUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unfollowUser>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  unfollowUser(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnfollowUserMutationResult = NonNullable<Awaited<ReturnType<typeof unfollowUser>>>
+
+    export type UnfollowUserMutationError = ErrorType<void>
+
+    /**
+ * @summary Unfollow a creator
+ */
+export const useUnfollowUser = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unfollowUser>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unfollowUser>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getUnfollowUserMutationOptions(options));
+    }
 
 export const getListConversationsUrl = () => {
 

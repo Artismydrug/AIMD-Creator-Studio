@@ -21,9 +21,12 @@ import {
   useListPostComments,
   getListPostCommentsQueryKey,
   useAddPostComment,
+  useFollowUser,
+  useUnfollowUser,
   getBaseUrl,
 } from '@workspace/api-client-react';
 import type { StudioPost } from '@workspace/api-client-react';
+import { useRouter } from 'expo-router';
 
 /** Resolve a relative imageUrl (e.g. /api/storage/objects/…) to an absolute URL for React Native. */
 function resolveImageUrl(url: string | null | undefined): string | null {
@@ -51,24 +54,34 @@ function Avatar({ username, avatarUrl, size = 36 }: { username?: string; avatarU
       width: size, height: size, borderRadius: size / 2,
       backgroundColor: colors.muted,
       alignItems: 'center', justifyContent: 'center',
+      overflow: 'hidden',
     }}>
-      <Text style={{ color: colors.primary, fontFamily: 'DMSans_600SemiBold', fontSize: size * 0.38 }}>
-        {initials}
-      </Text>
+      {resolveImageUrl(avatarUrl) ? (
+        <Image source={{ uri: resolveImageUrl(avatarUrl)! }} style={{ width: size, height: size }} />
+      ) : (
+        <Text style={{ color: colors.primary, fontFamily: 'DMSans_600SemiBold', fontSize: size * 0.38 }}>
+          {initials}
+        </Text>
+      )}
     </View>
   );
 }
 
 interface PostCardProps {
   post: StudioPost;
+  currentUserId?: number;
+  onFollowChanged?: () => void;
   onRefresh?: () => void;
 }
 
-export default function PostCard({ post, onRefresh }: PostCardProps) {
+export default function PostCard({ post, currentUserId, onFollowChanged, onRefresh }: PostCardProps) {
   const colors = useColors();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [liked, setLiked] = useState(post.likedByMe ?? false);
   const [likeCount, setLikeCount] = useState(post.likes);
+  const [followedByMe, setFollowedByMe] = useState(post.followedByMe);
+  const [followerCount, setFollowerCount] = useState(post.followerCount);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
 
@@ -95,6 +108,9 @@ export default function PostCard({ post, onRefresh }: PostCardProps) {
       },
     },
   });
+  const followMutation = useFollowUser();
+  const unfollowMutation = useUnfollowUser();
+  const isOwnPost = currentUserId === post.userId;
 
   const handleLike = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -107,6 +123,28 @@ export default function PostCard({ post, onRefresh }: PostCardProps) {
   const handleOpenComments = () => {
     setShowComments(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const handleFollow = () => {
+    const wasFollowing = followedByMe;
+    setFollowedByMe(!wasFollowing);
+    setFollowerCount((count) => Math.max(0, count + (wasFollowing ? -1 : 1)));
+    const mutation = wasFollowing ? unfollowMutation : followMutation;
+    mutation.mutate(
+      { id: post.userId },
+      {
+        onSuccess: (relationship) => {
+          setFollowedByMe(relationship.followedByMe);
+          setFollowerCount(relationship.followerCount);
+          queryClient.invalidateQueries({ queryKey: ['/api/studio-posts'] });
+          onFollowChanged?.();
+        },
+        onError: () => {
+          setFollowedByMe(wasFollowing);
+          setFollowerCount((count) => Math.max(0, count + (wasFollowing ? 1 : -1)));
+        },
+      },
+    );
   };
 
   const handleSendComment = () => {
@@ -137,6 +175,31 @@ export default function PostCard({ post, onRefresh }: PostCardProps) {
       fontFamily: 'DMSans_400Regular',
       fontSize: 12,
       color: colors.mutedForeground,
+    },
+    authorButton: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      flex: 1,
+      gap: 10,
+    },
+    socialMeta: {
+      color: colors.mutedForeground,
+      fontFamily: 'DMSans_400Regular',
+      fontSize: 11,
+      marginTop: 1,
+    },
+    followButton: {
+      borderColor: colors.primary,
+      borderRadius: colors.radius || 0,
+      borderWidth: 1,
+      minWidth: 74,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    followButtonText: {
+      fontFamily: 'DMSans_600SemiBold',
+      fontSize: 12,
+      textAlign: 'center',
     },
     caption: {
       fontFamily: 'DMSans_400Regular',
@@ -266,11 +329,34 @@ export default function PostCard({ post, onRefresh }: PostCardProps) {
   return (
     <View style={s.card}>
       <View style={s.cardHeader}>
-        <Avatar username={post.username} avatarUrl={post.userAvatarUrl} />
-        <View style={s.userInfo}>
-          <Text style={s.username}>{post.username ?? `User #${post.userId}`}</Text>
-          <Text style={s.time}>{formatTime(post.createdAt)}</Text>
-        </View>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={`Open ${post.username ?? 'creator'} profile`}
+          onPress={() => router.push(`/creator/${post.userId}`)}
+          style={s.authorButton}
+        >
+          <Avatar username={post.username} avatarUrl={post.userAvatarUrl} />
+          <View style={s.userInfo}>
+            <Text style={s.username}>{post.username ?? `User #${post.userId}`}</Text>
+            <Text style={s.time}>{formatTime(post.createdAt)}</Text>
+            <Text style={s.socialMeta}>{followerCount} followers · {post.followingCount} following</Text>
+          </View>
+        </TouchableOpacity>
+        {!isOwnPost && (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={`${followedByMe ? 'Unfollow' : 'Follow'} ${post.username ?? 'creator'}`}
+            accessibilityState={{ selected: followedByMe, busy: followMutation.isPending || unfollowMutation.isPending }}
+            disabled={followMutation.isPending || unfollowMutation.isPending}
+            onPress={handleFollow}
+            style={[s.followButton, followedByMe && { backgroundColor: colors.primary }]}
+            testID={`follow-user-${post.userId}`}
+          >
+            <Text style={[s.followButtonText, { color: followedByMe ? colors.primaryForeground : colors.primary }]}>
+              {followedByMe ? 'Following' : 'Follow'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <Text style={s.caption}>{post.caption}</Text>
@@ -292,7 +378,7 @@ export default function PostCard({ post, onRefresh }: PostCardProps) {
       )}
 
       <View style={s.actions}>
-        <TouchableOpacity style={s.actionBtn} onPress={handleLike} testID={`like-post-${post.id}`}>
+        <TouchableOpacity accessibilityLabel="Like post" style={s.actionBtn} onPress={handleLike} testID={`like-post-${post.id}`}>
           <Feather
             name={liked ? 'heart' : 'heart'}
             size={18}
@@ -301,7 +387,7 @@ export default function PostCard({ post, onRefresh }: PostCardProps) {
           <Text style={[s.actionCount, liked && { color: colors.primary }]}>{likeCount}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={s.actionBtn} onPress={handleOpenComments} testID={`comment-post-${post.id}`}>
+        <TouchableOpacity accessibilityLabel="Open critiques" style={s.actionBtn} onPress={handleOpenComments} testID={`comment-post-${post.id}`}>
           <Feather name="message-circle" size={18} color={colors.mutedForeground} />
           <Text style={s.actionCount}>Critique</Text>
         </TouchableOpacity>

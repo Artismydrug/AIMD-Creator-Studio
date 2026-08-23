@@ -13,4 +13,8 @@ offset?: number;
  * @nullable
  */
 userId?: number | null;
+/**
+ * Return posts from creators followed by the signed-in user. Requires authentication when true.
+ */
+followingOnly?: boolean;
 };

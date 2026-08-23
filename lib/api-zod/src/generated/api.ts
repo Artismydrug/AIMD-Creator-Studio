@@ -237,11 +237,13 @@ export const ListHabitLogsResponse = zod.array(ListHabitLogsResponseItem)
  */
 export const listStudioPostsQueryLimitDefault = 20;
 export const listStudioPostsQueryOffsetDefault = 0;
+export const listStudioPostsQueryFollowingOnlyDefault = false;
 
 export const ListStudioPostsQueryParams = zod.object({
   "limit": zod.coerce.number().int().default(listStudioPostsQueryLimitDefault),
   "offset": zod.coerce.number().int().default(listStudioPostsQueryOffsetDefault),
-  "userId": zod.coerce.number().int().nullish()
+  "userId": zod.coerce.number().int().nullish(),
+  "followingOnly": zod.coerce.boolean().default(listStudioPostsQueryFollowingOnlyDefault).describe('Return posts from creators followed by the signed-in user. Requires authentication when true.')
 })
 
 export const listStudioPostsResponseMediaTypeDefault = `image`;
@@ -251,6 +253,9 @@ export const ListStudioPostsResponseItem = zod.object({
   "userId": zod.int(),
   "username": zod.string().optional(),
   "userAvatarUrl": zod.string().nullish(),
+  "followerCount": zod.int(),
+  "followingCount": zod.int(),
+  "followedByMe": zod.boolean(),
   "imageUrl": zod.string().nullish(),
   "mediaType": zod.enum(['image', 'video']).default(listStudioPostsResponseMediaTypeDefault),
   "caption": zod.string(),
@@ -282,6 +287,9 @@ export const CreateStudioPostResponse = zod.object({
   "userId": zod.int(),
   "username": zod.string().optional(),
   "userAvatarUrl": zod.string().nullish(),
+  "followerCount": zod.int(),
+  "followingCount": zod.int(),
+  "followedByMe": zod.boolean(),
   "imageUrl": zod.string().nullish(),
   "mediaType": zod.enum(['image', 'video']).default(createStudioPostResponseMediaTypeDefault),
   "caption": zod.string(),
@@ -306,6 +314,9 @@ export const GetStudioPostResponse = zod.object({
   "userId": zod.int(),
   "username": zod.string().optional(),
   "userAvatarUrl": zod.string().nullish(),
+  "followerCount": zod.int(),
+  "followingCount": zod.int(),
+  "followedByMe": zod.boolean(),
   "imageUrl": zod.string().nullish(),
   "mediaType": zod.enum(['image', 'video']).default(getStudioPostResponseMediaTypeDefault),
   "caption": zod.string(),
@@ -340,6 +351,9 @@ export const LikeStudioPostResponse = zod.object({
   "userId": zod.int(),
   "username": zod.string().optional(),
   "userAvatarUrl": zod.string().nullish(),
+  "followerCount": zod.int(),
+  "followingCount": zod.int(),
+  "followedByMe": zod.boolean(),
   "imageUrl": zod.string().nullish(),
   "mediaType": zod.enum(['image', 'video']).default(likeStudioPostResponseMediaTypeDefault),
   "caption": zod.string(),
@@ -1311,22 +1325,56 @@ export const GetUserProfileResponse = zod.object({
   "username": zod.string(),
   "avatarUrl": zod.string().nullish(),
   "tier": zod.string(),
+  "studioReadyBadge": zod.boolean().optional(),
+  "points": zod.int().optional(),
   "discipline": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "location": zod.string().nullish(),
   "bookingOpen": zod.boolean(),
   "portfolioUrl": zod.string().nullish(),
-  "badgeCount": zod.int(),
   "postCount": zod.int(),
-  "points": zod.int().optional(),
-  "currentStreak": zod.int().optional(),
-  "workshopsEnrolled": zod.int().optional(),
+  "badgesEarned": zod.int(),
+  "currentStreak": zod.int(),
+  "workshopsEnrolled": zod.int(),
+  "followerCount": zod.int(),
+  "followingCount": zod.int(),
+  "followedByMe": zod.boolean(),
   "recentBadges": zod.array(zod.object({
-  "id": zod.int().optional(),
-  "name": zod.string().optional(),
+  "id": zod.int(),
+  "name": zod.string(),
   "imageUrl": zod.string().nullish(),
-  "earnedAt": zod.string().optional()
-})).optional()
+  "earnedAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Follow a creator
+ */
+export const FollowUserParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const FollowUserResponse = zod.object({
+  "targetUserId": zod.int(),
+  "followerCount": zod.int(),
+  "followingCount": zod.int(),
+  "followedByMe": zod.boolean()
+})
+
+
+/**
+ * @summary Unfollow a creator
+ */
+export const UnfollowUserParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const UnfollowUserResponse = zod.object({
+  "targetUserId": zod.int(),
+  "followerCount": zod.int(),
+  "followingCount": zod.int(),
+  "followedByMe": zod.boolean()
 })
 
 

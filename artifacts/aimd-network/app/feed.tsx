@@ -59,8 +59,11 @@ export default function FeedScreen() {
   } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [feedMode, setFeedMode] = useState<'all' | 'following'>('all');
 
-  const { data: posts, isLoading, isError, refetch } = useListStudioPosts();
+  const { data: posts, isLoading, isError, refetch } = useListStudioPosts({
+    followingOnly: feedMode === 'following',
+  });
   const { data: me } = useGetCurrentUser();
 
   const createMutation = useCreateStudioPost({
@@ -178,6 +181,34 @@ export default function FeedScreen() {
           alignItems: 'center',
           justifyContent: 'center',
           borderRadius: colors.radius || 0,
+        },
+        profileBtn: {
+          width: 38,
+          height: 38,
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: colors.radius || 0,
+        },
+        filterBar: {
+          flexDirection: 'row',
+          gap: 8,
+          paddingHorizontal: 16,
+          paddingVertical: 10,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        },
+        filterButton: {
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: colors.radius || 0,
+          paddingVertical: 7,
+          paddingHorizontal: 12,
+        },
+        filterText: {
+          fontFamily: 'DMSans_600SemiBold',
+          fontSize: 13,
         },
         listContent: { paddingBottom: Platform.OS === 'web' ? 100 : 100 },
         centered: {
@@ -305,6 +336,15 @@ export default function FeedScreen() {
           <Text style={s.headerTitle}>Studio Feed</Text>
         </View>
         <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Open your profile"
+          onPress={() => router.push('/profile')}
+          style={s.profileBtn}
+          testID="open-profile"
+        >
+          <Feather name="user" size={18} color={colors.foreground} />
+        </TouchableOpacity>
+        <TouchableOpacity
           style={s.composeBtn}
           onPress={() => {
             setComposing(true);
@@ -312,6 +352,28 @@ export default function FeedScreen() {
           }}
         >
           <Feather name="edit-2" size={18} color={colors.primaryForeground} />
+        </TouchableOpacity>
+      </View>
+      <View style={s.filterBar}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Show all posts"
+          accessibilityState={{ selected: feedMode === 'all' }}
+          onPress={() => setFeedMode('all')}
+          style={[s.filterButton, feedMode === 'all' && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+          testID="feed-filter-all"
+        >
+          <Text style={[s.filterText, { color: feedMode === 'all' ? colors.primaryForeground : colors.foreground }]}>All Posts</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Show posts from creators you follow"
+          accessibilityState={{ selected: feedMode === 'following' }}
+          onPress={() => setFeedMode('following')}
+          style={[s.filterButton, feedMode === 'following' && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+          testID="feed-filter-following"
+        >
+          <Text style={[s.filterText, { color: feedMode === 'following' ? colors.primaryForeground : colors.foreground }]}>Following Only</Text>
         </TouchableOpacity>
       </View>
 
@@ -331,7 +393,14 @@ export default function FeedScreen() {
         <FlatList
           data={posts}
           keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => <PostCard post={item} onRefresh={refetch} />}
+          renderItem={({ item }) => (
+            <PostCard
+              post={item}
+              currentUserId={me?.id}
+              onFollowChanged={refetch}
+              onRefresh={refetch}
+            />
+          )}
           contentContainerStyle={s.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -344,8 +413,12 @@ export default function FeedScreen() {
           ListEmptyComponent={
             <View style={s.centered}>
               <Feather name="image" size={48} color={colors.muted} />
-              <Text style={s.emptyTitle}>No posts yet</Text>
-              <Text style={s.emptyText}>Share what you're creating</Text>
+              <Text style={s.emptyTitle}>{feedMode === 'following' ? 'Your following feed is quiet' : 'No posts yet'}</Text>
+              <Text style={s.emptyText}>
+                {feedMode === 'following'
+                  ? 'Follow creators to see their studio posts here.'
+                  : 'Share what you’re creating'}
+              </Text>
             </View>
           }
         />
