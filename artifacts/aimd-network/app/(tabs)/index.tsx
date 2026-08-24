@@ -824,14 +824,6 @@ export default function ProgressScreen() {
     }
   }), [colors, insets, topPad]);
 
-  if (progressLoading && !progress) {
-    return (
-      <View style={[s.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
   const isOfflineMode =
     (progressIsError && !!progress) ||
     (challengeIsError && !!challengeData) ||
@@ -892,6 +884,23 @@ export default function ProgressScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
           }
         >
+          {progressLoading && !progress && (
+            <View
+              style={[
+                s.phaseBlock,
+                {
+                  minHeight: 136,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 12,
+                },
+              ]}
+            >
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={s.phaseLabel}>Loading your dashboard…</Text>
+            </View>
+          )}
+
           {progress && (
             <>
               <View style={s.phaseBlock}>

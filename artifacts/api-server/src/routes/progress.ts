@@ -70,58 +70,66 @@ async function buildProgressSummary(userId: number, timezone: string) {
   const now = new Date();
   const localDate = getLocalDate(now, timezone);
 
-  const [user] = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, userId));
+  const [
+    [user],
+    checkinRows,
+    [habitCountRow],
+    [completedRow],
+    allBadges,
+    [spinRow],
+  ] = await Promise.all([
+    db.select().from(usersTable).where(eq(usersTable.id, userId)),
+    db
+      .select({ localDate: creatorDailyCheckinsTable.localDate })
+      .from(creatorDailyCheckinsTable)
+      .where(eq(creatorDailyCheckinsTable.userId, userId))
+      .orderBy(creatorDailyCheckinsTable.localDate),
+    db
+      .select({ cnt: sql<number>`count(*)`.mapWith(Number) })
+      .from(habitsTable)
+      .where(eq(habitsTable.userId, userId)),
+    db
+      .select({ cnt: sql<number>`count(distinct ${habitLogsTable.habitId})`.mapWith(Number) })
+      .from(habitLogsTable)
+      .where(
+        and(
+          eq(habitLogsTable.userId, userId),
+          eq(habitLogsTable.date, localDate),
+          eq(habitLogsTable.completed, true),
+        ),
+      ),
+    db
+      .select()
+      .from(badgesTable)
+      .where(eq(badgesTable.userId, userId))
+      .orderBy(desc(badgesTable.earnedAt)),
+    db
+      .select()
+      .from(creatorRewardSpinsTable)
+      .where(
+        and(
+          eq(creatorRewardSpinsTable.userId, userId),
+          eq(creatorRewardSpinsTable.localDate, localDate),
+        ),
+      ),
+  ]);
 
   if (!user) throw new Error("User not found");
 
   const points = user.points;
 
-  // All check-in local dates (ascending) — needed for streak and today check.
-  const checkinRows = await db
-    .select({ localDate: creatorDailyCheckinsTable.localDate })
-    .from(creatorDailyCheckinsTable)
-    .where(eq(creatorDailyCheckinsTable.userId, userId))
-    .orderBy(creatorDailyCheckinsTable.localDate);
-
   const sortedDates = checkinRows.map((r) => r.localDate);
   const { currentStreak, longestStreak } = computeStreaks(sortedDates, localDate);
   const todayCheckin = sortedDates.includes(localDate);
 
-  // Total habits for this user.
-  const [habitCountRow] = await db
-    .select({ cnt: sql<number>`count(*)`.mapWith(Number) })
-    .from(habitsTable)
-    .where(eq(habitsTable.userId, userId));
   const totalHabits = habitCountRow?.cnt ?? 0;
 
-  // Count DISTINCT completed habit IDs for today to avoid inflation from
-  // multiple log entries per habit.
-  const [completedRow] = await db
-    .select({ cnt: sql<number>`count(distinct ${habitLogsTable.habitId})`.mapWith(Number) })
-    .from(habitLogsTable)
-    .where(
-      and(
-        eq(habitLogsTable.userId, userId),
-        eq(habitLogsTable.date, localDate),
-        eq(habitLogsTable.completed, true),
-      ),
-    );
   const todayHabitsCompleted = Math.min(
     completedRow?.cnt ?? 0,
     totalHabits,
   );
 
-  // Recent streak badges (up to 5, most recent first).
   const streakBadgeNames = new Set(STREAK_BADGE_MILESTONES.map((m) => m.name));
-  const allBadges = await db
-    .select()
-    .from(badgesTable)
-    .where(eq(badgesTable.userId, userId))
-    .orderBy(desc(badgesTable.earnedAt));
-
   const recentBadges = allBadges
     .filter((b) => streakBadgeNames.has(b.name))
     .slice(0, 5);
@@ -141,17 +149,6 @@ async function buildProgressSummary(userId: number, timezone: string) {
         progressPercent: Math.min(100, (currentStreak / nextMilestone.days) * 100),
       }
     : null;
-
-  // Today's spin.
-  const [spinRow] = await db
-    .select()
-    .from(creatorRewardSpinsTable)
-    .where(
-      and(
-        eq(creatorRewardSpinsTable.userId, userId),
-        eq(creatorRewardSpinsTable.localDate, localDate),
-      ),
-    );
 
   const todaySpin = spinRow
     ? {
