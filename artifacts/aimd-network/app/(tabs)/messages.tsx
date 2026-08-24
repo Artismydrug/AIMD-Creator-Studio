@@ -112,7 +112,7 @@ function ConversationRow({ conv }: { conv: Conversation }) {
   );
 }
 
-export default function MessagesScreen() {
+export default function MessagesScreen({ embedded = false }: { embedded?: boolean }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
@@ -125,7 +125,7 @@ export default function MessagesScreen() {
     setRefreshing(false);
   }, [refetch]);
 
-  const topPad = Platform.OS === 'web' ? 67 : insets.top + 8;
+  const topPad = embedded ? 0 : Platform.OS === 'web' ? 67 : insets.top + 8;
 
   const s = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },

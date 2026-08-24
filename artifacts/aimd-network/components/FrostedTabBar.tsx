@@ -13,12 +13,11 @@ import { useColors } from '@/hooks/useColors';
 import { safeImpact } from '@/lib/haptics';
 
 const icons: Record<string, keyof typeof Feather.glyphMap> = {
-  index: 'compass',
+  index: 'grid',
+  challenges: 'zap',
+  community: 'users',
   workshops: 'play-circle',
-  directory: 'users',
-  habits: 'activity',
-  messages: 'message-circle',
-  events: 'calendar',
+  'profile-tab': 'user',
 };
 
 type FrostedTabBarProps = {

@@ -36,9 +36,27 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Journey',
+          title: 'Dashboard',
           tabBarIcon: ({ color, size }) => (
-            <Feather name="target" size={size} color={color} />
+            <Feather name="grid" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="challenges"
+        options={{
+          title: 'Challenges & Habits',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="zap" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="community"
+        options={{
+          title: 'Community',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="users" size={size} color={color} />
           ),
         }}
       />
@@ -52,38 +70,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="directory"
+        name="profile-tab"
         options={{
-          title: 'Directory',
+          title: 'Profile',
           tabBarIcon: ({ color, size }) => (
-            <Feather name="users" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="habits"
-        options={{
-          title: 'Habits',
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="activity" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="messages"
-        options={{
-          title: 'Messages',
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="message-circle" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="events"
-        options={{
-          title: 'Events',
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="calendar" size={size} color={color} />
+            <Feather name="user" size={size} color={color} />
           ),
         }}
       />

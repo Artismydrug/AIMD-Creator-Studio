@@ -753,9 +753,20 @@ export default function ProgressScreen() {
     <View style={s.container} testID="progress-screen">
       <View style={s.header}>
         <View>
-          <Text style={s.title}>Journey</Text>
+           <Text style={s.title}>Dashboard</Text>
           <Text style={s.tagline}>Discipline Eats Talent</Text>
         </View>
+         <View style={{ alignItems: 'flex-end', gap: 6 }}>
+           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+             <Feather name="shield" size={13} color={colors.cyan} />
+             <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 11, color: colors.foreground, textTransform: 'uppercase' }}>
+               {currentUser?.tier === 'pro' ? 'Pro' : currentUser?.tier === 'academy' || currentUser?.tier === 'workshop' ? 'Dedicated' : 'Free'}
+             </Text>
+           </View>
+           <TouchableOpacity onPress={() => router.push('/profile')} testID="dashboard-profile-button">
+             <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.primary }}>View profile</Text>
+           </TouchableOpacity>
+         </View>
         <TouchableOpacity style={s.feedBtn} onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           router.push('/feed');

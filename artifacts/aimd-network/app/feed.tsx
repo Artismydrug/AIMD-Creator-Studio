@@ -44,7 +44,7 @@ async function uploadImageToServer(
   return result.objectPath;
 }
 
-export default function FeedScreen() {
+export default function FeedScreen({ embedded = false }: { embedded?: boolean }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -152,7 +152,7 @@ export default function FeedScreen() {
   };
 
   const isPending = uploading || createMutation.isPending;
-  const topPad = Platform.OS === 'web' ? 67 : insets.top + 8;
+   const topPad = embedded ? 0 : Platform.OS === 'web' ? 67 : insets.top + 8;
 
   const s = useMemo(
     () =>
@@ -329,9 +329,11 @@ export default function FeedScreen() {
   return (
     <View style={s.container}>
       <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Feather name="arrow-left" size={24} color={colors.foreground} />
-        </TouchableOpacity>
+         {!embedded && (
+           <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+             <Feather name="arrow-left" size={24} color={colors.foreground} />
+           </TouchableOpacity>
+         )}
         <View style={{ flex: 1 }}>
           <Text style={s.headerTitle}>Studio Feed</Text>
         </View>
