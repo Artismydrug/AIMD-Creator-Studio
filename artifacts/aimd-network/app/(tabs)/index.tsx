@@ -260,8 +260,8 @@ export default function ProgressScreen() {
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
       flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
+      gap: 12,
     },
     title: {
       fontFamily: 'DMSans_700Bold',
@@ -747,26 +747,31 @@ export default function ProgressScreen() {
     );
   }
 
-  const isOfflineMode = (progressIsError && progress) || (challengeIsError && challengeData);
+  const isOfflineMode = (progressIsError && !!progress) || (challengeIsError && !!challengeData);
 
   return (
     <View style={s.container} testID="progress-screen">
       <View style={s.header}>
-        <View>
-           <Text style={s.title}>Dashboard</Text>
-          <Text style={s.tagline}>Discipline Eats Talent</Text>
+        {/* Title block — grows to fill available space */}
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={s.title} numberOfLines={1}>Dashboard</Text>
+          <Text style={s.tagline} numberOfLines={1}>Discipline Eats Talent</Text>
         </View>
-         <View style={{ alignItems: 'flex-end', gap: 6 }}>
-           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-             <Feather name="shield" size={13} color={colors.cyan} />
-             <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 11, color: colors.foreground, textTransform: 'uppercase' }}>
-               {currentUser?.tier === 'pro' ? 'Pro' : currentUser?.tier === 'academy' || currentUser?.tier === 'workshop' ? 'Dedicated' : 'Free'}
-             </Text>
-           </View>
-           <TouchableOpacity onPress={() => router.push('/profile')} testID="dashboard-profile-button">
-             <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.primary }}>View profile</Text>
-           </TouchableOpacity>
-         </View>
+        {/* Tier badge + profile link */}
+        <TouchableOpacity
+          style={{ alignItems: 'flex-end', gap: 4 }}
+          onPress={() => router.push('/profile')}
+          testID="dashboard-profile-button"
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <Feather name="shield" size={12} color={colors.cyan} />
+            <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 11, color: colors.foreground, textTransform: 'uppercase' }}>
+              {currentUser?.tier === 'pro' ? 'Pro' : currentUser?.tier === 'academy' || currentUser?.tier === 'workshop' ? 'Dedicated' : 'Free'}
+            </Text>
+          </View>
+          <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.primary }}>My Profile</Text>
+        </TouchableOpacity>
+        {/* Feed shortcut */}
         <TouchableOpacity style={s.feedBtn} onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           router.push('/feed');
@@ -803,14 +808,14 @@ export default function ProgressScreen() {
             <>
               <View style={s.phaseBlock}>
                 <Text style={s.phaseLabel}>Current Phase</Text>
-                <Text style={s.phaseName}>{progress.phase.phase}</Text>
-                <Text style={s.pointsText}>{progress.points} Points</Text>
+                <Text style={s.phaseName}>{progress.phase?.phase ?? '—'}</Text>
+                <Text style={s.pointsText}>{progress.points ?? 0} Points</Text>
                 <View style={s.progressBarContainer}>
-                  <View style={[s.progressBarFill, { width: `${Math.max(0, Math.min(100, progress.phase.progressPercent))}%` }]} />
+                  <View style={[s.progressBarFill, { width: `${Math.max(0, Math.min(100, progress.phase?.progressPercent ?? 0))}%` }]} />
                 </View>
-                {progress.phase.nextPhase && (
+                {progress.phase?.nextPhase && (
                   <Text style={s.nextPhaseContext}>
-                    {(progress.phase.nextPhasePoints ?? 0) - progress.points} points to {progress.phase.nextPhase}
+                    {(progress.phase.nextPhasePoints ?? 0) - (progress.points ?? 0)} points to {progress.phase.nextPhase}
                   </Text>
                 )}
               </View>

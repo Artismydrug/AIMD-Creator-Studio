@@ -3,13 +3,12 @@ import { View, ActivityIndicator } from 'react-native';
 import { Tabs, Redirect } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
-import { useAuth, useUser } from '@clerk/expo';
+import { useAuth } from '@clerk/expo';
 import FrostedTabBar from '@/components/FrostedTabBar';
 
 export default function TabLayout() {
   const colors = useColors();
   const { isSignedIn, isLoaded } = useAuth();
-  const { user } = useUser();
 
   // Show loading spinner while Clerk initialises
   if (!isLoaded) {
@@ -65,6 +64,7 @@ export default function TabLayout() {
         name="challenge-habits"
         options={{
           title: 'Challenges & Habits',
+          tabBarLabel: 'Practice',
           tabBarIcon: ({ color, size }) => (
             <Feather name="zap" size={size} color={color} />
           ),

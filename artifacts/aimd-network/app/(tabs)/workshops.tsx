@@ -97,6 +97,7 @@ export default function WorkshopsScreen() {
   const {
     data: workshops,
     isLoading: workshopsLoading,
+    isError: workshopsError,
     refetch: refetchWorkshops,
   } = useListWorkshops(
     { tier: 'workshop' },
@@ -345,7 +346,26 @@ export default function WorkshopsScreen() {
 
             <View style={s.section}>
               <Text style={s.sectionTitle}>Video Masterclasses</Text>
-              {workshopsLoading ? <ActivityIndicator color={colors.primary} /> : workshops?.map((workshop) => (
+              {workshopsLoading ? (
+                <ActivityIndicator color={colors.primary} />
+              ) : workshopsError ? (
+                <View style={{ alignItems: 'center', paddingVertical: 24, gap: 10 }}>
+                  <Feather name="cloud-off" size={32} color={colors.mutedForeground} />
+                  <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.mutedForeground, textAlign: 'center' }}>
+                    Could not load workshops. Check your connection.
+                  </Text>
+                  <TouchableOpacity onPress={() => void refetchWorkshops()} style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border }}>
+                    <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 13, color: colors.foreground }}>Retry</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : !workshops?.length ? (
+                <View style={{ alignItems: 'center', paddingVertical: 24, gap: 8 }}>
+                  <Feather name="play-circle" size={32} color={colors.mutedForeground} />
+                  <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.mutedForeground, textAlign: 'center' }}>
+                    No workshops available yet. Check back soon.
+                  </Text>
+                </View>
+              ) : workshops.map((workshop) => (
                 <TouchableOpacity
                   key={workshop.id}
                   style={[s.card, selectedWorkshopId === workshop.id && s.selectedCard]}
@@ -406,7 +426,7 @@ export default function WorkshopsScreen() {
                 value={submissionNote}
                 onChangeText={setSubmissionNote}
                 placeholder="Add context for your instructor (optional)"
-                placeholderTextColor={colors.background}
+                placeholderTextColor="rgba(250,248,245,0.4)"
                 multiline
                 maxLength={500}
               />

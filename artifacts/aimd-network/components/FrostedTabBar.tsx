@@ -12,13 +12,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { safeImpact } from '@/lib/haptics';
 
-const icons: Record<string, keyof typeof Feather.glyphMap> = {
+// Only these four routes render as bottom tabs; everything else is hidden.
+const VISIBLE_TABS = ['index', 'community', 'workshops', 'challenge-habits'] as const;
+type VisibleTab = typeof VISIBLE_TABS[number];
+
+const icons: Record<VisibleTab, keyof typeof Feather.glyphMap> = {
   index: 'grid',
-  challenges: 'zap',
-  'challenge-habits': 'zap',
   community: 'users',
   workshops: 'play-circle',
-  'profile-tab': 'user',
+  'challenge-habits': 'zap',
 };
 
 type FrostedTabBarProps = {
@@ -57,50 +59,54 @@ export default function FrostedTabBar({
         },
       ]}
     >
-      {state.routes.map((route, index) => {
-        const { options } = descriptors[route.key];
-        const focused = state.index === index;
-        const label =
-          typeof options.tabBarLabel === 'string'
-            ? options.tabBarLabel
-            : typeof options.title === 'string'
-              ? options.title
-              : route.name;
-        const color = focused ? colors.electricMagenta : colors.mutedForeground;
+      {state.routes
+        .filter((route) => (VISIBLE_TABS as readonly string[]).includes(route.name))
+        .map((route) => {
+          const routeIndex = state.routes.indexOf(route);
+          const { options } = descriptors[route.key];
+          const focused = state.index === routeIndex;
+          const label =
+            typeof options.tabBarLabel === 'string'
+              ? options.tabBarLabel
+              : typeof options.title === 'string'
+                ? options.title
+                : route.name;
+          const color = focused ? colors.electricMagenta : colors.mutedForeground;
+          const iconName = icons[route.name as VisibleTab] ?? 'circle';
 
-        return (
-          <TouchableOpacity
-            key={route.key}
-            accessibilityRole="button"
-            accessibilityState={focused ? { selected: true } : {}}
-            accessibilityLabel={options.tabBarAccessibilityLabel}
-            testID={`tab-${route.name}`}
-            style={styles.item}
-            onPress={() => {
-              const event = navigation.emit({
-                type: 'tabPress',
-                target: route.key,
-                canPreventDefault: true,
-              });
-              if (!focused && !event.defaultPrevented) {
-                void safeImpact();
-                navigation.navigate(route.name, route.params);
-              }
-            }}
-          >
-            <View
-              style={[
-                styles.indicator,
-                focused && { backgroundColor: colors.cyan },
-              ]}
-            />
-            <Feather name={icons[route.name] ?? 'circle'} size={20} color={color} />
-            <Text numberOfLines={1} style={[styles.label, { color }]}>
-              {label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+          return (
+            <TouchableOpacity
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={focused ? { selected: true } : {}}
+              accessibilityLabel={options.tabBarAccessibilityLabel}
+              testID={`tab-${route.name}`}
+              style={styles.item}
+              onPress={() => {
+                const event = navigation.emit({
+                  type: 'tabPress',
+                  target: route.key,
+                  canPreventDefault: true,
+                });
+                if (!focused && !event.defaultPrevented) {
+                  void safeImpact();
+                  navigation.navigate(route.name, route.params);
+                }
+              }}
+            >
+              <View
+                style={[
+                  styles.indicator,
+                  focused && { backgroundColor: colors.cyan },
+                ]}
+              />
+              <Feather name={iconName} size={20} color={color} />
+              <Text numberOfLines={1} style={[styles.label, { color }]}>
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
     </View>
   );
 

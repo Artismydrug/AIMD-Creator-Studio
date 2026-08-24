@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import ChallengesScreen from './challenges';
@@ -28,7 +29,7 @@ export default function ChallengeHabitsScreen() {
   return <View style={styles.container} testID="challenge-habits-screen">
     <View style={styles.header}>
       <View style={styles.titleRow}><Feather name="zap" size={20} color={colors.primary} /><View><Text style={styles.title}>Challenges & Habits</Text><Text style={styles.subtitle}>Build the practice. Share the work.</Text></View></View>
-      <View style={styles.switcher} accessibilityRole="tablist">{(['challenges', 'habits'] as const).map(item => <TouchableOpacity key={item} style={[styles.switchButton, section === item && styles.active]} onPress={() => setSection(item)} accessibilityRole="tab" accessibilityState={{ selected: section === item }}><Feather name={item === 'challenges' ? 'award' : 'repeat'} size={15} color={section === item ? colors.primary : colors.mutedForeground} /><Text style={[styles.switchText, section === item && { color: colors.primary }]}>{item === 'challenges' ? 'Challenges' : 'Habits'}</Text></TouchableOpacity>)}</View>
+      <View style={styles.switcher} accessibilityRole="tablist">{(['challenges', 'habits'] as const).map(item => <TouchableOpacity key={item} style={[styles.switchButton, section === item && styles.active]} onPress={() => { if (section !== item) { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSection(item); } }} accessibilityRole="tab" accessibilityState={{ selected: section === item }}><Feather name={item === 'challenges' ? 'award' : 'repeat'} size={15} color={section === item ? colors.primary : colors.mutedForeground} /><Text style={[styles.switchText, section === item && { color: colors.primary }]}>{item === 'challenges' ? 'Challenges' : 'Habits'}</Text></TouchableOpacity>)}</View>
     </View>
     <View style={styles.content}>{section === 'challenges' ? <ChallengesScreen embedded /> : <HabitsScreen embedded />}</View>
   </View>;
