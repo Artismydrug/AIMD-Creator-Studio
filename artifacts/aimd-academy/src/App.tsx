@@ -48,6 +48,7 @@ import Onboarding from '@/pages/Onboarding';
 import Tattoo from '@/pages/Tattoo';
 import Gallery from '@/pages/Gallery';
 import Instructor from '@/pages/Instructor';
+import ArtistResort from '@/pages/ArtistResort';
 
 // ─── Clerk setup ──────────────────────────────────────────────────────────────
 // REQUIRED — resolves the publishable key from the request host so the same
@@ -258,6 +259,7 @@ function Router() {
       {/* Public marketing pages — the AIMD hub */}
       <Route path="/" component={Landing} />
       <Route path="/about" component={About} />
+      <Route path="/artist-resort" component={ArtistResort} />
       <Route path="/tattoo" component={Tattoo} />
       <Route path="/gallery" component={Gallery} />
       {/* Creator app entry: dashboard when signed in, sign-in otherwise */}
@@ -310,9 +312,18 @@ function ClerkProviderWithRoutes() {
 function App() {
   return (
     <WouterRouter base={basePath}>
+      <ScrollToTop />
       <ClerkProviderWithRoutes />
     </WouterRouter>
   );
+}
+
+function ScrollToTop() {
+  const [location] = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location]);
+  return null;
 }
 
 export default App;

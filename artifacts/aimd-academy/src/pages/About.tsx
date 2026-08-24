@@ -11,15 +11,8 @@ import {
   Globe,
   HeartHandshake,
   Eye,
-  Palette,
-  Users,
-  Flame,
-  TrendingUp,
 } from 'lucide-react';
 import aimdHeroImg from '@assets/generated_images/aimd-hero.jpg';
-import resortCampusImg from '@assets/generated_images/artist-resort-campus.jpg';
-import resortContainersImg from '@assets/generated_images/artist-resort-containers.jpg';
-import resortSuiteImg from '@assets/generated_images/artist-resort-suite.jpg';
 
 export default function About() {
   return (
@@ -33,17 +26,32 @@ export default function About() {
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
         </div>
 
-        <div className="container relative z-10 px-6 mx-auto py-20">
-          <div className="max-w-4xl">
+        <div className="container relative z-10 px-6 mx-auto py-16">
+          <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-10 items-center">
+            <div className="max-w-4xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-8">
               <Globe className="w-4 h-4" /> Mission & Vision
             </div>
             <h1 className="text-5xl md:text-7xl font-black font-display uppercase leading-[0.9] tracking-tighter mb-6">
               To Bridge Physical Artistry & <span className="text-gradient-brand">Digital Creation.</span>
             </h1>
-            <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mb-10">
+            <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl">
               AIMD (Art Is My Drug) bridges physical artistry, digital creation, and community ownership — a vibrant platform where art is the ultimate form of expression, community, and personal transformation.
             </p>
+            </div>
+            <div className="glass-card rounded-xl p-2">
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black">
+                <iframe
+                  className="absolute inset-0 w-full h-full"
+                  src="https://www.youtube.com/embed/fmVeAgPqNEk"
+                  title="AIMD Youth Art Workshop at The School of Los Angeles"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                  loading="lazy"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -74,10 +82,10 @@ export default function About() {
         </div>
       </section>
 
-      {/* Community impact video */}
+      {/* Community impact */}
       <section className="py-20 px-6 border-b border-border bg-card">
         <div className="container mx-auto">
-          <div className="max-w-3xl mx-auto text-center mb-10">
+          <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-6">
               <Sparkles className="w-4 h-4" /> Watch Our Story
             </div>
@@ -87,73 +95,6 @@ export default function About() {
             <p className="text-lg text-muted-foreground">
               Art is more than expression—it's a catalyst for community growth and personal transformation. Art Is My Drug empowers local youth, rising talent, and adult creators alike. Watch our Youth Art Workshop at The School of Los Angeles in action.
             </p>
-          </div>
-          <div className="max-w-4xl mx-auto">
-            <div className="glass-card rounded-xl p-2">
-              <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black">
-                <iframe
-                  className="absolute inset-0 w-full h-full"
-                  src="https://www.youtube.com/embed/fmVeAgPqNEk"
-                  title="AIMD Youth Art Workshop at The School of Los Angeles"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Brand values */}
-      <section className="py-20 px-6 border-b border-border">
-        <div className="container mx-auto">
-          <div className="flex items-center gap-4 mb-4">
-            <h2 className="text-3xl md:text-5xl font-black font-display uppercase tracking-tight">Brand Values</h2>
-            <div className="h-[2px] bg-border flex-1 hidden md:block" />
-          </div>
-          <p className="text-lg text-muted-foreground mb-12 max-w-2xl">
-            The principles behind everything we build — on the wall, on the screen, and in the community.
-          </p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {[
-              {
-                icon: Palette,
-                title: 'Expression First',
-                body: 'Art is the ultimate form of expression. Every feature, wall, and gallery exists to amplify the work itself.',
-                color: 'var(--vibrant-magenta)',
-              },
-              {
-                icon: Users,
-                title: 'Community Ownership',
-                body: 'Creators shape the platform they build on. The community owns its culture, its showcase, and its future.',
-                color: 'var(--vibrant-cyan)',
-              },
-              {
-                icon: Flame,
-                title: 'Passion Powers Performance',
-                body: 'Daily discipline and creative drive turn into real momentum — streaks, challenges, and craft that compounds.',
-                color: 'var(--vibrant-coral, var(--vibrant-magenta))',
-              },
-              {
-                icon: TrendingUp,
-                title: 'Tangible Growth',
-                body: 'Gamified milestones unlock real opportunity: portfolios, gallery placement, bookings, and pro creator perks.',
-                color: 'var(--vibrant-gold)',
-              },
-            ].map(({ icon: Icon, title, body, color }) => (
-              <article key={title} className="glass-card rounded-xl p-6 group hover:-translate-y-1 transition-transform duration-300">
-                <div
-                  className="w-12 h-12 rounded-lg border-2 bg-background flex items-center justify-center mb-5"
-                  style={{ borderColor: color }}
-                >
-                  <Icon className="w-5 h-5" style={{ color }} />
-                </div>
-                <h3 className="font-display font-black text-xl uppercase tracking-tight mb-2">{title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{body}</p>
-              </article>
-            ))}
           </div>
         </div>
       </section>
@@ -249,79 +190,6 @@ export default function About() {
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Future Vision - Resort */}
-      <section id="artist-resort" className="py-24 px-6 border-b border-border bg-card">
-        <div className="container mx-auto">
-          <div className="max-w-3xl mx-auto text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted text-muted-foreground font-mono text-xs uppercase tracking-widest mb-6">
-              <Building className="w-4 h-4" /> Future Vision
-            </div>
-            <h2 className="text-4xl md:text-6xl font-black font-display uppercase tracking-tight mb-4">
-              The AIMD Artist <span className="text-gradient-brand">Resort.</span>
-            </h2>
-            <p className="text-xl md:text-2xl font-display uppercase tracking-tight text-foreground/80 mb-6">
-              Containers create the infrastructure. Artists create the culture.
-            </p>
-            <p className="text-lg text-muted-foreground">
-              Our long-term vision extends beyond digital spaces and our current physical studio. We are conceptualizing an off-grid desert artist campus built from repurposed shipping containers — a sanctuary where creators can create, stay, and gather.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-12 gap-4 mb-16">
-            <div className="md:col-span-12 glass-card rounded-xl overflow-hidden p-2">
-              <img
-                src={resortCampusImg}
-                alt="Aerial concept of the AIMD Artist Resort campus"
-                className="w-full h-[40vh] md:h-[60vh] rounded-lg object-cover"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-            <div className="md:col-span-8 glass-card rounded-xl overflow-hidden p-2">
-              <img
-                src={resortContainersImg}
-                alt="Exterior container architecture"
-                className="w-full h-64 md:h-96 rounded-lg object-cover"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-            <div className="md:col-span-4 glass-card rounded-xl overflow-hidden p-2">
-              <img
-                src={resortSuiteImg}
-                alt="Private container stay"
-                className="w-full h-64 md:h-96 rounded-lg object-cover"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
-            <div className="text-center px-4">
-              <h3 className="font-display font-black text-2xl uppercase tracking-tight mb-3">Create</h3>
-              <p className="text-muted-foreground">Dedicated creative studios optimized for the artistic process, fully equipped and free from distraction.</p>
-            </div>
-            <div className="text-center px-4">
-              <h3 className="font-display font-black text-2xl uppercase tracking-tight mb-3">Stay</h3>
-              <p className="text-muted-foreground">Private, comfortable container suites that blend rugged off-grid living with modern sanctuary.</p>
-            </div>
-            <div className="text-center px-4">
-              <h3 className="font-display font-black text-2xl uppercase tracking-tight mb-3">Gather</h3>
-              <p className="text-muted-foreground">Shared fire circles and community spaces to unplug, connect, and collaborate with peers.</p>
-            </div>
-          </div>
-
-          <div className="max-w-2xl mx-auto border border-primary/20 bg-primary/5 p-6 rounded-xl flex items-start gap-4">
-            <Sparkles className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
-            <p className="text-sm md:text-base font-mono leading-relaxed text-foreground/80">
-              <strong className="text-primary uppercase block mb-1">Concept Stage Only</strong>
-              This resort is a future vision for the AIMD ecosystem. It is not currently open, bookable, or accepting applications. Stay tuned as we build toward this reality.
-            </p>
           </div>
         </div>
       </section>

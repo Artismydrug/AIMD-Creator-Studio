@@ -252,21 +252,21 @@ export default function Landing() {
       <MarketingNav />
 
       {/* Hero */}
-      <section className="relative min-h-[85vh] flex items-center border-b border-border overflow-hidden">
+      <section className="relative min-h-[48vh] flex items-center border-b border-border overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img src={aimdHeroImg} alt="" className="w-full h-full object-cover opacity-25" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         </div>
 
-        <div className="container relative z-10 px-6 mx-auto py-20 text-center flex flex-col items-center">
-          <div className="inline-flex items-center justify-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-8">
+        <div className="container relative z-10 px-6 mx-auto py-12 text-center flex flex-col items-center">
+           <div className="inline-flex items-center justify-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-5">
             <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
             Studio · Gallery · Creator App
           </div>
-          <h1 className="text-5xl md:text-9xl font-black font-display uppercase leading-[0.85] tracking-tighter mb-6 max-w-6xl">
+           <h1 className="text-5xl md:text-8xl font-black font-display uppercase leading-[0.85] tracking-tighter mb-4 max-w-6xl">
             Art <br className="md:hidden" />Is My <span className="text-gradient-brand">Drug.</span>
           </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mb-10 mx-auto">
+           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mb-6 mx-auto">
             To bridge physical artistry, digital creation, and community ownership—providing a vibrant platform where art is the ultimate form of expression, community, and personal transformation.
           </p>
 
@@ -292,9 +292,9 @@ export default function Landing() {
       </section>
 
       {/* Three pillars */}
-      <section className="py-24 px-6 border-b border-border">
+       <section className="py-12 px-6 border-b border-border">
         <div className="container mx-auto">
-          <div className="grid md:grid-cols-3 gap-8">
+           <div className="grid md:grid-cols-3 gap-6">
             <PillarCard
               image={tattooImg}
               icon={Brush}

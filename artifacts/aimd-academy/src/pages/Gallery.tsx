@@ -44,7 +44,7 @@ export default function Gallery() {
               <ImageIcon className="w-3.5 h-3.5" /> The AIMD Gallery
             </div>
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black font-display uppercase leading-[0.9] tracking-tighter mb-6 text-foreground drop-shadow-sm">
-              Work Worth <br/><span className="text-gradient-brand">Sharing.</span>
+               The <span className="text-gradient-brand">Gallery.</span>
             </h1>
             <p className="text-lg md:text-xl text-foreground font-medium max-w-2xl">
               A living collection of visual work made and shared by the AIMD creative community.

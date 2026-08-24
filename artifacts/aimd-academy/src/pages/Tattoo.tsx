@@ -246,7 +246,7 @@ export default function Tattoo() {
       </section>
 
       {/* Booking intake */}
-      <section id="booking" className="py-16 px-6 border-b border-border bg-card">
+       <section id="booking" className="scroll-mt-28 py-16 px-6 border-b border-border bg-card">
         <div className="container mx-auto grid md:grid-cols-2 gap-10 items-start">
           <div>
             <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary mb-4">
