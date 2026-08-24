@@ -269,6 +269,16 @@ router.post("/:id/rsvp", async (req, res): Promise<void> => {
       return;
     }
 
+    // Ticketed events must never accept an RSVP while their price is unknown.
+    // Keep this server-side as the authoritative guard; both web and mobile
+    // clients also disable their buttons, but clients can be stale or bypassed.
+    if (event.eventType === "ticketed" && event.priceCents == null) {
+      res.status(400).json({
+        error: "Ticketed event price must be announced before RSVPs are accepted.",
+      });
+      return;
+    }
+
     const [existing] = await db
       .select()
       .from(eventRsvpsTable)
