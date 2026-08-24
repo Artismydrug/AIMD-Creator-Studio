@@ -13,7 +13,7 @@ import {
 import { useSignUp, useAuth, useSSO } from '@clerk/expo';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
-import { type Href, Link, useRouter } from 'expo-router';
+import { type Href, Link, Redirect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Handle any pending authentication sessions on Android
@@ -89,7 +89,9 @@ export default function SignUpScreen() {
     }
   }, [startSSOFlow, router]);
 
-  if (signUp.status === 'complete' || isSignedIn) return null;
+  if (signUp.status === 'complete' || isSignedIn) {
+    return <Redirect href="/(tabs)" />;
+  }
 
   // Email verification step
   if (
