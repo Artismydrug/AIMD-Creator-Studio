@@ -1,6 +1,5 @@
 import { useListWorkshops } from '@workspace/api-client-react';
-import { Link } from 'wouter';
-import { Clock, BookOpen, Lock, PlayCircle } from 'lucide-react';
+import { Clock, BookOpen, PlayCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -15,10 +14,10 @@ export default function Workshops() {
 
   return (
     <div className="p-6 md:p-10 space-y-12">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border">
+       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border">
         <div>
           <h1 className="text-4xl md:text-5xl font-black font-display uppercase tracking-tight">Workshops</h1>
-          <p className="text-muted-foreground font-mono mt-2">Learn directly from working artists through focused, practice-led instruction.</p>
+           <p className="text-muted-foreground font-mono mt-2">A first look at the tattoo apprenticeship coming to Creator Studio.</p>
         </div>
       </header>
 
@@ -41,7 +40,7 @@ function WorkshopCard({ workshop }: { workshop: any }) {
   const requiresUpgrade = workshop.tier === 'pro' && !workshop.isEnrolled; // Need actual user tier to know, assuming not enrolled means maybe locked if pro
 
   return (
-    <div className="border border-border bg-card flex flex-col group relative">
+    <div className="border-2 border-fuchsia-500/50 bg-card flex flex-col group relative">
       <div className="h-48 bg-muted relative overflow-hidden">
         {workshop.thumbnailUrl ? (
           <img src={workshop.thumbnailUrl} className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" alt="" />
@@ -55,19 +54,10 @@ function WorkshopCard({ workshop }: { workshop: any }) {
           <Badge className="rounded-none bg-background/90 text-foreground backdrop-blur-sm font-mono uppercase text-[10px] w-fit">
             {workshop.category}
           </Badge>
-          <Badge className={`rounded-none font-mono uppercase text-[10px] w-fit ${
-            workshop.tier === 'pro' ? 'bg-primary text-primary-foreground' : 'bg-foreground text-background'
-          }`}>
-            {workshop.tier} Tier
+          <Badge className="rounded-none bg-fuchsia-500 text-white backdrop-blur-sm font-mono uppercase text-[10px] w-fit">
+            Coming Soon
           </Badge>
         </div>
-
-        {requiresUpgrade && (
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <Lock className="w-8 h-8 text-primary mb-2" />
-            <span className="font-display font-bold uppercase tracking-widest text-lg">Pro Required</span>
-          </div>
-        )}
       </div>
 
       <div className="p-6 flex-1 flex flex-col">
@@ -85,11 +75,9 @@ function WorkshopCard({ workshop }: { workshop: any }) {
           </div>
         </div>
         
-        <Link href={`/workshops/${workshop.id}`}>
-          <Button className="w-full rounded-none font-mono uppercase bg-foreground text-background hover:bg-foreground/90">
-            {workshop.isEnrolled ? 'Continue Course' : 'View Details'}
-          </Button>
-        </Link>
+        <Button disabled className="w-full rounded-none font-mono uppercase bg-muted text-muted-foreground">
+          <Sparkles className="w-4 h-4 mr-2" /> Coming Soon
+        </Button>
       </div>
     </div>
   );

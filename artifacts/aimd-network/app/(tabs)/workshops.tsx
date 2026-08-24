@@ -35,33 +35,9 @@ import WorkshopLessonPlayer, { type WorkshopLesson } from '@/components/Workshop
 
 const featuredTracks = [
   {
-    icon: 'feather' as const,
-    title: 'Visual Arts Foundations',
-    instructor: 'Drawing, painting, and mixed media',
-    accent: 'coral' as const,
-  },
-  {
     icon: 'edit-3' as const,
     title: 'Tattoo Apprenticeship Prep with Poncho The Artist',
     instructor: 'Poncho The Artist',
-    accent: 'magenta' as const,
-  },
-  {
-    icon: 'headphones' as const,
-    title: 'Audio Production',
-    instructor: 'Beat-making and studio fundamentals',
-    accent: 'cyan' as const,
-  },
-  {
-    icon: 'scissors' as const,
-    title: 'Garment Design',
-    instructor: 'Pattern, construction, and finish',
-    accent: 'coral' as const,
-  },
-  {
-    icon: 'activity' as const,
-    title: 'The Art of Basketball',
-    instructor: 'David Singleton',
     accent: 'magenta' as const,
   },
 ];
@@ -251,6 +227,10 @@ export default function WorkshopsScreen() {
     assignmentTitle: { fontFamily: 'DMSans_600SemiBold', color: colors.background, fontSize: 13 },
     assignmentMeta: { fontFamily: 'DMSans_400Regular', color: colors.background, opacity: 0.65, fontSize: 11 },
     locked: { margin: 20, padding: 22, borderRadius: colors.radius + 2, borderWidth: 2, borderColor: colors.gold, backgroundColor: colors.goldWash, alignItems: 'center', gap: 10 },
+    promoCard: { margin: 20, padding: 22, borderRadius: colors.radius + 4, borderWidth: 2, borderColor: colors.electricMagenta, backgroundColor: colors.magentaWash, alignItems: 'center', gap: 12 },
+    promoBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.electricMagenta },
+    promoBadgeText: { fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 1, color: colors.primaryForeground, textTransform: 'uppercase' },
+    promoMeta: { fontFamily: 'DMSans_600SemiBold', fontSize: 12, color: colors.electricMagenta, textTransform: 'uppercase', letterSpacing: 1 },
     lockedTitle: { fontFamily: 'DMSans_700Bold', color: colors.foreground, fontSize: 21, textAlign: 'center' },
     lockedBody: { fontFamily: 'DMSans_400Regular', color: colors.mutedForeground, fontSize: 14, lineHeight: 21, textAlign: 'center' },
     upgrade: { minHeight: 46, marginTop: 4, paddingHorizontal: 18, borderRadius: 10, backgroundColor: colors.electricMagenta, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
@@ -269,12 +249,23 @@ export default function WorkshopsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
         <View style={s.header}>
-          <Text style={s.eyebrow}>Dedicated Artist · Workshops & Masterclasses</Text>
-          <Text style={s.title}>Build mastery. Show the work.</Text>
-          <Text style={s.intro}>Video-led instruction across visual arts, tattoo prep, audio production, garment design, and more — with direct instructor feedback.</Text>
+          <Text style={s.eyebrow}>AIMD Workshop Preview</Text>
+          <Text style={s.title}>One craft. One apprenticeship.</Text>
+          <Text style={s.intro}>A first look at the tattoo apprenticeship coming to Creator Studio.</Text>
         </View>
 
-        {!hasPhaseTwo ? (
+        <View style={s.promoCard} testID="tattoo-apprenticeship-coming-soon">
+          <View style={s.promoBadge}>
+            <Feather name="clock" size={13} color={colors.primaryForeground} />
+            <Text style={s.promoBadgeText}>Coming soon</Text>
+          </View>
+          <Feather name="edit-3" size={38} color={colors.electricMagenta} />
+          <Text style={s.cardTitle}>Tattoo Apprenticeship with Poncho The Artist</Text>
+          <Text style={s.promoMeta}>A six-module practice-led workshop</Text>
+          <Text style={s.cardBody}>Preview the kind of focused instruction, drills, and instructor perspective we’re building for AIMD creators.</Text>
+        </View>
+
+        {false && (!hasPhaseTwo ? (
           <View style={s.locked}>
             <Feather name="play-circle" size={28} color={colors.gold} />
             <Text style={s.lockedTitle}>Start with a real Module 1 preview</Text>
@@ -368,7 +359,7 @@ export default function WorkshopsScreen() {
                     No workshops available yet. Check back soon.
                   </Text>
                 </View>
-              ) : workshops.map((workshop) => (
+              ) : workshops?.map((workshop) => (
                 <TouchableOpacity
                   key={workshop.id}
                   style={[s.card, selectedWorkshopId === workshop.id && s.selectedCard]}
@@ -420,7 +411,7 @@ export default function WorkshopsScreen() {
                 <Feather name={capturedVideo ? 'check-circle' : 'video'} size={24} color={colors.gold} />
                 <Text style={s.pickerText}>
                   {capturedVideo
-                    ? `Footage recorded — ${Math.round(capturedVideo.durationSecs)}s`
+                    ? `Footage recorded — ${Math.round(capturedVideo?.durationSecs ?? 0)}s`
                     : 'Record assignment footage'}
                 </Text>
               </TouchableOpacity>
@@ -460,7 +451,7 @@ export default function WorkshopsScreen() {
               )}
             </View>
           </>
-        )}
+        ))}
       </ScrollView>
 
       <DrillCameraCapture

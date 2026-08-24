@@ -71,7 +71,7 @@ function CreatorJourney() {
       icon: Trophy,
       title: 'The Dedicated Artist',
       action: 'Workshops & Masterclasses',
-      description: 'Learn a real craft from industry instructors — hands-on multi-medium curriculum including visual arts, tattoo prep with Poncho The Artist, audio production, garment design, and The Art of Basketball with David Singleton.',
+      description: 'Learn a real craft from a working artist — a focused tattoo apprenticeship with Poncho The Artist is coming to Creator Studio.',
       color: 'var(--vibrant-magenta)',
       glow: 'glow-magenta',
     },
