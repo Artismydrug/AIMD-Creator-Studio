@@ -276,7 +276,7 @@ function QRScanner({ onClose }: { onClose: () => void }) {
   );
 }
 
-export default function EventsScreen() {
+export default function EventsScreen({ embedded = false }: { embedded?: boolean }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [scanning, setScanning] = useState(false);
@@ -290,7 +290,7 @@ export default function EventsScreen() {
     setRefreshing(false);
   }, [refetch]);
 
-  const topPad = Platform.OS === 'web' ? 67 : insets.top + 8;
+    const topPad = embedded ? 16 : Platform.OS === 'web' ? 67 : insets.top + 8;
 
   const s = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },

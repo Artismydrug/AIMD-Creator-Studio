@@ -15,10 +15,10 @@ import { safeImpact } from '@/lib/haptics';
 const icons: Record<string, keyof typeof Feather.glyphMap> = {
   index: 'grid',
   challenges: 'zap',
+  'challenge-habits': 'zap',
   community: 'users',
   workshops: 'play-circle',
   'profile-tab': 'user',
-  hq: 'shield',
 };
 
 type FrostedTabBarProps = {

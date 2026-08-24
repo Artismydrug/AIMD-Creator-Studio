@@ -5,10 +5,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { safeImpact } from '@/lib/haptics';
 import FeedScreen from '../feed';
-import MessagesScreen from './messages';
-import ChallengesScreen from './challenges';
+import EventsScreen from './events';
 
-type CommunitySection = 'challenges' | 'feed' | 'messages';
+type CommunitySection = 'feed' | 'events';
 
 export default function CommunityScreen() {
   const colors = useColors();
@@ -68,7 +67,7 @@ export default function CommunityScreen() {
           </View>
         </View>
         <View style={s.switcher} accessibilityRole="tablist">
-          {(['challenges', 'feed', 'messages'] as const).map((item) => {
+          {(['feed', 'events'] as const).map((item) => {
             const active = section === item;
             return (
               <TouchableOpacity
@@ -79,9 +78,9 @@ export default function CommunityScreen() {
                 accessibilityState={{ selected: active }}
                 testID={`community-${item}-tab`}
               >
-                <Feather name={item === 'challenges' ? 'zap' : item === 'feed' ? 'image' : 'message-circle'} size={15} color={active ? colors.primary : colors.mutedForeground} />
+                <Feather name={item === 'feed' ? 'image' : 'calendar'} size={15} color={active ? colors.primary : colors.mutedForeground} />
                 <Text style={[s.switchText, active && s.activeSwitchText]}>
-                  {item === 'challenges' ? 'Challenges & Habits' : item === 'feed' ? 'Feed' : 'Messages'}
+                  {item === 'feed' ? 'Feed' : 'Events'}
                 </Text>
               </TouchableOpacity>
             );
@@ -89,7 +88,7 @@ export default function CommunityScreen() {
         </View>
       </View>
       <View style={s.content}>
-        {section === 'challenges' ? <ChallengesScreen embedded /> : section === 'feed' ? <FeedScreen embedded /> : <MessagesScreen embedded />}
+        {section === 'feed' ? <FeedScreen embedded /> : <EventsScreen embedded />}
       </View>
     </View>
   );

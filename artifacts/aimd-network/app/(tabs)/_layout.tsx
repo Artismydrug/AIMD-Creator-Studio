@@ -10,8 +10,6 @@ export default function TabLayout() {
   const colors = useColors();
   const { isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
-  const staffRole = String(user?.publicMetadata?.role ?? user?.publicMetadata?.aimdRole ?? '');
-  const canSeeHQ = staffRole === 'admin' || staffRole === 'instructor';
 
   // Show loading spinner while Clerk initialises
   if (!isLoaded) {
@@ -64,6 +62,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="challenge-habits"
+        options={{
+          title: 'Challenges & Habits',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="zap" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile-tab"
         options={{
           title: 'Profile',
@@ -72,16 +79,12 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="hq"
-        options={{
-          title: 'HQ',
-          href: canSeeHQ ? '/(tabs)/hq' : null,
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="shield" size={size} color={color} />
-          ),
-        }}
-      />
+      {/* These screens remain deep-linkable, but are not bottom-navigation tabs. */}
+      <Tabs.Screen name="events" options={{ href: null }} />
+      <Tabs.Screen name="habits" options={{ href: null }} />
+      <Tabs.Screen name="challenges" options={{ href: null }} />
+      <Tabs.Screen name="messages" options={{ href: null }} />
+      <Tabs.Screen name="hq" options={{ href: null }} />
     </Tabs>
   );
 }

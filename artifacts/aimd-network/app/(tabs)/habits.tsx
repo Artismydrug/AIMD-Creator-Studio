@@ -26,7 +26,7 @@ import HabitCard from '@/components/HabitCard';
 
 const CATEGORIES = ['Drawing', 'Painting', 'Sculpture', 'Photography', 'Music', 'Writing', 'Other'];
 
-export default function HabitsScreen() {
+export default function HabitsScreen({ embedded = false }: { embedded?: boolean }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [adding, setAdding] = useState(false);
@@ -71,7 +71,7 @@ export default function HabitsScreen() {
     });
   };
 
-  const topPad = Platform.OS === 'web' ? 67 : insets.top + 8;
+  const topPad = embedded ? 16 : Platform.OS === 'web' ? 67 : insets.top + 8;
 
   const s = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
