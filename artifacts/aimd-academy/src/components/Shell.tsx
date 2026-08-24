@@ -180,7 +180,7 @@ function SidebarContent({
       items: [
         ...(isInstructor || user?.isAdmin ? [{ href: '/instructor', label: 'Instructor Workspace', icon: Video }] : []),
         ...(user?.isAdmin ? [{ href: '/admin', label: 'Admin Dashboard', icon: ShieldCheck }] : []),
-        ...(user?.isAdmin ? [{ href: '/hq', label: 'Creator Studio HQ', icon: Building2 }] : []),
+        ...(isInstructor || user?.isAdmin ? [{ href: '/hq', label: 'Creator Studio HQ', icon: Building2 }] : []),
       ],
     }];
   }

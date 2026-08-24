@@ -130,4 +130,53 @@ export async function ensureCreatorStudioSchema(
       created_at timestamptz NOT NULL DEFAULT now()
     )
   `);
+  await database.query(`
+    CREATE TABLE IF NOT EXISTS residency_applications (
+      id serial PRIMARY KEY,
+      user_id integer NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+      portfolio_object_paths text[] NOT NULL DEFAULT '{}',
+      bbp_certification_object_path text,
+      introduction_video_object_path text,
+      status text NOT NULL DEFAULT 'submitted',
+      reviewer_note text,
+      reviewed_by integer REFERENCES users(id) ON DELETE SET NULL,
+      reviewed_at timestamptz,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now()
+    )
+  `);
+  await database.query(`
+    CREATE TABLE IF NOT EXISTS hq_financial_entries (
+      id serial PRIMARY KEY,
+      entry_type text NOT NULL,
+      amount_cents integer NOT NULL,
+      effective_on date NOT NULL DEFAULT current_date,
+      note text,
+      created_by integer REFERENCES users(id) ON DELETE SET NULL,
+      created_at timestamptz NOT NULL DEFAULT now()
+    )
+  `);
+  await database.query(`
+    CREATE TABLE IF NOT EXISTS affiliate_partners (
+      id serial PRIMARY KEY,
+      name text NOT NULL,
+      category text NOT NULL,
+      affiliate_code text NOT NULL UNIQUE,
+      perk text NOT NULL,
+      active boolean NOT NULL DEFAULT true,
+      created_by integer REFERENCES users(id) ON DELETE SET NULL,
+      created_at timestamptz NOT NULL DEFAULT now()
+    )
+  `);
+  await database.query(`
+    CREATE TABLE IF NOT EXISTS hq_announcements (
+      id serial PRIMARY KEY,
+      title text NOT NULL,
+      body text NOT NULL,
+      audience text NOT NULL DEFAULT 'all_creators',
+      delivery text NOT NULL DEFAULT 'in_app',
+      created_by integer REFERENCES users(id) ON DELETE SET NULL,
+      created_at timestamptz NOT NULL DEFAULT now()
+    )
+  `);
 }
