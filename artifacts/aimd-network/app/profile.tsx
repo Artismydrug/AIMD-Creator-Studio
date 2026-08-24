@@ -359,7 +359,7 @@ export default function ProfileScreen() {
           <Text style={s.statusTitle}>{progress?.phase?.phase ?? 'Discovering'} phase · {me.tier === 'free' ? 'Free access' : me.tier}</Text>
           <Text style={s.statusText}>
             {me.tier === 'free'
-              ? 'Your free creator access is active. Dedicated Artist and Professional Artist memberships are coming soon.'
+              ? 'Your free creator access is active.'
               : 'Your current membership access is active.'}
           </Text>
           {progressError && <Text style={[s.statusText, { color: colors.destructive }]}>Progress details are temporarily unavailable.</Text>}

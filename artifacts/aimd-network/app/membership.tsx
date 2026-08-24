@@ -39,8 +39,6 @@ const proBenefits = [
   'Priority affiliate tracking and confirmed earnings',
   'Brand partnership and resident artist applications',
 ];
-const PAID_MEMBERSHIPS_COMING_SOON = true;
-
 function periodLabel(subscriptionPeriod: string | null | undefined): string {
   if (subscriptionPeriod === 'P1Y') return 'per year';
   if (subscriptionPeriod === 'P1M') return 'per month';
@@ -89,6 +87,17 @@ export default function MembershipScreen() {
     const bi = order.indexOf(second.identifier);
     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
   }), [packages]);
+  const currentPackages = useMemo(
+    () => orderedPackages.filter((item) => {
+      const isPro = item.identifier.startsWith('pro_');
+      const isDedicated =
+        item.identifier.startsWith('dedicated_') ||
+        item.identifier.startsWith('academy_');
+      return (isPro && hasProAccess) ||
+        (isDedicated && !isPro && hasAcademyAccess);
+    }),
+    [orderedPackages, hasAcademyAccess, hasProAccess],
+  );
 
   const styles = useMemo(() => StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.background },
@@ -192,22 +201,6 @@ export default function MembershipScreen() {
       fontSize: 10,
       letterSpacing: 0.9,
       color: colors.primaryForeground,
-      textTransform: 'uppercase',
-    },
-    comingSoonBadge: {
-      alignSelf: 'flex-start',
-      paddingVertical: 5,
-      paddingHorizontal: 9,
-      borderRadius: 99,
-      backgroundColor: 'rgba(234,179,8,0.15)',
-      borderWidth: 1,
-      borderColor: 'rgba(234,179,8,0.4)',
-    },
-    comingSoonText: {
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 10,
-      letterSpacing: 0.9,
-      color: colors.gold,
       textTransform: 'uppercase',
     },
     planTop: {
@@ -483,12 +476,12 @@ export default function MembershipScreen() {
           </View>
         </View>
 
-        {isLoading ? (
+        {(hasAcademyAccess || hasProAccess) && isLoading ? (
           <View style={styles.centerCard}>
             <ActivityIndicator color={colors.electricMagenta} />
             <Text style={styles.centerBody}>Loading current App Store options…</Text>
           </View>
-        ) : errorMessage || orderedPackages.length === 0 ? (
+        ) : (hasAcademyAccess || hasProAccess) && (errorMessage || currentPackages.length === 0) ? (
           <View style={styles.centerCard}>
             <Feather name="wifi-off" size={24} color={colors.gold} />
             <Text style={styles.centerTitle}>Membership options are unavailable</Text>
@@ -499,9 +492,9 @@ export default function MembershipScreen() {
               <Text style={styles.retryText}>Try again</Text>
             </TouchableOpacity>
           </View>
-        ) : (
+        ) : (hasAcademyAccess || hasProAccess) ? (
           <View style={styles.plans}>
-            {orderedPackages.map((item) => {
+            {currentPackages.map((item) => {
               const isPro = item.identifier.startsWith('pro_');
               const isDedicated =
                 item.identifier.startsWith('dedicated_') ||
@@ -510,7 +503,6 @@ export default function MembershipScreen() {
               const isCurrent =
                 (isPro && hasProAccess) ||
                 (isDedicated && !isPro && hasAcademyAccess);
-              const isLaunchPending = PAID_MEMBERSHIPS_COMING_SOON && !isCurrent;
               const benefits = isPro
                 ? proBenefits
                 : dedicatedBenefits;
@@ -530,11 +522,6 @@ export default function MembershipScreen() {
                   {isAnnual && (
                     <View style={styles.badge}>
                       <Text style={styles.badgeText}>Best value</Text>
-                    </View>
-                  )}
-                  {isLaunchPending && (
-                    <View style={styles.comingSoonBadge}>
-                      <Text style={styles.comingSoonText}>Membership coming soon</Text>
                     </View>
                   )}
                   <View style={styles.planTop}>
@@ -565,9 +552,9 @@ export default function MembershipScreen() {
                     style={[
                       styles.choose,
                       isAnnual && styles.chooseFeatured,
-                      (isCurrent || isLaunchPending) && styles.chooseDisabled,
+                       isCurrent && styles.chooseDisabled,
                     ]}
-                    disabled={isCurrent || isLaunchPending || isPurchasing}
+                    disabled={isCurrent || isPurchasing}
                     testID={`choose-${item.identifier}`}
                     onPress={() => {
                       void safeImpact();
@@ -575,14 +562,14 @@ export default function MembershipScreen() {
                     }}
                   >
                     <Text style={styles.chooseText}>
-                      {isCurrent ? 'Your current plan' : isLaunchPending ? 'Coming soon' : `Choose ${displayTitle}`}
+                      {isCurrent ? 'Your current plan' : `Choose ${displayTitle}`}
                     </Text>
                   </TouchableOpacity>
                 </View>
               );
             })}
           </View>
-        )}
+        ) : null}
 
         <TouchableOpacity
           style={styles.restore}

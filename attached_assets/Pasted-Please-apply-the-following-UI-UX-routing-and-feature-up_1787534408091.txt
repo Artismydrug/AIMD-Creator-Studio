@@ -1,0 +1,50 @@
+Please apply the following UI, UX, routing, and feature updates across artismydrug.com and the Creator Studio Web/App platform:
+
+1. HOMEPAGE & LAYOUT FIXES (`/`):
+   - Hero Banner: Reduce the height/vertical padding of the homepage hero banner so that the 3 cards below it are 100% visible on screen without requiring initial scrolling.
+   - Brand Name Spelling: Ensure the brand name is strictly spelled "Art Is My Drug" across all headings and metadata.
+
+2. ABOUT ME PAGE (`/about`):
+   - Video Position: Move the movie/video element to the top-right section next to the "To Bridge Physical" text.
+   - Section Swap: Remove the original "To Bridge Physical" section and replace it entirely with the "Our Community Impact and Roots" section (including the embedded video).
+   - Brand Values: Completely remove the "Brand Values" section from the page.
+
+3. DEDICATED ARTIST RESORT PAGE & TAB (`/artist-resort`):
+   - Move "Artist Resort" into its own dedicated standalone route (`/artist-resort`) and add a distinct navigation tab in the main header for it so details can be expanded.
+
+4. PAGE SCROLL & NAVIGATION FIXES:
+   - Scroll Position on Route Change: Force window scroll position to automatically reset to top (0,0) whenever a user clicks/navigates to any page.
+   - Tattoo Booking Form (`/tattoo`): Fix the anchor link jump for the "Book With" tab so it lands cleanly on the intake form without cutting off the top of the form container.
+   - Text Update: Change all references of "Work Worth the Wall" to "The Gallery".
+
+5. CREATOR APP SLIDER & ONBOARDING GATEWAY (`/app`):
+   - Fullscreen Slider: Make the Creator App video/media slider full screen on the app landing page.
+   - Section Removal: Remove the "Discipline Eats Talent" section and the 2 adjacent tabs on this specific page view.
+   - Slide Navigation: Convert the video container into a slide show where users can click left/right arrows to go to the next slide.
+   - Slide Details: Add detailed feature callouts for each slide on the slider.
+   - Sign Up Trigger: On the final slide, add a "Start Creating" button that links directly to the Sign-Up modal.
+   - Join Studio Button: Place the "Join The Studio" CTA button directly beneath the slider.
+
+6. SIGN-UP MODAL & AUTHENTICATION (Clerk):
+   - Modal Backdrop: Update the "Join The Studio" pop-up modal overlay background from solid black to 20% opacity black (`rgba(0, 0, 0, 0.2)`), creating a translucent glassmorphism effect over the website background.
+   - Password Constraints: Lower the minimum password length requirement in Clerk auth settings from 15 characters to standard default (8–10 characters).
+   - Profile Account Tiers: In the user profile header, display account tier badges ("Free", "Dedicated", "Pro") alongside a "Upgrade Account" button linking to subscription options.
+
+7. CREATOR STUDIO DASHBOARD & CERTIFICATES:
+   - Persistent Dashboard Access: Ensure logged-in creators have a dedicated, persistent "Creator Dashboard" link in the navigation menu so they can return to their dashboard anytime.
+   - Certificates & Badges Page (`/badges`): Redesign the badges and certificates showcase into a fun, vibrant visual page with animated, high-contrast creative badges.
+   - Completed Workshop Badges: Automatically direct completed workshop badges to render on the user's `/badges` page and public profile showcase.
+
+8. GAMIFICATION & HABIT TRACKER REDESIGN:
+   - Animated AIMD Points Card: Redesign the AIMD Points reward card with animated glow borders/subtle pop-out shadows so it stands out visually and doesn't blend into the background cards.
+   - Creative Habit Tracker UI: Make the Discipline/Habit Tracker visually exciting. Replace basic streak heatmaps with dynamic fire emojis 🔥 and high-frequency color scales.
+   - Mandatory Proof-of-Work File Upload: Require users to attach an image or video file when logging a habit.
+   - Progress Auto-Save & Log Persistence: Ensure incomplete timed habits automatically save progress upon closing, and store all historical check-in records in a persistent user activity log (`/history`).
+
+9. CHALLENGES & PROOF-OF-WORK SAFEGUARDS:
+   - Mandatory Media Upload: Make artwork photo/video uploads strictly mandatory to submit challenge entries.
+   - Anti-Cheating Safeguards: Enforce direct camera/EXIF timestamp validation to prevent pre-rendered AI or duplicated media submissions.
+
+10. EVENTS & SITEWIDE STYLING:
+    - Event Ticket Pricing: Ensure all ticketed events explicitly display the price tag on event cards and checkout modals.
+    - Global Design System Audit: Audit typography, font hierarchies, color coding, and container spacing across all pages to ensure crisp contrast on our warm canvas backdrop (#FAF8F5).
