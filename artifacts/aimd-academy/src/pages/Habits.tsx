@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { Link } from 'wouter';
+import { MediaUpload, type MediaType } from '@/components/MediaUpload';
 
 // ─── Tier limit banner ────────────────────────────────────────────────────────
 
@@ -196,6 +197,8 @@ function HabitCard({ habit }: { habit: any }) {
   const [elapsedSeconds, setElapsedSeconds] = useState(() => {
     try { return JSON.parse(localStorage.getItem(storageKey) ?? '{}').elapsedSeconds ?? 0; } catch { return 0; }
   });
+  const [proofUrl, setProofUrl] = useState('');
+  const [proofMediaType, setProofMediaType] = useState<MediaType>('image');
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -218,7 +221,7 @@ function HabitCard({ habit }: { habit: any }) {
   const startTimer = () => {
     setIsTracking(true);
     intervalRef.current = setInterval(() => {
-      setElapsedSeconds((s) => s + 1);
+      setElapsedSeconds((s: number) => s + 1);
     }, 1000);
   };
 
@@ -228,15 +231,21 @@ function HabitCard({ habit }: { habit: any }) {
   };
 
   const stopAndLog = () => {
+    if (!proofUrl || (proofMediaType !== 'image' && proofMediaType !== 'video')) {
+      toast({ title: 'Add proof first', description: 'Attach a photo or video of this practice session before logging it.', variant: 'destructive' });
+      return;
+    }
     pauseTimer();
     const minutes = Math.ceil(elapsedSeconds / 60);
     logSession.mutate(
-      { id: habit.id, data: { minutesSpent: Math.max(1, minutes) } },
+      { id: habit.id, data: { minutesSpent: Math.max(1, minutes), proofUrl, proofMediaType } },
       {
         onSuccess: () => {
           toast({ title: 'Session logged!', description: `${Math.max(1, minutes)} minutes recorded.` });
           setElapsedSeconds(0);
            localStorage.removeItem(storageKey);
+           setProofUrl('');
+           setProofMediaType('image');
           queryClient.invalidateQueries({ queryKey: ['listHabits'] });
           queryClient.invalidateQueries({ queryKey: ['getHabitHeatmap'] });
         },
@@ -285,6 +294,20 @@ function HabitCard({ habit }: { habit: any }) {
         </div>
         <Progress value={progress} className="h-1.5 rounded-none bg-border [&>div]:bg-primary" />
       </div>
+
+      {!habit.completedToday && (
+        <div className="border-t border-border pt-4">
+          <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Session proof required</p>
+          <MediaUpload
+            url={proofUrl}
+            mediaType={proofMediaType}
+            onChange={(url, mediaType) => { setProofUrl(url); setProofMediaType(mediaType); }}
+            allowImage
+            allowVideo
+            purpose="habit_proof"
+          />
+        </div>
+      )}
 
       <div className="flex gap-2">
         {!isTracking ? (

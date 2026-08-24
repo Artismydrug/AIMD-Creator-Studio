@@ -196,7 +196,9 @@ export const LogHabitSessionParams = zod.object({
 
 export const LogHabitSessionBody = zod.object({
   "minutesSpent": zod.int().min(1),
-  "date": zod.coerce.date().optional()
+  "date": zod.coerce.date().optional(),
+  "proofUrl": zod.string().describe('Creator-owned image or video proof uploaded for this habit session.'),
+  "proofMediaType": zod.enum(['image', 'video'])
 })
 
 export const LogHabitSessionResponse = zod.object({
@@ -206,6 +208,8 @@ export const LogHabitSessionResponse = zod.object({
   "date": zod.coerce.date(),
   "minutesSpent": zod.int(),
   "completed": zod.boolean(),
+  "proofUrl": zod.string().nullish(),
+  "proofMediaType": zod.union([zod.literal('image'),zod.literal('video'),zod.literal(null)]).nullish(),
   "createdAt": zod.coerce.date()
 })
 
@@ -227,6 +231,8 @@ export const ListHabitLogsResponseItem = zod.object({
   "date": zod.coerce.date(),
   "minutesSpent": zod.int(),
   "completed": zod.boolean(),
+  "proofUrl": zod.string().nullish(),
+  "proofMediaType": zod.union([zod.literal('image'),zod.literal('video'),zod.literal(null)]).nullish(),
   "createdAt": zod.coerce.date()
 })
 export const ListHabitLogsResponse = zod.array(ListHabitLogsResponseItem)
@@ -747,6 +753,7 @@ export const ListEventsResponseItem = zod.object({
   "description": zod.string(),
   "category": zod.enum(['workshop', 'pop-up', 'gallery', 'activation', 'community']),
   "eventType": zod.enum(['free', 'ticketed', 'members-only']),
+  "priceCents": zod.int().nullish().describe('Required for ticketed events; expressed in cents.'),
   "location": zod.string(),
   "imageUrl": zod.string().nullish(),
   "startsAt": zod.coerce.date(),
@@ -764,6 +771,8 @@ export const ListEventsResponse = zod.array(ListEventsResponseItem)
  * @summary Create a community event (admin)
  */
 
+export const createEventBodyPriceCentsMin = 0;
+
 
 
 export const CreateEventBody = zod.object({
@@ -771,6 +780,7 @@ export const CreateEventBody = zod.object({
   "description": zod.string(),
   "category": zod.enum(['workshop', 'pop-up', 'gallery', 'activation', 'community']),
   "eventType": zod.enum(['free', 'ticketed', 'members-only']),
+  "priceCents": zod.int().min(createEventBodyPriceCentsMin).nullish(),
   "location": zod.string(),
   "imageUrl": zod.string().nullish(),
   "startsAt": zod.coerce.date(),
@@ -785,6 +795,7 @@ export const CreateEventResponse = zod.object({
   "description": zod.string(),
   "category": zod.enum(['workshop', 'pop-up', 'gallery', 'activation', 'community']),
   "eventType": zod.enum(['free', 'ticketed', 'members-only']),
+  "priceCents": zod.int().nullish().describe('Required for ticketed events; expressed in cents.'),
   "location": zod.string(),
   "imageUrl": zod.string().nullish(),
   "startsAt": zod.coerce.date(),
@@ -810,6 +821,7 @@ export const GetEventResponse = zod.object({
   "description": zod.string(),
   "category": zod.enum(['workshop', 'pop-up', 'gallery', 'activation', 'community']),
   "eventType": zod.enum(['free', 'ticketed', 'members-only']),
+  "priceCents": zod.int().nullish().describe('Required for ticketed events; expressed in cents.'),
   "location": zod.string(),
   "imageUrl": zod.string().nullish(),
   "startsAt": zod.coerce.date(),
@@ -835,6 +847,7 @@ export const RsvpToEventResponse = zod.object({
   "description": zod.string(),
   "category": zod.enum(['workshop', 'pop-up', 'gallery', 'activation', 'community']),
   "eventType": zod.enum(['free', 'ticketed', 'members-only']),
+  "priceCents": zod.int().nullish().describe('Required for ticketed events; expressed in cents.'),
   "location": zod.string(),
   "imageUrl": zod.string().nullish(),
   "startsAt": zod.coerce.date(),
@@ -856,6 +869,7 @@ export const ListMyRsvpsResponseItem = zod.object({
   "description": zod.string(),
   "category": zod.enum(['workshop', 'pop-up', 'gallery', 'activation', 'community']),
   "eventType": zod.enum(['free', 'ticketed', 'members-only']),
+  "priceCents": zod.int().nullish().describe('Required for ticketed events; expressed in cents.'),
   "location": zod.string(),
   "imageUrl": zod.string().nullish(),
   "startsAt": zod.coerce.date(),
@@ -1307,6 +1321,7 @@ export const ListDirectoryResponseItem = zod.object({
   "id": zod.int().optional(),
   "name": zod.string().optional(),
   "imageUrl": zod.string().nullish(),
+  "workshopTitle": zod.string().nullish(),
   "earnedAt": zod.string().optional()
 })).optional()
 })
@@ -1343,6 +1358,7 @@ export const GetUserProfileResponse = zod.object({
   "id": zod.int(),
   "name": zod.string(),
   "imageUrl": zod.string().nullish(),
+  "workshopTitle": zod.string().nullish(),
   "earnedAt": zod.coerce.date()
 }))
 })

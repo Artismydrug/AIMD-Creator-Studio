@@ -11,5 +11,7 @@ export type PublicCreatorProfileRecentBadgesItem = {
   name: string;
   /** @nullable */
   imageUrl?: string | null;
+  /** @nullable */
+  workshopTitle?: string | null;
   earnedAt: Date;
 };

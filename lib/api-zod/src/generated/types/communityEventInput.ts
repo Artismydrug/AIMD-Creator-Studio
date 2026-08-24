@@ -14,6 +14,11 @@ export interface CommunityEventInput {
   description: string;
   category: CommunityEventInputCategory;
   eventType: CommunityEventInputEventType;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  priceCents?: number | null;
   location: string;
   /** @nullable */
   imageUrl?: string | null;

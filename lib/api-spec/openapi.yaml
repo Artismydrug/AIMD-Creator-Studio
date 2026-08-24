@@ -2217,13 +2217,18 @@ components:
           type: integer
         completed:
           type: boolean
+        proofUrl:
+          type: ["string", "null"]
+        proofMediaType:
+          type: ["string", "null"]
+          enum: ["image", "video", null]
         createdAt:
           type: string
           format: date-time
 
     HabitLogInput:
       type: object
-      required: [minutesSpent]
+      required: [minutesSpent, proofUrl, proofMediaType]
       properties:
         minutesSpent:
           type: integer
@@ -2231,6 +2236,12 @@ components:
         date:
           type: string
           format: date
+        proofUrl:
+          type: string
+          description: Creator-owned image or video proof uploaded for this habit session.
+        proofMediaType:
+          type: string
+          enum: ["image", "video"]
 
     HeatmapDay:
       type: object
@@ -2623,6 +2634,9 @@ components:
         eventType:
           type: string
           enum: ["free", "ticketed", "members-only"]
+        priceCents:
+          type: ["integer", "null"]
+          description: Required for ticketed events; expressed in cents.
         location:
           type: string
         imageUrl:
@@ -2660,6 +2674,9 @@ components:
         eventType:
           type: string
           enum: ["free", "ticketed", "members-only"]
+        priceCents:
+          type: ["integer", "null"]
+          minimum: 0
         location:
           type: string
         imageUrl:
@@ -3019,6 +3036,8 @@ components:
                 type: string
               imageUrl:
                 type: ["string", "null"]
+              workshopTitle:
+                type: ["string", "null"]
               earnedAt:
                 type: string
 
@@ -3075,6 +3094,8 @@ components:
               name:
                 type: string
               imageUrl:
+                type: ["string", "null"]
+              workshopTitle:
                 type: ["string", "null"]
               earnedAt:
                 type: string

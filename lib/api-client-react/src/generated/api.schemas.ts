@@ -182,6 +182,17 @@ export interface HabitUpdate {
   targetMinutes?: number;
 }
 
+/**
+ * @nullable
+ */
+export type HabitLogProofMediaType = typeof HabitLogProofMediaType[keyof typeof HabitLogProofMediaType] | null;
+
+
+export const HabitLogProofMediaType = {
+  image: 'image',
+  video: 'video',
+} as const;
+
 export interface HabitLog {
   id: number;
   habitId: number;
@@ -189,13 +200,28 @@ export interface HabitLog {
   date: string;
   minutesSpent: number;
   completed: boolean;
+  /** @nullable */
+  proofUrl?: string | null;
+  /** @nullable */
+  proofMediaType?: HabitLogProofMediaType;
   createdAt: string;
 }
+
+export type HabitLogInputProofMediaType = typeof HabitLogInputProofMediaType[keyof typeof HabitLogInputProofMediaType];
+
+
+export const HabitLogInputProofMediaType = {
+  image: 'image',
+  video: 'video',
+} as const;
 
 export interface HabitLogInput {
   /** @minimum 1 */
   minutesSpent: number;
   date?: string;
+  /** Creator-owned image or video proof uploaded for this habit session. */
+  proofUrl: string;
+  proofMediaType: HabitLogInputProofMediaType;
 }
 
 export interface HeatmapDay {
@@ -524,6 +550,11 @@ export interface CommunityEvent {
   description: string;
   category: CommunityEventCategory;
   eventType: CommunityEventEventType;
+  /**
+     * Required for ticketed events; expressed in cents.
+     * @nullable
+     */
+  priceCents?: number | null;
   location: string;
   /** @nullable */
   imageUrl?: string | null;
@@ -564,6 +595,11 @@ export interface CommunityEventInput {
   description: string;
   category: CommunityEventInputCategory;
   eventType: CommunityEventInputEventType;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  priceCents?: number | null;
   location: string;
   /** @nullable */
   imageUrl?: string | null;
@@ -825,6 +861,8 @@ export type DirectoryCreatorRecentBadgesItem = {
   name?: string;
   /** @nullable */
   imageUrl?: string | null;
+  /** @nullable */
+  workshopTitle?: string | null;
   earnedAt?: string;
 };
 
@@ -856,6 +894,8 @@ export type PublicCreatorProfileRecentBadgesItem = {
   name: string;
   /** @nullable */
   imageUrl?: string | null;
+  /** @nullable */
+  workshopTitle?: string | null;
   earnedAt: string;
 };
 

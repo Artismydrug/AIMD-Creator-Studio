@@ -53,6 +53,7 @@ router.get("/", async (req, res): Promise<void> => {
       description: e.description,
       category: e.category,
       eventType: e.eventType,
+       priceCents: e.priceCents,
       location: e.location,
       imageUrl: e.imageUrl,
       startsAt: e.startsAt.toISOString(),
@@ -74,6 +75,10 @@ router.get("/", async (req, res): Promise<void> => {
 router.post("/", requireAdmin, async (req, res): Promise<void> => {
   try {
     const body = CreateEventBody.parse(req.body);
+    if (body.eventType === "ticketed" && (body.priceCents == null || body.priceCents < 0)) {
+      res.status(400).json({ error: "Ticketed events require a non-negative price in cents." });
+      return;
+    }
     const [event] = await db
       .insert(communityEventsTable)
       .values({
@@ -81,6 +86,7 @@ router.post("/", requireAdmin, async (req, res): Promise<void> => {
         description: body.description,
         category: body.category,
         eventType: body.eventType,
+         priceCents: body.eventType === "ticketed" ? body.priceCents : null,
         location: body.location,
         imageUrl: body.imageUrl ?? null,
         startsAt: new Date(body.startsAt),

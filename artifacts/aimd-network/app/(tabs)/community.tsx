@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { safeImpact } from '@/lib/haptics';
 import FeedScreen from '../feed';
-import MessagesScreen from '../messages';
+import MessagesScreen from './messages';
 
 type CommunitySection = 'feed' | 'messages';
 

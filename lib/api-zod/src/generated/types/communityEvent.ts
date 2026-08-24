@@ -14,6 +14,11 @@ export interface CommunityEvent {
   description: string;
   category: CommunityEventCategory;
   eventType: CommunityEventEventType;
+  /**
+     * Required for ticketed events; expressed in cents.
+     * @nullable
+     */
+  priceCents?: number | null;
   location: string;
   /** @nullable */
   imageUrl?: string | null;

@@ -67,6 +67,8 @@ export * from './habitListMeta';
 export * from './habitListMetaTier';
 export * from './habitLog';
 export * from './habitLogInput';
+export * from './habitLogInputProofMediaType';
+export * from './habitLogProofMediaType';
 export * from './habitUpdate';
 export * from './healthStatus';
 export * from './heatmapDay';

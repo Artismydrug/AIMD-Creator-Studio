@@ -1,4 +1,4 @@
-import { useGetDashboardSummary, useGetActivityFeed } from '@workspace/api-client-react';
+import { useGetDashboardSummary, useGetActivityFeed, useGetCurrentUser } from '@workspace/api-client-react';
 import { Flame, Zap, CheckCircle2, TrendingUp, Trophy, ArrowUpRight, Coins } from 'lucide-react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { DropsCountdownBanner } from '@/components/DropsCountdownBanner';
 export default function Dashboard() {
   const { data: summary, isLoading } = useGetDashboardSummary({ query: { queryKey: ['getDashboardSummary'] } });
   const { data: feed } = useGetActivityFeed({ limit: 5 }, { query: { queryKey: ['getActivityFeed', 5] } });
+  const { data: user } = useGetCurrentUser({ query: { queryKey: ['getCurrentUser'] } });
 
   if (isLoading) {
     return <div className="p-8 font-mono animate-pulse">Loading studio data...</div>;
@@ -58,7 +59,7 @@ export default function Dashboard() {
           </div>
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-amber-300">AIMD Points</p>
-            <p className="font-display text-3xl font-black text-foreground">{summary?.points ?? 0}</p>
+            <p className="font-display text-3xl font-black text-foreground">{user?.points ?? 0}</p>
           </div>
         </div>
         <div className="flex gap-3">

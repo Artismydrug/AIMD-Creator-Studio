@@ -5,6 +5,7 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+import type { HabitLogProofMediaType } from './habitLogProofMediaType';
 
 export interface HabitLog {
   id: number;
@@ -13,5 +14,9 @@ export interface HabitLog {
   date: Date;
   minutesSpent: number;
   completed: boolean;
+  /** @nullable */
+  proofUrl?: string | null;
+  /** @nullable */
+  proofMediaType?: HabitLogProofMediaType;
   createdAt: Date;
 }

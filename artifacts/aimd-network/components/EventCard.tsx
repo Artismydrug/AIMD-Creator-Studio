@@ -33,6 +33,7 @@ export default function EventCard({ event, onRsvpChange }: EventCardProps) {
   const colors = useColors();
   const [rsvped, setRsvped] = useState(event.hasRsvped ?? false);
   const [rsvpCount, setRsvpCount] = useState(event.rsvpCount ?? 0);
+  const ticketPriceReady = event.eventType !== 'ticketed' || typeof event.priceCents === 'number';
   const iconName = (CATEGORY_ICONS[event.category] ?? 'calendar') as any;
 
   const rsvpMutation = useRsvpToEvent({
@@ -112,6 +113,11 @@ export default function EventCard({ event, onRsvpChange }: EventCardProps) {
       fontSize: 12,
       color: colors.mutedForeground,
     },
+    ticketText: {
+      fontFamily: 'DMSans_600SemiBold',
+      fontSize: 12,
+      color: colors.primary,
+    },
     bottomRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -161,6 +167,16 @@ export default function EventCard({ event, onRsvpChange }: EventCardProps) {
               <Feather name="map-pin" size={12} color={colors.mutedForeground} />
               <Text style={s.metaText}>{event.location}</Text>
             </View>
+            {event.eventType === 'ticketed' && (
+              <View style={s.metaItem}>
+                <Feather name="tag" size={12} color={colors.primary} />
+                <Text style={s.ticketText}>
+                  {typeof event.priceCents === 'number'
+                    ? `$${(event.priceCents / 100).toFixed(2)}`
+                    : 'Price before checkout'}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       </View>
@@ -173,11 +189,11 @@ export default function EventCard({ event, onRsvpChange }: EventCardProps) {
             backgroundColor: rsvped ? colors.primary : 'transparent',
           }]}
           onPress={handleRsvp}
-          disabled={rsvpMutation.isPending}
+          disabled={rsvpMutation.isPending || !ticketPriceReady}
           testID={`rsvp-event-${event.id}`}
         >
           <Text style={[s.rsvpBtnText, { color: rsvped ? colors.primaryForeground : colors.foreground }]}>
-            {rsvped ? 'Going' : 'RSVP'}
+            {!ticketPriceReady ? 'Price Pending' : rsvped ? 'Going' : 'RSVP'}
           </Text>
         </TouchableOpacity>
       </View>

@@ -11,5 +11,7 @@ export type DirectoryCreatorRecentBadgesItem = {
   name?: string;
   /** @nullable */
   imageUrl?: string | null;
+  /** @nullable */
+  workshopTitle?: string | null;
   earnedAt?: string;
 };

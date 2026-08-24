@@ -5,9 +5,13 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+import type { HabitLogInputProofMediaType } from './habitLogInputProofMediaType';
 
 export interface HabitLogInput {
   /** @minimum 1 */
   minutesSpent: number;
   date?: Date;
+  /** Creator-owned image or video proof uploaded for this habit session. */
+  proofUrl: string;
+  proofMediaType: HabitLogInputProofMediaType;
 }

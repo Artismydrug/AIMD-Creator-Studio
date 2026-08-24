@@ -224,9 +224,12 @@ router.get("/users/:id/profile", async (req, res): Promise<void> => {
         SELECT json_agg(json_build_object(
           'id', b2.id, 'name', b2.name,
           'imageUrl', b2.image_url,
+           'workshopTitle', w2.title,
           'earnedAt', b2.earned_at
         ) ORDER BY b2.earned_at DESC)
-        FROM badges b2 WHERE b2.user_id = u.id
+         FROM badges b2
+         LEFT JOIN workshops w2 ON w2.id = b2.workshop_id
+         WHERE b2.user_id = u.id
       ), '[]'::json) AS "recentBadges"
     FROM users u
     LEFT JOIN studio_posts p ON p.user_id = u.id

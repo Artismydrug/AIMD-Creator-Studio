@@ -7,6 +7,7 @@ export const communityEventsTable = pgTable("community_events", {
   description: text("description").notNull(),
   category: text("category").notNull().$type<"workshop" | "pop-up" | "gallery" | "activation" | "community">(),
   eventType: text("event_type").notNull().$type<"free" | "ticketed" | "members-only">(),
+  priceCents: integer("price_cents"),
   location: text("location").notNull(),
   imageUrl: text("image_url"),
   startsAt: timestamp("starts_at").notNull(),

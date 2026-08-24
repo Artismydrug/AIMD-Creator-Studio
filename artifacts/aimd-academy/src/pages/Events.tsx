@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useListEvents, useRsvpToEvent } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { MapPin, Calendar as CalendarIcon, Clock, Users } from 'lucide-react';
+import { MapPin, Calendar as CalendarIcon, Clock, Users, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -68,6 +68,12 @@ export default function Events() {
                   <MapPin className="w-4 h-4 text-primary" />
                   {featured.location}
                 </div>
+                {featured.eventType === 'ticketed' && (
+                  <div className="flex items-center gap-2 text-foreground">
+                    <Ticket className="w-4 h-4 text-primary" />
+                    {typeof featured.priceCents === 'number' ? `$${(featured.priceCents / 100).toFixed(2)}` : 'Price announced before checkout'}
+                  </div>
+                )}
               </div>
             </div>
             
@@ -129,6 +135,12 @@ function EventCard({ event }: { event: any }) {
             <Users className="w-4 h-4 text-primary" />
             {event.rsvpCount} Attending {event.maxCapacity ? `/ ${event.maxCapacity} Max` : ''}
           </div>
+          {event.eventType === 'ticketed' && (
+            <div className="flex items-center gap-3">
+              <Ticket className="w-4 h-4 text-primary" />
+              {typeof event.priceCents === 'number' ? `$${(event.priceCents / 100).toFixed(2)} ticket` : 'Ticket price announced before checkout'}
+            </div>
+          )}
         </div>
         
         <EventActions event={event} />
@@ -152,24 +164,34 @@ function EventActions({ event, size = "default" }: { event: any, size?: "default
   };
 
   const isFull = event.maxCapacity && event.rsvpCount >= event.maxCapacity && !event.hasRsvped;
+  const ticketPriceReady = event.eventType !== 'ticketed' || typeof event.priceCents === 'number';
 
   return (
-    <Button 
-      className={`rounded-none font-mono uppercase w-full ${size === 'lg' ? 'h-16 text-lg md:w-auto md:px-12' : ''} ${
+    <div className="space-y-2 w-full md:w-auto">
+      {event.eventType === 'ticketed' && (
+        <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground text-center md:text-left">
+          {typeof event.priceCents === 'number' ? `Ticket: $${(event.priceCents / 100).toFixed(2)} — shown before RSVP` : 'Ticket price will be shown before checkout'}
+        </p>
+      )}
+      <Button 
+        className={`rounded-none font-mono uppercase w-full ${size === 'lg' ? 'h-16 text-lg md:w-auto md:px-12' : ''} ${
         event.hasRsvped ? 'bg-primary/20 text-primary border border-primary hover:bg-primary/30' : 
         'bg-foreground text-background hover:bg-foreground/90'
       }`}
-      disabled={isFull}
+      disabled={Boolean(isFull) || !ticketPriceReady}
       onClick={handleRsvp}
     >
       {event.hasRsvped ? (
         <><CheckCircle className="w-4 h-4 mr-2" /> Going</>
+      ) : !ticketPriceReady ? (
+        'Ticket Price Pending'
       ) : isFull ? (
         'Waitlist / Full'
       ) : (
         'RSVP Now'
       )}
-    </Button>
+      </Button>
+    </div>
   );
 }
 

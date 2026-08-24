@@ -19,8 +19,41 @@ import {
   ListHabitLogsResponse,
 } from "@workspace/api-zod";
 import { FREE_HABIT_LIMIT } from "../middleware/requireTier";
+import { ObjectNotFoundError, ObjectStorageService } from "../lib/objectStorage";
+import { ObjectPermission, getObjectAclPolicy } from "../lib/objectAcl";
 
 const router: IRouter = Router();
+const objectStorageService = new ObjectStorageService();
+
+async function isOwnedHabitProof(
+  userId: number,
+  proofUrl: string,
+  proofMediaType: "image" | "video",
+): Promise<boolean> {
+  if (!proofUrl.startsWith("/api/storage/objects/")) return false;
+  try {
+    const objectFile = await objectStorageService.getObjectEntityFile(
+      proofUrl.slice("/api/storage".length),
+    );
+    const canWrite = await objectStorageService.canAccessObjectEntity({
+      userId: String(userId),
+      objectFile,
+      requestedPermission: ObjectPermission.WRITE,
+    });
+    const policy = await getObjectAclPolicy(objectFile);
+    const [metadata] = await objectFile.getMetadata();
+    const contentType = String(metadata.contentType ?? "");
+    const matchesType = proofMediaType === "image"
+      ? contentType.startsWith("image/")
+      : contentType.startsWith("video/");
+    return canWrite && policy?.owner === String(userId) && policy.visibility === "private" && matchesType;
+  } catch (error) {
+    if (!(error instanceof ObjectNotFoundError)) {
+      // Keep storage validation failures private while rejecting the request.
+    }
+    return false;
+  }
+}
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
@@ -220,11 +253,24 @@ router.post("/habits/:id/log", async (req, res): Promise<void> => {
   if (!habit) { res.status(404).json({ error: "Habit not found" }); return; }
 
   const logDate: string = (parsed.data.date as string | undefined) ?? todayStr();
+  const ownsProof = await isOwnedHabitProof(userId, parsed.data.proofUrl, parsed.data.proofMediaType);
+  if (!ownsProof) {
+    res.status(400).json({ error: "Habit proof must be your uploaded image or video." });
+    return;
+  }
   const completed = parsed.data.minutesSpent >= habit.targetMinutes;
 
   const [log] = await db
     .insert(habitLogsTable)
-    .values({ habitId: habit.id, userId, date: logDate, minutesSpent: parsed.data.minutesSpent, completed })
+    .values({
+      habitId: habit.id,
+      userId,
+      date: logDate,
+      minutesSpent: parsed.data.minutesSpent,
+      completed,
+      proofUrl: parsed.data.proofUrl,
+      proofMediaType: parsed.data.proofMediaType,
+    })
     .returning();
 
   await updateStreak(habit.id, userId);

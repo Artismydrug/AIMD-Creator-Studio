@@ -21,6 +21,8 @@ export const habitLogsTable = pgTable("habit_logs", {
   date: date("date", { mode: "string" }).notNull(),
   minutesSpent: integer("minutes_spent").notNull().default(0),
   completed: boolean("completed").notNull().default(false),
+  proofUrl: text("proof_url"),
+  proofMediaType: text("proof_media_type").$type<"image" | "video">(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

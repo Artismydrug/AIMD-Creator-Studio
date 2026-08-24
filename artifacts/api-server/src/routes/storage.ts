@@ -97,6 +97,7 @@ const CHALLENGE_UPLOAD_PURPOSES = new Set([
 ]);
 const ASSIGNMENT_UPLOAD_PURPOSE = 'assignment';
 const INSTRUCTOR_FEEDBACK_PURPOSE = 'instructor_feedback';
+const HABIT_PROOF_UPLOAD_PURPOSE = 'habit_proof';
 
 /** Hard cap for assignment drill submissions. */
 const ASSIGNMENT_MAX_DURATION_SECONDS = 30;
@@ -266,14 +267,19 @@ router.post(
     const isChallengeProof = purpose !== null && CHALLENGE_UPLOAD_PURPOSES.has(purpose);
     const isAssignmentFootage = purpose === ASSIGNMENT_UPLOAD_PURPOSE;
     const isInstructorFeedback = purpose === INSTRUCTOR_FEEDBACK_PURPOSE;
+    const isHabitProof = purpose === HABIT_PROOF_UPLOAD_PURPOSE;
     const captureSource = getHeader(req, 'x-aimd-capture-source');
     const capturedAt = parseCaptureTimestamp(getHeader(req, 'x-aimd-captured-at'));
     const exifTimestamp = parseCaptureTimestamp(getHeader(req, 'x-aimd-exif-timestamp'));
     const devicePlatform = getHeader(req, 'x-aimd-device-platform');
     const cameraFacing = getHeader(req, 'x-aimd-camera-facing');
 
-    if (purpose && !isChallengeProof && !isAssignmentFootage && !isInstructorFeedback) {
+    if (purpose && !isChallengeProof && !isAssignmentFootage && !isInstructorFeedback && !isHabitProof) {
       res.status(400).json({ error: 'Invalid upload purpose' });
+      return;
+    }
+    if (isHabitProof && !isImage && !isVideo) {
+      res.status(400).json({ error: 'Habit proof must be an image or video' });
       return;
     }
     if (isAssignmentFootage && !isVideo) {
@@ -364,7 +370,7 @@ router.post(
       const sha256 = createHash('sha256')
         .update(storedMedia.buffer)
         .digest('hex');
-      const isPrivate = isAssignmentFootage || isInstructorFeedback;
+       const isPrivate = isAssignmentFootage || isInstructorFeedback || isHabitProof;
       const objectPath = await objectStorageService.uploadObjectEntity(
         storedMedia.buffer,
         storedMedia.contentType,
