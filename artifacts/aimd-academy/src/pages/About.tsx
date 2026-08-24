@@ -69,7 +69,7 @@ export default function About() {
               Art. Community. Ownership.
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              To bridge physical artistry, digital creation, and community ownership — providing a vibrant platform where art is the ultimate form of expression, community, and personal transformation.
+              Art is my drug’s mission is to build a community of artists &amp; creatives by providing space and opportunities for growth &amp; development. Our mission is to help artists no matter what phase of their journey &amp; to be a pillar of support as they continue to build.
             </p>
           </article>
           <article className="glass-card rounded-xl p-7 md:p-9">
@@ -79,7 +79,7 @@ export default function About() {
               The definitive creator ecosystem.
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              To become the definitive ecosystem for creators and tattoo artists — where passion powers performance, creators unlock tangible growth through gamified milestones, and fans experience art seamlessly across physical studios and digital galleries.
+              We visualize the artists being the roots of our foundation, as we build up through multiple locations &amp; various services. Art is My Drug will truly blossom through investing into the artists of tomorrow.
             </p>
           </article>
         </div>

@@ -6,6 +6,10 @@ import { Badge } from '@/components/ui/badge';
 
 export default function Workshops() {
   const { data: workshops, isLoading } = useListWorkshops({}, { query: { queryKey: ['listWorkshops'] } });
+  const tattooApprenticeship = workshops?.find((workshop: any) =>
+    workshop.title.toLowerCase().includes('tattoo apprenticeship')
+    && workshop.title.toLowerCase().includes('poncho'),
+  );
 
   if (isLoading) return <div className="p-8 font-mono animate-pulse">Loading curriculum...</div>;
 
@@ -13,15 +17,31 @@ export default function Workshops() {
     <div className="p-6 md:p-10 space-y-12">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border">
         <div>
-          <h1 className="text-4xl md:text-5xl font-black font-display uppercase tracking-tight">Workshops & Masterclasses</h1>
-          <p className="text-muted-foreground font-mono mt-2">Expert-led multi-medium curriculum with verified instructors.</p>
+          <h1 className="text-4xl md:text-5xl font-black font-display uppercase tracking-tight">Workshops</h1>
+          <p className="text-muted-foreground font-mono mt-2">A first look at the AIMD learning studio. More masterclasses are coming soon.</p>
         </div>
       </header>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {workshops?.map(workshop => (
-          <WorkshopCard key={workshop.id} workshop={workshop} />
-        ))}
+      <div className="grid md:grid-cols-2 gap-8">
+        {tattooApprenticeship ? (
+          <WorkshopCard workshop={tattooApprenticeship} />
+        ) : (
+          <ComingSoonWorkshop title="Tattoo Apprenticeship with Poncho The Artist" description="The first AIMD workshop is being prepared for release." />
+        )}
+        <ComingSoonWorkshop title="More AIMD Workshops" description="New artist-led lessons will appear here as they are filmed and ready to share." />
+      </div>
+    </div>
+  );
+}
+
+function ComingSoonWorkshop({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="border border-dashed border-primary/40 bg-primary/5 p-7 md:p-9 flex flex-col min-h-[360px]">
+      <span className="w-fit font-mono text-[10px] uppercase tracking-widest border border-primary/40 bg-primary/10 text-primary px-2 py-1">Coming soon</span>
+      <div className="my-auto">
+        <PlayCircle className="w-11 h-11 text-primary mb-5" />
+        <h2 className="text-2xl font-bold font-display uppercase tracking-tight mb-3">{title}</h2>
+        <p className="text-muted-foreground">{description}</p>
       </div>
     </div>
   );

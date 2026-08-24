@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Award, Briefcase, Calendar, Flame, GraduationCap, HeartHandshake, History as HistoryIcon, ImagePlus, MapPin, Menu, MessageSquare, QrCode, ShieldCheck, Sparkles, Timer, User, Users, X, Video, LayoutDashboard } from 'lucide-react';
+import { Award, Briefcase, Calendar, Flame, GraduationCap, HeartHandshake, ImagePlus, Menu, ShieldCheck, Sparkles, Timer, User, Users, X, Video, LayoutDashboard } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useGetCurrentUser, useGetInstructorSelf } from '@workspace/api-client-react';
 import { useAuth, useClerk } from '@clerk/react';
@@ -24,21 +24,18 @@ interface NavSection {
 
 const NAV_SECTIONS: NavSection[] = [
   {
-    heading: 'Daily Studio',
+    heading: 'Creator Studio',
     items: [
-      { href: '/dashboard',    label: 'Creator Dashboard',         icon: LayoutDashboard },
-      { href: '/studio-log',  label: 'Studio Feed',              icon: Flame },
-      { href: '/messages',    label: 'Messages',                 icon: MessageSquare },
-      { href: '/habits',      label: 'Habit Tracker & Timer',    icon: Timer },
-      { href: '/events',      label: 'Community Events',         icon: Calendar },
-      { href: '/history',     label: 'Session History',           icon: HistoryIcon },
-      { href: '/checkin',     label: 'Event Check-In',           icon: QrCode },
+      { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { href: '/community', label: 'Community & Practice', icon: Flame },
+      { href: '/events', label: 'Events', icon: Calendar },
     ],
   },
   {
     heading: 'Workshops & Masterclasses',
     items: [
       { href: '/workshops',   label: 'Workshops & Masterclasses',         icon: GraduationCap },
+      { href: '/plans',       label: 'Membership',                       icon: Sparkles },
       { href: '/badges',      label: 'Certifications & Badges',  icon: Award },
     ],
   },
@@ -60,10 +57,10 @@ const NAV_SECTIONS: NavSection[] = [
 
 // Bottom nav tabs (mobile only)
 const BOTTOM_TABS = [
-  { href: '/studio-log', label: 'Feed', icon: Flame },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/community', label: 'Community', icon: Flame },
   { href: '/workshops', label: 'Workshops', icon: GraduationCap },
-  // index 2 = FAB (rendered separately)
-  { href: '/job-board', label: 'Chairs', icon: Briefcase },
+  { href: '/events', label: 'Events', icon: Calendar },
   { href: '/profile', label: 'Profile', icon: User },
 ];
 
@@ -352,21 +349,27 @@ function MobileDrawer({
 
 function MobileBottomNav({
   location,
-  onLogOpen,
 }: {
   location: string;
-  onLogOpen: () => void;
 }) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-[90] md:hidden bg-sidebar/95 backdrop-blur-md border-t border-border px-3 py-2">
       <div className="flex items-center justify-around max-w-md mx-auto">
 
-        {/* Feed */}
+        {/* Dashboard */}
         <BottomTab
-          href="/studio-log"
-          label="Feed"
+          href="/dashboard"
+          label="Dashboard"
+          icon={LayoutDashboard}
+          active={location === '/dashboard'}
+        />
+
+        {/* Community */}
+        <BottomTab
+          href="/community"
+          label="Community"
           icon={Flame}
-          active={location === '/studio-log'}
+          active={location === '/community'}
         />
 
         {/* Workshops */}
@@ -377,21 +380,12 @@ function MobileBottomNav({
           active={location === '/workshops' || location.startsWith('/workshops/')}
         />
 
-        {/* FAB — elevated center */}
-        <button
-          onClick={onLogOpen}
-          className="relative -top-4 bg-primary hover:bg-primary/90 text-white p-3.5 rounded-full shadow-lg shadow-primary/25 transition-transform active:scale-95 border-2 border-white flex items-center justify-center"
-          aria-label="Start Studio Session"
-        >
-          <Timer className="w-6 h-6 stroke-[2.5]" />
-        </button>
-
-        {/* Chairs */}
+        {/* Events */}
         <BottomTab
-          href="/job-board"
-          label="Chairs"
-          icon={Briefcase}
-          active={location === '/job-board'}
+          href="/events"
+          label="Events"
+          icon={Calendar}
+          active={location === '/events'}
         />
 
         {/* Profile */}
@@ -439,7 +433,6 @@ function BottomTab({
 export function Shell({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [logModalOpen, setLogModalOpen] = useState(false);
 
   const { data: user } = useGetCurrentUser();
   const { data: instructorData } = useGetInstructorSelf({ query: { queryKey: ['getInstructorSelf'], retry: false } });
@@ -452,9 +445,6 @@ export function Shell({ children }: { children: ReactNode }) {
 
   return (
     <>
-      {/* ── Log modal (above everything) ── */}
-      <LogModal open={logModalOpen} onClose={() => setLogModalOpen(false)} />
-
       {/* ── Mobile: slide-in sidebar drawer ── */}
       <MobileDrawer
         open={drawerOpen}
@@ -518,7 +508,6 @@ export function Shell({ children }: { children: ReactNode }) {
       {/* ── Mobile bottom nav ── */}
       <MobileBottomNav
         location={location}
-        onLogOpen={() => setLogModalOpen(true)}
       />
     </>
   );

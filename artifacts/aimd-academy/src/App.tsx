@@ -45,6 +45,7 @@ import Mission from '@/pages/Mission';
 import CheckIn from '@/pages/CheckIn';
 import Directory from '@/pages/Directory';
 import Messages from '@/pages/Messages';
+import Community from '@/pages/Community';
 import Admin from '@/pages/Admin';
 import Onboarding from '@/pages/Onboarding';
 import Tattoo from '@/pages/Tattoo';
@@ -220,6 +221,7 @@ function AuthenticatedShell() {
       <RoutedErrorBoundary>
         <Switch>
           <Route path="/dashboard"      component={Dashboard} />
+          <Route path="/community"      component={Community} />
           <Route path="/habits"         component={Habits} />
           <Route path="/studio-log"     component={StudioLog} />
           <Route path="/events"         component={Events} />

@@ -29,6 +29,7 @@ function PlanCard({
   const userRank      = TIER_RANK[userTier ?? 'free'] ?? 0;
   const planRank      = TIER_RANK[plan.tier]  ?? 0;
   const isDowngrade   = planRank < userRank;
+  const isComingSoon = plan.tier !== 'free' && !isCurrentPlan;
   // Enforce requested prices locally based on tier
   const localPriceMonthly = plan.tier === 'academy' ? 39 : plan.tier === 'pro' ? 99 : 0;
   const localPriceAnnual = plan.tier === 'academy' ? 399 : plan.tier === 'pro' ? 999 : 0;
@@ -120,7 +121,7 @@ function PlanCard({
               variant="outline"
               className="w-full h-12 rounded-none font-mono font-bold uppercase tracking-wider border-border text-foreground/80 hover:bg-muted hover:text-white"
             >
-              <Link href="/studio-log">Start Free</Link>
+              <Link href="/community">Start Free</Link>
             </Button>
           )
         ) : isCurrentPlan ? (
@@ -134,6 +135,13 @@ function PlanCard({
             className="w-full h-12 rounded-none font-mono font-bold uppercase tracking-wider border-border text-muted-foreground opacity-50"
           >
             Downgrade
+          </Button>
+        ) : isComingSoon ? (
+          <Button
+            disabled
+            className="w-full h-12 rounded-none font-mono font-bold uppercase tracking-wider border border-primary/30 bg-primary/10 text-primary opacity-100"
+          >
+            Coming Soon
           </Button>
         ) : (
           <Button
@@ -162,7 +170,7 @@ export default function Plans() {
   const [annual, setAnnual] = useState(false);
   const queryClient = useQueryClient();
   const [upgradeStatus, setUpgradeStatus] = useState<'verifying' | 'done' | 'failed' | null>(null);
-  const launchPlans = plans?.filter((plan: any) => plan.tier === 'free' || plan.tier === user?.tier);
+  const launchPlans = plans;
 
   // Returning from a successful Stripe Checkout: verify the session with the
   // server (which confirms payment with Stripe) so the new tier applies
@@ -233,7 +241,7 @@ export default function Plans() {
             Invest in the Grind
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Select your tier. Workshops & Masterclasses. Build your career.
+            Free creator access is open now. Dedicated Artist and Professional Artist memberships are planned for a future release.
           </p>
 
           {/* Billing toggle */}
