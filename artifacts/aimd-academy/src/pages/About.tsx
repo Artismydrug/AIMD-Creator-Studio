@@ -39,17 +39,17 @@ export default function About() {
               AIMD (Art Is My Drug) bridges physical artistry, digital creation, and community ownership — a vibrant platform where art is the ultimate form of expression, community, and personal transformation.
             </p>
             </div>
-            <div className="glass-card rounded-xl p-2">
-              <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black">
-                <iframe
-                  className="absolute inset-0 w-full h-full"
-                  src="https://www.youtube.com/embed/fmVeAgPqNEk"
-                  title="AIMD Youth Art Workshop at The School of Los Angeles"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
-                  loading="lazy"
-                />
+            <div className="glass-card rounded-xl p-7 md:p-9">
+              <Sparkles className="w-8 h-8 text-primary mb-6" aria-hidden="true" />
+              <p className="font-mono text-xs uppercase tracking-widest text-primary mb-3">Community impact</p>
+              <h2 className="font-display font-black uppercase tracking-tight text-3xl leading-none mb-4">
+                Creativity belongs <span className="text-gradient-brand">to everyone.</span>
+              </h2>
+              <p className="text-muted-foreground leading-relaxed">
+                From youth art workshops to rising talent and adult creators, Art Is My Drug supports the people and practice behind the work.
+              </p>
+              <div className="mt-7 border-t border-border pt-5 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                The School of Los Angeles · Youth Art Workshop
               </div>
             </div>
           </div>
@@ -87,13 +87,13 @@ export default function About() {
         <div className="container mx-auto">
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-6">
-              <Sparkles className="w-4 h-4" /> Watch Our Story
+              <Sparkles className="w-4 h-4" /> Our Community Roots
             </div>
             <h2 className="text-4xl md:text-6xl font-black font-display uppercase tracking-tight mb-4">
               Our Community Impact <span className="text-gradient-brand">& Roots.</span>
             </h2>
             <p className="text-lg text-muted-foreground">
-              Art is more than expression—it's a catalyst for community growth and personal transformation. Art Is My Drug empowers local youth, rising talent, and adult creators alike. Watch our Youth Art Workshop at The School of Los Angeles in action.
+              Art is more than expression—it's a catalyst for community growth and personal transformation. Art Is My Drug empowers local youth, rising talent, and adult creators alike.
             </p>
           </div>
         </div>
@@ -108,7 +108,7 @@ export default function About() {
           </div>
           <p className="text-lg mb-12 max-w-2xl">
             <span className="font-display font-black uppercase tracking-tight text-2xl md:text-3xl text-gradient-brand">Level Up Your Creative Journey</span>
-            <span className="block text-muted-foreground mt-1">Three growth phases take you from first check-in to full-time professional.</span>
+            <span className="block text-muted-foreground mt-1">A free starting point for building a creative practice and finding your people.</span>
           </p>
 
           <div className="relative grid md:grid-cols-3 gap-6">
@@ -117,7 +117,7 @@ export default function About() {
             {[
               {
                 icon: Compass,
-                phase: 'Phase 01',
+                phase: 'Available today',
                 title: 'The Inspiring Artist',
                 tagline: 'Discover & Connect',
                 color: 'var(--vibrant-cyan)',
@@ -130,28 +130,28 @@ export default function About() {
               },
               {
                 icon: Trophy,
-                phase: 'Phase 02',
+                phase: 'Practice & Share',
                 title: 'The Dedicated Artist',
-                tagline: 'Level Up & Skill Building',
+                tagline: 'Keep Building Your Craft',
                 color: 'var(--vibrant-magenta)',
                 glow: 'glow-magenta',
                 points: [
                   'Join weekly creator challenges',
-                  'Unlock rare badges & rank up on leaderboards',
+                  'Earn badges for thoughtful participation',
                   'Build your portfolio',
                 ],
               },
               {
                 icon: Crown,
-                phase: 'Phase 03',
+                phase: 'Growing With AIMD',
                 title: 'The Professional Artist',
-                tagline: 'Showcase & Monetize',
+                tagline: 'A Path We Are Building',
                 color: 'var(--vibrant-gold)',
                 glow: 'glow-gold',
                 points: [
-                  'Feature artwork in the online gallery',
-                  'Offer custom tattoo & art bookings',
-                  'Unlock pro creator perks',
+                  'Feature artwork in your creator portfolio',
+                  'Follow new learning opportunities as they open',
+                  'Stay connected as new pathways take shape',
                 ],
               },
             ].map(({ icon: Icon, phase, title, tagline, color, glow, points }, i) => (

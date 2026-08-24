@@ -99,6 +99,7 @@ const clerkAppearance = {
   },
   elements: {
     rootBox: 'w-full flex justify-center',
+    modalBackdrop: 'bg-black/20 backdrop-blur-[2px]',
     cardBox: 'bg-white rounded-2xl w-[440px] max-w-full overflow-hidden shadow-[0_8px_30px_rgba(44,38,35,0.10)]',
     card: '!shadow-none !border-0 !bg-transparent !rounded-none',
     footer: '!shadow-none !border-0 !bg-transparent !rounded-none',

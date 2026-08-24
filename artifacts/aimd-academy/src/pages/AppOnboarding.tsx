@@ -1,227 +1,288 @@
+import { useState } from 'react';
 import { SignInButton, SignUpButton } from '@clerk/react';
 import { Button } from '@/components/ui/button';
 import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
 import {
+  ArrowLeft,
   ArrowRight,
-  Flame,
-  Trophy,
-  Sparkles,
-  ImageIcon,
-  Compass,
-  GraduationCap,
-  Crown,
   Check,
+  Compass,
+  Flame,
+  GraduationCap,
+  ImageIcon,
+  Sparkles,
+  Trophy,
 } from 'lucide-react';
-
-import { CreatorAppExplainer } from '@/components/video/CreatorAppExplainer';
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
 
-const FEATURES = [
+const SLIDES = [
   {
+    eyebrow: '01 / Build the practice',
+    title: 'Make the work\nvisible.',
+    body: 'Creator Studio gives your practice a home. Track the small sessions that add up, celebrate the days you show up, and keep your creative rhythm in view.',
     icon: Flame,
-    title: 'Daily Streaks & Collectible Badges',
-    body: 'Check in every day you create. Streaks build discipline; collectible badges make the grind visible.',
     color: 'var(--vibrant-coral)',
-    glow: 'glow-magenta',
+    details: [
+      'A daily check-in built around the work you make',
+      'Streaks and collectible badges that recognize consistency',
+      'A personal dashboard for your creative momentum',
+    ],
   },
   {
-    icon: Trophy,
-    title: 'Weekly Creator Challenges',
-    body: 'Themed sprints that push your craft. Compete with the community and climb the leaderboards.',
-    color: 'var(--vibrant-magenta)',
-    glow: 'glow-magenta',
-  },
-  {
-    icon: Sparkles,
-    title: 'Daily Reward Wheel Spins',
-    body: 'Show up, spin, and win. Daily reward wheel spins turn consistency into perks and surprises.',
-    color: 'var(--vibrant-gold)',
-    glow: 'glow-gold',
-  },
-  {
+    eyebrow: '02 / Meet your people',
+    title: 'Find the room\nfor your art.',
+    body: 'Share your process with a community that understands making. Publish work, see what other creators are building, and make a portfolio that is yours.',
     icon: ImageIcon,
-    title: 'Portfolio Publishing',
-    body: 'Publish your best work to your public portfolio and the AIMD gallery — seen by the community, curated to the store.',
     color: 'var(--vibrant-cyan)',
-    glow: 'glow-cyan',
+    details: [
+      'A creator profile and public portfolio',
+      'A community feed for works in progress and finished pieces',
+      'A gallery that celebrates original work and its makers',
+    ],
   },
-];
+  {
+    eyebrow: '03 / Stretch the craft',
+    title: 'Turn a prompt\ninto progress.',
+    body: 'Weekly challenges offer a focused reason to make something new. Bring your own point of view, submit your work, and see what the community creates alongside you.',
+    icon: Trophy,
+    color: 'var(--vibrant-magenta)',
+    details: [
+      'Creator prompts that invite experimentation',
+      'A place to submit your work and follow the challenge',
+      'Recognition for thoughtful, consistent participation',
+    ],
+  },
+  {
+    eyebrow: '04 / Start here',
+    title: 'Your studio\nis waiting.',
+    body: 'Join Art Is My Drug’s creative community today. Your free Creator Studio account is the starting point for making, sharing, and showing up for your craft.',
+    icon: Sparkles,
+    color: 'var(--vibrant-gold)',
+    details: [
+      'Free access to your creator profile and community',
+      'A dashboard designed to support your daily practice',
+      'A growing home for artists across disciplines',
+    ],
+  },
+] as const;
 
-const TIERS = [
+const ROADMAP = [
   {
     icon: Compass,
-    phase: 'Phase 01',
-    title: 'The Discovering Artist',
-    tagline: 'Open Exploration',
-    focus: 'Open exploration for hobbyists & art enthusiasts discovering inspiring communities.',
+    phase: 'Available today',
+    title: 'Discovering Artist',
+    body: 'Build a practice, share your work, and connect with the creative community — free.',
+    points: ['Daily check-in streaks', 'Collectible badges', 'Gallery browsing', 'Community access'],
     color: 'var(--vibrant-cyan)',
-    glow: 'glow-cyan',
-    points: [
-      'Daily check-in streaks',
-      'Collectible badges',
-      'Gallery browsing',
-      'Community access',
-    ],
   },
   {
     icon: GraduationCap,
-    phase: 'Phase 02',
-    title: 'The Dedicated Artist',
-    tagline: 'Workshops & Masterclasses',
-    focus: 'Hands-on mastery for creators ready to learn an actual craft and medium.',
+    phase: 'Planned pathway',
+    title: 'Dedicated Artist',
+    body: 'Hands-on workshops and instructor-led learning will be introduced when the curriculum is ready.',
+    points: ['Multi-medium curriculum', 'Tattoo prep with Poncho The Artist', 'The Art of Basketball', 'Instructor feedback'],
     color: 'var(--vibrant-magenta)',
-    glow: 'glow-magenta',
-    points: [
-      'Multi-medium curriculum — visual arts, garment design, audio production',
-      'Tattoo prep with Poncho The Artist',
-      'The Art of Basketball with David Singleton',
-      'Drills and direct verified instructor feedback',
-    ],
   },
   {
-    icon: Crown,
-    phase: 'Phase 03',
-    title: 'The Professional Artist',
-    tagline: 'Career Paths & Coaching',
-    focus: 'Career acceleration for pro creators and adult artists ready to monetize.',
+    icon: Sparkles,
+    phase: 'Planned pathway',
+    title: 'Professional Artist',
+    body: 'Career coaching and partner opportunities will open when those real-world pathways are in place.',
+    points: ['Coaching opportunities', 'Career-path resources', 'Professional services', 'Partner pipeline opportunities'],
     color: 'var(--vibrant-gold)',
-    glow: 'glow-gold',
-    points: [
-      'All Dedicated Artist access',
-      'Monthly coaching sessions',
-      'Priority Ecosystem Partner & Affiliate Pipeline opportunities',
-      'Professional services access',
-    ],
   },
-];
+] as const;
 
 export default function AppOnboarding() {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const slide = SLIDES[activeSlide];
+  const Icon = slide.icon;
+  const isFinalSlide = activeSlide === SLIDES.length - 1;
+
+  const goToSlide = (index: number) => {
+    setActiveSlide(Math.max(0, Math.min(index, SLIDES.length - 1)));
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <MarketingNav />
 
-      {/* Ethos hero */}
-      <section className="relative border-b border-border overflow-hidden">
-        <div className="container px-6 mx-auto pt-24 pb-16 text-center flex flex-col items-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-8">
-            <Flame className="w-4 h-4" /> The Creator App
-          </div>
-          <h1 className="text-5xl md:text-8xl font-black font-display uppercase leading-[0.85] tracking-tighter mb-6 max-w-4xl">
-            Discipline Eats <span className="text-gradient-brand">Talent.</span>
-          </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mb-12">
-            Talent gets you started. Consistency builds the legacy. Welcome to the Art Is My Drug Digital Studio—built for creators of all ages.
-          </p>
+      <main className="flex-1">
+        <section className="border-b border-border px-4 py-8 md:px-6 md:py-12">
+          <div
+            className="container mx-auto max-w-6xl outline-none"
+            aria-roledescription="carousel"
+            aria-label="Creator Studio feature tour"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === 'ArrowRight') {
+                event.preventDefault();
+                goToSlide(activeSlide + 1);
+              }
+              if (event.key === 'ArrowLeft') {
+                event.preventDefault();
+                goToSlide(activeSlide - 1);
+              }
+            }}
+          >
+            <div className="mb-5 flex items-center justify-between gap-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              <span>Creator Studio by AIMD</span>
+              <span aria-live="polite">Feature {activeSlide + 1} of {SLIDES.length}</span>
+            </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
-            <SignUpButton mode="modal" forceRedirectUrl={`${basePath}/onboarding`} signInForceRedirectUrl={`${basePath}/dashboard`}>
-              <Button size="lg" className="w-full sm:w-auto h-14 px-8 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono font-bold text-sm group">
-                Join The Studio
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </SignUpButton>
-            <SignInButton mode="modal" forceRedirectUrl={`${basePath}/dashboard`}>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 rounded-none uppercase font-mono font-bold text-sm">
-                Log In
-              </Button>
-            </SignInButton>
-          </div>
-
-          {/* Walkthrough tour video container */}
-          <div className="w-full max-w-4xl relative z-10 shadow-2xl shadow-primary/20 rounded-xl">
-            <CreatorAppExplainer />
-          </div>
-        </div>
-      </section>
-
-      {/* Feature highlights */}
-      <section className="py-20 px-6 border-b border-border bg-card">
-        <div className="container mx-auto">
-          <div className="max-w-3xl mb-12">
-            <p className="font-mono text-xs uppercase tracking-widest text-primary mb-3">Inside the Studio</p>
-            <h2 className="text-4xl md:text-6xl font-black font-display uppercase tracking-tight leading-[0.9] mb-4">
-              Built for the <span className="text-gradient-brand">daily grind.</span>
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Passion powers performance. Every feature turns showing up into tangible growth.
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {FEATURES.map(({ icon: Icon, title, body, color, glow }) => (
-              <article key={title} className={`glass-card ${glow} rounded-xl p-6 group hover:-translate-y-1 transition-transform duration-300`}>
-                <div
-                  className="w-12 h-12 rounded-lg border-2 bg-background flex items-center justify-center mb-5"
-                  style={{ borderColor: color }}
-                >
-                  <Icon className="w-5 h-5" style={{ color }} />
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xl shadow-foreground/5">
+              <div
+                className="grid min-h-[540px] md:grid-cols-[1.1fr_0.9fr] motion-safe:transition-opacity motion-safe:duration-300 motion-reduce:transition-none"
+                key={activeSlide}
+              >
+                <div className="relative flex min-h-[320px] flex-col justify-between overflow-hidden bg-foreground p-7 text-background md:min-h-0 md:p-12">
+                  <div
+                    className="absolute -right-16 -top-20 h-64 w-64 rounded-full blur-3xl opacity-70"
+                    style={{ backgroundColor: slide.color }}
+                    aria-hidden="true"
+                  />
+                  <div className="relative">
+                    <div className="mb-8 inline-flex h-14 w-14 items-center justify-center rounded-xl border border-white/25 bg-white/10">
+                      <Icon className="h-6 w-6" style={{ color: slide.color }} aria-hidden="true" />
+                    </div>
+                    <p className="mb-5 font-mono text-xs uppercase tracking-[0.18em] text-white/65">{slide.eyebrow}</p>
+                    <h1 className="whitespace-pre-line font-display text-5xl font-black uppercase leading-[0.86] tracking-tight md:text-7xl">
+                      {slide.title}
+                    </h1>
+                  </div>
+                  <p className="relative mt-8 max-w-md text-base leading-relaxed text-white/75 md:text-lg">
+                    Art Is My Drug is built to make the daily creative practice feel supported, not solitary.
+                  </p>
                 </div>
-                <h3 className="font-display font-black text-xl uppercase tracking-tight mb-2">{title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{body}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* Subscription tiers */}
-      <section className="py-20 px-6 border-b border-border">
-        <div className="container mx-auto">
-          <div className="max-w-3xl mx-auto text-center mb-14">
-            <p className="font-mono text-xs uppercase tracking-widest text-primary mb-3">Choose Your Phase</p>
-            <h2 className="text-4xl md:text-6xl font-black font-display uppercase tracking-tight mb-4">
-              Three Phases. <span className="text-gradient-brand">One Journey.</span>
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              From first check-in to full-time professional — unlock tangible growth through gamified milestones.
-            </p>
-          </div>
+                <div className="flex flex-col justify-between p-7 md:p-12">
+                  <div>
+                    <p className="mb-5 font-mono text-xs uppercase tracking-widest" style={{ color: slide.color }}>Inside the studio</p>
+                    <p className="max-w-lg text-xl leading-relaxed text-muted-foreground md:text-2xl">{slide.body}</p>
+                    <ul className="mt-9 space-y-4">
+                      {slide.details.map((detail) => (
+                        <li key={detail} className="flex items-start gap-3 text-sm leading-relaxed md:text-base">
+                          <Check className="mt-0.5 h-5 w-5 shrink-0" style={{ color: slide.color }} aria-hidden="true" />
+                          <span>{detail}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {TIERS.map(({ icon: Icon, phase, title, tagline, focus, color, glow, points }, i) => (
-              <article key={title} className={`glass-card ${glow} rounded-xl p-7 flex flex-col group hover:-translate-y-1 transition-transform duration-300`}>
-                <div
-                  className="relative w-14 h-14 border-2 bg-background rounded-lg flex items-center justify-center mb-6"
-                  style={{ borderColor: color }}
-                >
-                  <Icon className="w-6 h-6" style={{ color }} />
-                  <span
-                    className="absolute -top-2 -right-2 text-white font-mono text-[10px] font-bold w-6 h-6 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: color }}
-                  >
-                    {i + 1}
-                  </span>
+                  {isFinalSlide && (
+                    <SignUpButton mode="modal" forceRedirectUrl={`${basePath}/onboarding`} signInForceRedirectUrl={`${basePath}/dashboard`}>
+                      <Button size="lg" className="mt-9 h-14 w-full rounded-none bg-primary px-7 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground hover:bg-primary/90 sm:w-auto">
+                        Join The Studio <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
+                      </Button>
+                    </SignUpButton>
+                  )}
                 </div>
-                <p className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color }}>{phase}</p>
-                <h3 className="font-display font-black text-2xl uppercase tracking-tight mb-1">{title}</h3>
-                <p className="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-4">{tagline}</p>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-5">{focus}</p>
-                <ul className="space-y-2.5 flex-1">
-                  {points.map((p) => (
-                    <li key={p} className="flex items-start gap-2.5 text-sm leading-relaxed">
-                      <Check className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color }} />
-                      {p}
-                    </li>
+              </div>
+
+              <div className="flex flex-col gap-4 border-t border-border bg-background px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2" aria-label="Choose a feature">
+                  {SLIDES.map((item, index) => (
+                    <button
+                      key={item.eyebrow}
+                      type="button"
+                      onClick={() => goToSlide(index)}
+                      className="group h-10 px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      aria-label={`Show feature ${index + 1}: ${item.title.replace('\n', ' ')}`}
+                      aria-current={index === activeSlide ? 'step' : undefined}
+                    >
+                      <span
+                        className="block h-1 w-9 rounded-full transition-colors motion-reduce:transition-none"
+                        style={{ backgroundColor: index === activeSlide ? item.color : 'hsl(var(--border))' }}
+                      />
+                    </button>
                   ))}
-                </ul>
-              </article>
-            ))}
-          </div>
-
-          {/* Primary CTA */}
-          <div className="mt-14 flex flex-col items-center gap-3">
-            <SignUpButton mode="modal" forceRedirectUrl={`${basePath}/onboarding`} signInForceRedirectUrl={`${basePath}/dashboard`}>
-              <Button size="lg" className="h-16 px-10 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono font-bold text-base group">
-                 Join The Studio
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </SignUpButton>
-            <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              Free to start · Level up when you're ready
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => goToSlide(activeSlide - 1)}
+                    disabled={activeSlide === 0}
+                    className="h-11 rounded-none border-border px-4 font-mono text-xs font-bold uppercase"
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" /> Previous
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => goToSlide(activeSlide + 1)}
+                    disabled={isFinalSlide}
+                    className="h-11 rounded-none bg-primary px-4 font-mono text-xs font-bold uppercase text-primary-foreground hover:bg-primary/90"
+                  >
+                    Next <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <p className="mt-4 text-center text-sm text-muted-foreground">
+              Use the arrow buttons or left and right arrow keys to explore the studio.
             </p>
           </div>
-        </div>
-      </section>
+        </section>
+
+        <section className="border-b border-border bg-card px-6 py-16">
+          <div className="container mx-auto max-w-5xl text-center">
+            <p className="font-mono text-xs uppercase tracking-widest text-primary">Start creating today</p>
+            <h2 className="mt-4 font-display text-4xl font-black uppercase tracking-tight md:text-6xl">
+              Join the <span className="text-gradient-brand">Studio.</span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+              Your free account opens the door to a consistent creative practice and a community that values the work behind the work.
+            </p>
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <SignUpButton mode="modal" forceRedirectUrl={`${basePath}/onboarding`} signInForceRedirectUrl={`${basePath}/dashboard`}>
+                <Button size="lg" className="h-14 rounded-none bg-primary px-8 font-mono text-sm font-bold uppercase text-primary-foreground hover:bg-primary/90">
+                  Join The Studio <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
+                </Button>
+              </SignUpButton>
+              <SignInButton mode="modal" forceRedirectUrl={`${basePath}/dashboard`}>
+                <Button size="lg" variant="outline" className="h-14 rounded-none px-8 font-mono text-sm font-bold uppercase">
+                  Log In
+                </Button>
+              </SignInButton>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-border px-6 py-16">
+          <div className="container mx-auto">
+            <div className="mx-auto mb-12 max-w-3xl text-center">
+              <p className="font-mono text-xs uppercase tracking-widest text-primary">The creative pathway</p>
+              <h2 className="mt-3 font-display text-4xl font-black uppercase tracking-tight md:text-6xl">
+                One practice. <span className="text-gradient-brand">Many directions.</span>
+              </h2>
+              <p className="mt-4 text-lg text-muted-foreground">
+                Creator Studio starts free today. Workshops and professional pathways will be introduced only when the real learning and career support are ready.
+              </p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-3">
+              {ROADMAP.map(({ icon: PhaseIcon, phase, title, body, points, color }) => (
+                <article key={title} className="glass-card flex flex-col rounded-xl p-7">
+                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-lg border-2 bg-background" style={{ borderColor: color }}>
+                    <PhaseIcon className="h-6 w-6" style={{ color }} aria-hidden="true" />
+                  </div>
+                  <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color }}>{phase}</p>
+                  <h3 className="mt-2 font-display text-2xl font-black uppercase tracking-tight">{title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{body}</p>
+                  <ul className="mt-6 space-y-2.5">
+                    {points.map((point) => (
+                      <li key={point} className="flex items-start gap-2.5 text-sm leading-relaxed">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color }} aria-hidden="true" />
+                        {point}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
 
       <MarketingFooter />
     </div>
