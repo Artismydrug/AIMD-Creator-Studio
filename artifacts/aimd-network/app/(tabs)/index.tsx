@@ -1053,9 +1053,6 @@ export default function ProgressScreen() {
             </>
           )}
 
-          <ProEcosystemPortal user={currentUser} />
-          <MoreFromAimd />
-
           {challengeLoading && !challengeData && (
             <View style={s.challengeBlock}>
               <ActivityIndicator color={colors.primary} />
@@ -1165,6 +1162,9 @@ export default function ProgressScreen() {
               )}
             </View>
           )}
+
+          <ProEcosystemPortal user={currentUser} />
+          <MoreFromAimd />
         </ScrollView>
       )}
 
