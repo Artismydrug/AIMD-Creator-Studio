@@ -70,15 +70,9 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="profile-tab"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="user" size={size} color={color} />
-          ),
-        }}
-      />
+      {/* Profile is part of the Dashboard home base; it remains reachable from
+          the dashboard header and the profile stack screen, not as a fifth tab. */}
+      <Tabs.Screen name="profile-tab" options={{ href: null }} />
       {/* These screens remain deep-linkable, but are not bottom-navigation tabs. */}
       <Tabs.Screen name="events" options={{ href: null }} />
       <Tabs.Screen name="habits" options={{ href: null }} />
