@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useListPlans, useCreateCheckoutSession } from '@workspace/api-client-react';
 import { useGetCurrentUser } from '@workspace/api-client-react';
-import { Check, HeartHandshake, Lock, Sparkles, Zap } from 'lucide-react';
+import { Check, Lock, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
 
@@ -10,8 +10,6 @@ import { Link } from 'wouter';
 
 const TIER_RANK: Record<string, number> = { free: 0, academy: 1, pro: 2 };
 const TIER_DISPLAY_NAMES: Record<string, string> = { free: 'Discovering Artist', academy: 'Dedicated Artist', pro: 'Professional Artist' };
-const PAID_MEMBERSHIPS_COMING_SOON = true;
-
 // ─── Plan card ────────────────────────────────────────────────────────────────
 
 function PlanCard({
@@ -31,8 +29,6 @@ function PlanCard({
   const userRank      = TIER_RANK[userTier ?? 'free'] ?? 0;
   const planRank      = TIER_RANK[plan.tier]  ?? 0;
   const isDowngrade   = planRank < userRank;
-  const isPaidLaunchPending = PAID_MEMBERSHIPS_COMING_SOON && plan.tier !== 'free' && !isCurrentPlan;
-
   // Enforce requested prices locally based on tier
   const localPriceMonthly = plan.tier === 'academy' ? 39 : plan.tier === 'pro' ? 99 : 0;
   const localPriceAnnual = plan.tier === 'academy' ? 399 : plan.tier === 'pro' ? 999 : 0;
@@ -70,10 +66,6 @@ function PlanCard({
             {isCurrentPlan ? (
               <span className="font-mono text-[10px] uppercase tracking-widest text-primary border border-primary/30 bg-primary/10 px-2 py-0.5">
                 Current
-              </span>
-            ) : isPaidLaunchPending ? (
-              <span className="font-mono text-[10px] uppercase tracking-widest text-amber-300 border border-amber-400/30 bg-amber-400/10 px-2 py-0.5">
-                Coming soon
               </span>
             ) : null}
           </div>
@@ -116,14 +108,6 @@ function PlanCard({
             </span>
           </div>
         )}
-        {isPaidLaunchPending && (
-          <div className="mb-6 px-3 py-2 border border-amber-400/30 bg-amber-400/5">
-            <p className="font-mono text-xs text-amber-200">
-              Paid memberships open with the first filmed learning releases and career pipeline launch.
-            </p>
-          </div>
-        )}
-
         {/* CTA */}
         {localPriceMonthly === 0 ? (
           isCurrentPlan ? (
@@ -139,10 +123,6 @@ function PlanCard({
               <Link href="/studio-log">Start Free</Link>
             </Button>
           )
-        ) : isPaidLaunchPending ? (
-          <Button disabled className="w-full h-12 rounded-none font-mono font-bold uppercase tracking-wider border border-amber-400/30 bg-amber-400/10 text-amber-200 opacity-100">
-            Membership coming soon
-          </Button>
         ) : isCurrentPlan ? (
           <Button disabled className="w-full h-12 rounded-none font-mono font-bold uppercase tracking-wider opacity-50">
             Current Plan
@@ -173,110 +153,6 @@ function PlanCard({
   );
 }
 
-// ─── Sponsor section ──────────────────────────────────────────────────────────
-
-function SponsorSection() {
-  const [loading, setLoading] = useState<'39' | '99' | null>(null);
-  const [creator, setCreator] = useState('');
-  const [message, setMessage] = useState('');
-
-  async function startCheckout(amount: '39' | '99') {
-    if (PAID_MEMBERSHIPS_COMING_SOON) return;
-    setLoading(amount);
-    try {
-      const res = await fetch('/api/payments/create-sponsor-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount, creatorName: creator || undefined, message: message || undefined }),
-      });
-      const data = await res.json();
-      if (data.checkoutUrl) window.location.href = data.checkoutUrl;
-    } finally {
-      setLoading(null);
-    }
-  }
-
-  return (
-    <section className="border border-border bg-muted p-8 md:p-10">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center gap-3 mb-2">
-          <HeartHandshake className="w-6 h-6 text-primary" />
-          <span className="font-mono text-[11px] uppercase tracking-widest text-primary">
-            Sponsorship
-          </span>
-        </div>
-        <h2 className="font-display font-black text-3xl uppercase tracking-tight text-white mb-3">
-          Sponsor a Creator
-        </h2>
-        <p className="text-muted-foreground text-sm leading-relaxed mb-8 max-w-xl">
-          Gift a Dedicated Artist or Professional Artist membership to a deserving Discovering Artist. 100% goes directly to the creator's access.
-        </p>
-
-        {/* Optional fields */}
-        <div className="grid sm:grid-cols-2 gap-4 mb-8">
-          <div>
-            <label className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground block mb-1.5">
-              Creator Name (Optional)
-            </label>
-            <input
-              value={creator}
-              onChange={(e) => setCreator(e.target.value)}
-              placeholder="Name or @handle"
-              className="w-full h-10 px-3 bg-background border border-border text-white text-sm font-mono focus:outline-none focus:border-primary/50 placeholder:text-muted-foreground"
-            />
-          </div>
-          <div>
-            <label className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground block mb-1.5">
-              Message (Optional)
-            </label>
-            <input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="A note to the artist..."
-              className="w-full h-10 px-3 bg-background border border-border text-white text-sm font-mono focus:outline-none focus:border-primary/50 placeholder:text-muted-foreground"
-            />
-          </div>
-        </div>
-
-        {/* Sponsor tiers */}
-        <div className="grid sm:grid-cols-2 gap-4">
-          {[
-            {
-              amount: '39' as const,
-              label: 'Dedicated Artist',
-              desc: 'Unlimited habits, full workshop access, certification path — 1 month.',
-              color: 'border-primary/30 hover:border-primary/50',
-            },
-            {
-              amount: '99' as const,
-              label: 'Professional Artist',
-              desc: 'Everything in Dedicated + Studio Ready badge, directory listing, placement priority — 1 month.',
-              color: 'border-violet-500/30 hover:border-violet-500/60',
-            },
-          ].map(({ amount, label, desc, color }) => (
-            <button
-              key={amount}
-              onClick={() => startCheckout(amount)}
-              disabled={PAID_MEMBERSHIPS_COMING_SOON || !!loading}
-              className={`text-left p-5 border ${color} bg-background transition-all group disabled:cursor-not-allowed disabled:opacity-60`}
-            >
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <span className="font-display font-black text-lg uppercase text-white">{label}</span>
-                <span className="font-mono font-bold text-2xl text-white">${amount}</span>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed mb-4">{desc}</p>
-              <div className="flex items-center gap-1.5 font-mono text-xs text-primary group-hover:gap-2 transition-all">
-                <Sparkles className="w-3.5 h-3.5" />
-                {PAID_MEMBERSHIPS_COMING_SOON ? 'Sponsorship coming soon' : loading === amount ? 'Redirecting…' : 'Donate & Sponsor →'}
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Plans() {
@@ -286,6 +162,7 @@ export default function Plans() {
   const [annual, setAnnual] = useState(false);
   const queryClient = useQueryClient();
   const [upgradeStatus, setUpgradeStatus] = useState<'verifying' | 'done' | 'failed' | null>(null);
+  const launchPlans = plans?.filter((plan: any) => plan.tier === 'free' || plan.tier === user?.tier);
 
   // Returning from a successful Stripe Checkout: verify the session with the
   // server (which confirms payment with Stripe) so the new tier applies
@@ -385,7 +262,7 @@ export default function Plans() {
 
         {/* Plan cards */}
         <div className="grid md:grid-cols-3 gap-6 mt-8">
-          {plans?.map((plan: any) => (
+          {launchPlans?.map((plan: any) => (
             <PlanCard
               key={plan.id}
               plan={plan}
@@ -406,8 +283,6 @@ export default function Plans() {
           </p>
         </div>
 
-        {/* Sponsor section */}
-        <SponsorSection />
       </div>
     </div>
   );
