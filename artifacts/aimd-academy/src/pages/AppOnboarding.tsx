@@ -46,19 +46,9 @@ export default function AppOnboarding() {
       <MarketingNav />
 
       <main className="flex-1">
-        <section className="relative overflow-hidden border-b border-border">
-          <div className="container mx-auto flex flex-col items-center px-6 pt-24 pb-16 text-center">
-            <div className="mb-8 inline-flex items-center gap-2 border border-primary/20 bg-primary/10 px-3 py-1 font-mono text-xs uppercase tracking-widest text-primary">
-              <Flame className="h-4 w-4" /> The Creator App
-            </div>
-            <h1 className="mb-6 max-w-4xl font-display text-5xl font-black uppercase leading-[0.85] tracking-tighter md:text-8xl">
-              Discipline Eats <span className="text-gradient-brand">Talent.</span>
-            </h1>
-            <p className="mb-12 max-w-2xl text-xl text-muted-foreground md:text-2xl">
-              Talent gets you started. Consistency builds the legacy. Welcome to the Art Is My Drug Digital Studio—built for creators of all ages.
-            </p>
-
-            <div className="relative z-10 w-full max-w-4xl rounded-xl shadow-2xl shadow-primary/20">
+        <section className="relative flex min-h-[calc(100vh-4.5rem)] items-center overflow-hidden border-b border-border px-4 py-4 md:px-6 md:py-6">
+          <div className="container mx-auto w-full">
+            <div className="relative z-10 w-full rounded-xl shadow-2xl shadow-primary/20">
               <CreatorAppExplainer />
             </div>
           </div>

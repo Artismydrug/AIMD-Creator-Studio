@@ -60,7 +60,7 @@ export function CreatorAppExplainer() {
 
   return (
     <div 
-      className="w-full aspect-video rounded-xl overflow-hidden relative bg-black border border-border/50 text-white select-none @container group"
+      className="w-full h-[calc(100vh-7.5rem)] min-h-[520px] rounded-xl overflow-hidden relative bg-black border border-border/50 text-white select-none @container group"
     >
       {/* Screen Reader Script */}
       <div className="sr-only">
