@@ -89,4 +89,3 @@ export async function getCurrentTier(
   );
 }
 
-export const FREE_HABIT_LIMIT = 3;

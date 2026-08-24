@@ -27,7 +27,7 @@ const NAV_SECTIONS: NavSection[] = [
     heading: 'Creator Studio',
     items: [
       { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      { href: '/community', label: 'Community & Practice', icon: Flame },
+      { href: '/community', label: 'Challenges & Habits', icon: Flame },
       { href: '/events', label: 'Events', icon: Calendar },
     ],
   },

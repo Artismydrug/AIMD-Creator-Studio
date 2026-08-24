@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, desc, gte, sql } from "drizzle-orm";
-import { db, habitsTable, habitLogsTable, usersTable } from "@workspace/db";
+import { db, habitsTable, habitLogsTable } from "@workspace/db";
 import {
   ListHabitsResponse,
   CreateHabitBody,
@@ -18,7 +18,6 @@ import {
   ListHabitLogsQueryParams,
   ListHabitLogsResponse,
 } from "@workspace/api-zod";
-import { FREE_HABIT_LIMIT } from "../middleware/requireTier";
 import { ObjectNotFoundError, ObjectStorageService } from "../lib/objectStorage";
 import { ObjectPermission, getObjectAclPolicy } from "../lib/objectAcl";
 
@@ -108,18 +107,11 @@ router.get("/habits", async (req, res): Promise<void> => {
   const completedToday = new Set(todayLogs.filter((l) => l.completed).map((l) => l.habitId));
   const result = habits.map((h) => ({ ...h, completedToday: completedToday.has(h.id) }));
 
-  // Attach tier and limit metadata for the frontend
-  const [user] = await db.select({ tier: usersTable.tier }).from(usersTable).where(eq(usersTable.id, userId));
-  const tier = user?.tier ?? "free";
-  const limitedTier = tier === "free";
-
   res.json(ListHabitsResponse.parse({
     habits: result,
     meta: {
-      tier,
+      tier: req.dbUser.tier,
       habitCount:  habits.length,
-      habitLimit:  limitedTier ? FREE_HABIT_LIMIT : null,
-      atLimit:     limitedTier && habits.length >= FREE_HABIT_LIMIT,
     },
   }));
 });
@@ -127,21 +119,6 @@ router.get("/habits", async (req, res): Promise<void> => {
 router.post("/habits", async (req, res): Promise<void> => {
   if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
   const userId = req.dbUser!.id;
-
-  // Enforce free tier habit limit
-  const [user] = await db.select({ tier: usersTable.tier }).from(usersTable).where(eq(usersTable.id, userId));
-  if (user?.tier === "free") {
-    const countResult = await db.execute(sql`SELECT count(*)::int AS cnt FROM habits WHERE user_id = ${userId}`);
-    const habitCount = (countResult.rows[0] as any)?.cnt ?? 0;
-    if (habitCount >= FREE_HABIT_LIMIT) {
-      res.status(403).json({
-        error: "habit_limit",
-        limit: FREE_HABIT_LIMIT,
-        message: `Free tier is limited to ${FREE_HABIT_LIMIT} habits. Upgrade to Dedicated Artist for unlimited tracking.`,
-      });
-      return;
-    }
-  }
 
   const parsed = CreateHabitBody.safeParse(req.body);
   if (!parsed.success) {

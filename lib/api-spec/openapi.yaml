@@ -2163,7 +2163,7 @@ components:
 
     HabitListMeta:
       type: object
-      required: [tier, habitCount, habitLimit, atLimit]
+      required: [tier, habitCount]
       properties:
         tier:
           type: string
@@ -2171,11 +2171,6 @@ components:
         habitCount:
           type: integer
           minimum: 0
-        habitLimit:
-          type: ["integer", "null"]
-          minimum: 1
-        atLimit:
-          type: boolean
 
     HabitInput:
       type: object

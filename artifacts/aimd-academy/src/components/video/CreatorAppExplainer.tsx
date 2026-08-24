@@ -1,31 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Flame, Trophy, Sparkles, ImageIcon, Compass, GraduationCap, Crown, Pause, Play, RotateCcw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Flame, Trophy, Sparkles, ImageIcon, Compass, GraduationCap, Crown } from 'lucide-react';
 
-const SCENE_DURATIONS = [4000, 4500, 4500, 4000, 5000, 4000];
-const TOTAL_SCENES = SCENE_DURATIONS.length;
+const TOTAL_SCENES = 6;
 
 export function CreatorAppExplainer() {
   const [currentScene, setCurrentScene] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [playbackCycle, setPlaybackCycle] = useState(0);
   const shouldReduceMotion = useReducedMotion();
 
-  useEffect(() => {
-    if (!isPlaying || shouldReduceMotion) return;
-    
-    let timeout = setTimeout(() => {
-      setCurrentScene((prev) => (prev + 1) % TOTAL_SCENES);
-    }, SCENE_DURATIONS[currentScene]);
-
-    return () => clearTimeout(timeout);
-  }, [currentScene, isPlaying, playbackCycle, shouldReduceMotion]);
-
-  const replayExplainer = () => {
-    setCurrentScene(0);
-    setIsPlaying(true);
-    setPlaybackCycle((cycle) => cycle + 1);
-  };
+  const previousScene = () => setCurrentScene((scene) => (scene - 1 + TOTAL_SCENES) % TOTAL_SCENES);
+  const nextScene = () => setCurrentScene((scene) => (scene + 1) % TOTAL_SCENES);
 
   if (shouldReduceMotion) {
     return (
@@ -117,54 +101,51 @@ export function CreatorAppExplainer() {
         </div>
 
         <AnimatePresence mode="popLayout">
-          {currentScene === 0 && <Scene0 key={`scene0-${playbackCycle}`} />}
-          {currentScene === 1 && <Scene1 key={`scene1-${playbackCycle}`} />}
-          {currentScene === 2 && <Scene2 key={`scene2-${playbackCycle}`} />}
-          {currentScene === 3 && <Scene3 key={`scene3-${playbackCycle}`} />}
-          {currentScene === 4 && <Scene4 key={`scene4-${playbackCycle}`} />}
-          {currentScene === 5 && <Scene5 key={`scene5-${playbackCycle}`} />}
+          {currentScene === 0 && <Scene0 key="scene0" />}
+          {currentScene === 1 && <Scene1 key="scene1" />}
+          {currentScene === 2 && <Scene2 key="scene2" />}
+          {currentScene === 3 && <Scene3 key="scene3" />}
+          {currentScene === 4 && <Scene4 key="scene4" />}
+          {currentScene === 5 && <Scene5 key="scene5" />}
         </AnimatePresence>
       </div>
 
       {/* Persistent Controls & Progress Bar */}
       <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 flex items-center gap-4 z-50 bg-gradient-to-t from-black/80 to-transparent pointer-events-none">
-        {/* Progress Bars */}
-        <div className="flex-1 flex gap-1 md:gap-1.5" aria-hidden="true">
-          {SCENE_DURATIONS.map((duration, i) => (
-            <div key={`${i}-${playbackCycle}`} className="h-1 md:h-1.5 flex-1 bg-white/20 rounded-full overflow-hidden">
-              <motion.div 
-                className="h-full bg-white rounded-full origin-left"
-                initial={{ scaleX: i < currentScene ? 1 : 0 }}
-                animate={{ 
-                  scaleX: i === currentScene ? 1 : i < currentScene ? 1 : 0 
-                }}
-                transition={{ 
-                  duration: i === currentScene ? duration / 1000 : 0, 
-                  ease: 'linear' 
-                }}
-              />
-            </div>
+        {/* Manual slideshow controls */}
+        <button
+          onClick={previousScene}
+          aria-label="Previous Creator Studio slide"
+          className="pointer-events-auto h-[44px] min-w-[44px] flex items-center justify-center gap-1 bg-black/80 hover:bg-black text-white rounded-full border border-white/30 backdrop-blur-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black shadow-lg font-mono text-[10px] uppercase tracking-wide"
+        >
+          <ChevronLeft className="w-5 h-5" />
+          <span className="hidden sm:inline">Previous</span>
+        </button>
+
+        <div className="pointer-events-auto flex-1 flex items-center justify-center gap-1.5" role="tablist" aria-label="Creator Studio slides">
+          {Array.from({ length: TOTAL_SCENES }, (_, index) => (
+            <button
+              key={index}
+              type="button"
+              role="tab"
+              aria-selected={index === currentScene}
+              aria-label={`Go to Creator Studio slide ${index + 1}`}
+              onClick={() => setCurrentScene(index)}
+              className={`h-2.5 rounded-full transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
+                index === currentScene ? 'w-8 bg-white' : 'w-2.5 bg-white/40 hover:bg-white/70'
+              }`}
+            />
           ))}
         </div>
 
-        <div className="pointer-events-auto shrink-0 flex items-center gap-2">
-          <button
-            onClick={() => setIsPlaying((playing) => !playing)}
-            aria-label={isPlaying ? "Pause explainer video" : "Play explainer video"}
-            className="h-[44px] min-w-[44px] px-2.5 flex items-center justify-center gap-1.5 bg-black/80 hover:bg-black text-white rounded-full border border-white/30 backdrop-blur-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black shadow-lg font-mono text-[10px] uppercase tracking-wide"
-          >
-            {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
-            <span>{isPlaying ? 'Pause' : 'Play'}</span>
-          </button>
-          <button
-            onClick={replayExplainer}
-            aria-label="Replay explainer video from the beginning"
-            className="h-[44px] min-w-[44px] px-2.5 flex items-center justify-center gap-1.5 bg-black/80 hover:bg-black text-white rounded-full border border-white/30 backdrop-blur-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black shadow-lg font-mono text-[10px] uppercase tracking-wide"
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span>Replay</span>
-          </button>
-        </div>
+        <button
+          onClick={nextScene}
+          aria-label="Next Creator Studio slide"
+          className="pointer-events-auto h-[44px] min-w-[44px] flex items-center justify-center gap-1 bg-black/80 hover:bg-black text-white rounded-full border border-white/30 backdrop-blur-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black shadow-lg font-mono text-[10px] uppercase tracking-wide"
+        >
+          <span className="hidden sm:inline">Next</span>
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );

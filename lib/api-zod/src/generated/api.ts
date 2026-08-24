@@ -69,7 +69,6 @@ export const listHabitsResponseMetaHabitCountMin = 0;
 
 
 
-
 export const ListHabitsResponse = zod.object({
   "habits": zod.array(zod.object({
   "id": zod.int(),
@@ -84,9 +83,7 @@ export const ListHabitsResponse = zod.object({
 })),
   "meta": zod.object({
   "tier": zod.enum(['free', 'workshop', 'academy', 'pro']),
-  "habitCount": zod.int().min(listHabitsResponseMetaHabitCountMin),
-  "habitLimit": zod.int().min(1).nullable(),
-  "atLimit": zod.boolean()
+  "habitCount": zod.int().min(listHabitsResponseMetaHabitCountMin)
 })
 })
 

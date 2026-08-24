@@ -16,41 +16,6 @@ import { Progress } from '@/components/ui/progress';
 import { Link } from 'wouter';
 import { MediaUpload, type MediaType } from '@/components/MediaUpload';
 
-// ─── Tier limit banner ────────────────────────────────────────────────────────
-
-function TierLimitBanner({ habitCount, limit }: { habitCount: number; limit: number }) {
-  const isAtLimit = habitCount >= limit;
-  return (
-    <div className={`flex items-center justify-between gap-4 px-5 py-4 border ${
-      isAtLimit
-        ? 'border-amber-500/40 bg-amber-500/5'
-        : 'border-border bg-muted/40/50'
-    }`}>
-      <div className="flex items-center gap-3">
-        <Lock className={`w-4 h-4 flex-shrink-0 ${isAtLimit ? 'text-amber-400' : 'text-muted-foreground'}`} />
-        <div>
-          <p className={`font-mono text-xs font-bold uppercase tracking-wider ${isAtLimit ? 'text-amber-400' : 'text-muted-foreground'}`}>
-            Discovering Artist — {habitCount}/{limit} Habits
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {isAtLimit
-              ? 'Habit limit reached. Upgrade to Dedicated Artist for unlimited habit tracking.'
-              : `${limit - habitCount} habit slot${limit - habitCount !== 1 ? 's' : ''} remaining on your free plan.`}
-          </p>
-        </div>
-      </div>
-      {isAtLimit && (
-        <Button asChild className="flex-shrink-0 rounded-none bg-primary hover:bg-primary/90 text-zinc-950 font-bold text-xs uppercase tracking-wider h-8 px-4">
-          <Link href="/plans">
-            <Sparkles className="w-3 h-3 mr-1.5" />
-            Upgrade
-          </Link>
-        </Button>
-      )}
-    </div>
-  );
-}
-
 // ─── Heatmap gate ─────────────────────────────────────────────────────────────
 
 function HeatmapSection({ heatmap, tier }: { heatmap: any[] | undefined; tier: string | undefined }) {
@@ -127,19 +92,13 @@ export default function Habits() {
           <p className="text-muted-foreground font-mono mt-2 font-bold text-primary">Discipline Eats Talent.</p>
           <p className="text-muted-foreground font-mono mt-1 text-xs uppercase tracking-wider">Log your daily grinds. Build the habit.</p>
         </div>
-        {/* Hide create button if free + at limit */}
          <div className="flex items-center gap-3">
            <Link href="/history" className="inline-flex items-center gap-2 border border-border px-4 h-10 font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground hover:border-primary/50">
              <HistoryIcon className="w-3.5 h-3.5" /> History
            </Link>
-           {(!meta || !meta.atLimit) && <CreateHabitDialog />}
+            <CreateHabitDialog />
          </div>
       </header>
-
-      {/* Free tier usage banner */}
-      {meta?.habitLimit && (
-        <TierLimitBanner habitCount={meta.habitCount} limit={meta.habitLimit} />
-      )}
 
       {/* Heatmap */}
       <HeatmapSection heatmap={heatmap as any} tier={tier} />
@@ -157,26 +116,6 @@ export default function Habits() {
           </div>
         )}
 
-        {/* Locked slot cards for free tier */}
-        {meta?.habitLimit && habits && habits.length < meta.habitLimit && [...Array(meta.habitLimit - habits.length)].map((_, i) => (
-          <div key={`empty-${i}`} className="border border-dashed border-border flex flex-col items-center justify-center py-10 opacity-40">
-            <Plus className="w-6 h-6 text-muted-foreground mb-2" />
-            <span className="font-mono text-xs text-muted-foreground uppercase">Empty Slot</span>
-          </div>
-        ))}
-
-        {meta?.atLimit && (
-          <div className="border border-amber-500/20 bg-amber-500/5 flex flex-col items-center justify-center py-10 text-center gap-3 px-4">
-            <Lock className="w-6 h-6 text-amber-400" />
-            <div>
-              <p className="font-display font-bold uppercase text-sm text-white mb-1">Habit Limit Reached</p>
-              <p className="font-mono text-xs text-muted-foreground">Upgrade to Dedicated Artist for unlimited habits.</p>
-            </div>
-            <Button asChild className="rounded-none bg-primary hover:bg-primary/90 text-zinc-950 font-bold text-xs uppercase h-8 px-4">
-              <Link href="/plans">Upgrade →</Link>
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   );

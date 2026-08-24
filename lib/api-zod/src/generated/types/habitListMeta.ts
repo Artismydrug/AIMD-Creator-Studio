@@ -11,10 +11,4 @@ export interface HabitListMeta {
   tier: HabitListMetaTier;
   /** @minimum 0 */
   habitCount: number;
-  /**
-     * @minimum 1
-     * @nullable
-     */
-  habitLimit: number | null;
-  atLimit: boolean;
 }

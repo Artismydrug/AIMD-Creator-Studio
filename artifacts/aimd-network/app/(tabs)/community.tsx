@@ -6,8 +6,9 @@ import { useColors } from '@/hooks/useColors';
 import { safeImpact } from '@/lib/haptics';
 import FeedScreen from '../feed';
 import MessagesScreen from './messages';
+import ChallengesScreen from './challenges';
 
-type CommunitySection = 'feed' | 'messages';
+type CommunitySection = 'challenges' | 'feed' | 'messages';
 
 export default function CommunityScreen() {
   const colors = useColors();
@@ -67,7 +68,7 @@ export default function CommunityScreen() {
           </View>
         </View>
         <View style={s.switcher} accessibilityRole="tablist">
-          {(['feed', 'messages'] as const).map((item) => {
+          {(['challenges', 'feed', 'messages'] as const).map((item) => {
             const active = section === item;
             return (
               <TouchableOpacity
@@ -78,15 +79,17 @@ export default function CommunityScreen() {
                 accessibilityState={{ selected: active }}
                 testID={`community-${item}-tab`}
               >
-                <Feather name={item === 'feed' ? 'image' : 'message-circle'} size={15} color={active ? colors.primary : colors.mutedForeground} />
-                <Text style={[s.switchText, active && s.activeSwitchText]}>{item === 'feed' ? 'Feed' : 'Messages'}</Text>
+                <Feather name={item === 'challenges' ? 'zap' : item === 'feed' ? 'image' : 'message-circle'} size={15} color={active ? colors.primary : colors.mutedForeground} />
+                <Text style={[s.switchText, active && s.activeSwitchText]}>
+                  {item === 'challenges' ? 'Challenges & Habits' : item === 'feed' ? 'Feed' : 'Messages'}
+                </Text>
               </TouchableOpacity>
             );
           })}
         </View>
       </View>
       <View style={s.content}>
-        {section === 'feed' ? <FeedScreen embedded /> : <MessagesScreen embedded />}
+        {section === 'challenges' ? <ChallengesScreen embedded /> : section === 'feed' ? <FeedScreen embedded /> : <MessagesScreen embedded />}
       </View>
     </View>
   );

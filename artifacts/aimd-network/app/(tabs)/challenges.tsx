@@ -32,7 +32,7 @@ import {
   uploadChallengeProof,
 } from '@/lib/challengeProof';
 
-export default function ChallengesScreen() {
+export default function ChallengesScreen({ embedded = false }: { embedded?: boolean }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -54,7 +54,7 @@ export default function ChallengesScreen() {
   const { data: summary } = useGetDashboardSummary();
   const habits = habitsResponse?.habits ?? [];
   const challenge = challengeData?.challenge;
-  const topPad = Platform.OS === 'web' ? 67 : insets.top + 8;
+  const topPad = embedded ? 16 : Platform.OS === 'web' ? 67 : insets.top + 8;
 
   const submitMutation = useSubmitChallengeEntry({
     mutation: {

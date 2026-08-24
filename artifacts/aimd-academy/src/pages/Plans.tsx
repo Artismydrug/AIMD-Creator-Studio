@@ -100,15 +100,6 @@ function PlanCard({
           ))}
         </ul>
 
-        {/* Limits note for free tier */}
-        {plan.tier === 'free' && (
-          <div className="flex items-center gap-2 mb-6 px-3 py-2 bg-muted border border-border">
-            <Lock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-            <span className="font-mono text-xs text-muted-foreground">
-              Habits limit · Module 1 preview only
-            </span>
-          </div>
-        )}
         {/* CTA */}
         {localPriceMonthly === 0 ? (
           isCurrentPlan ? (
