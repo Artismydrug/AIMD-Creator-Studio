@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
@@ -7,19 +8,21 @@ import {
   Trophy,
   Crown,
   Sparkles,
-  Building,
-  Globe,
   HeartHandshake,
   Eye,
 } from 'lucide-react';
 import aimdHeroImg from '@assets/generated_images/aimd-hero.jpg';
 
 export default function About() {
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <MarketingNav />
 
-      {/* Hero */}
+      {/* Community impact and roots */}
       <section className="relative min-h-[60vh] flex items-center border-b border-border overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img src={aimdHeroImg} alt="AIMD Studio" className="w-full h-full object-cover opacity-30" />
@@ -27,29 +30,29 @@ export default function About() {
         </div>
 
         <div className="container relative z-10 px-6 mx-auto py-16">
-          <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-10 items-center">
-            <div className="max-w-4xl">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+            <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-8">
-              <Globe className="w-4 h-4" /> Mission & Vision
+              <Sparkles className="w-4 h-4" /> Our Community Roots
             </div>
             <h1 className="text-5xl md:text-7xl font-black font-display uppercase leading-[0.9] tracking-tighter mb-6">
-              To Bridge Physical Artistry & <span className="text-gradient-brand">Digital Creation.</span>
+              Our Community Impact <span className="text-gradient-brand">&amp; Roots.</span>
             </h1>
             <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl">
-              AIMD (Art Is My Drug) bridges physical artistry, digital creation, and community ownership — a vibrant platform where art is the ultimate form of expression, community, and personal transformation.
+              Art is more than expression—it&apos;s a catalyst for community growth and personal transformation. Art Is My Drug empowers local youth, rising talent, and adult creators alike.
             </p>
             </div>
-            <div className="glass-card rounded-xl p-7 md:p-9">
-              <Sparkles className="w-8 h-8 text-primary mb-6" aria-hidden="true" />
-              <p className="font-mono text-xs uppercase tracking-widest text-primary mb-3">Community impact</p>
-              <h2 className="font-display font-black uppercase tracking-tight text-3xl leading-none mb-4">
-                Creativity belongs <span className="text-gradient-brand">to everyone.</span>
-              </h2>
-              <p className="text-muted-foreground leading-relaxed">
-                From youth art workshops to rising talent and adult creators, Art Is My Drug supports the people and practice behind the work.
-              </p>
-              <div className="mt-7 border-t border-border pt-5 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                The School of Los Angeles · Youth Art Workshop
+            <div className="glass-card rounded-xl p-3 md:p-4">
+              <div className="aspect-video overflow-hidden rounded-lg bg-black">
+                <iframe
+                  className="h-full w-full"
+                  src="https://www.youtube.com/embed/fmVeAgPqNEk"
+                  title="AIMD community workshop"
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
               </div>
             </div>
           </div>
@@ -79,23 +82,6 @@ export default function About() {
               To become the definitive ecosystem for creators and tattoo artists — where passion powers performance, creators unlock tangible growth through gamified milestones, and fans experience art seamlessly across physical studios and digital galleries.
             </p>
           </article>
-        </div>
-      </section>
-
-      {/* Community impact */}
-      <section className="py-20 px-6 border-b border-border bg-card">
-        <div className="container mx-auto">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-6">
-              <Sparkles className="w-4 h-4" /> Our Community Roots
-            </div>
-            <h2 className="text-4xl md:text-6xl font-black font-display uppercase tracking-tight mb-4">
-              Our Community Impact <span className="text-gradient-brand">& Roots.</span>
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Art is more than expression—it's a catalyst for community growth and personal transformation. Art Is My Drug empowers local youth, rising talent, and adult creators alike.
-            </p>
-          </div>
         </div>
       </section>
 
