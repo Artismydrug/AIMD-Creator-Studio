@@ -1,71 +1,17 @@
-import { useState } from 'react';
 import { SignInButton, SignUpButton } from '@clerk/react';
 import { Button } from '@/components/ui/button';
 import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
 import {
-  ArrowLeft,
   ArrowRight,
   Check,
   Compass,
   Flame,
   GraduationCap,
-  ImageIcon,
   Sparkles,
-  Trophy,
 } from 'lucide-react';
+import { CreatorAppExplainer } from '@/components/video/CreatorAppExplainer';
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
-
-const SLIDES = [
-  {
-    eyebrow: '01 / Build the practice',
-    title: 'Make the work\nvisible.',
-    body: 'Creator Studio gives your practice a home. Track the small sessions that add up, celebrate the days you show up, and keep your creative rhythm in view.',
-    icon: Flame,
-    color: 'var(--vibrant-coral)',
-    details: [
-      'A daily check-in built around the work you make',
-      'Streaks and collectible badges that recognize consistency',
-      'A personal dashboard for your creative momentum',
-    ],
-  },
-  {
-    eyebrow: '02 / Meet your people',
-    title: 'Find the room\nfor your art.',
-    body: 'Share your process with a community that understands making. Publish work, see what other creators are building, and make a portfolio that is yours.',
-    icon: ImageIcon,
-    color: 'var(--vibrant-cyan)',
-    details: [
-      'A creator profile and public portfolio',
-      'A community feed for works in progress and finished pieces',
-      'A gallery that celebrates original work and its makers',
-    ],
-  },
-  {
-    eyebrow: '03 / Stretch the craft',
-    title: 'Turn a prompt\ninto progress.',
-    body: 'Weekly challenges offer a focused reason to make something new. Bring your own point of view, submit your work, and see what the community creates alongside you.',
-    icon: Trophy,
-    color: 'var(--vibrant-magenta)',
-    details: [
-      'Creator prompts that invite experimentation',
-      'A place to submit your work and follow the challenge',
-      'Recognition for thoughtful, consistent participation',
-    ],
-  },
-  {
-    eyebrow: '04 / Start here',
-    title: 'Your studio\nis waiting.',
-    body: 'Join Art Is My Drug’s creative community today. Your free Creator Studio account is the starting point for making, sharing, and showing up for your craft.',
-    icon: Sparkles,
-    color: 'var(--vibrant-gold)',
-    details: [
-      'Free access to your creator profile and community',
-      'A dashboard designed to support your daily practice',
-      'A growing home for artists across disciplines',
-    ],
-  },
-] as const;
 
 const ROADMAP = [
   {
@@ -95,133 +41,26 @@ const ROADMAP = [
 ] as const;
 
 export default function AppOnboarding() {
-  const [activeSlide, setActiveSlide] = useState(0);
-  const slide = SLIDES[activeSlide];
-  const Icon = slide.icon;
-  const isFinalSlide = activeSlide === SLIDES.length - 1;
-
-  const goToSlide = (index: number) => {
-    setActiveSlide(Math.max(0, Math.min(index, SLIDES.length - 1)));
-  };
-
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <MarketingNav />
 
       <main className="flex-1">
-        <section className="border-b border-border px-4 py-8 md:px-6 md:py-12">
-          <div
-            className="container mx-auto max-w-6xl outline-none"
-            aria-roledescription="carousel"
-            aria-label="Creator Studio feature tour"
-            tabIndex={0}
-            onKeyDown={(event) => {
-              if (event.key === 'ArrowRight') {
-                event.preventDefault();
-                goToSlide(activeSlide + 1);
-              }
-              if (event.key === 'ArrowLeft') {
-                event.preventDefault();
-                goToSlide(activeSlide - 1);
-              }
-            }}
-          >
-            <div className="mb-5 flex items-center justify-between gap-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              <span>Creator Studio by AIMD</span>
-              <span aria-live="polite">Feature {activeSlide + 1} of {SLIDES.length}</span>
+        <section className="relative overflow-hidden border-b border-border">
+          <div className="container mx-auto flex flex-col items-center px-6 pt-24 pb-16 text-center">
+            <div className="mb-8 inline-flex items-center gap-2 border border-primary/20 bg-primary/10 px-3 py-1 font-mono text-xs uppercase tracking-widest text-primary">
+              <Flame className="h-4 w-4" /> The Creator App
             </div>
-
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xl shadow-foreground/5">
-              <div
-                className="grid min-h-[540px] md:grid-cols-[1.1fr_0.9fr] motion-safe:transition-opacity motion-safe:duration-300 motion-reduce:transition-none"
-                key={activeSlide}
-              >
-                <div className="relative flex min-h-[320px] flex-col justify-between overflow-hidden bg-foreground p-7 text-background md:min-h-0 md:p-12">
-                  <div
-                    className="absolute -right-16 -top-20 h-64 w-64 rounded-full blur-3xl opacity-70"
-                    style={{ backgroundColor: slide.color }}
-                    aria-hidden="true"
-                  />
-                  <div className="relative">
-                    <div className="mb-8 inline-flex h-14 w-14 items-center justify-center rounded-xl border border-white/25 bg-white/10">
-                      <Icon className="h-6 w-6" style={{ color: slide.color }} aria-hidden="true" />
-                    </div>
-                    <p className="mb-5 font-mono text-xs uppercase tracking-[0.18em] text-white/65">{slide.eyebrow}</p>
-                    <h1 className="whitespace-pre-line font-display text-5xl font-black uppercase leading-[0.86] tracking-tight md:text-7xl">
-                      {slide.title}
-                    </h1>
-                  </div>
-                  <p className="relative mt-8 max-w-md text-base leading-relaxed text-white/75 md:text-lg">
-                    Art Is My Drug is built to make the daily creative practice feel supported, not solitary.
-                  </p>
-                </div>
-
-                <div className="flex flex-col justify-between p-7 md:p-12">
-                  <div>
-                    <p className="mb-5 font-mono text-xs uppercase tracking-widest" style={{ color: slide.color }}>Inside the studio</p>
-                    <p className="max-w-lg text-xl leading-relaxed text-muted-foreground md:text-2xl">{slide.body}</p>
-                    <ul className="mt-9 space-y-4">
-                      {slide.details.map((detail) => (
-                        <li key={detail} className="flex items-start gap-3 text-sm leading-relaxed md:text-base">
-                          <Check className="mt-0.5 h-5 w-5 shrink-0" style={{ color: slide.color }} aria-hidden="true" />
-                          <span>{detail}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {isFinalSlide && (
-                    <SignUpButton mode="modal" forceRedirectUrl={`${basePath}/onboarding`} signInForceRedirectUrl={`${basePath}/dashboard`}>
-                      <Button size="lg" className="mt-9 h-14 w-full rounded-none bg-primary px-7 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground hover:bg-primary/90 sm:w-auto">
-                        Join The Studio <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
-                      </Button>
-                    </SignUpButton>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-4 border-t border-border bg-background px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2" aria-label="Choose a feature">
-                  {SLIDES.map((item, index) => (
-                    <button
-                      key={item.eyebrow}
-                      type="button"
-                      onClick={() => goToSlide(index)}
-                      className="group h-10 px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                      aria-label={`Show feature ${index + 1}: ${item.title.replace('\n', ' ')}`}
-                      aria-current={index === activeSlide ? 'step' : undefined}
-                    >
-                      <span
-                        className="block h-1 w-9 rounded-full transition-colors motion-reduce:transition-none"
-                        style={{ backgroundColor: index === activeSlide ? item.color : 'hsl(var(--border))' }}
-                      />
-                    </button>
-                  ))}
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => goToSlide(activeSlide - 1)}
-                    disabled={activeSlide === 0}
-                    className="h-11 rounded-none border-border px-4 font-mono text-xs font-bold uppercase"
-                  >
-                    <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" /> Previous
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => goToSlide(activeSlide + 1)}
-                    disabled={isFinalSlide}
-                    className="h-11 rounded-none bg-primary px-4 font-mono text-xs font-bold uppercase text-primary-foreground hover:bg-primary/90"
-                  >
-                    Next <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <p className="mt-4 text-center text-sm text-muted-foreground">
-              Use the arrow buttons or left and right arrow keys to explore the studio.
+            <h1 className="mb-6 max-w-4xl font-display text-5xl font-black uppercase leading-[0.85] tracking-tighter md:text-8xl">
+              Discipline Eats <span className="text-gradient-brand">Talent.</span>
+            </h1>
+            <p className="mb-12 max-w-2xl text-xl text-muted-foreground md:text-2xl">
+              Talent gets you started. Consistency builds the legacy. Welcome to the Art Is My Drug Digital Studio—built for creators of all ages.
             </p>
+
+            <div className="relative z-10 w-full max-w-4xl rounded-xl shadow-2xl shadow-primary/20">
+              <CreatorAppExplainer />
+            </div>
           </div>
         </section>
 
