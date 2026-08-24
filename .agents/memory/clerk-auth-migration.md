@@ -17,6 +17,13 @@ Declared in `artifacts/api-server/src/middlewares/clerkAuth.ts`. Routes use `req
 - Web (aimd-academy): Clerk cookie session. Never add getToken() or Authorization: Bearer to browser API calls.
 - Mobile (aimd-network): No cookie jar. setAuthTokenGetter(() => getToken()) wired in (tabs)/_layout.tsx via useAuth().getToken from @clerk/expo.
 
+## Staff workspace access
+Use the same Clerk identity for creators, instructors, and admins, but gate Creator Studio HQ and instructor actions with database-authoritative instructor/admin roles.
+
+**Why:** Creators should never need to see or enter a staff workspace, while staff need one protected operational area without managing a separate set of login credentials.
+
+**How to apply:** Keep HQ and instructor API routes role-protected; unaffiliated accounts receive an ordinary access denial, never a server error. A missing linked instructor profile must not be parsed as an instructor record.
+
 ## Mobile native build configuration
 Explicitly register `@clerk/expo` as an Expo config plugin when shipping an iOS build, and keep it on a release compatible with the app's Expo SDK.
 
