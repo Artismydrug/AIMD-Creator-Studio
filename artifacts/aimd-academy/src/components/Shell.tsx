@@ -27,8 +27,7 @@ const NAV_SECTIONS: NavSection[] = [
     heading: 'Creator Studio',
     items: [
       { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      { href: '/community', label: 'Challenges & Habits', icon: Flame },
-      { href: '/events', label: 'Events', icon: Calendar },
+      { href: '/community', label: 'Community', icon: Flame },
     ],
   },
   {
@@ -60,7 +59,6 @@ const BOTTOM_TABS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/community', label: 'Community', icon: Flame },
   { href: '/workshops', label: 'Workshops', icon: GraduationCap },
-  { href: '/events', label: 'Events', icon: Calendar },
   { href: '/profile', label: 'Profile', icon: User },
 ];
 
@@ -379,14 +377,6 @@ function MobileBottomNav({
           label="Workshops"
           icon={GraduationCap}
           active={location === '/workshops' || location.startsWith('/workshops/')}
-        />
-
-        {/* Events */}
-        <BottomTab
-          href="/events"
-          label="Events"
-          icon={Calendar}
-          active={location === '/events'}
         />
 
         {/* Profile */}

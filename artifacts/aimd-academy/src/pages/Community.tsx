@@ -1,19 +1,21 @@
 import { useState } from 'react';
-import { Flame, MessageSquare, Timer } from 'lucide-react';
+import { Calendar, Flame, MessageSquare, Timer } from 'lucide-react';
 import StudioLog from '@/pages/StudioLog';
 import Habits from '@/pages/Habits';
 import Messages from '@/pages/Messages';
+import Events from '@/pages/Events';
 
-type CommunityView = 'challenge' | 'practice' | 'messages';
+type CommunityView = 'feed' | 'practice' | 'messages' | 'events';
 
 const VIEWS: Array<{ id: CommunityView; label: string; description: string; icon: typeof Flame }> = [
-  { id: 'challenge', label: 'Challenge & Community', description: 'Share work, join the weekly brief, and vote for creators.', icon: Flame },
+  { id: 'feed', label: 'Feed & Challenges', description: 'Share work, join the weekly brief, and vote for creators.', icon: Flame },
   { id: 'practice', label: 'Daily Practice', description: 'Build habits, run a session timer, and keep your streak alive.', icon: Timer },
   { id: 'messages', label: 'Messages', description: 'Keep conversations with creators in one place.', icon: MessageSquare },
+  { id: 'events', label: 'Events', description: 'Find pop-ups, gallery activations, and studio gatherings.', icon: Calendar },
 ];
 
 export default function Community() {
-  const [activeView, setActiveView] = useState<CommunityView>('challenge');
+  const [activeView, setActiveView] = useState<CommunityView>('feed');
   const currentView = VIEWS.find((view) => view.id === activeView)!;
 
   return (
@@ -49,9 +51,10 @@ export default function Community() {
       </header>
 
       <div role="tabpanel">
-        {activeView === 'challenge' && <StudioLog />}
+        {activeView === 'feed' && <StudioLog />}
         {activeView === 'practice' && <Habits />}
         {activeView === 'messages' && <Messages />}
+        {activeView === 'events' && <Events />}
       </div>
     </div>
   );

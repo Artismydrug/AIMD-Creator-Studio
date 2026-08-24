@@ -6,9 +6,8 @@ import { useColors } from '@/hooks/useColors';
 import { safeImpact } from '@/lib/haptics';
 import FeedScreen from '../feed';
 import EventsScreen from './events';
-import MessagesScreen from './messages';
 
-type CommunitySection = 'feed' | 'messages' | 'events';
+type CommunitySection = 'feed' | 'events';
 
 export default function CommunityScreen() {
   const colors = useColors();
@@ -72,7 +71,7 @@ export default function CommunityScreen() {
         </View>
         <View style={s.studioRule} />
          <View style={s.switcher} accessibilityRole="tablist">
-          {(['feed', 'messages', 'events'] as const).map((item) => {
+          {(['feed', 'events'] as const).map((item) => {
             const active = section === item;
             return (
               <TouchableOpacity
@@ -83,13 +82,9 @@ export default function CommunityScreen() {
                 accessibilityState={{ selected: active }}
                 testID={`community-${item}-tab`}
               >
-                <Feather
-                  name={item === 'feed' ? 'image' : item === 'messages' ? 'message-circle' : 'calendar'}
-                  size={15}
-                  color={active ? colors.primary : colors.mutedForeground}
-                />
+                <Feather name={item === 'feed' ? 'image' : 'calendar'} size={15} color={active ? colors.primary : colors.mutedForeground} />
                 <Text style={[s.switchText, active && s.activeSwitchText]}>
-                  {item === 'feed' ? 'Feed' : item === 'messages' ? 'Messages' : 'Events'}
+                  {item === 'feed' ? 'Feed' : 'Events'}
                 </Text>
               </TouchableOpacity>
             );
@@ -97,13 +92,7 @@ export default function CommunityScreen() {
         </View>
       </View>
       <View style={s.content}>
-        {section === 'feed' ? (
-          <FeedScreen embedded />
-        ) : section === 'messages' ? (
-          <MessagesScreen embedded />
-        ) : (
-          <EventsScreen embedded />
-        )}
+        {section === 'feed' ? <FeedScreen embedded /> : <EventsScreen embedded />}
       </View>
     </View>
   );
