@@ -391,9 +391,15 @@ export default function EventsScreen({ embedded = false }: { embedded?: boolean 
         </View>
       ) : isError ? (
         <View style={s.centered}>
-          <Feather name="wifi-off" size={40} color={colors.mutedForeground} />
-          <Text style={s.emptyTitle}>Failed to load events</Text>
-          <TouchableOpacity style={s.retryBtn} onPress={() => refetch()}>
+          <Feather name="cloud-off" size={40} color={colors.mutedForeground} />
+          <Text style={s.emptyTitle}>Could not load events. Check your connection.</Text>
+          <TouchableOpacity
+            style={s.retryBtn}
+            onPress={() => void refetch()}
+            accessibilityRole="button"
+            accessibilityLabel="Retry loading events"
+            testID="retry-events-button"
+          >
             <Text style={s.retryText}>Retry</Text>
           </TouchableOpacity>
         </View>
