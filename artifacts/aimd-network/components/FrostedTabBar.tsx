@@ -94,16 +94,20 @@ export default function FrostedTabBar({
                 }
               }}
             >
+              {focused && (
+                <View style={[styles.activeLabel, { backgroundColor: colors.ink }]}>
+                  <Text style={[styles.activeLabelText, { color: colors.background }]}>
+                    {label}
+                  </Text>
+                </View>
+              )}
               <View
                 style={[
                   styles.indicator,
                   focused && { backgroundColor: colors.cyan },
                 ]}
               />
-              <Feather name={iconName} size={20} color={color} />
-              <Text numberOfLines={1} style={[styles.label, { color }]}>
-                {label}
-              </Text>
+              <Feather name={iconName} size={26} color={color} />
             </TouchableOpacity>
           );
         })}
@@ -134,10 +138,21 @@ const styles = StyleSheet.create({
   item: {
     flex: 1,
     minWidth: 48,
-    minHeight: 48,
+    minHeight: 58,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
+    gap: 4,
+  },
+  activeLabel: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    maxWidth: '100%',
+  },
+  activeLabelText: {
+    fontFamily: 'DMSans_600SemiBold',
+    fontSize: 9,
+    lineHeight: 12,
   },
   indicator: {
     width: 22,
@@ -145,9 +160,5 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     marginBottom: 1,
     backgroundColor: 'transparent',
-  },
-  label: {
-    fontFamily: 'DMSans_600SemiBold',
-    fontSize: 10,
   },
 });
