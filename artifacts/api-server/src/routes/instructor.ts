@@ -47,13 +47,21 @@ const router: IRouter = Router();
 
 /** GET /instructor/me */
 router.get("/instructor/me", requireInstructor, async (req, res): Promise<void> => {
-  const profile = req.instructorProfile!;
+  const profile = req.instructorProfile;
+  if (!profile) {
+    res.status(404).json({ error: "Instructor profile not found" });
+    return;
+  }
   res.json(GetInstructorSelfResponse.parse(profile));
 });
 
 /** PATCH /instructor/me */
 router.patch("/instructor/me", requireInstructor, async (req, res): Promise<void> => {
-  const profile = req.instructorProfile!;
+  const profile = req.instructorProfile;
+  if (!profile) {
+    res.status(404).json({ error: "Instructor profile not found" });
+    return;
+  }
 
   const parsed = UpdateInstructorSelfBody.safeParse(req.body);
   if (!parsed.success) {
