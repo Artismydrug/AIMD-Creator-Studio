@@ -52,6 +52,7 @@ import Tattoo from '@/pages/Tattoo';
 import Gallery from '@/pages/Gallery';
 import Instructor from '@/pages/Instructor';
 import ArtistResort from '@/pages/ArtistResort';
+import HQ from '@/pages/HQ';
 
 // ─── Clerk setup ──────────────────────────────────────────────────────────────
 // REQUIRED — resolves the publishable key from the request host so the same
@@ -242,6 +243,7 @@ function AuthenticatedShell() {
           <Route path="/messages"       component={Messages} />
           <Route path="/admin"          component={Admin} />
           <Route path="/instructor"     component={Instructor} />
+          <Route path="/hq"              component={HQ} />
           <Route                        component={NotFound} />
         </Switch>
       </RoutedErrorBoundary>

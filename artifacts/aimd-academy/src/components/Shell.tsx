@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Award, Briefcase, Calendar, Flame, GraduationCap, HeartHandshake, ImagePlus, Menu, ShieldCheck, Sparkles, Timer, User, Users, X, Video, LayoutDashboard } from 'lucide-react';
+import { Award, Briefcase, Calendar, Flame, GraduationCap, HeartHandshake, ImagePlus, Menu, ShieldCheck, Sparkles, Timer, User, Users, X, Video, LayoutDashboard, Building2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useGetCurrentUser, useGetInstructorSelf } from '@workspace/api-client-react';
 import { useAuth, useClerk } from '@clerk/react';
@@ -180,6 +180,7 @@ function SidebarContent({
       items: [
         ...(isInstructor || user?.isAdmin ? [{ href: '/instructor', label: 'Instructor Workspace', icon: Video }] : []),
         ...(user?.isAdmin ? [{ href: '/admin', label: 'Admin Dashboard', icon: ShieldCheck }] : []),
+        ...(user?.isAdmin ? [{ href: '/hq', label: 'Creator Studio HQ', icon: Building2 }] : []),
       ],
     }];
   }
