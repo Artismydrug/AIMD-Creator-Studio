@@ -70,7 +70,7 @@ function CreatorJourney() {
     {
       icon: Trophy,
       title: 'The Dedicated Artist',
-      action: 'Workshops & Masterclasses',
+      action: 'Dedicated Artist · $39/mo · Coming Soon',
       description: 'Learn a real craft from a working artist — a focused tattoo apprenticeship with Poncho The Artist is coming to Creator Studio.',
       color: 'var(--vibrant-magenta)',
       glow: 'glow-magenta',

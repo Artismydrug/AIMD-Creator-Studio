@@ -78,6 +78,10 @@ export default function WorkshopsScreen() {
   } = useListWorkshops(
     { tier: 'workshop' },
   );
+  const tattooWorkshop = workshops?.find((workshop) =>
+    workshop.title.toLowerCase().includes('tattoo apprenticeship')
+    && workshop.title.toLowerCase().includes('poncho'),
+  );
   const workshopQueryId = selectedWorkshopId ?? 0;
   const { data: workshopDetail } = useGetWorkshop(workshopQueryId, {
     query: {
@@ -227,10 +231,27 @@ export default function WorkshopsScreen() {
     assignmentTitle: { fontFamily: 'DMSans_600SemiBold', color: colors.background, fontSize: 13 },
     assignmentMeta: { fontFamily: 'DMSans_400Regular', color: colors.background, opacity: 0.65, fontSize: 11 },
     locked: { margin: 20, padding: 22, borderRadius: colors.radius + 2, borderWidth: 2, borderColor: colors.gold, backgroundColor: colors.goldWash, alignItems: 'center', gap: 10 },
-    promoCard: { margin: 20, padding: 22, borderRadius: colors.radius + 4, borderWidth: 2, borderColor: colors.electricMagenta, backgroundColor: colors.magentaWash, alignItems: 'center', gap: 12 },
-    promoBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.electricMagenta },
+    promoCard: { margin: 20, borderRadius: colors.radius + 4, borderWidth: 2, borderColor: colors.electricMagenta, backgroundColor: colors.card, overflow: 'hidden' },
+    promoArtwork: { height: 184, backgroundColor: colors.ink, position: 'relative', overflow: 'hidden' },
+    promoImage: { width: '100%', height: '100%', opacity: 0.8 },
+    promoArtFallback: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.ink },
+    promoArtCircle: { position: 'absolute', width: 220, height: 220, borderRadius: 110, top: -88, right: -46, backgroundColor: colors.electricMagenta, opacity: 0.84 },
+    promoArtCircleSmall: { position: 'absolute', width: 92, height: 92, borderRadius: 46, bottom: -28, left: 30, backgroundColor: colors.gold },
+    promoArtMark: { fontFamily: 'DMSans_700Bold', fontSize: 12, letterSpacing: 3, color: colors.background, textTransform: 'uppercase' },
+    promoBadge: { position: 'absolute', top: 14, left: 14, flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.electricMagenta },
     promoBadgeText: { fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 1, color: colors.primaryForeground, textTransform: 'uppercase' },
-    promoMeta: { fontFamily: 'DMSans_600SemiBold', fontSize: 12, color: colors.electricMagenta, textTransform: 'uppercase', letterSpacing: 1 },
+    promoArtworkMark: { position: 'absolute', right: 16, bottom: 15, alignItems: 'flex-end', gap: 3 },
+    promoArtworkTitle: { fontFamily: 'DMSans_700Bold', fontSize: 21, color: colors.background, letterSpacing: -0.6 },
+    promoCopy: { padding: 19, gap: 12 },
+    promoTitle: { fontFamily: 'DMSans_700Bold', fontSize: 23, lineHeight: 27, letterSpacing: -0.6, color: colors.foreground },
+    promoMeta: { fontFamily: 'DMSans_700Bold', fontSize: 11, color: colors.electricMagenta, textTransform: 'uppercase', letterSpacing: 1.2 },
+    promoFacts: { flexDirection: 'row', gap: 8 },
+    promoFact: { flex: 1, minHeight: 62, padding: 9, borderRadius: 10, backgroundColor: colors.muted, gap: 5 },
+    promoFactText: { fontFamily: 'DMSans_600SemiBold', fontSize: 10, lineHeight: 13, color: colors.foreground },
+    membershipStrip: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 10, padding: 12, backgroundColor: colors.ink },
+    membershipStripCopy: { flex: 1, gap: 2 },
+    membershipStripTitle: { fontFamily: 'DMSans_700Bold', fontSize: 12, color: colors.cyan, textTransform: 'uppercase', letterSpacing: 0.7 },
+    membershipStripBody: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.background, opacity: 0.82 },
     lockedTitle: { fontFamily: 'DMSans_700Bold', color: colors.foreground, fontSize: 21, textAlign: 'center' },
     lockedBody: { fontFamily: 'DMSans_400Regular', color: colors.mutedForeground, fontSize: 14, lineHeight: 21, textAlign: 'center' },
     upgrade: { minHeight: 46, marginTop: 4, paddingHorizontal: 18, borderRadius: 10, backgroundColor: colors.electricMagenta, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
@@ -255,14 +276,51 @@ export default function WorkshopsScreen() {
         </View>
 
         <View style={s.promoCard} testID="tattoo-apprenticeship-coming-soon">
-          <View style={s.promoBadge}>
-            <Feather name="clock" size={13} color={colors.primaryForeground} />
-            <Text style={s.promoBadgeText}>Coming soon</Text>
+          <View style={s.promoArtwork}>
+            {tattooWorkshop?.thumbnailUrl ? (
+              <Image source={{ uri: tattooWorkshop.thumbnailUrl }} style={s.promoImage} resizeMode="cover" />
+            ) : (
+              <View style={s.promoArtFallback}>
+                <View style={s.promoArtCircle} />
+                <View style={s.promoArtCircleSmall} />
+                <Feather name="edit-3" size={52} color={colors.background} />
+              </View>
+            )}
+            <View style={s.promoBadge}>
+              <Feather name="clock" size={13} color={colors.primaryForeground} />
+              <Text style={s.promoBadgeText}>Coming soon</Text>
+            </View>
+            <View style={s.promoArtworkMark}>
+              <Text style={s.promoArtMark}>AIMD / 01</Text>
+              <Text style={s.promoArtworkTitle}>TATTOO</Text>
+            </View>
           </View>
-          <Feather name="edit-3" size={38} color={colors.electricMagenta} />
-          <Text style={s.cardTitle}>Tattoo Apprenticeship with Poncho The Artist</Text>
-          <Text style={s.promoMeta}>A six-module practice-led workshop</Text>
-          <Text style={s.cardBody}>Preview the kind of focused instruction, drills, and instructor perspective we’re building for AIMD creators.</Text>
+          <View style={s.promoCopy}>
+            <Text style={s.promoMeta}>With Poncho The Artist</Text>
+            <Text style={s.promoTitle}>Tattoo Apprenticeship</Text>
+            <Text style={s.cardBody}>Train your eye. Build your hand. Learn the studio mindset.</Text>
+            <View style={s.promoFacts}>
+              <View style={s.promoFact}>
+                <Feather name="layers" size={16} color={colors.electricMagenta} />
+                <Text style={s.promoFactText}>6 focused modules</Text>
+              </View>
+              <View style={s.promoFact}>
+                <Feather name="video" size={16} color={colors.cyan} />
+                <Text style={s.promoFactText}>30-sec drills</Text>
+              </View>
+              <View style={s.promoFact}>
+                <Feather name="message-circle" size={16} color={colors.gold} />
+                <Text style={s.promoFactText}>Artist feedback</Text>
+              </View>
+            </View>
+            <View style={s.membershipStrip}>
+              <Feather name="award" size={22} color={colors.gold} />
+              <View style={s.membershipStripCopy}>
+                <Text style={s.membershipStripTitle}>Dedicated Artist membership</Text>
+                <Text style={s.membershipStripBody}>Workshop access begins at $39/month when it opens.</Text>
+              </View>
+            </View>
+          </View>
         </View>
 
         {false && (!hasPhaseTwo ? (
