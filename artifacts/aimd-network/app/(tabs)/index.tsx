@@ -42,6 +42,8 @@ import {
   useGetCurrentChallenge,
   getGetCurrentChallengeQueryKey,
   useSubmitChallengeEntry,
+  getGetUserProfileQueryKey,
+  useGetUserProfile,
   getBaseUrl,
   DailySpinResult,
   useGetCurrentUser,
@@ -84,15 +86,30 @@ export default function ProgressScreen() {
     refetch: refetchChallenge
   } = useGetCurrentChallenge();
   const { data: currentUser, refetch: refetchCurrentUser } = useGetCurrentUser();
+  const {
+    data: profileSnapshot,
+    isError: profileIsError,
+    refetch: refetchProfileSnapshot,
+  } = useGetUserProfile(currentUser?.id ?? 0, {
+    query: {
+      enabled: !!currentUser,
+      queryKey: currentUser ? getGetUserProfileQueryKey(currentUser.id) : [],
+    },
+  });
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([refetchProgress(), refetchChallenge(), refetchCurrentUser()]);
+      await Promise.all([
+        refetchProgress(),
+        refetchChallenge(),
+        refetchCurrentUser(),
+        refetchProfileSnapshot(),
+      ]);
     } finally {
       setRefreshing(false);
     }
-  }, [refetchProgress, refetchChallenge, refetchCurrentUser]);
+  }, [refetchProgress, refetchChallenge, refetchCurrentUser, refetchProfileSnapshot]);
 
   // Mutations
   const checkInMut = useCheckInProgress({
@@ -341,6 +358,63 @@ export default function ProgressScreen() {
       borderBottomColor: colors.border,
       alignItems: 'center',
       backgroundColor: colors.card,
+    },
+    profileSnapshot: {
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      backgroundColor: colors.background,
+    },
+    profileSnapshotCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: colors.radius || 4,
+      backgroundColor: colors.card,
+    },
+    profileSnapshotAvatar: {
+      width: 54,
+      height: 54,
+      borderRadius: 27,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.muted,
+      overflow: 'hidden',
+    },
+    profileSnapshotAvatarText: {
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 18,
+      color: colors.primary,
+    },
+    profileSnapshotContent: {
+      flex: 1,
+      minWidth: 0,
+      gap: 5,
+    },
+    profileSnapshotEyebrow: {
+      fontFamily: 'DMSans_500Medium',
+      fontSize: 10,
+      color: colors.primary,
+      letterSpacing: 1.2,
+      textTransform: 'uppercase',
+    },
+    profileSnapshotName: {
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 17,
+      color: colors.foreground,
+    },
+    profileSnapshotStats: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+    },
+    profileSnapshotStat: {
+      fontFamily: 'DMSans_400Regular',
+      fontSize: 12,
+      color: colors.mutedForeground,
     },
     phaseLabel: {
       fontFamily: 'DMSans_500Medium',
@@ -747,7 +821,10 @@ export default function ProgressScreen() {
     );
   }
 
-  const isOfflineMode = (progressIsError && !!progress) || (challengeIsError && !!challengeData);
+  const isOfflineMode =
+    (progressIsError && !!progress) ||
+    (challengeIsError && !!challengeData) ||
+    (profileIsError && !!profileSnapshot);
 
   return (
     <View style={s.container} testID="progress-screen">
@@ -819,6 +896,51 @@ export default function ProgressScreen() {
                   </Text>
                 )}
               </View>
+
+              {currentUser && (
+                <View style={s.profileSnapshot}>
+                  <TouchableOpacity
+                    style={s.profileSnapshotCard}
+                    onPress={() => router.push('/profile')}
+                    testID="dashboard-profile-snapshot"
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open your profile, ${currentUser.username}`}
+                  >
+                    <View style={s.profileSnapshotAvatar}>
+                      {resolveMediaUrl(profileSnapshot?.avatarUrl ?? currentUser.avatarUrl) ? (
+                        <Image
+                          source={{
+                            uri: resolveMediaUrl(profileSnapshot?.avatarUrl ?? currentUser.avatarUrl)!,
+                          }}
+                          style={{ width: 54, height: 54 }}
+                        />
+                      ) : (
+                        <Text style={s.profileSnapshotAvatarText}>
+                          {currentUser.username.slice(0, 2).toUpperCase()}
+                        </Text>
+                      )}
+                    </View>
+                    <View style={s.profileSnapshotContent}>
+                      <Text style={s.profileSnapshotEyebrow}>Your public profile</Text>
+                      <Text style={s.profileSnapshotName} numberOfLines={1}>
+                        @{profileSnapshot?.username ?? currentUser.username}
+                      </Text>
+                      <View style={s.profileSnapshotStats}>
+                        <Text style={s.profileSnapshotStat}>
+                          {profileSnapshot?.followerCount ?? '—'} followers
+                        </Text>
+                        <Text style={s.profileSnapshotStat}>
+                          {profileSnapshot?.followingCount ?? '—'} following
+                        </Text>
+                        <Text style={s.profileSnapshotStat}>
+                          {profileSnapshot?.badgesEarned ?? '—'} badges
+                        </Text>
+                      </View>
+                    </View>
+                    <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+                  </TouchableOpacity>
+                </View>
+              )}
 
               <View style={s.statsGrid}>
                 <View style={s.statCell}>
