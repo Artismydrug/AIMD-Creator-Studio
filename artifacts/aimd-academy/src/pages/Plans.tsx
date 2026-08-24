@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useListPlans, useCreateCheckoutSession } from '@workspace/api-client-react';
 import { useGetCurrentUser } from '@workspace/api-client-react';
-import { Check, Lock, Zap } from 'lucide-react';
+import { BookOpen, BriefcaseBusiness, Compass, Layers3, Sparkles, Users, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
 
@@ -10,6 +10,41 @@ import { Link } from 'wouter';
 
 const TIER_RANK: Record<string, number> = { free: 0, academy: 1, pro: 2 };
 const TIER_DISPLAY_NAMES: Record<string, string> = { free: 'Discovering Artist', academy: 'Dedicated Artist', pro: 'Professional Artist' };
+const TIER_CONTENT = {
+  free: {
+    description: 'Start your practice. Find your people.',
+    icon: Sparkles,
+    features: [
+      { icon: Sparkles, label: 'Make & share' },
+      { icon: Compass, label: 'Daily practice' },
+      { icon: Users, label: 'Community & events' },
+    ],
+  },
+  academy: {
+    description: 'Learn deeper. Get real feedback.',
+    icon: Layers3,
+    features: [
+      { icon: BookOpen, label: 'Masterclasses' },
+      { icon: Users, label: 'Instructor feedback' },
+      { icon: Sparkles, label: 'Badges & priority events' },
+    ],
+  },
+  pro: {
+    description: 'Support for the work beyond the studio.',
+    icon: BriefcaseBusiness,
+    features: [
+      { icon: Compass, label: 'Monthly coaching' },
+      { icon: BriefcaseBusiness, label: 'Creative opportunities' },
+      { icon: Layers3, label: 'Partner pipeline' },
+    ],
+  },
+} as const;
+
+const FALLBACK_PLANS = [
+  { id: 'discovering-artist', tier: 'free', name: 'Discovering Artist', description: '', featured: false, features: [] },
+  { id: 'dedicated-artist', tier: 'academy', name: 'Dedicated Artist', description: '', featured: true, features: [] },
+  { id: 'professional-artist', tier: 'pro', name: 'Professional Artist', description: '', featured: false, features: [] },
+];
 // ─── Plan card ────────────────────────────────────────────────────────────────
 
 function PlanCard({
@@ -30,6 +65,8 @@ function PlanCard({
   const planRank      = TIER_RANK[plan.tier]  ?? 0;
   const isDowngrade   = planRank < userRank;
   const isComingSoon = plan.tier !== 'free' && !isCurrentPlan;
+  const tierContent = TIER_CONTENT[plan.tier as keyof typeof TIER_CONTENT] ?? TIER_CONTENT.free;
+  const TierIcon = tierContent.icon;
   // Enforce requested prices locally based on tier
   const localPriceMonthly = plan.tier === 'academy' ? 39 : plan.tier === 'pro' ? 99 : 0;
   const localPriceAnnual = plan.tier === 'academy' ? 399 : plan.tier === 'pro' ? 999 : 0;
@@ -68,9 +105,16 @@ function PlanCard({
               <span className="font-mono text-[10px] uppercase tracking-widest text-primary border border-primary/30 bg-primary/10 px-2 py-0.5">
                 Current
               </span>
+            ) : isComingSoon ? (
+              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-foreground border border-amber-500/40 bg-amber-400/20 px-2 py-0.5">
+                <Compass className="w-3 h-3" /> Coming soon
+              </span>
             ) : null}
           </div>
-          <p className="text-muted-foreground text-sm leading-relaxed">{plan.description}</p>
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <TierIcon className="w-4 h-4 text-primary shrink-0" />
+            <p>{tierContent.description}</p>
+          </div>
         </div>
 
         {/* Price */}
@@ -92,12 +136,17 @@ function PlanCard({
 
         {/* Features */}
         <ul className="space-y-3 mb-8 flex-1">
-          {plan.features.map((f: string, i: number) => (
-            <li key={i} className="flex items-start gap-3">
-              <Check className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-              <span className="text-sm text-foreground/80">{f}</span>
+          {tierContent.features.map((feature) => {
+            const FeatureIcon = feature.icon;
+            return (
+            <li key={feature.label} className="flex items-start gap-3">
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center border border-primary/20 bg-primary/10 text-primary">
+                <FeatureIcon className="w-3.5 h-3.5" />
+              </span>
+              <span className="text-sm text-foreground/80 pt-1">{feature.label}</span>
             </li>
-          ))}
+            );
+          })}
         </ul>
 
         {/* CTA */}
@@ -161,7 +210,9 @@ export default function Plans() {
   const [annual, setAnnual] = useState(false);
   const queryClient = useQueryClient();
   const [upgradeStatus, setUpgradeStatus] = useState<'verifying' | 'done' | 'failed' | null>(null);
-  const launchPlans = plans;
+  const launchPlans = FALLBACK_PLANS.map(
+    (fallback) => plans?.find((plan: any) => plan.tier === fallback.tier) ?? fallback,
+  );
 
   // Returning from a successful Stripe Checkout: verify the session with the
   // server (which confirms payment with Stripe) so the new tier applies
@@ -232,7 +283,7 @@ export default function Plans() {
             Invest in the Grind
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Free creator access is open now. Dedicated Artist and Professional Artist memberships are planned for a future release.
+            One practice. Three artist paths. Start free.
           </p>
 
           {/* Billing toggle */}
@@ -253,7 +304,7 @@ export default function Plans() {
             >
               Annual
               <span className="ml-1.5 text-[10px] bg-primary/15 text-primary border border-primary/30 px-1 py-0.5">
-                Save up to $189
+                Save
               </span>
             </button>
           </div>
@@ -261,7 +312,7 @@ export default function Plans() {
 
         {/* Plan cards */}
         <div className="grid md:grid-cols-3 gap-6 mt-8">
-          {launchPlans?.map((plan: any) => (
+          {launchPlans.map((plan: any) => (
             <PlanCard
               key={plan.id}
               plan={plan}
@@ -275,11 +326,8 @@ export default function Plans() {
 
         {/* Feature comparison note */}
         <div className="text-center text-xs font-mono text-muted-foreground space-y-1">
-          <p>All plans include access to the AIMD community. Cancel anytime.</p>
-          <p>
-            Dedicated Artist annual billing: $399/year (equivalent to ~$33/mo).{' '}
-            <Link href="/mission" className="text-primary underline">Learn about our mission →</Link>
-          </p>
+          <p>All paths begin in the AIMD community.</p>
+          <Link href="/mission" className="text-primary underline">Learn about our mission →</Link>
         </div>
 
       </div>

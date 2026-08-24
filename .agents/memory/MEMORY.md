@@ -9,3 +9,4 @@
 - [Paid membership rollout](paid-membership-rollout.md) — public launch stays free-only until filmed lessons and career pipelines are ready.
 - [Launch content policy](launch-content-policy.md) — remove fake/demo and unavailable launch surfaces; retain useful form hints and truthful empty states.
 - [Habit access policy](habit-access-policy.md) — habit creation and tracking are unlimited for every membership tier.
+- [Creative UI copy density](creative-ui-copy-density.md) — favor compact, icon-led cues over feature-list paragraphs, especially in membership and pathway screens.

@@ -19,25 +19,25 @@ import { useColors } from '@/hooks/useColors';
 import { safeImpact } from '@/lib/haptics';
 import { useSubscription } from '@/lib/revenuecat';
 
-const discoveringBenefits = [
-  'Community feed, habits, and check-in streaks',
-  'Daily reward wheel and gallery drops',
-  'Creator directory and events',
+type FeatherIcon = React.ComponentProps<typeof Feather>['name'];
+type MembershipBenefit = { icon: FeatherIcon; label: string };
+
+const discoveringBenefits: MembershipBenefit[] = [
+  { icon: 'edit-3', label: 'Make & share' },
+  { icon: 'activity', label: 'Daily practice' },
+  { icon: 'users', label: 'Community & events' },
 ];
 
-const dedicatedBenefits = [
-  'Everything in Discovering Artist',
-  'Multi-medium masterclass library — visual arts, tattoo prep, audio production, garment design, and more',
-  'Direct instructor feedback on assignments',
-  'Badges, certification, and priority events',
+const dedicatedBenefits: MembershipBenefit[] = [
+  { icon: 'play-circle', label: 'Masterclasses' },
+  { icon: 'message-circle', label: 'Instructor feedback' },
+  { icon: 'award', label: 'Badges & priority events' },
 ];
 
-const proBenefits = [
-  'Everything in Dedicated Artist',
-  'Monthly coaching sessions',
-  'Ecosystem Partner and Affiliate Pipeline access',
-  'Priority affiliate tracking and confirmed earnings',
-  'Brand partnership and resident artist applications',
+const proBenefits: MembershipBenefit[] = [
+  { icon: 'compass', label: 'Monthly coaching' },
+  { icon: 'briefcase', label: 'Creative opportunities' },
+  { icon: 'link-2', label: 'Partner pipeline' },
 ];
 function periodLabel(subscriptionPeriod: string | null | undefined): string {
   if (subscriptionPeriod === 'P1Y') return 'per year';
@@ -128,10 +128,12 @@ export default function MembershipScreen() {
     },
     hero: {
       padding: 22,
-      borderRadius: colors.radius,
-      backgroundColor: colors.foreground,
+      borderRadius: colors.radius + 4,
+      backgroundColor: colors.ink,
       gap: 10,
       overflow: 'hidden',
+      borderWidth: 2,
+      borderColor: colors.cyan,
     },
     eyebrow: {
       fontFamily: 'DMSans_700Bold',
@@ -189,6 +191,10 @@ export default function MembershipScreen() {
       borderColor: colors.electricMagenta,
       borderWidth: 2,
     },
+    planComingSoon: {
+      borderWidth: 2,
+      opacity: 0.92,
+    },
     badge: {
       alignSelf: 'flex-start',
       paddingVertical: 5,
@@ -201,6 +207,23 @@ export default function MembershipScreen() {
       fontSize: 10,
       letterSpacing: 0.9,
       color: colors.primaryForeground,
+      textTransform: 'uppercase',
+    },
+    comingSoonBadge: {
+      alignSelf: 'flex-start',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingVertical: 5,
+      paddingHorizontal: 9,
+      borderRadius: 99,
+      backgroundColor: colors.goldWash,
+    },
+    comingSoonBadgeText: {
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 10,
+      letterSpacing: 0.9,
+      color: colors.foreground,
       textTransform: 'uppercase',
     },
     planTop: {
@@ -234,7 +257,15 @@ export default function MembershipScreen() {
       textAlign: 'right',
     },
     benefits: { gap: 8 },
-    benefit: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+    benefit: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    benefitIcon: {
+      width: 26,
+      height: 26,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 8,
+      backgroundColor: colors.muted,
+    },
     benefitText: {
       flex: 1,
       fontFamily: 'DMSans_400Regular',
@@ -252,6 +283,24 @@ export default function MembershipScreen() {
     },
     chooseFeatured: { backgroundColor: colors.electricMagenta },
     chooseDisabled: { opacity: 0.45 },
+    comingSoonAction: {
+      minHeight: 44,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+      backgroundColor: colors.muted,
+    },
+    comingSoonActionText: {
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 13,
+      color: colors.mutedForeground,
+      textTransform: 'uppercase',
+      letterSpacing: 0.7,
+    },
     chooseText: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 14,
@@ -444,9 +493,7 @@ export default function MembershipScreen() {
           <Text style={styles.eyebrow}>Build the whole creative life</Text>
           <Text style={styles.heroTitle}>Discipline Eats Talent</Text>
           <Text style={styles.heroBody}>
-            Free discovery access is always available. Upgrade to unlock the
-            full masterclass library, instructor feedback, and the professional
-            creator pathway.
+            Start free. Build the practice. More pathways are on the way.
           </Text>
           <View style={styles.status}>
             <Feather name="check-circle" size={15} color={colors.gold} />
@@ -468,13 +515,81 @@ export default function MembershipScreen() {
           </View>
           <View style={styles.benefits}>
             {discoveringBenefits.map((benefit) => (
-              <View key={benefit} style={styles.benefit}>
-                <Feather name="check" size={16} color={colors.sunsetCoral} />
-                <Text style={styles.benefitText}>{benefit}</Text>
+              <View key={benefit.label} style={styles.benefit}>
+                <View style={styles.benefitIcon}>
+                  <Feather name={benefit.icon} size={14} color={colors.sunsetCoral} />
+                </View>
+                <Text style={styles.benefitText}>{benefit.label}</Text>
               </View>
             ))}
           </View>
         </View>
+
+        {!hasAcademyAccess && (
+          <View
+            style={[styles.plan, styles.planComingSoon, { borderColor: colors.cyan, backgroundColor: colors.cyanWash }]}
+            testID="membership-dedicated-coming-soon"
+          >
+            <View style={styles.comingSoonBadge}>
+              <Feather name="clock" size={12} color={colors.foreground} />
+              <Text style={styles.comingSoonBadgeText}>Coming soon</Text>
+            </View>
+            <View style={styles.planTop}>
+              <View style={styles.planCopy}>
+                <Text style={styles.planTitle}>Dedicated Artist</Text>
+                <Text style={styles.planDescription}>Learn deeper. Get real feedback.</Text>
+              </View>
+              <Feather name="layers" size={25} color={colors.cyan} />
+            </View>
+            <View style={styles.benefits}>
+              {dedicatedBenefits.map((benefit) => (
+                <View key={benefit.label} style={styles.benefit}>
+                  <View style={styles.benefitIcon}>
+                    <Feather name={benefit.icon} size={14} color={colors.cyan} />
+                  </View>
+                  <Text style={styles.benefitText}>{benefit.label}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.comingSoonAction} accessibilityRole="text">
+              <Feather name="clock" size={15} color={colors.mutedForeground} />
+              <Text style={styles.comingSoonActionText}>Coming soon</Text>
+            </View>
+          </View>
+        )}
+
+        {!hasProAccess && (
+          <View
+            style={[styles.plan, styles.planComingSoon, { borderColor: colors.gold, backgroundColor: colors.goldWash }]}
+            testID="membership-pro-coming-soon"
+          >
+            <View style={styles.comingSoonBadge}>
+              <Feather name="clock" size={12} color={colors.foreground} />
+              <Text style={styles.comingSoonBadgeText}>Coming soon</Text>
+            </View>
+            <View style={styles.planTop}>
+              <View style={styles.planCopy}>
+                <Text style={styles.planTitle}>Professional Artist</Text>
+                <Text style={styles.planDescription}>Support for the work beyond the studio.</Text>
+              </View>
+              <Feather name="compass" size={25} color={colors.gold} />
+            </View>
+            <View style={styles.benefits}>
+              {proBenefits.slice(0, 3).map((benefit) => (
+                <View key={benefit.label} style={styles.benefit}>
+                  <View style={styles.benefitIcon}>
+                    <Feather name={benefit.icon} size={14} color={colors.gold} />
+                  </View>
+                  <Text style={styles.benefitText}>{benefit.label}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.comingSoonAction} accessibilityRole="text">
+              <Feather name="clock" size={15} color={colors.mutedForeground} />
+              <Text style={styles.comingSoonActionText}>Coming soon</Text>
+            </View>
+          </View>
+        )}
 
         {(hasAcademyAccess || hasProAccess) && isLoading ? (
           <View style={styles.centerCard}>
@@ -541,9 +656,11 @@ export default function MembershipScreen() {
 
                   <View style={styles.benefits}>
                     {benefits.map((benefit) => (
-                      <View key={benefit} style={styles.benefit}>
-                        <Feather name="check" size={16} color={colors.sunsetCoral} />
-                        <Text style={styles.benefitText}>{benefit}</Text>
+                      <View key={benefit.label} style={styles.benefit}>
+                        <View style={styles.benefitIcon}>
+                          <Feather name={benefit.icon} size={14} color={colors.sunsetCoral} />
+                        </View>
+                        <Text style={styles.benefitText}>{benefit.label}</Text>
                       </View>
                     ))}
                   </View>
