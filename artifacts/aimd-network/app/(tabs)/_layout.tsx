@@ -64,7 +64,7 @@ export default function TabLayout() {
         name="challenge-habits"
         options={{
           title: 'Challenges & Habits',
-          tabBarLabel: 'Practice',
+          tabBarLabel: 'Challenges & Habits',
           tabBarIcon: ({ color, size }) => (
             <Feather name="zap" size={size} color={color} />
           ),

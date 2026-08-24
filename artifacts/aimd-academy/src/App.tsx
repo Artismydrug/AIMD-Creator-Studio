@@ -46,6 +46,7 @@ import CheckIn from '@/pages/CheckIn';
 import Directory from '@/pages/Directory';
 import Messages from '@/pages/Messages';
 import Community from '@/pages/Community';
+import ChallengesHabits from '@/pages/ChallengesHabits';
 import Admin from '@/pages/Admin';
 import Onboarding from '@/pages/Onboarding';
 import Tattoo from '@/pages/Tattoo';
@@ -223,6 +224,7 @@ function AuthenticatedShell() {
         <Switch>
           <Route path="/dashboard"      component={Dashboard} />
           <Route path="/community"      component={Community} />
+          <Route path="/challenges-habits" component={ChallengesHabits} />
           <Route path="/habits"         component={Habits} />
           <Route path="/studio-log"     component={StudioLog} />
           <Route path="/events"         component={Events} />

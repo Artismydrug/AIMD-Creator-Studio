@@ -28,6 +28,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
       { href: '/community', label: 'Community', icon: Flame },
+      { href: '/challenges-habits', label: 'Challenges & Habits', icon: Award },
     ],
   },
   {
@@ -58,6 +59,7 @@ const NAV_SECTIONS: NavSection[] = [
 const BOTTOM_TABS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/community', label: 'Community', icon: Flame },
+  { href: '/challenges-habits', label: 'Challenges & Habits', icon: Award },
   { href: '/workshops', label: 'Workshops', icon: GraduationCap },
   { href: '/profile', label: 'Profile', icon: User },
 ];
@@ -369,6 +371,14 @@ function MobileBottomNav({
           label="Community"
           icon={Flame}
           active={location === '/community'}
+        />
+
+        {/* Challenges & Habits */}
+        <BottomTab
+          href="/challenges-habits"
+          label="Challenges & Habits"
+          icon={Award}
+          active={location === '/challenges-habits'}
         />
 
         {/* Workshops */}

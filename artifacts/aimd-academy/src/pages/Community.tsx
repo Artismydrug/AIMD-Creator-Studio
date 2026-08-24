@@ -1,15 +1,13 @@
 import { useState } from 'react';
-import { Calendar, Flame, MessageSquare, Timer } from 'lucide-react';
+import { Calendar, Flame, MessageSquare } from 'lucide-react';
 import StudioLog from '@/pages/StudioLog';
-import Habits from '@/pages/Habits';
 import Messages from '@/pages/Messages';
 import Events from '@/pages/Events';
 
-type CommunityView = 'feed' | 'practice' | 'messages' | 'events';
+type CommunityView = 'feed' | 'messages' | 'events';
 
 const VIEWS: Array<{ id: CommunityView; label: string; description: string; icon: typeof Flame }> = [
-  { id: 'feed', label: 'Feed & Challenges', description: 'Share work, join the weekly brief, and vote for creators.', icon: Flame },
-  { id: 'practice', label: 'Daily Practice', description: 'Build habits, run a session timer, and keep your streak alive.', icon: Timer },
+  { id: 'feed', label: 'Feed', description: 'Share work and connect with creators.', icon: Flame },
   { id: 'messages', label: 'Messages', description: 'Keep conversations with creators in one place.', icon: MessageSquare },
   { id: 'events', label: 'Events', description: 'Find pop-ups, gallery activations, and studio gatherings.', icon: Calendar },
 ];
@@ -22,7 +20,7 @@ export default function Community() {
     <div className="min-h-full">
       <header className="px-6 pt-8 pb-5 md:px-10 md:pt-10 border-b border-border bg-card/40">
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-primary mb-2">Creator Studio</p>
-        <h1 className="font-display text-4xl md:text-5xl font-black uppercase tracking-tight">Community & Practice</h1>
+        <h1 className="font-display text-4xl md:text-5xl font-black uppercase tracking-tight">Community</h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">{currentView.description}</p>
 
         <div className="mt-6 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Community views">
@@ -52,7 +50,6 @@ export default function Community() {
 
       <div role="tabpanel">
         {activeView === 'feed' && <StudioLog />}
-        {activeView === 'practice' && <Habits />}
         {activeView === 'messages' && <Messages />}
         {activeView === 'events' && <Events />}
       </div>
