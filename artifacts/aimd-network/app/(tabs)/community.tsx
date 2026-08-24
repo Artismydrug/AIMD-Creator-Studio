@@ -20,31 +20,32 @@ export default function CommunityScreen() {
     header: {
       paddingTop: topPad,
       paddingHorizontal: 16,
-      paddingBottom: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-      gap: 10,
+      paddingBottom: 16,
+      gap: 12,
     },
-    titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    title: { fontFamily: 'DMSans_700Bold', fontSize: 23, color: colors.foreground },
-    subtitle: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.mutedForeground },
+    titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    titleMark: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary },
+    titleCopy: { flex: 1, gap: 2 },
+    title: { fontFamily: 'DMSans_700Bold', fontSize: 26, color: colors.foreground, letterSpacing: -0.6 },
+    subtitle: { fontFamily: 'DMSans_500Medium', fontSize: 12, color: colors.sunsetCoral, letterSpacing: 0.5 },
+    studioRule: { height: 3, width: 56, borderRadius: 3, backgroundColor: colors.cyan },
     switcher: {
       flexDirection: 'row',
       backgroundColor: colors.muted,
-      borderRadius: colors.radius,
-      padding: 3,
+      borderRadius: colors.radius + 2,
+      padding: 4,
       gap: 3,
     },
     switchButton: {
       flex: 1,
       minHeight: 38,
-      borderRadius: colors.radius - 3,
+      borderRadius: colors.radius - 2,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 7,
     },
-    activeSwitch: { backgroundColor: colors.card, shadowColor: colors.foreground, shadowOpacity: 0.08, shadowRadius: 5, elevation: 2 },
+    activeSwitch: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cyan },
     switchText: { fontFamily: 'DMSans_600SemiBold', fontSize: 13, color: colors.mutedForeground },
     activeSwitchText: { color: colors.primary },
     content: { flex: 1 },
@@ -60,12 +61,15 @@ export default function CommunityScreen() {
     <View style={s.container} testID="community-screen">
       <View style={s.header}>
         <View style={s.titleRow}>
-          <Feather name="users" size={20} color={colors.primary} />
-          <View>
+          <View style={s.titleMark}>
+            <Feather name="users" size={19} color={colors.primaryForeground} />
+          </View>
+          <View style={s.titleCopy}>
             <Text style={s.title}>Community</Text>
             <Text style={s.subtitle}>Share the work. Stay connected.</Text>
           </View>
         </View>
+        <View style={s.studioRule} />
         <View style={s.switcher} accessibilityRole="tablist">
           {(['feed', 'events'] as const).map((item) => {
             const active = section === item;

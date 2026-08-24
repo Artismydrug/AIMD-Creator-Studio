@@ -126,27 +126,28 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   row: {
-    minHeight: 64,
-    paddingTop: 8,
+    minHeight: 70,
+    paddingTop: 9,
     borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
   },
   item: {
     flex: 1,
     minWidth: 48,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 3,
   },
   indicator: {
-    width: 18,
-    height: 3,
+    width: 22,
+    height: 4,
     borderRadius: 2,
     marginBottom: 1,
     backgroundColor: 'transparent',
   },
   label: {
     fontFamily: 'DMSans_600SemiBold',
-    fontSize: 9,
+    fontSize: 10,
   },
 });

@@ -78,9 +78,7 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
     header: {
       paddingTop: topPad,
       paddingHorizontal: 16,
-      paddingBottom: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      paddingBottom: 16,
     },
     headerRow: {
       flexDirection: 'row',
@@ -90,13 +88,15 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
     },
     headerTitle: {
       fontFamily: 'DMSans_700Bold',
-      fontSize: 22,
+      fontSize: 26,
       color: colors.foreground,
+      letterSpacing: -0.6,
     },
     addBtn: {
       width: 36,
       height: 36,
-      backgroundColor: colors.primary,
+      backgroundColor: colors.ink,
+      borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -119,6 +119,8 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
       alignItems: 'center',
       borderWidth: 1,
       borderColor: colors.border,
+      borderRadius: colors.radius,
+      overflow: 'hidden',
     },
     statNumber: {
       fontFamily: 'DMSans_700Bold',

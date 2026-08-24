@@ -84,6 +84,8 @@ export default function PostCard({ post, currentUserId, onFollowChanged, onRefre
   const [followerCount, setFollowerCount] = useState(post.followerCount);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const frameColors = [colors.primary, colors.sunsetCoral, colors.cyan, colors.gold];
+  const frameColor = frameColors[post.id % frameColors.length];
 
   const likeMutation = useLikeStudioPost({
     mutation: {
@@ -154,10 +156,13 @@ export default function PostCard({ post, currentUserId, onFollowChanged, onRefre
 
   const s = useMemo(() => StyleSheet.create({
     card: {
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-      paddingVertical: 16,
-      paddingHorizontal: 16,
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: colors.radius + 2,
+      padding: 14,
+      marginHorizontal: 12,
+      marginTop: 12,
     },
     cardHeader: {
       flexDirection: 'row',
@@ -190,7 +195,7 @@ export default function PostCard({ post, currentUserId, onFollowChanged, onRefre
     },
     followButton: {
       borderColor: colors.primary,
-      borderRadius: colors.radius || 0,
+      borderRadius: 99,
       borderWidth: 1,
       minWidth: 74,
       paddingHorizontal: 10,
@@ -206,7 +211,7 @@ export default function PostCard({ post, currentUserId, onFollowChanged, onRefre
       fontSize: 15,
       color: colors.foreground,
       lineHeight: 22,
-      marginBottom: 10,
+      marginBottom: 12,
     },
     tagsRow: {
       flexDirection: 'row',
@@ -215,21 +220,44 @@ export default function PostCard({ post, currentUserId, onFollowChanged, onRefre
       marginBottom: 12,
     },
     tag: {
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 12,
+      fontFamily: 'DMSans_600SemiBold',
+      fontSize: 11,
       color: colors.primary,
+      backgroundColor: colors.magentaWash,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 99,
+    },
+    imageFrame: {
+      position: 'relative',
+      borderRadius: colors.radius,
+      borderWidth: 3,
+      overflow: 'hidden',
+      marginBottom: 12,
     },
     postImage: {
       width: '100%',
       aspectRatio: 1,
-      borderRadius: 4,
-      marginBottom: 10,
       backgroundColor: colors.muted,
+    },
+    imageStamp: {
+      position: 'absolute',
+      right: 10,
+      bottom: 10,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.background,
     },
     actions: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 20,
+      gap: 18,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      paddingTop: 10,
     },
     actionBtn: {
       flexDirection: 'row',
@@ -327,7 +355,7 @@ export default function PostCard({ post, currentUserId, onFollowChanged, onRefre
   }), [colors]);
 
   return (
-    <View style={s.card}>
+    <View style={[s.card, { borderTopColor: frameColor, borderTopWidth: 4 }]}>
       <View style={s.cardHeader}>
         <TouchableOpacity
           accessibilityRole="button"
@@ -362,11 +390,16 @@ export default function PostCard({ post, currentUserId, onFollowChanged, onRefre
       <Text style={s.caption}>{post.caption}</Text>
 
       {resolveImageUrl(post.imageUrl) ? (
-        <Image
-          source={{ uri: resolveImageUrl(post.imageUrl)! }}
-          style={s.postImage}
-          resizeMode="cover"
-        />
+        <View style={[s.imageFrame, { borderColor: frameColor }]}>
+          <Image
+            source={{ uri: resolveImageUrl(post.imageUrl)! }}
+            style={s.postImage}
+            resizeMode="cover"
+          />
+          <View style={s.imageStamp}>
+            <Feather name="aperture" size={15} color={frameColor} />
+          </View>
+        </View>
       ) : null}
 
       {post.tags && post.tags.length > 0 && (

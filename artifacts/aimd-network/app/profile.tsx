@@ -269,8 +269,6 @@ export default function ProfileScreen() {
     screen: { flex: 1, backgroundColor: colors.background },
     header: {
       alignItems: 'center',
-      borderBottomColor: colors.border,
-      borderBottomWidth: 1,
       flexDirection: 'row',
       gap: 12,
       paddingBottom: 12,
@@ -283,18 +281,18 @@ export default function ProfileScreen() {
     state: { alignItems: 'center', gap: 12, justifyContent: 'center', minHeight: 320, padding: 24 },
     stateTitle: { color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 17 },
     stateText: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 14, textAlign: 'center' },
-    overview: { alignItems: 'center', gap: 10, paddingVertical: 8 },
+    overview: { alignItems: 'center', gap: 10, padding: 20, borderRadius: colors.radius + 4, borderWidth: 2, borderColor: colors.primary },
     username: { color: colors.foreground, fontFamily: 'DMSans_700Bold', fontSize: 22 },
     bio: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 20, textAlign: 'center' },
     tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
-    tag: { backgroundColor: colors.muted, borderRadius: colors.radius, paddingHorizontal: 10, paddingVertical: 5 },
+    tag: { backgroundColor: colors.card, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 5 },
     tagText: { color: colors.mutedForeground, fontFamily: 'DMSans_500Medium', fontSize: 12 },
-    metrics: { borderColor: colors.border, borderRadius: colors.radius, borderWidth: 1, flexDirection: 'row', overflow: 'hidden' },
+    metrics: { backgroundColor: colors.card, borderColor: colors.cyan, borderRadius: colors.radius + 2, borderWidth: 2, flexDirection: 'row', overflow: 'hidden' },
     metric: { alignItems: 'center', flex: 1, gap: 3, paddingVertical: 14 },
     metricDivider: { backgroundColor: colors.border, width: 1 },
     metricValue: { color: colors.foreground, fontFamily: 'DMSans_700Bold', fontSize: 17 },
     metricLabel: { color: colors.mutedForeground, fontFamily: 'DMSans_500Medium', fontSize: 10, textTransform: 'uppercase' },
-    statusCard: { borderColor: colors.border, borderRadius: colors.radius, borderWidth: 1, gap: 6, padding: 14 },
+    statusCard: { borderColor: colors.gold, borderRadius: colors.radius + 2, borderWidth: 2, gap: 6, padding: 14 },
     statusTitle: { color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 15 },
     statusText: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 13, lineHeight: 19 },
     badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -336,7 +334,7 @@ export default function ProfileScreen() {
       </View>
 
       <KeyboardAwareScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
-        <View style={s.overview}>
+          <View style={[s.overview, { backgroundColor: colors.magentaWash }]}>
           <Avatar username={me.username} avatarUrl={me.avatarUrl} size={94} />
           <Text style={s.username}>{me.username}</Text>
           {me.bio ? <Text style={s.bio}>{me.bio}</Text> : <Text style={s.bio}>Add a short bio so the community can find your work.</Text>}
@@ -355,7 +353,7 @@ export default function ProfileScreen() {
           <View style={s.metric}><Text style={s.metricValue}>{progress?.currentStreak ?? 0}</Text><Text style={s.metricLabel}>Day streak</Text></View>
         </View>
 
-        <View style={[s.statusCard, { backgroundColor: colors.card }]}>
+        <View style={[s.statusCard, { backgroundColor: colors.goldWash }]}>
           <Text style={s.statusTitle}>{progress?.phase?.phase ?? 'Discovering'} phase · {me.tier === 'free' ? 'Free access' : me.tier}</Text>
           <Text style={s.statusText}>
             {me.tier === 'free'

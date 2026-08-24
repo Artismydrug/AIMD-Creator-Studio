@@ -7,15 +7,6 @@ import { customFetch, useLogHabitSession } from '@workspace/api-client-react';
 import type { Habit } from '@workspace/api-client-react';
 import * as ImagePicker from 'expo-image-picker';
 
-const CATEGORY_COLORS: Record<string, string> = {
-  drawing: '#33cc66',
-  painting: '#a855f7',
-  sculpture: '#f59e0b',
-  photography: '#3b82f6',
-  music: '#ec4899',
-  writing: '#14b8a6',
-};
-
 interface HabitCardProps {
   habit: Habit;
   onLogged?: () => void;
@@ -23,7 +14,15 @@ interface HabitCardProps {
 
 export default function HabitCard({ habit, onLogged }: HabitCardProps) {
   const colors = useColors();
-  const catColor = CATEGORY_COLORS[habit.category?.toLowerCase() ?? ''] ?? colors.mutedForeground;
+  const categoryColors: Record<string, string> = {
+    drawing: colors.cyan,
+    painting: colors.primary,
+    sculpture: colors.gold,
+    photography: colors.sunsetCoral,
+    music: colors.primary,
+    writing: colors.cyan,
+  };
+  const catColor = categoryColors[habit.category?.toLowerCase() ?? ''] ?? colors.mutedForeground;
   const [localDone, setLocalDone] = React.useState(habit.completedToday ?? false);
   const [proof, setProof] = React.useState<{ url: string; mediaType: 'image' | 'video' } | null>(null);
   const [uploadingProof, setUploadingProof] = React.useState(false);
@@ -88,10 +87,14 @@ export default function HabitCard({ habit, onLogged }: HabitCardProps) {
       backgroundColor: colors.card,
       borderWidth: 1,
       borderColor: colors.border,
+      borderRadius: colors.radius,
       padding: 14,
+      paddingLeft: 18,
       marginHorizontal: 16,
       marginBottom: 10,
+      overflow: 'hidden',
     },
+    accentRail: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 5 },
     row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     body: { flex: 1 },
     name: {
@@ -107,8 +110,8 @@ export default function HabitCard({ habit, onLogged }: HabitCardProps) {
     },
     categoryBadge: {
       paddingHorizontal: 8,
-      paddingVertical: 2,
-      backgroundColor: colors.muted,
+      paddingVertical: 3,
+      borderRadius: 99,
     },
     categoryText: {
       fontFamily: 'DMSans_500Medium',
@@ -137,6 +140,7 @@ export default function HabitCard({ habit, onLogged }: HabitCardProps) {
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 2,
+      borderRadius: 12,
     },
     proofButton: {
       alignSelf: 'flex-start',
@@ -148,6 +152,7 @@ export default function HabitCard({ habit, onLogged }: HabitCardProps) {
       borderWidth: 1,
       borderColor: colors.border,
       marginTop: 12,
+      borderRadius: 8,
     },
     proofText: {
       fontFamily: 'DMSans_500Medium',
@@ -158,11 +163,12 @@ export default function HabitCard({ habit, onLogged }: HabitCardProps) {
 
   return (
     <View style={s.card}>
+      <View style={[s.accentRail, { backgroundColor: catColor }]} />
       <View style={s.row}>
         <View style={s.body}>
           <Text style={s.name}>{habit.name}</Text>
           <View style={s.meta}>
-            <View style={s.categoryBadge}>
+            <View style={[s.categoryBadge, { backgroundColor: `${catColor}22` }]}>
               <Text style={[s.categoryText, { color: catColor }]}>{habit.category}</Text>
             </View>
             <View style={s.streak}>

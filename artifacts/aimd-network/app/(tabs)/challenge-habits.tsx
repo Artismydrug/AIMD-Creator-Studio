@@ -16,19 +16,20 @@ export default function ChallengeHabitsScreen() {
   const topPad = Platform.OS === 'web' ? 67 : insets.top + 8;
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
-    header: { paddingTop: topPad, paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 10 },
-    titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    title: { fontFamily: 'DMSans_700Bold', fontSize: 23, color: colors.foreground },
-    subtitle: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.mutedForeground },
-    switcher: { flexDirection: 'row', backgroundColor: colors.muted, borderRadius: colors.radius, padding: 3, gap: 3 },
-    switchButton: { flex: 1, minHeight: 38, borderRadius: colors.radius - 3, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
-    active: { backgroundColor: colors.card, shadowColor: colors.foreground, shadowOpacity: 0.08, shadowRadius: 5, elevation: 2 },
+    header: { paddingTop: topPad, paddingHorizontal: 16, paddingBottom: 16, gap: 12 },
+    titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    titleMark: { width: 38, height: 38, borderRadius: 12, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center' },
+    title: { fontFamily: 'DMSans_700Bold', fontSize: 26, color: colors.foreground, letterSpacing: -0.6 },
+    subtitle: { fontFamily: 'DMSans_500Medium', fontSize: 12, color: colors.sunsetCoral, letterSpacing: 0.4 },
+    switcher: { flexDirection: 'row', backgroundColor: colors.muted, borderRadius: colors.radius + 2, padding: 4, gap: 3 },
+    switchButton: { flex: 1, minHeight: 40, borderRadius: colors.radius - 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
+    active: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.gold },
     switchText: { fontFamily: 'DMSans_600SemiBold', fontSize: 13, color: colors.mutedForeground },
     content: { flex: 1 },
   }), [colors, topPad]);
   return <View style={styles.container} testID="challenge-habits-screen">
     <View style={styles.header}>
-      <View style={styles.titleRow}><Feather name="zap" size={20} color={colors.primary} /><View><Text style={styles.title}>Challenges & Habits</Text><Text style={styles.subtitle}>Build the practice. Share the work.</Text></View></View>
+      <View style={styles.titleRow}><View style={styles.titleMark}><Feather name="zap" size={19} color={colors.accentForeground} /></View><View><Text style={styles.title}>Practice</Text><Text style={styles.subtitle}>Build the practice. Share the work.</Text></View></View>
       <View style={styles.switcher} accessibilityRole="tablist">{(['challenges', 'habits'] as const).map(item => <TouchableOpacity key={item} style={[styles.switchButton, section === item && styles.active]} onPress={() => { if (section !== item) { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSection(item); } }} accessibilityRole="tab" accessibilityState={{ selected: section === item }}><Feather name={item === 'challenges' ? 'award' : 'repeat'} size={15} color={section === item ? colors.primary : colors.mutedForeground} /><Text style={[styles.switchText, section === item && { color: colors.primary }]}>{item === 'challenges' ? 'Challenges' : 'Habits'}</Text></TouchableOpacity>)}</View>
     </View>
     <View style={styles.content}>{section === 'challenges' ? <ChallengesScreen embedded /> : <HabitsScreen embedded />}</View>

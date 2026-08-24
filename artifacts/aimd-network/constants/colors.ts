@@ -21,6 +21,11 @@ const warmCanvas = {
   sunsetCoral: '#FF6B00',
   cyan: '#00F0FF',
   gold: '#E9A319',
+  coralWash: '#FFE1D0',
+  magentaWash: '#FFE0EE',
+  cyanWash: '#D9FBFD',
+  goldWash: '#FFF0CF',
+  ink: '#17343A',
 };
 
 const colors = {

@@ -213,25 +213,26 @@ export default function WorkshopsScreen() {
   const s = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     content: { paddingBottom: Platform.OS === 'web' ? 120 : insets.bottom + 110 },
-    header: { paddingTop: Platform.OS === 'web' ? 77 : insets.top + 16, paddingHorizontal: 20, paddingBottom: 22, gap: 6 },
+    header: { paddingTop: Platform.OS === 'web' ? 77 : insets.top + 16, paddingHorizontal: 20, paddingBottom: 22, gap: 7 },
     eyebrow: { fontFamily: 'DMSans_700Bold', fontSize: 11, letterSpacing: 1.8, textTransform: 'uppercase', color: colors.sunsetCoral },
     title: { fontFamily: 'DMSans_700Bold', fontSize: 30, letterSpacing: -0.8, color: colors.foreground },
     intro: { fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21, color: colors.mutedForeground },
     section: { paddingHorizontal: 20, paddingVertical: 18, gap: 12 },
-    sectionTitle: { fontFamily: 'DMSans_700Bold', fontSize: 19, color: colors.foreground },
+    sectionTitle: { fontFamily: 'DMSans_700Bold', fontSize: 19, color: colors.foreground, letterSpacing: -0.25 },
     trackRow: { gap: 10 },
-    track: { padding: 16, borderRadius: colors.radius, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', gap: 12 },
-    trackIcon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+    track: { padding: 15, borderRadius: colors.radius + 2, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', gap: 12, overflow: 'hidden' },
+    trackIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+    trackIndex: { position: 'absolute', right: 12, top: 10, fontFamily: 'DMSans_700Bold', fontSize: 10, color: colors.mutedForeground, letterSpacing: 1 },
     trackTitle: { fontFamily: 'DMSans_700Bold', fontSize: 15, color: colors.foreground },
     trackMeta: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.mutedForeground },
-    card: { padding: 16, borderRadius: colors.radius, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, gap: 8 },
-    selectedCard: { borderColor: colors.electricMagenta, borderWidth: 2 },
+    card: { padding: 16, borderRadius: colors.radius + 2, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, gap: 8 },
+    selectedCard: { borderColor: colors.electricMagenta, borderWidth: 2, backgroundColor: colors.magentaWash },
     category: { fontFamily: 'DMSans_700Bold', fontSize: 10, color: colors.sunsetCoral, textTransform: 'uppercase', letterSpacing: 1.2 },
     cardTitle: { fontFamily: 'DMSans_700Bold', fontSize: 17, color: colors.foreground },
     cardBody: { fontFamily: 'DMSans_400Regular', fontSize: 13, lineHeight: 19, color: colors.mutedForeground },
     metaRow: { flexDirection: 'row', gap: 14 },
     meta: { fontFamily: 'DMSans_500Medium', fontSize: 11, color: colors.mutedForeground },
-    submissionHub: { marginHorizontal: 20, marginTop: 4, padding: 18, borderRadius: colors.radius, backgroundColor: colors.foreground, gap: 14 },
+    submissionHub: { marginHorizontal: 20, marginTop: 4, padding: 18, borderRadius: colors.radius + 4, backgroundColor: colors.ink, gap: 14, borderWidth: 2, borderColor: colors.cyan },
     submissionHubEyebrow: { fontFamily: 'DMSans_700Bold', color: colors.cyan, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.5 },
     submissionHubTitle: { fontFamily: 'DMSans_700Bold', color: colors.background, fontSize: 24 },
     submissionHubBody: { fontFamily: 'DMSans_400Regular', color: colors.background, opacity: 0.78, fontSize: 13, lineHeight: 19 },
@@ -240,7 +241,7 @@ export default function WorkshopsScreen() {
     chipActive: { backgroundColor: colors.cyan, borderColor: colors.cyan },
     chipText: { fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.background },
     chipTextActive: { color: colors.accentForeground },
-    picker: { padding: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.gold, borderRadius: 10, alignItems: 'center', gap: 6 },
+    picker: { padding: 16, borderWidth: 2, borderStyle: 'dashed', borderColor: colors.gold, borderRadius: 10, alignItems: 'center', gap: 6 },
     pickerText: { fontFamily: 'DMSans_700Bold', color: colors.gold, fontSize: 13 },
     note: { minHeight: 80, padding: 12, borderRadius: 9, backgroundColor: 'rgba(255,255,255,0.09)', color: colors.background, fontFamily: 'DMSans_400Regular', textAlignVertical: 'top' },
     submit: { paddingVertical: 13, borderRadius: 9, backgroundColor: colors.electricMagenta, alignItems: 'center' },
@@ -249,7 +250,7 @@ export default function WorkshopsScreen() {
     assignmentCopy: { flex: 1 },
     assignmentTitle: { fontFamily: 'DMSans_600SemiBold', color: colors.background, fontSize: 13 },
     assignmentMeta: { fontFamily: 'DMSans_400Regular', color: colors.background, opacity: 0.65, fontSize: 11 },
-    locked: { margin: 20, padding: 22, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, alignItems: 'center', gap: 10 },
+    locked: { margin: 20, padding: 22, borderRadius: colors.radius + 2, borderWidth: 2, borderColor: colors.gold, backgroundColor: colors.goldWash, alignItems: 'center', gap: 10 },
     lockedTitle: { fontFamily: 'DMSans_700Bold', color: colors.foreground, fontSize: 21, textAlign: 'center' },
     lockedBody: { fontFamily: 'DMSans_400Regular', color: colors.mutedForeground, fontSize: 14, lineHeight: 21, textAlign: 'center' },
     upgrade: { minHeight: 46, marginTop: 4, paddingHorizontal: 18, borderRadius: 10, backgroundColor: colors.electricMagenta, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
@@ -329,15 +330,17 @@ export default function WorkshopsScreen() {
             <View style={s.section}>
               <Text style={s.sectionTitle}>Featured masterclass tracks</Text>
               <View style={s.trackRow}>
-                {featuredTracks.map((track) => {
+                {featuredTracks.map((track, index) => {
                   const accent = track.accent === 'magenta' ? colors.electricMagenta : track.accent === 'cyan' ? colors.cyan : colors.sunsetCoral;
+                  const accentWash = track.accent === 'magenta' ? colors.magentaWash : track.accent === 'cyan' ? colors.cyanWash : colors.coralWash;
                   return (
-                    <View key={track.title} style={s.track} testID={`track-${track.title.replace(/\s+/g, '-').toLowerCase()}`}>
+                    <View key={track.title} style={[s.track, { borderLeftWidth: 5, borderLeftColor: accent, backgroundColor: accentWash }]} testID={`track-${track.title.replace(/\s+/g, '-').toLowerCase()}`}>
                       <View style={[s.trackIcon, { backgroundColor: accent }]}><Feather name={track.icon} size={19} color={colors.primaryForeground} /></View>
                       <View style={{ flex: 1 }}>
                         <Text style={s.trackTitle}>{track.title}</Text>
                         <Text style={s.trackMeta}>{track.instructor}</Text>
                       </View>
+                      <Text style={s.trackIndex}>0{index + 1}</Text>
                     </View>
                   );
                 })}
