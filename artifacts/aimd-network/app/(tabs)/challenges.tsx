@@ -154,11 +154,13 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
       >
-        <View style={s.header}>
-          <Text style={s.eyebrow}>Weekly practice</Text>
-          <Text style={s.title}>Challenges & Habits</Text>
-          <Text style={s.intro}>Make the work visible. Capture your challenge proof live, then keep your daily practice moving.</Text>
-        </View>
+        {!embedded && (
+          <View style={s.header}>
+            <Text style={s.eyebrow}>Weekly practice</Text>
+            <Text style={s.title}>Challenges & Habits</Text>
+            <Text style={s.intro}>Make the work visible. Capture your challenge proof live, then keep your daily practice moving.</Text>
+          </View>
+        )}
 
         {challengeLoading ? (
           <View style={s.empty}><ActivityIndicator color={colors.primary} /></View>
