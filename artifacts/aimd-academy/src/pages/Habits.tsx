@@ -7,7 +7,7 @@ import {
   useGetHabitHeatmap 
 } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Play, Pause, Square, Plus, Trash2, Check, Flame, Lock, Sparkles } from 'lucide-react';
+import { Play, Pause, Square, Plus, Trash2, Check, Flame, Lock, Sparkles, History as HistoryIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
@@ -72,8 +72,7 @@ function HeatmapSection({ heatmap, tier }: { heatmap: any[] | undefined; tier: s
           <div className="flex gap-1 opacity-20 pointer-events-none select-none">
             {[...Array(30)].map((_, i) => (
               <div key={i} className={`w-4 h-4 rounded-none ${
-                [0,1,2,3,4][Math.floor(Math.random()*5)] === 0 ? 'bg-border' :
-                [1][0] === 1 ? 'bg-primary/30' : 'bg-primary/60'
+                i % 7 === 0 ? 'bg-border' : i % 3 === 0 ? 'bg-primary/30' : 'bg-primary/60'
               }`} />
             ))}
           </div>
@@ -83,18 +82,20 @@ function HeatmapSection({ heatmap, tier }: { heatmap: any[] | undefined; tier: s
           </p>
         </div>
       ) : heatmap && heatmap.length > 0 ? (
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1" aria-label="Practice activity by day">
           {heatmap.slice(-60).map((day, i) => (
             <div
               key={i}
-              className={`w-4 h-4 rounded-none transition-colors ${
+              className={`w-5 h-5 rounded-full transition-colors ${
                 day.level === 0 ? 'bg-background border border-border' :
-                day.level === 1 ? 'bg-primary/30' :
-                day.level === 2 ? 'bg-primary/60' :
-                day.level === 3 ? 'bg-primary/80' :
-                'bg-primary'
+                day.level === 1 ? 'bg-orange-950 border border-orange-800' :
+                day.level === 2 ? 'bg-orange-700' :
+                day.level === 3 ? 'bg-orange-500' :
+                'bg-orange-300'
               }`}
-              title={`${day.date}: ${day.count} logs`}
+              title={`${day.date}: ${day.count} practice ${day.count === 1 ? 'session' : 'sessions'}`}
+              role="img"
+              aria-label={`${day.date}, ${day.count} ${day.count === 1 ? 'session' : 'sessions'}`}
             />
           ))}
         </div>
@@ -126,7 +127,12 @@ export default function Habits() {
           <p className="text-muted-foreground font-mono mt-1 text-xs uppercase tracking-wider">Log your daily grinds. Build the habit.</p>
         </div>
         {/* Hide create button if free + at limit */}
-        {(!meta || !meta.atLimit) && <CreateHabitDialog />}
+         <div className="flex items-center gap-3">
+           <Link href="/history" className="inline-flex items-center gap-2 border border-border px-4 h-10 font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground hover:border-primary/50">
+             <HistoryIcon className="w-3.5 h-3.5" /> History
+           </Link>
+           {(!meta || !meta.atLimit) && <CreateHabitDialog />}
+         </div>
       </header>
 
       {/* Free tier usage banner */}
@@ -183,9 +189,31 @@ function HabitCard({ habit }: { habit: any }) {
   const logSession  = useLogHabitSession();
   const deleteHabit = useDeleteHabit();
   
-  const [isTracking, setIsTracking]     = useState(false);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const storageKey = `aimd-habit-session-${habit.id}`;
+  const [isTracking, setIsTracking] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(storageKey) ?? '{}').isTracking ?? false; } catch { return false; }
+  });
+  const [elapsedSeconds, setElapsedSeconds] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(storageKey) ?? '{}').elapsedSeconds ?? 0; } catch { return 0; }
+  });
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(storageKey);
+    if (!saved) return;
+    try {
+      const session = JSON.parse(saved);
+      if (session.isTracking && session.startedAt) {
+        setElapsedSeconds((session.elapsedSeconds ?? 0) + Math.max(0, Math.floor((Date.now() - session.startedAt) / 1000)));
+      }
+    } catch { /* malformed recovery data is safe to discard */ }
+  }, [storageKey]);
+
+  useEffect(() => {
+    localStorage.setItem(storageKey, JSON.stringify({ isTracking, elapsedSeconds, startedAt: isTracking ? Date.now() : null }));
+  }, [storageKey, isTracking, elapsedSeconds]);
+
+  useEffect(() => () => { if (intervalRef.current) clearInterval(intervalRef.current); }, []);
 
   const startTimer = () => {
     setIsTracking(true);
@@ -208,6 +236,7 @@ function HabitCard({ habit }: { habit: any }) {
         onSuccess: () => {
           toast({ title: 'Session logged!', description: `${Math.max(1, minutes)} minutes recorded.` });
           setElapsedSeconds(0);
+           localStorage.removeItem(storageKey);
           queryClient.invalidateQueries({ queryKey: ['listHabits'] });
           queryClient.invalidateQueries({ queryKey: ['getHabitHeatmap'] });
         },

@@ -1,5 +1,5 @@
 import { useGetDashboardSummary, useGetActivityFeed } from '@workspace/api-client-react';
-import { Flame, Zap, CheckCircle2, TrendingUp, Trophy, ArrowUpRight } from 'lucide-react';
+import { Flame, Zap, CheckCircle2, TrendingUp, Trophy, ArrowUpRight, Coins } from 'lucide-react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -50,6 +50,22 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      <section className="border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-card to-primary/5 p-6 flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-amber-400/20 border border-amber-400/40 flex items-center justify-center">
+            <Coins className="w-6 h-6 text-amber-300" />
+          </div>
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-amber-300">AIMD Points</p>
+            <p className="font-display text-3xl font-black text-foreground">{summary?.points ?? 0}</p>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <Link href="/badges"><Button variant="outline" className="rounded-none font-mono uppercase text-xs">Recognition</Button></Link>
+          <Link href="/history"><Button variant="outline" className="rounded-none font-mono uppercase text-xs">History</Button></Link>
+        </div>
+      </section>
 
       <div className="grid md:grid-cols-3 gap-8">
         {/* Main Column */}

@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Award, Briefcase, Calendar, Flame, GraduationCap, HeartHandshake, ImagePlus, MapPin, Menu, MessageSquare, QrCode, ShieldCheck, Sparkles, Timer, User, Users, X, Video } from 'lucide-react';
+import { Award, Briefcase, Calendar, Flame, GraduationCap, HeartHandshake, History as HistoryIcon, ImagePlus, MapPin, Menu, MessageSquare, QrCode, ShieldCheck, Sparkles, Timer, User, Users, X, Video, LayoutDashboard } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useGetCurrentUser, useGetInstructorSelf } from '@workspace/api-client-react';
 import { useAuth, useClerk } from '@clerk/react';
@@ -26,10 +26,12 @@ const NAV_SECTIONS: NavSection[] = [
   {
     heading: 'Daily Studio',
     items: [
+      { href: '/dashboard',    label: 'Creator Dashboard',         icon: LayoutDashboard },
       { href: '/studio-log',  label: 'Studio Feed',              icon: Flame },
       { href: '/messages',    label: 'Messages',                 icon: MessageSquare },
       { href: '/habits',      label: 'Habit Tracker & Timer',    icon: Timer },
       { href: '/events',      label: 'Community Events',         icon: Calendar },
+      { href: '/history',     label: 'Session History',           icon: HistoryIcon },
       { href: '/checkin',     label: 'Event Check-In',           icon: QrCode },
     ],
   },
@@ -37,7 +39,7 @@ const NAV_SECTIONS: NavSection[] = [
     heading: 'Workshops & Masterclasses',
     items: [
       { href: '/workshops',   label: 'Workshops & Masterclasses',         icon: GraduationCap },
-      { href: '/skill-tracks',label: 'Certifications & Badges',  icon: Award },
+      { href: '/badges',      label: 'Certifications & Badges',  icon: Award },
     ],
   },
   {

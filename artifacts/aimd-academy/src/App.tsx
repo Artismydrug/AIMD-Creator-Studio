@@ -39,6 +39,8 @@ import JobBoard from '@/pages/JobBoard';
 import Sponsor from '@/pages/Sponsor';
 import Plans from '@/pages/Plans';
 import Profile from '@/pages/Profile';
+import Badges from '@/pages/Badges';
+import History from '@/pages/History';
 import Mission from '@/pages/Mission';
 import CheckIn from '@/pages/CheckIn';
 import Directory from '@/pages/Directory';
@@ -230,6 +232,8 @@ function AuthenticatedShell() {
           <Route path="/plans"          component={Plans} />
           <Route path="/profile"        component={Profile} />
           <Route path="/profile/:id"    component={Profile} />
+          <Route path="/badges"         component={Badges} />
+          <Route path="/history"        component={History} />
           <Route path="/mission"        component={Mission} />
           <Route path="/checkin"        component={CheckIn} />
           <Route path="/directory"      component={Directory} />
