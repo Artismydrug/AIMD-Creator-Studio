@@ -6,8 +6,9 @@ import { useColors } from '@/hooks/useColors';
 import { safeImpact } from '@/lib/haptics';
 import FeedScreen from '../feed';
 import EventsScreen from './events';
+import MessagesScreen from './messages';
 
-type CommunitySection = 'feed' | 'events';
+type CommunitySection = 'feed' | 'messages' | 'events';
 
 export default function CommunityScreen() {
   const colors = useColors();
@@ -36,9 +37,9 @@ export default function CommunityScreen() {
       padding: 4,
       gap: 3,
     },
-    switchButton: {
+     switchButton: {
       flex: 1,
-      minHeight: 38,
+       minHeight: 40,
       borderRadius: colors.radius - 2,
       flexDirection: 'row',
       alignItems: 'center',
@@ -70,8 +71,8 @@ export default function CommunityScreen() {
           </View>
         </View>
         <View style={s.studioRule} />
-        <View style={s.switcher} accessibilityRole="tablist">
-          {(['feed', 'events'] as const).map((item) => {
+         <View style={s.switcher} accessibilityRole="tablist">
+          {(['feed', 'messages', 'events'] as const).map((item) => {
             const active = section === item;
             return (
               <TouchableOpacity
@@ -82,9 +83,13 @@ export default function CommunityScreen() {
                 accessibilityState={{ selected: active }}
                 testID={`community-${item}-tab`}
               >
-                <Feather name={item === 'feed' ? 'image' : 'calendar'} size={15} color={active ? colors.primary : colors.mutedForeground} />
+                <Feather
+                  name={item === 'feed' ? 'image' : item === 'messages' ? 'message-circle' : 'calendar'}
+                  size={15}
+                  color={active ? colors.primary : colors.mutedForeground}
+                />
                 <Text style={[s.switchText, active && s.activeSwitchText]}>
-                  {item === 'feed' ? 'Feed' : 'Events'}
+                  {item === 'feed' ? 'Feed' : item === 'messages' ? 'Messages' : 'Events'}
                 </Text>
               </TouchableOpacity>
             );
@@ -92,7 +97,13 @@ export default function CommunityScreen() {
         </View>
       </View>
       <View style={s.content}>
-        {section === 'feed' ? <FeedScreen embedded /> : <EventsScreen embedded />}
+        {section === 'feed' ? (
+          <FeedScreen embedded />
+        ) : section === 'messages' ? (
+          <MessagesScreen embedded />
+        ) : (
+          <EventsScreen embedded />
+        )}
       </View>
     </View>
   );
