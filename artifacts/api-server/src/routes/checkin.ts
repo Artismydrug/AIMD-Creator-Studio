@@ -37,15 +37,6 @@ const EVENTS: Record<string, AimdEvent> = {
         "Present at the AIMD Atlanta Pop-Up. Certified witness to the movement.",
     },
   },
-  "AIMD-MIA26": {
-    code: "AIMD-MIA26",
-    name: "Pro Resident Chair Drop — Miami",
-    badge: {
-      name: "Miami Resident Drop",
-      description:
-        "Attended the Miami Chair Drop event. Early access to resident applications.",
-    },
-  },
   "AIMD-CHI26": {
     code: "AIMD-CHI26",
     name: "AIMD Chicago Art Week",

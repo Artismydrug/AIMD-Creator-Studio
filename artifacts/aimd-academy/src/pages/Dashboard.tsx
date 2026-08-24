@@ -3,7 +3,6 @@ import { Flame, Zap, CheckCircle2, TrendingUp, Trophy, ArrowUpRight, Coins } fro
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { DropsCountdownBanner } from '@/components/DropsCountdownBanner';
 
 export default function Dashboard() {
   const { data: summary, isLoading } = useGetDashboardSummary({ query: { queryKey: ['getDashboardSummary'] } });
@@ -32,9 +31,6 @@ export default function Dashboard() {
           </div>
         </div>
       </header>
-
-      {/* Live drops banner */}
-      <DropsCountdownBanner />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

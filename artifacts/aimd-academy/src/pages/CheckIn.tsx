@@ -33,19 +33,6 @@ const EVENTS: Record<string, AimdEvent> = {
     },
     exclusive: 'Unlock the Atlanta studio directory & guest chair fast-track application.',
   },
-  'AIMD-MIA26': {
-    code: 'AIMD-MIA26',
-    name: 'Pro Resident Chair Drop — Miami',
-    date: 'Aug 12, 2026',
-    location: 'Miami, FL',
-    badge: {
-      name: 'Miami Resident Drop',
-      description: 'Attended the Miami Chair Drop event. Early access to resident applications.',
-      color: 'emerald',
-      symbol: '🌴',
-    },
-    exclusive: 'Priority access to the next 3 Miami studio chair openings.',
-  },
   'AIMD-CHI26': {
     code: 'AIMD-CHI26',
     name: 'AIMD Chicago Art Week',

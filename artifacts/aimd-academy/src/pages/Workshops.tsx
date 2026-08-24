@@ -18,7 +18,7 @@ export default function Workshops() {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border">
         <div>
           <h1 className="text-4xl md:text-5xl font-black font-display uppercase tracking-tight">Workshops</h1>
-          <p className="text-muted-foreground font-mono mt-2">A first look at the AIMD learning studio. More masterclasses are coming soon.</p>
+          <p className="text-muted-foreground font-mono mt-2">Learn directly from working artists through focused, practice-led instruction.</p>
         </div>
       </header>
 
@@ -26,22 +26,11 @@ export default function Workshops() {
         {tattooApprenticeship ? (
           <WorkshopCard workshop={tattooApprenticeship} />
         ) : (
-          <ComingSoonWorkshop title="Tattoo Apprenticeship with Poncho The Artist" description="The first AIMD workshop is being prepared for release." />
+          <div className="md:col-span-2 border border-border bg-card p-8 text-center">
+            <h2 className="text-xl font-bold font-display uppercase tracking-tight mb-2">No workshops available</h2>
+            <p className="text-muted-foreground">There are no published workshops to display right now.</p>
+          </div>
         )}
-        <ComingSoonWorkshop title="More AIMD Workshops" description="New artist-led lessons will appear here as they are filmed and ready to share." />
-      </div>
-    </div>
-  );
-}
-
-function ComingSoonWorkshop({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="border border-dashed border-primary/40 bg-primary/5 p-7 md:p-9 flex flex-col min-h-[360px]">
-      <span className="w-fit font-mono text-[10px] uppercase tracking-widest border border-primary/40 bg-primary/10 text-primary px-2 py-1">Coming soon</span>
-      <div className="my-auto">
-        <PlayCircle className="w-11 h-11 text-primary mb-5" />
-        <h2 className="text-2xl font-bold font-display uppercase tracking-tight mb-3">{title}</h2>
-        <p className="text-muted-foreground">{description}</p>
       </div>
     </div>
   );

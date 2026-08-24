@@ -20,17 +20,17 @@ import { MediaUpload } from '@/components/MediaUpload';
 
 
 const TIER_LABELS: Record<string, { label: string; color: string }> = {
-  free:    { label: 'Discovering Artist',   color: 'text-muted-foreground border-border' },
-  academy: { label: 'Dedicated Artist',     color: 'text-primary border-emerald-500/50' },
-  pro:     { label: 'Professional Artist',  color: 'text-violet-400 border-violet-500/50' },
+  free:    { label: 'Discovering Artist',   color: 'text-foreground border-foreground/30 bg-foreground/5' },
+  academy: { label: 'Dedicated Artist',     color: 'text-emerald-800 border-emerald-700/40 bg-emerald-700/10' },
+  pro:     { label: 'Professional Artist',  color: 'text-violet-800 border-violet-700/40 bg-violet-700/10' },
 };
 
 const DISCIPLINE_COLORS: Record<string, string> = {
   'Tattooing':         'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  'Fine Art':          'bg-violet-500/10 text-violet-400 border-violet-500/20',
-  'Fine Art & Murals': 'bg-violet-500/10 text-violet-400 border-violet-500/20',
-  'Mural & Street Art':'bg-sky-500/10 text-sky-400 border-sky-500/20',
-  'Graphic Design':    'bg-rose-500/10 text-rose-400 border-rose-500/20',
+  'Fine Art':          'bg-violet-700/10 text-violet-800 border-violet-700/25',
+  'Fine Art & Murals': 'bg-violet-700/10 text-violet-800 border-violet-700/25',
+  'Mural & Street Art':'bg-sky-700/10 text-sky-800 border-sky-700/25',
+  'Graphic Design':    'bg-rose-700/10 text-rose-800 border-rose-700/25',
   'Illustration':      'bg-primary/10 text-primary border-primary/20',
 };
 

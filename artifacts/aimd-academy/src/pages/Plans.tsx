@@ -61,7 +61,7 @@ function PlanCard({
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between gap-2 mb-2">
-            <h3 className="font-display font-black text-xl uppercase tracking-tight text-white">
+            <h3 className="font-display font-black text-xl uppercase tracking-tight text-foreground">
               {TIER_DISPLAY_NAMES[plan.tier] ?? plan.name}
             </h3>
             {isCurrentPlan ? (
@@ -76,7 +76,7 @@ function PlanCard({
         {/* Price */}
         <div className="mb-6">
           <div className="flex items-end gap-2">
-            <span className="text-5xl font-black font-display leading-none text-white">
+            <span className="text-5xl font-black font-display leading-none text-foreground">
               ${annual && localPriceAnnual ? localPriceAnnual : localPriceMonthly}
             </span>
             <span className="text-muted-foreground font-mono text-sm pb-1.5">
@@ -110,7 +110,7 @@ function PlanCard({
             <Button
               asChild
               variant="outline"
-              className="w-full h-12 rounded-none font-mono font-bold uppercase tracking-wider border-border text-foreground/80 hover:bg-muted hover:text-white"
+              className="w-full h-12 rounded-none font-mono font-bold uppercase tracking-wider border-border text-foreground/80 hover:bg-muted hover:text-foreground"
             >
               <Link href="/community">Start Free</Link>
             </Button>
@@ -202,7 +202,7 @@ export default function Plans() {
   if (isLoading) return <div className="p-8 font-mono animate-pulse text-muted-foreground">Loading membership tiers…</div>;
 
   return (
-    <div className="min-h-screen bg-background text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-16 py-16">
 
         {/* Post-checkout status */}
@@ -240,7 +240,7 @@ export default function Plans() {
             <button
               onClick={() => setAnnual(false)}
               className={`px-4 py-1.5 font-mono text-xs uppercase tracking-wider transition-colors ${
-                !annual ? 'bg-primary text-zinc-950 font-bold' : 'text-muted-foreground hover:text-white'
+                !annual ? 'bg-primary text-zinc-950 font-bold' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Monthly
@@ -248,7 +248,7 @@ export default function Plans() {
             <button
               onClick={() => setAnnual(true)}
               className={`px-4 py-1.5 font-mono text-xs uppercase tracking-wider transition-colors ${
-                annual ? 'bg-primary text-zinc-950 font-bold' : 'text-muted-foreground hover:text-white'
+                annual ? 'bg-primary text-zinc-950 font-bold' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Annual
