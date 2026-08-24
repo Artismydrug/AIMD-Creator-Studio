@@ -3,12 +3,15 @@ import { View, ActivityIndicator } from 'react-native';
 import { Tabs, Redirect } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
-import { useAuth } from '@clerk/expo';
+import { useAuth, useUser } from '@clerk/expo';
 import FrostedTabBar from '@/components/FrostedTabBar';
 
 export default function TabLayout() {
   const colors = useColors();
   const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
+  const staffRole = String(user?.publicMetadata?.role ?? user?.publicMetadata?.aimdRole ?? '');
+  const canSeeHQ = staffRole === 'admin' || staffRole === 'instructor';
 
   // Show loading spinner while Clerk initialises
   if (!isLoaded) {
@@ -66,6 +69,16 @@ export default function TabLayout() {
           title: 'Profile',
           tabBarIcon: ({ color, size }) => (
             <Feather name="user" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="hq"
+        options={{
+          title: 'HQ',
+          href: canSeeHQ ? '/(tabs)/hq' : null,
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="shield" size={size} color={color} />
           ),
         }}
       />

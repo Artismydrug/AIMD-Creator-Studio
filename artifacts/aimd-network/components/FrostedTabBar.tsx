@@ -18,6 +18,7 @@ const icons: Record<string, keyof typeof Feather.glyphMap> = {
   community: 'users',
   workshops: 'play-circle',
   'profile-tab': 'user',
+  hq: 'shield',
 };
 
 type FrostedTabBarProps = {
