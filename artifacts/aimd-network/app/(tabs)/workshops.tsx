@@ -35,9 +35,33 @@ import WorkshopLessonPlayer, { type WorkshopLesson } from '@/components/Workshop
 
 const featuredTracks = [
   {
+    icon: 'feather' as const,
+    title: 'Visual Arts Foundations',
+    instructor: 'Drawing, painting, and mixed media',
+    accent: 'coral' as const,
+  },
+  {
     icon: 'edit-3' as const,
     title: 'Tattoo Apprenticeship Prep with Poncho The Artist',
     instructor: 'Poncho The Artist',
+    accent: 'magenta' as const,
+  },
+  {
+    icon: 'headphones' as const,
+    title: 'Audio Production',
+    instructor: 'Beat-making and studio fundamentals',
+    accent: 'cyan' as const,
+  },
+  {
+    icon: 'scissors' as const,
+    title: 'Garment Design',
+    instructor: 'Pattern, construction, and finish',
+    accent: 'coral' as const,
+  },
+  {
+    icon: 'activity' as const,
+    title: 'The Art of Basketball',
+    instructor: 'David Singleton',
     accent: 'magenta' as const,
   },
 ];
@@ -78,12 +102,12 @@ export default function WorkshopsScreen() {
   } = useListWorkshops(
     { tier: 'workshop' },
   );
-  const tattooWorkshop = workshops?.find((workshop) =>
-    workshop.title.toLowerCase().includes('tattoo apprenticeship')
-    && workshop.title.toLowerCase().includes('poncho'),
-  );
   const workshopQueryId = selectedWorkshopId ?? 0;
-  const { data: workshopDetail } = useGetWorkshop(workshopQueryId, {
+  const {
+    data: workshopDetail,
+    isError: workshopDetailError,
+    refetch: refetchWorkshopDetail,
+  } = useGetWorkshop(workshopQueryId, {
     query: {
       // Signed-in free members receive the server-enforced Module 1 preview.
       enabled: selectedWorkshopId !== null,
@@ -111,8 +135,9 @@ export default function WorkshopsScreen() {
   }, [selectedWorkshopId, workshops]);
 
   useEffect(() => {
-    if (workshopDetail?.modules[0] && selectedModuleId === null) {
-      setSelectedModuleId(workshopDetail.modules[0].id);
+    const firstModule = workshopDetail?.modules?.[0];
+    if (firstModule && selectedModuleId === null) {
+      setSelectedModuleId(firstModule.id);
     }
   }, [selectedModuleId, workshopDetail]);
 
@@ -193,26 +218,25 @@ export default function WorkshopsScreen() {
   const s = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     content: { paddingBottom: Platform.OS === 'web' ? 120 : insets.bottom + 110 },
-    header: { paddingTop: Platform.OS === 'web' ? 77 : insets.top + 16, paddingHorizontal: 20, paddingBottom: 22, gap: 7 },
+    header: { paddingTop: Platform.OS === 'web' ? 77 : insets.top + 16, paddingHorizontal: 20, paddingBottom: 22, gap: 6 },
     eyebrow: { fontFamily: 'DMSans_700Bold', fontSize: 11, letterSpacing: 1.8, textTransform: 'uppercase', color: colors.sunsetCoral },
     title: { fontFamily: 'DMSans_700Bold', fontSize: 30, letterSpacing: -0.8, color: colors.foreground },
     intro: { fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21, color: colors.mutedForeground },
     section: { paddingHorizontal: 20, paddingVertical: 18, gap: 12 },
-    sectionTitle: { fontFamily: 'DMSans_700Bold', fontSize: 19, color: colors.foreground, letterSpacing: -0.25 },
+    sectionTitle: { fontFamily: 'DMSans_700Bold', fontSize: 19, color: colors.foreground },
     trackRow: { gap: 10 },
-    track: { padding: 15, borderRadius: colors.radius + 2, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', gap: 12, overflow: 'hidden' },
-    trackIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-    trackIndex: { position: 'absolute', right: 12, top: 10, fontFamily: 'DMSans_700Bold', fontSize: 10, color: colors.mutedForeground, letterSpacing: 1 },
+    track: { padding: 16, borderRadius: colors.radius, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', gap: 12 },
+    trackIcon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
     trackTitle: { fontFamily: 'DMSans_700Bold', fontSize: 15, color: colors.foreground },
     trackMeta: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.mutedForeground },
-    card: { padding: 16, borderRadius: colors.radius + 2, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, gap: 8 },
-    selectedCard: { borderColor: colors.electricMagenta, borderWidth: 2, backgroundColor: colors.magentaWash },
+    card: { padding: 16, borderRadius: colors.radius, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, gap: 8 },
+    selectedCard: { borderColor: colors.electricMagenta, borderWidth: 2 },
     category: { fontFamily: 'DMSans_700Bold', fontSize: 10, color: colors.sunsetCoral, textTransform: 'uppercase', letterSpacing: 1.2 },
     cardTitle: { fontFamily: 'DMSans_700Bold', fontSize: 17, color: colors.foreground },
     cardBody: { fontFamily: 'DMSans_400Regular', fontSize: 13, lineHeight: 19, color: colors.mutedForeground },
     metaRow: { flexDirection: 'row', gap: 14 },
     meta: { fontFamily: 'DMSans_500Medium', fontSize: 11, color: colors.mutedForeground },
-    submissionHub: { marginHorizontal: 20, marginTop: 4, padding: 18, borderRadius: colors.radius + 4, backgroundColor: colors.ink, gap: 14, borderWidth: 2, borderColor: colors.cyan },
+    submissionHub: { marginHorizontal: 20, marginTop: 4, padding: 18, borderRadius: colors.radius, backgroundColor: colors.foreground, gap: 14 },
     submissionHubEyebrow: { fontFamily: 'DMSans_700Bold', color: colors.cyan, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.5 },
     submissionHubTitle: { fontFamily: 'DMSans_700Bold', color: colors.background, fontSize: 24 },
     submissionHubBody: { fontFamily: 'DMSans_400Regular', color: colors.background, opacity: 0.78, fontSize: 13, lineHeight: 19 },
@@ -221,7 +245,11 @@ export default function WorkshopsScreen() {
     chipActive: { backgroundColor: colors.cyan, borderColor: colors.cyan },
     chipText: { fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.background },
     chipTextActive: { color: colors.accentForeground },
-    picker: { padding: 16, borderWidth: 2, borderStyle: 'dashed', borderColor: colors.gold, borderRadius: 10, alignItems: 'center', gap: 6 },
+     detailNotice: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 9, backgroundColor: 'rgba(255,255,255,0.09)' },
+     detailNoticeText: { flex: 1, fontFamily: 'DMSans_400Regular', color: colors.background, opacity: 0.82, fontSize: 12, lineHeight: 18 },
+     detailRetry: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingVertical: 9, paddingHorizontal: 13, borderRadius: 8, backgroundColor: colors.gold },
+     detailRetryText: { fontFamily: 'DMSans_700Bold', color: colors.background, fontSize: 12 },
+    picker: { padding: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.gold, borderRadius: 10, alignItems: 'center', gap: 6 },
     pickerText: { fontFamily: 'DMSans_700Bold', color: colors.gold, fontSize: 13 },
     note: { minHeight: 80, padding: 12, borderRadius: 9, backgroundColor: 'rgba(255,255,255,0.09)', color: colors.background, fontFamily: 'DMSans_400Regular', textAlignVertical: 'top' },
     submit: { paddingVertical: 13, borderRadius: 9, backgroundColor: colors.electricMagenta, alignItems: 'center' },
@@ -230,28 +258,7 @@ export default function WorkshopsScreen() {
     assignmentCopy: { flex: 1 },
     assignmentTitle: { fontFamily: 'DMSans_600SemiBold', color: colors.background, fontSize: 13 },
     assignmentMeta: { fontFamily: 'DMSans_400Regular', color: colors.background, opacity: 0.65, fontSize: 11 },
-    locked: { margin: 20, padding: 22, borderRadius: colors.radius + 2, borderWidth: 2, borderColor: colors.gold, backgroundColor: colors.goldWash, alignItems: 'center', gap: 10 },
-    promoCard: { margin: 20, borderRadius: colors.radius + 4, borderWidth: 2, borderColor: colors.electricMagenta, backgroundColor: colors.card, overflow: 'hidden' },
-    promoArtwork: { height: 184, backgroundColor: colors.ink, position: 'relative', overflow: 'hidden' },
-    promoImage: { width: '100%', height: '100%', opacity: 0.8 },
-    promoArtFallback: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.ink },
-    promoArtCircle: { position: 'absolute', width: 220, height: 220, borderRadius: 110, top: -88, right: -46, backgroundColor: colors.electricMagenta, opacity: 0.84 },
-    promoArtCircleSmall: { position: 'absolute', width: 92, height: 92, borderRadius: 46, bottom: -28, left: 30, backgroundColor: colors.gold },
-    promoArtMark: { fontFamily: 'DMSans_700Bold', fontSize: 12, letterSpacing: 3, color: colors.background, textTransform: 'uppercase' },
-    promoBadge: { position: 'absolute', top: 14, left: 14, flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.electricMagenta },
-    promoBadgeText: { fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 1, color: colors.primaryForeground, textTransform: 'uppercase' },
-    promoArtworkMark: { position: 'absolute', right: 16, bottom: 15, alignItems: 'flex-end', gap: 3 },
-    promoArtworkTitle: { fontFamily: 'DMSans_700Bold', fontSize: 21, color: colors.background, letterSpacing: -0.6 },
-    promoCopy: { padding: 19, gap: 12 },
-    promoTitle: { fontFamily: 'DMSans_700Bold', fontSize: 23, lineHeight: 27, letterSpacing: -0.6, color: colors.foreground },
-    promoMeta: { fontFamily: 'DMSans_700Bold', fontSize: 11, color: colors.electricMagenta, textTransform: 'uppercase', letterSpacing: 1.2 },
-    promoFacts: { flexDirection: 'row', gap: 8 },
-    promoFact: { flex: 1, minHeight: 62, padding: 9, borderRadius: 10, backgroundColor: colors.muted, gap: 5 },
-    promoFactText: { fontFamily: 'DMSans_600SemiBold', fontSize: 10, lineHeight: 13, color: colors.foreground },
-    membershipStrip: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 10, padding: 12, backgroundColor: colors.ink },
-    membershipStripCopy: { flex: 1, gap: 2 },
-    membershipStripTitle: { fontFamily: 'DMSans_700Bold', fontSize: 12, color: colors.cyan, textTransform: 'uppercase', letterSpacing: 0.7 },
-    membershipStripBody: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.background, opacity: 0.82 },
+    locked: { margin: 20, padding: 22, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, alignItems: 'center', gap: 10 },
     lockedTitle: { fontFamily: 'DMSans_700Bold', color: colors.foreground, fontSize: 21, textAlign: 'center' },
     lockedBody: { fontFamily: 'DMSans_400Regular', color: colors.mutedForeground, fontSize: 14, lineHeight: 21, textAlign: 'center' },
     upgrade: { minHeight: 46, marginTop: 4, paddingHorizontal: 18, borderRadius: 10, backgroundColor: colors.electricMagenta, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
@@ -270,60 +277,12 @@ export default function WorkshopsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
         <View style={s.header}>
-          <Text style={s.eyebrow}>AIMD Workshop Preview</Text>
-          <Text style={s.title}>One craft. One apprenticeship.</Text>
-          <Text style={s.intro}>A first look at the tattoo apprenticeship coming to Creator Studio.</Text>
+          <Text style={s.eyebrow}>Dedicated Artist · Workshops & Masterclasses</Text>
+          <Text style={s.title}>Build mastery. Show the work.</Text>
+          <Text style={s.intro}>Video-led instruction across visual arts, tattoo prep, audio production, garment design, and more — with direct instructor feedback.</Text>
         </View>
 
-        <View style={s.promoCard} testID="tattoo-apprenticeship-coming-soon">
-          <View style={s.promoArtwork}>
-            {tattooWorkshop?.thumbnailUrl ? (
-              <Image source={{ uri: tattooWorkshop.thumbnailUrl }} style={s.promoImage} resizeMode="cover" />
-            ) : (
-              <View style={s.promoArtFallback}>
-                <View style={s.promoArtCircle} />
-                <View style={s.promoArtCircleSmall} />
-                <Feather name="edit-3" size={52} color={colors.background} />
-              </View>
-            )}
-            <View style={s.promoBadge}>
-              <Feather name="clock" size={13} color={colors.primaryForeground} />
-              <Text style={s.promoBadgeText}>Coming soon</Text>
-            </View>
-            <View style={s.promoArtworkMark}>
-              <Text style={s.promoArtMark}>AIMD / 01</Text>
-              <Text style={s.promoArtworkTitle}>TATTOO</Text>
-            </View>
-          </View>
-          <View style={s.promoCopy}>
-            <Text style={s.promoMeta}>With Poncho The Artist</Text>
-            <Text style={s.promoTitle}>Tattoo Apprenticeship</Text>
-            <Text style={s.cardBody}>Train your eye. Build your hand. Learn the studio mindset.</Text>
-            <View style={s.promoFacts}>
-              <View style={s.promoFact}>
-                <Feather name="layers" size={16} color={colors.electricMagenta} />
-                <Text style={s.promoFactText}>6 focused modules</Text>
-              </View>
-              <View style={s.promoFact}>
-                <Feather name="video" size={16} color={colors.cyan} />
-                <Text style={s.promoFactText}>30-sec drills</Text>
-              </View>
-              <View style={s.promoFact}>
-                <Feather name="message-circle" size={16} color={colors.gold} />
-                <Text style={s.promoFactText}>Artist feedback</Text>
-              </View>
-            </View>
-            <View style={s.membershipStrip}>
-              <Feather name="award" size={22} color={colors.gold} />
-              <View style={s.membershipStripCopy}>
-                <Text style={s.membershipStripTitle}>Dedicated Artist membership</Text>
-                <Text style={s.membershipStripBody}>Workshop access begins at $39/month when it opens.</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {false && (!hasPhaseTwo ? (
+        {!hasPhaseTwo ? (
           <View style={s.locked}>
             <Feather name="play-circle" size={28} color={colors.gold} />
             <Text style={s.lockedTitle}>Start with a real Module 1 preview</Text>
@@ -379,17 +338,15 @@ export default function WorkshopsScreen() {
             <View style={s.section}>
               <Text style={s.sectionTitle}>Featured masterclass tracks</Text>
               <View style={s.trackRow}>
-                {featuredTracks.map((track, index) => {
+                {featuredTracks.map((track) => {
                   const accent = track.accent === 'magenta' ? colors.electricMagenta : track.accent === 'cyan' ? colors.cyan : colors.sunsetCoral;
-                  const accentWash = track.accent === 'magenta' ? colors.magentaWash : track.accent === 'cyan' ? colors.cyanWash : colors.coralWash;
                   return (
-                    <View key={track.title} style={[s.track, { borderLeftWidth: 5, borderLeftColor: accent, backgroundColor: accentWash }]} testID={`track-${track.title.replace(/\s+/g, '-').toLowerCase()}`}>
+                    <View key={track.title} style={s.track} testID={`track-${track.title.replace(/\s+/g, '-').toLowerCase()}`}>
                       <View style={[s.trackIcon, { backgroundColor: accent }]}><Feather name={track.icon} size={19} color={colors.primaryForeground} /></View>
                       <View style={{ flex: 1 }}>
                         <Text style={s.trackTitle}>{track.title}</Text>
                         <Text style={s.trackMeta}>{track.instructor}</Text>
                       </View>
-                      <Text style={s.trackIndex}>0{index + 1}</Text>
                     </View>
                   );
                 })}
@@ -417,7 +374,7 @@ export default function WorkshopsScreen() {
                     No workshops available yet. Check back soon.
                   </Text>
                 </View>
-              ) : workshops?.map((workshop) => (
+              ) : workshops.map((workshop) => (
                 <TouchableOpacity
                   key={workshop.id}
                   style={[s.card, selectedWorkshopId === workshop.id && s.selectedCard]}
@@ -445,20 +402,45 @@ export default function WorkshopsScreen() {
               <Text style={s.submissionHubEyebrow}>Assignment Submission</Text>
               <Text style={s.submissionHubTitle}>Submit a 30-second practice drill</Text>
               <Text style={s.submissionHubBody}>Select an official drill, record one focused fake-skin or station-practice clip live in the app, and receive a master-instructor video breakdown and critique.</Text>
-              <View style={s.selector}>
-                {workshopDetail?.modules.map((module) => (
+              {workshopDetailError ? (
+                <View style={{ alignItems: 'center', gap: 8 }}>
+                  <Text style={[s.submissionHubBody, { textAlign: 'center' }]}>
+                    We could not load the drills for this workshop.
+                  </Text>
                   <TouchableOpacity
-                    key={module.id}
-                    style={[s.chip, selectedModuleId === module.id && s.chipActive]}
-                    testID={`module-chip-${module.id}`}
-                    onPress={() => openLesson(module)}
+                    onPress={() => void refetchWorkshopDetail()}
+                    style={s.detailRetry}
+                    testID="workshop-detail-retry"
+                    accessibilityRole="button"
+                    accessibilityLabel="Retry loading workshop drills"
                   >
-                    <Text style={[s.chipText, selectedModuleId === module.id && s.chipTextActive]}>
-                      {module.isCompleted ? '✓ ' : ''}{module.order}. {module.title}
-                    </Text>
+                    <Feather name="refresh-cw" size={15} color={colors.background} />
+                    <Text style={s.detailRetryText}>Retry loading drills</Text>
                   </TouchableOpacity>
-                ))}
-              </View>
+                </View>
+              ) : workshopDetail && workshopDetail.modules?.length === 0 ? (
+                <View style={s.detailNotice} testID="workshop-empty-modules">
+                  <Feather name="info" size={17} color={colors.gold} />
+                  <Text style={s.detailNoticeText}>
+                    Drills are temporarily unavailable for this workshop. Please check back soon.
+                  </Text>
+                </View>
+              ) : (
+                <View style={s.selector}>
+                  {workshopDetail?.modules?.map((module) => (
+                    <TouchableOpacity
+                      key={module.id}
+                      style={[s.chip, selectedModuleId === module.id && s.chipActive]}
+                      testID={`module-chip-${module.id}`}
+                      onPress={() => openLesson(module)}
+                    >
+                      <Text style={[s.chipText, selectedModuleId === module.id && s.chipTextActive]}>
+                        {module.isCompleted ? '✓ ' : ''}{module.order}. {module.title}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
               <TouchableOpacity
                 style={s.picker}
                 onPress={() => setDrillCameraVisible(true)}
@@ -469,7 +451,7 @@ export default function WorkshopsScreen() {
                 <Feather name={capturedVideo ? 'check-circle' : 'video'} size={24} color={colors.gold} />
                 <Text style={s.pickerText}>
                   {capturedVideo
-                    ? `Footage recorded — ${Math.round(capturedVideo?.durationSecs ?? 0)}s`
+                    ? `Footage recorded — ${Math.round(capturedVideo.durationSecs)}s`
                     : 'Record assignment footage'}
                 </Text>
               </TouchableOpacity>
@@ -509,7 +491,7 @@ export default function WorkshopsScreen() {
               )}
             </View>
           </>
-        ))}
+        )}
       </ScrollView>
 
       <DrillCameraCapture
