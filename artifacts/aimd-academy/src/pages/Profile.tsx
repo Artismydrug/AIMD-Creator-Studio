@@ -110,6 +110,31 @@ function PostThumb({ post }: { post: any }) {
 // ─── Edit profile dialog ──────────────────────────────────────────────────────
 
 const DISCIPLINES = ['Tattooing', 'Fine Art', 'Fine Art & Murals', 'Mural & Street Art', 'Graphic Design', 'Illustration'];
+const HANDLE_PATTERN = /^[a-zA-Z0-9_]{3,28}$/;
+
+function normalizeHandle(value: string): string {
+  return value.trim().replace(/\s+/g, '_');
+}
+
+function getHandleError(value: string): string | null {
+  if (HANDLE_PATTERN.test(value)) return null;
+  return 'Use 3–28 letters, numbers, or underscores. Spaces are saved as underscores.';
+}
+
+function getProfileSaveError(error: unknown): string {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'data' in error &&
+    error.data &&
+    typeof error.data === 'object' &&
+    'error' in error.data &&
+    typeof error.data.error === 'string'
+  ) {
+    return error.data.error;
+  }
+  return 'Please try again.';
+}
 
 function EditProfileDialog({ user }: { user: any }) {
   const [open, setOpen] = useState(false);
@@ -125,7 +150,7 @@ function EditProfileDialog({ user }: { user: any }) {
 
   useEffect(() => {
     if (open) {
-      setUsername(user.username ?? '');
+      setUsername(normalizeHandle(user.username ?? ''));
       setAvatarUrl(user.avatarUrl ?? '');
       setBio(user.bio ?? '');
       setDiscipline(user.discipline ?? '');
@@ -134,6 +159,9 @@ function EditProfileDialog({ user }: { user: any }) {
       setBookingOpen(!!user.bookingOpen);
     }
   }, [open]);
+
+  const handle = normalizeHandle(username);
+  const handleError = getHandleError(handle);
 
   const update = useUpdateCurrentUser({
     mutation: {
@@ -145,7 +173,7 @@ function EditProfileDialog({ user }: { user: any }) {
       onError: (err: any) => {
         toast({
           title: 'Could not save profile',
-          description: err?.response?.data?.error ?? 'Please try again.',
+          description: getProfileSaveError(err),
           variant: 'destructive',
         });
       },
@@ -153,10 +181,21 @@ function EditProfileDialog({ user }: { user: any }) {
   });
 
   const save = () => {
+    if (handleError) {
+      toast({
+        title: 'Update your handle',
+        description: handleError,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const avatarChanged = avatarUrl !== (user.avatarUrl ?? '');
+
     update.mutate({
       data: {
-        username: username.trim(),
-        avatarUrl: avatarUrl || null,
+        username: handle,
+        ...(avatarChanged ? { avatarUrl: avatarUrl || null } : {}),
         bio: bio.trim() || null,
         discipline: discipline || null,
         location: location.trim() || null,
@@ -185,8 +224,16 @@ function EditProfileDialog({ user }: { user: any }) {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="pf-username">Username</Label>
-            <Input id="pf-username" value={username} onChange={(e) => setUsername(e.target.value)} maxLength={28} />
-            <p className="text-[11px] text-muted-foreground">3–28 characters — letters, numbers, underscores.</p>
+            <Input
+              id="pf-username"
+              value={username}
+              onChange={(e) => setUsername(normalizeHandle(e.target.value))}
+              maxLength={28}
+              aria-invalid={!!handleError}
+            />
+            <p className={`text-[11px] ${handleError ? 'text-destructive' : 'text-muted-foreground'}`}>
+              {handleError ?? '3–28 characters — letters, numbers, underscores. Spaces become underscores.'}
+            </p>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="pf-bio">Bio</Label>
@@ -219,7 +266,7 @@ function EditProfileDialog({ user }: { user: any }) {
             </div>
             <Switch checked={bookingOpen} onCheckedChange={setBookingOpen} />
           </div>
-          <Button onClick={save} disabled={update.isPending || username.trim().length < 3} className="w-full rounded-none font-mono text-xs uppercase">
+          <Button onClick={save} disabled={update.isPending || !!handleError} className="w-full rounded-none font-mono text-xs uppercase">
             {update.isPending ? 'Saving…' : 'Save Profile'}
           </Button>
         </div>
