@@ -1,16 +1,6 @@
 import { useEffect } from 'react';
-import { Link } from 'wouter';
-import { Button } from '@/components/ui/button';
+import { ArrowUpRight, Container } from 'lucide-react';
 import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
-import {
-  ArrowRight,
-  Compass,
-  Trophy,
-  Crown,
-  Sparkles,
-  HeartHandshake,
-  Eye,
-} from 'lucide-react';
 import aimdHeroImg from '@assets/generated_images/aimd-hero.jpg';
 
 export default function About() {
@@ -19,166 +9,170 @@ export default function About() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-[100dvh] bg-[#171514] text-[#f5eee2]">
       <MarketingNav />
 
-      {/* Community impact and roots */}
-      <section className="relative min-h-[60vh] flex items-center border-b border-border overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img src={aimdHeroImg} alt="AIMD Studio" className="w-full h-full object-cover opacity-30" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
-        </div>
-
-        <div className="container relative z-10 px-6 mx-auto py-16">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+      <main>
+        <section
+          aria-labelledby="about-title"
+          className="relative isolate overflow-hidden border-b border-[#f5eee2]/15"
+        >
+          <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_85%_10%,rgba(198,88,50,0.28),transparent_28%),radial-gradient(circle_at_5%_80%,rgba(179,18,95,0.18),transparent_25%)]" />
+          <div className="container mx-auto grid min-h-[calc(100dvh-73px)] items-center gap-12 px-6 py-20 lg:grid-cols-[1.02fr_0.98fr] lg:gap-20 lg:py-24">
             <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary font-mono text-xs uppercase tracking-widest mb-8">
-              <Sparkles className="w-4 h-4" /> Our Community Roots
+              <p className="mb-7 flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.26em] text-[#e9a319]">
+                <span className="h-px w-10 bg-[#e9a319]" aria-hidden="true" />
+                About Us
+              </p>
+              <h1
+                id="about-title"
+                data-testid="heading-about-us"
+                className="max-w-2xl text-[clamp(3.6rem,9vw,8.8rem)] font-black leading-[0.82] tracking-[-0.075em] text-[#f5eee2] normal-case"
+              >
+                About Us
+                {' '}
+                <span className="mt-4 block text-[#e9a319]">— Art Is My Drug</span>
+              </h1>
+              <p className="mt-10 max-w-xl text-lg leading-8 text-[#d2c5b4] md:text-xl">
+                <strong className="font-semibold text-[#f5eee2]">Our Journey: From a Local Hub to a Creative Movement</strong>
+              </p>
             </div>
-            <h1 className="text-5xl md:text-7xl font-black font-display uppercase leading-[0.9] tracking-tighter mb-6">
-              Our Community Impact <span className="text-gradient-brand">&amp; Roots.</span>
-            </h1>
-            <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl">
-              Art is more than expression—it&apos;s a catalyst for community growth and personal transformation. Art Is My Drug empowers local youth, rising talent, and adult creators alike.
-            </p>
-            </div>
-            <div className="glass-card rounded-xl p-3 md:p-4">
-              <div className="aspect-video overflow-hidden rounded-lg bg-black">
-                <iframe
-                  className="h-full w-full"
-                  src="https://www.youtube.com/embed/fmVeAgPqNEk"
-                  title="AIMD community workshop"
-                  loading="lazy"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
+
+            <div className="relative mx-auto w-full max-w-xl lg:justify-self-end">
+              <div className="absolute -right-3 -top-3 h-24 w-24 border-r border-t border-[#e9a319]" aria-hidden="true" />
+              <div className="absolute -bottom-3 -left-3 h-24 w-24 border-b border-l border-[#c85a32]" aria-hidden="true" />
+              <figure className="relative aspect-[4/5] overflow-hidden bg-[#2d2723]">
+                <img
+                  src={aimdHeroImg}
+                  alt="Art Is My Drug creative studio"
+                  className="h-full w-full object-cover opacity-85"
+                  data-testid="img-about-hero"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#171514]/80 via-transparent to-[#171514]/10" />
+                <figcaption className="absolute bottom-5 left-5 border-l-2 border-[#e9a319] pl-3 font-mono text-[10px] uppercase tracking-[0.18em] text-[#f5eee2]">
+                  Art Is My Drug
+                </figcaption>
+              </figure>
+            </div>
+          </div>
+        </section>
+
+        <section
+          aria-labelledby="journey-title"
+          className="bg-[#f3ecdf] text-[#2c2623]"
+        >
+          <div className="container mx-auto grid gap-14 px-6 py-20 md:py-28 lg:grid-cols-[0.75fr_1.25fr] lg:gap-24">
+            <div className="lg:sticky lg:top-28 lg:self-start">
+              <h2
+                id="journey-title"
+                data-testid="heading-journey"
+                className="max-w-sm text-5xl font-black leading-[0.9] tracking-[-0.055em] md:text-7xl normal-case"
+              >
+                Our Journey:
+                {' '}
+                <span className="mt-3 block text-[#b3125f]">From a Local Hub to a Creative Movement</span>
+              </h2>
+              <div className="mt-10 hidden h-24 w-px bg-[#b3125f] lg:block" aria-hidden="true" />
+            </div>
+
+            <div className="max-w-2xl">
+              <p data-testid="text-journey-intro" className="text-xl leading-9 md:text-2xl md:leading-10">
+                Art Is My Drug started with a vision to build a true community of creators. In <strong>2014</strong>, Edward “Ponchotheartist” Davila opened his very first shop in <strong>Torrance, CA</strong>. What started as a <strong>1,000 sq. ft. tattoo shop</strong> quickly grew into something much bigger, expanding to over <strong>4,000 sq. ft.</strong> and serving as a bustling hub for the community. We brought not just tattoos, but <strong>fashion, poetry, music, and all forms of art under one roof.</strong>
+              </p>
+
+              <div className="my-16 border-y border-[#2c2623]/20 py-8">
+                <p className="mb-7 font-mono text-[11px] uppercase tracking-[0.22em] text-[#b3125f]">
+                  Our momentum pushed us beyond the walls of a traditional shop:
+                </p>
+                <div className="grid gap-8 sm:grid-cols-[auto_1fr] sm:gap-x-7">
+                  <p className="font-display text-5xl font-black leading-none text-[#c85a32]" aria-hidden="true">01</p>
+                  <p data-testid="text-milestone-mobile-tattoo-bus" className="text-lg leading-8">
+                    <strong>2017:</strong> We built the first Mobile Tattoo Bus.
+                  </p>
+                  <p className="font-display text-5xl font-black leading-none text-[#c85a32]" aria-hidden="true">02</p>
+                  <p data-testid="text-milestone-tours" className="text-lg leading-8">
+                    <strong>National &amp; California Tours:</strong> We collaborated on high-profile projects with Hulu, Mammoth/Heavyhitters, Coachella activations, LA Weekly, and more.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Mission and vision */}
-      <section className="py-16 px-6 border-b border-border">
-        <div className="container mx-auto grid md:grid-cols-2 gap-6">
-          <article className="glass-card rounded-xl p-7 md:p-9">
-            <HeartHandshake className="w-7 h-7 text-primary mb-5" />
-            <p className="font-mono text-xs uppercase tracking-widest text-primary mb-2">Our Mission</p>
-            <h2 className="text-2xl md:text-3xl font-black font-display uppercase tracking-tight mb-4">
-              Art. Community. Ownership.
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Art is my drug’s mission is to build a community of artists &amp; creatives by providing space and opportunities for growth &amp; development. Our mission is to help artists no matter what phase of their journey &amp; to be a pillar of support as they continue to build.
-            </p>
-          </article>
-          <article className="glass-card rounded-xl p-7 md:p-9">
-            <Eye className="w-7 h-7 text-primary mb-5" />
-            <p className="font-mono text-xs uppercase tracking-widest text-primary mb-2">Our Vision</p>
-            <h2 className="text-2xl md:text-3xl font-black font-display uppercase tracking-tight mb-4">
-              The definitive creator ecosystem.
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              We visualize the artists being the roots of our foundation, as we build up through multiple locations &amp; various services. Art is My Drug will truly blossom through investing into the artists of tomorrow.
-            </p>
-          </article>
-        </div>
-      </section>
-
-      {/* Creator Journey */}
-      <section className="py-20 px-6 border-b border-border">
-        <div className="container mx-auto">
-          <div className="flex items-center gap-4 mb-4">
-            <h2 className="text-3xl md:text-5xl font-black font-display uppercase tracking-tight">The Creator Journey</h2>
-            <div className="h-[2px] bg-border flex-1 hidden md:block" />
-          </div>
-          <p className="text-lg mb-12 max-w-2xl">
-            <span className="font-display font-black uppercase tracking-tight text-2xl md:text-3xl text-gradient-brand">Level Up Your Creative Journey</span>
-            <span className="block text-muted-foreground mt-1">A free starting point for building a creative practice and finding your people.</span>
-          </p>
-
-          <div className="relative grid md:grid-cols-3 gap-6">
-            {/* connecting line (desktop) */}
-            <div className="hidden md:block absolute top-10 left-[12%] right-[12%] h-[2px] bg-border" aria-hidden="true" />
-            {[
-              {
-                icon: Compass,
-                phase: 'Available today',
-                title: 'The Inspiring Artist',
-                tagline: 'Discover & Connect',
-                color: 'var(--vibrant-cyan)',
-                glow: 'glow-cyan',
-                points: [
-                  'Explore artwork from the community',
-                  'Track daily check-in streaks',
-                  'Discover resident artists',
-                ],
-              },
-              {
-                icon: Trophy,
-                phase: 'Practice & Share',
-                title: 'The Dedicated Artist',
-                tagline: 'Keep Building Your Craft',
-                color: 'var(--vibrant-magenta)',
-                glow: 'glow-magenta',
-                points: [
-                  'Join weekly creator challenges',
-                  'Earn badges for thoughtful participation',
-                  'Build your portfolio',
-                ],
-              },
-              {
-                icon: Crown,
-                phase: 'Growing With AIMD',
-                title: 'The Professional Artist',
-                tagline: 'A Path We Are Building',
-                color: 'var(--vibrant-gold)',
-                glow: 'glow-gold',
-                points: [
-                  'Feature artwork in your creator portfolio',
-                  'Follow new learning opportunities as they open',
-                  'Stay connected as new pathways take shape',
-                ],
-              },
-            ].map(({ icon: Icon, phase, title, tagline, color, glow, points }, i) => (
-              <div key={phase} className={`relative glass-card ${glow} rounded-xl p-6 pt-8 group hover:-translate-y-1 transition-transform duration-300`}>
-                <div
-                  className="relative z-10 w-14 h-14 border-2 bg-background rounded-lg flex items-center justify-center mb-5"
-                  style={{ borderColor: color }}
-                >
-                  <Icon className="w-6 h-6" style={{ color }} />
-                  <span
-                    className="absolute -top-2 -right-2 text-white font-mono text-[10px] font-bold w-6 h-6 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: color }}
-                  >
-                    {i + 1}
-                  </span>
-                </div>
-                <p className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color }}>{phase}</p>
-                <h3 className="font-display font-black text-2xl uppercase tracking-tight mb-1">{title}</h3>
-                <p className="font-mono text-xs uppercase tracking-wide text-muted-foreground mb-4">{tagline}</p>
-                <ul className="space-y-2">
-                  {points.map((p) => (
-                    <li key={p} className="flex items-start gap-2 text-sm">
-                      <span className="w-1.5 h-1.5 mt-1.5 flex-shrink-0" style={{ backgroundColor: color }} />
-                      {p}
-                    </li>
-                  ))}
-                </ul>
+        <section
+          aria-labelledby="next-era-title"
+          className="border-b border-[#f5eee2]/15 bg-[#27211e]"
+        >
+          <div className="container mx-auto grid gap-12 px-6 py-20 md:py-28 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:gap-24">
+            <div>
+              <div className="mb-8 flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.24em] text-[#e9a319]">
+                <Container className="h-4 w-4" aria-hidden="true" />
+                The Next Era
               </div>
-            ))}
+              <h2
+                id="next-era-title"
+                data-testid="heading-next-era"
+                className="max-w-4xl text-6xl font-black leading-[0.84] tracking-[-0.065em] text-[#f5eee2] md:text-8xl normal-case"
+              >
+                The Next Era:
+                {' '}
+                <span className="mt-4 block text-[#c85a32]">Concrete Jungle &amp; The Artist Resort</span>
+              </h2>
+            </div>
+            <div className="border-l border-[#e9a319]/60 pl-6 md:pl-8">
+              <p data-testid="text-next-era" className="text-lg leading-8 text-[#d2c5b4] md:text-xl md:leading-9">
+                In <strong className="text-[#f5eee2]">2024</strong>, we took a massive leap forward and moved to <strong className="text-[#f5eee2]">Vintageland/Concrete Jungle</strong>—a sprawling <strong className="text-[#f5eee2]">100,000 sq. ft. space</strong> featuring <strong className="text-[#f5eee2]">3 levels dedicated to creation.</strong>
+              </p>
+              <p className="mt-7 text-lg leading-8 text-[#d2c5b4] md:text-xl md:leading-9">
+                We are now scaling to build our long-time dream: <strong className="text-[#f5eee2]">The Artist Resort.</strong> Our plan is to build a sustainable compound utilizing shipping containers, and our very first container compound is already set up right here at Concrete Jungle!
+              </p>
+            </div>
           </div>
+        </section>
 
-          <div className="mt-10 flex justify-center">
-            <Button asChild size="lg" className="h-14 px-8 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-mono font-bold group">
-              <Link href="/app">
-                Start Your Journey
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </Button>
+        <section
+          aria-labelledby="support-title"
+          className="relative overflow-hidden bg-[#e9a319] text-[#2c2623]"
+        >
+          <div className="absolute -right-20 -top-32 h-80 w-80 rounded-full border-[48px] border-[#2c2623]/10" aria-hidden="true" />
+          <div className="absolute -bottom-28 -left-16 h-64 w-64 rounded-full border-[32px] border-[#c85a32]/20" aria-hidden="true" />
+          <div className="container relative mx-auto px-6 py-20 md:py-28">
+            <div className="grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-24">
+              <div>
+                <h2
+                  id="support-title"
+                  data-testid="heading-supporting-creators"
+                  className="max-w-md text-5xl font-black leading-[0.86] tracking-[-0.06em] md:text-7xl normal-case"
+                >
+                  Supporting the Creators of Tomorrow
+                </h2>
+              </div>
+              <div className="max-w-2xl">
+                <p data-testid="text-supporting-creators" className="text-xl leading-9 md:text-2xl md:leading-10">
+                  We are deeply committed to lifting up the next generation. In <strong>2024</strong>, we officially launched our <strong>Non-Profit organization dedicated to supporting and nurturing the youth.</strong> We have already hosted over a dozen art workshops and plan to keep building the creators of tomorrow.
+                </p>
+
+                <div className="mt-12 border-t border-[#2c2623]/30 pt-8">
+                  <p className="max-w-xl text-2xl font-black leading-tight tracking-[-0.025em] md:text-3xl">
+                    Want to help empower the next generation of youth creators?
+                  </p>
+                  <a
+                    href="https://www.artismydrug.org"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Learn more about and support the Art Is My Drug Non-Profit initiative"
+                    data-testid="link-nonprofit-support"
+                    className="group mt-7 inline-flex max-w-full items-center gap-3 break-words border-b-2 border-[#2c2623] pb-2 font-mono text-sm font-bold tracking-[0.08em] transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c2623] focus-visible:ring-offset-4 focus-visible:ring-offset-[#e9a319] md:text-base"
+                  >
+                    Click here to learn more about and support our Non-Profit initiative www.artismydrug.org
+                    <ArrowUpRight className="h-5 w-5 shrink-0 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
       <MarketingFooter />
     </div>

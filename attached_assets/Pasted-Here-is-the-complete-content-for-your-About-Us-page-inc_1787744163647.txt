@@ -1,0 +1,23 @@
+Here is the complete content for your About Us page, incorporating your full journey—from the first shop in Torrance to the new space at Vintageland/Concrete Jungle—along with a clear link to support your non-profit.
+About Us — Art Is My Drug
+Our Journey: From a Local Hub to a Creative Movement
+Art Is My Drug started with a vision to build a true community of creators. In 2014, Edward “Ponchotheartist” Davila opened his very first shop in Torrance, CA. What started as a 1,000 sq. ft. tattoo shop quickly grew into something much bigger, expanding to over 4,000 sq. ft. and serving as a bustling hub for the community. We brought not just tattoos, but fashion, poetry, music, and all forms of art under one roof.
+Our momentum pushed us beyond the walls of a traditional shop:
+ * 2017: We built the first Mobile Tattoo Bus.
+ * National & California Tours: We collaborated on high-profile projects with Hulu, Mammoth/Heavyhitters, Coachella activations, LA Weekly, and more.
+The Next Era: Concrete Jungle & The Artist Resort
+In 2024, we took a massive leap forward and moved to Vintageland/Concrete Jungle—a sprawling 100,000 sq. ft. space featuring 3 levels dedicated to creation.
+We are now scaling to build our long-time dream: The Artist Resort. Our plan is to build a sustainable compound utilizing shipping containers, and our very first container compound is already set up right here at Concrete Jungle!
+Supporting the Creators of Tomorrow
+We are deeply committed to lifting up the next generation. In 2024, we officially launched our Non-Profit organization dedicated to supporting and nurturing the youth. We have already hosted over a dozen art workshops and plan to keep building the creators of tomorrow.
+> Want to help empower the next generation of youth creators?
+> Click here to learn more about and support our Non-Profit initiative (Insert your non-profit link here)
+> 
+Copy-Paste Prompt for Replit:
+If you want to send this directly to Replit to have them build or update your [artismydrug.com/about](https://artismydrug.com/about) page, you can use this prompt:
+Please update or create the About page on our website at the route "/about" (accessible at https://www.artismydrug.com/about). 
+
+Use the following text content, structured cleanly with headings, bold text, and a prominent call-to-action link directing people to our non-profit:
+
+[Insert the text from the sections above, making sure to link your non-profit organization appropriately]
+
