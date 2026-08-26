@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import {
-  Heart,
   Zap,
   BookOpen,
   Shield,
@@ -13,15 +12,6 @@ import {
 // ─── Slide definitions ────────────────────────────────────────────────────────
 
 const SLIDES = [
-  {
-    badge: 'OUR MISSION',
-    icon: Heart,
-    iconBg: 'bg-[#FAF0EC]',
-    iconColor: 'text-primary',
-    accent: '#C85A32',
-    title: 'Built For Artists,\nBy Artists',
-    body: 'AIMD is built to give independent creators real infrastructure — daily accountability, world-class education, studio placement, and IP protection. No investors. No shortcuts.',
-  },
   {
     badge: 'DAILY DISCIPLINE',
     icon: Zap,
