@@ -2,6 +2,10 @@ import { useEffect } from 'react';
 import { ArrowUpRight, Container } from 'lucide-react';
 import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
 import aimdHeroImg from '@assets/generated_images/aimd-hero.jpg';
+import tattooBusImg from '@assets/The_Mobile_Tattoo_Bus_Tour_-_2019-28_Original_1787745840250.jpeg';
+import youthWorkshopImg from '@assets/The_Mobile_Tattoo_Bus_Tour_-_2045_Original_1787745840250.jpeg';
+import huluCollaborationImg from '@assets/IMG_6735_1787745840250.jpeg';
+import concreteJungleContainerImg from '@assets/IMG_6733_1787745840250.jpeg';
 
 export default function About() {
   useEffect(() => {
@@ -80,6 +84,33 @@ export default function About() {
                 Art Is My Drug started with a vision to build a true community of creators. In <strong>2014</strong>, Edward “Ponchotheartist” Davila opened his very first shop in <strong>Torrance, CA</strong>. What started as a <strong>1,000 sq. ft. tattoo shop</strong> quickly grew into something much bigger, expanding to over <strong>4,000 sq. ft.</strong> and serving as a bustling hub for the community. We brought not just tattoos, but <strong>fashion, poetry, music, and all forms of art under one roof.</strong>
               </p>
 
+              <div className="mt-12 grid gap-4 sm:grid-cols-[1.35fr_0.65fr]">
+                <figure className="group relative overflow-hidden bg-[#2c2623]">
+                  <img
+                    src={tattooBusImg}
+                    alt="The Art Is My Drug Mobile Tattoo Bus set up for a tour stop"
+                    className="aspect-[16/10] h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#171514]/90 via-[#171514]/45 to-transparent px-5 pb-4 pt-12 font-mono text-[10px] uppercase tracking-[0.16em] text-[#f5eee2]">
+                    The original Mobile Tattoo Bus
+                  </figcaption>
+                </figure>
+                <figure className="relative overflow-hidden border border-[#2c2623]/15 bg-[#d8cebe]">
+                  <img
+                    src={huluCollaborationImg}
+                    alt="Edward Davila at a Hulu collaboration"
+                    className="aspect-[3/4] h-full w-full object-cover object-center"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <figcaption className="absolute bottom-3 left-3 right-3 bg-[#f3ecdf]/90 px-2 py-2 font-mono text-[9px] uppercase tracking-[0.12em] text-[#2c2623]">
+                    On the road
+                  </figcaption>
+                </figure>
+              </div>
+
               <div className="my-16 border-y border-[#2c2623]/20 py-8">
                 <p className="mb-7 font-mono text-[11px] uppercase tracking-[0.22em] text-[#b3125f]">
                   Our momentum pushed us beyond the walls of a traditional shop:
@@ -126,6 +157,18 @@ export default function About() {
               <p className="mt-7 text-lg leading-8 text-[#d2c5b4] md:text-xl md:leading-9">
                 We are now scaling to build our long-time dream: <strong className="text-[#f5eee2]">The Artist Resort.</strong> Our plan is to build a sustainable compound utilizing shipping containers, and our very first container compound is already set up right here at Concrete Jungle!
               </p>
+              <figure className="relative mt-10 overflow-hidden border border-[#f5eee2]/15 bg-[#171514]">
+                <img
+                  src={concreteJungleContainerImg}
+                  alt="A finished shipping-container studio at Concrete Jungle"
+                  className="aspect-[16/10] h-full w-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <figcaption className="absolute bottom-0 left-0 border-r border-t border-[#e9a319] bg-[#171514]/90 px-4 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-[#f5eee2]">
+                  The first container compound
+                </figcaption>
+              </figure>
             </div>
           </div>
         </section>
@@ -146,6 +189,18 @@ export default function About() {
                 >
                   Supporting the Creators of Tomorrow
                 </h2>
+                <figure className="relative mt-10 max-w-xl overflow-hidden border-4 border-[#2c2623] bg-[#2c2623] shadow-[12px_12px_0_rgba(44,38,35,0.18)]">
+                  <img
+                    src={youthWorkshopImg}
+                    alt="Young creators gathered in front of the Art Is My Drug Mobile Tattoo Bus"
+                    className="aspect-[16/10] h-full w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <figcaption className="border-t border-[#2c2623] bg-[#f5eee2] px-4 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-[#2c2623]">
+                    Building with the next generation
+                  </figcaption>
+                </figure>
               </div>
               <div className="max-w-2xl">
                 <p data-testid="text-supporting-creators" className="text-xl leading-9 md:text-2xl md:leading-10">
