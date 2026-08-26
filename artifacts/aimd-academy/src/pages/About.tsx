@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { ArrowUpRight, Container } from 'lucide-react';
 import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
-import aimdHeroImg from '@assets/generated_images/aimd-hero.jpg';
+import heroStudioImg from '@assets/IMG_0341_Original_1787745840250.jpeg';
 import tattooBusImg from '@assets/The_Mobile_Tattoo_Bus_Tour_-_2019-28_Original_1787745840250.jpeg';
 import youthWorkshopImg from '@assets/The_Mobile_Tattoo_Bus_Tour_-_2045_Original_1787745840250.jpeg';
 import huluCollaborationImg from '@assets/IMG_6735_1787745840250.jpeg';
@@ -47,8 +47,8 @@ export default function About() {
               <div className="absolute -bottom-3 -left-3 h-24 w-24 border-b border-l border-[#c85a32]" aria-hidden="true" />
               <figure className="relative aspect-[4/5] overflow-hidden bg-[#2d2723]">
                 <img
-                  src={aimdHeroImg}
-                  alt="Art Is My Drug creative studio"
+                  src={heroStudioImg}
+                  alt="Tattoo artists working inside the Art Is My Drug Mobile Tattoo Bus"
                   className="h-full w-full object-cover opacity-85"
                   data-testid="img-about-hero"
                 />
