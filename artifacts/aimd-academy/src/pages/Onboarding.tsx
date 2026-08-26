@@ -195,9 +195,31 @@ export function Onboarding() {
           </h2>
 
           {/* Body */}
-          <p className="text-sm text-[#666] leading-relaxed text-center mb-8 max-w-xs mx-auto">
+          <p
+            className={`text-sm text-[#666] leading-relaxed text-center max-w-xs mx-auto ${
+              'tags' in slide ? 'mb-4' : 'mb-8'
+            }`}
+          >
             {slide.body}
           </p>
+
+          {'tags' in slide && (
+            <div className="flex flex-wrap justify-center gap-2 mb-6" aria-label="Creator communities">
+              {slide.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full border px-2.5 py-1 text-[10px] font-semibold"
+                  style={{
+                    borderColor: `${slide.accent}66`,
+                    background: `${slide.accent}10`,
+                    color: slide.accent,
+                  }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* Navigation row */}
           <div className="flex items-center justify-between gap-3">
