@@ -10,3 +10,4 @@
 - [Launch content policy](launch-content-policy.md) — remove fake/demo and unavailable launch surfaces; retain useful form hints and truthful empty states.
 - [Habit access policy](habit-access-policy.md) — habit creation and tracking are unlimited for every membership tier.
 - [Creative UI copy density](creative-ui-copy-density.md) — favor compact, icon-led cues over feature-list paragraphs, especially in membership and pathway screens.
+- [Workspace static build environment](workspace-static-build-env.md) — static workspace builds load Vite configs without workflow PORT or BASE_PATH values.
