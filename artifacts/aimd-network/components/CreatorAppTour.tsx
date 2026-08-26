@@ -29,7 +29,7 @@ const SLIDES: TourSlide[] = [
     title: 'Every creator belongs here.',
     body: 'A digital studio for the way you make. Find your lane, practice your craft, and keep moving.',
     accent: 'coral',
-    tags: ['Painters', 'Musicians', 'Tattoo artists', 'More'],
+    tags: ['Painters', 'Musicians', 'Athletes', 'Tattoo artists'],
   },
   {
     icon: 'zap',
