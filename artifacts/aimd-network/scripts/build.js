@@ -4,6 +4,7 @@ const path = require('path');
 const { spawn } = require('child_process');
 const { Readable } = require('stream');
 const { pipeline } = require('stream/promises');
+const { assertDashboardSmokeContract } = require('./dashboard-smoke');
 
 let metroProcess = null;
 let metroPort = Number(process.env.METRO_PORT || 8081);
@@ -579,6 +580,7 @@ async function main() {
   console.log('Building static Expo Go deployment...');
 
   setupSignalHandlers();
+  assertDashboardSmokeContract();
 
   const domain = getDeploymentDomain();
   const expoPublicReplId = getExpoPublicReplId();

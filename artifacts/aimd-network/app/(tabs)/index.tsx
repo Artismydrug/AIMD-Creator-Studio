@@ -907,6 +907,7 @@ export default function ProgressScreen() {
                   gap: 12,
                 },
               ]}
+              testID="dashboard-loading-state"
             >
               <ActivityIndicator size="large" color={colors.primary} />
               <Text style={s.dailyFocusLabel}>Loading your dashboard…</Text>
@@ -915,26 +916,28 @@ export default function ProgressScreen() {
 
           {progress && (
             <>
-              <View style={s.dailyFocusBlock} testID="dashboard-daily-focus">
-                <View style={s.dailyFocusIcon}>
-                  <Feather
-                    name={progress.checkedInToday ? 'check' : 'sun'}
-                    size={24}
-                    color={colors.accentForeground}
-                  />
-                </View>
-                <View style={s.dailyFocusCopy}>
-                  <Text style={s.dailyFocusLabel}>
-                    {progress.checkedInToday ? 'Nice work' : 'Your next move'}
-                  </Text>
-                  <Text style={s.dailyFocusTitle}>
-                    {progress.checkedInToday ? 'You showed up.' : 'Make your mark.'}
-                  </Text>
-                  <Text style={s.dailyFocusBody}>
-                    {progress.checkedInToday
-                      ? 'Keep the momentum going.'
-                      : 'One small move is enough to start.'}
-                  </Text>
+              <View testID="dashboard-loaded-state" accessibilityLabel="Dashboard daily focus">
+                <View style={s.dailyFocusBlock} testID="dashboard-daily-focus">
+                  <View style={s.dailyFocusIcon}>
+                    <Feather
+                      name={progress.checkedInToday ? 'check' : 'sun'}
+                      size={24}
+                      color={colors.accentForeground}
+                    />
+                  </View>
+                  <View style={s.dailyFocusCopy}>
+                    <Text style={s.dailyFocusLabel}>
+                      {progress.checkedInToday ? 'Nice work' : 'Your next move'}
+                    </Text>
+                    <Text style={s.dailyFocusTitle}>
+                      {progress.checkedInToday ? 'You showed up.' : 'Make your mark.'}
+                    </Text>
+                    <Text style={s.dailyFocusBody}>
+                      {progress.checkedInToday
+                        ? 'Keep the momentum going.'
+                        : 'One small move is enough to start.'}
+                    </Text>
+                  </View>
                 </View>
               </View>
 
