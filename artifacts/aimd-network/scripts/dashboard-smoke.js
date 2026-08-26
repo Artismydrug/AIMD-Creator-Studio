@@ -33,7 +33,7 @@ function assertDashboardSmokeContract() {
   assertIncludes(source, 'progressLoading && !progress', 'in-place loading condition');
   assertIncludes(source, '{progress && (', 'resolved dashboard condition');
   assertIncludes(source, 'Loading your dashboard…', 'loading copy');
-  assertIncludes(source, 'testID="dashboard-daily-focus"', 'daily focus dashboard copy');
+  assertIncludes(source, 'testID="creator-app-tour"', 'creator app tour');
 
   if (loadingState === -1 || loadedState === -1) {
     throw new Error('Dashboard smoke contract is missing state test IDs');
@@ -60,7 +60,7 @@ Repeatable native dashboard smoke flow
 3. Before the progress request resolves, confirm the dashboard header remains
    visible and the in-place loading card with "Loading your dashboard…" appears.
 4. Wait for the progress response. Confirm the loading card is replaced by the
-   daily focus card and progress content.
+   dashboard progress content below the creator tour.
 5. Confirm the screen is not blank and the dashboard remains scrollable.
 6. Treat a missing loading card, a persistent loading card, or a blank screen
    as a release-blocking regression.

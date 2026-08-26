@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useColors } from '@/hooks/useColors';
 
 type TourSlide = {
@@ -125,8 +126,80 @@ export default function CreatorAppTour() {
       justifyContent: 'center',
     },
     copy: {
-      marginTop: 28,
+      marginTop: 12,
       gap: 9,
+    },
+    artStage: {
+      height: 72,
+      marginTop: 14,
+      borderRadius: 14,
+      overflow: 'hidden',
+    },
+    artCanvas: {
+      flex: 1,
+      position: 'relative',
+      justifyContent: 'center',
+      paddingHorizontal: 16,
+      overflow: 'hidden',
+    },
+    artGlow: {
+      position: 'absolute',
+      width: 92,
+      height: 92,
+      borderRadius: 46,
+      right: 34,
+      top: -44,
+      opacity: 0.75,
+    },
+    artGlowSmall: {
+      position: 'absolute',
+      width: 54,
+      height: 54,
+      borderRadius: 27,
+      left: 42,
+      bottom: -28,
+      opacity: 0.55,
+    },
+    artGrid: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    artTile: {
+      width: 40,
+      height: 40,
+      borderRadius: 11,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: 'rgba(250,248,245,0.25)',
+      backgroundColor: 'rgba(0,0,0,0.22)',
+    },
+    artTileTall: {
+      width: 54,
+      height: 52,
+      borderRadius: 13,
+      transform: [{ rotate: '-6deg' }],
+    },
+    artTileOffset: {
+      transform: [{ rotate: '7deg' }],
+    },
+    artStroke: {
+      position: 'absolute',
+      height: 2,
+      width: 86,
+      right: 12,
+      bottom: 16,
+      transform: [{ rotate: '-16deg' }],
+      backgroundColor: 'rgba(250,248,245,0.62)',
+    },
+    artLabel: {
+      marginLeft: 'auto',
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 9,
+      letterSpacing: 1.2,
+      color: colors.background,
+      textTransform: 'uppercase',
     },
     title: {
       maxWidth: '92%',
@@ -219,7 +292,7 @@ export default function CreatorAppTour() {
         accessible
         accessibilityLabel={`Creator Studio tour, slide ${activeIndex + 1} of ${SLIDES.length}`}
       >
-        {SLIDES.map((slide) => {
+        {SLIDES.map((slide, index) => {
           const accent = accentColors[slide.accent as keyof typeof accentColors];
           return (
             <View key={slide.title} style={styles.slide}>
@@ -228,6 +301,38 @@ export default function CreatorAppTour() {
                 <View style={[styles.icon, { backgroundColor: `${accent}28` }]}>
                   <Feather name={slide.icon} size={22} color={accent} />
                 </View>
+              </View>
+              <View style={styles.artStage} accessibilityElementsHidden>
+                <LinearGradient
+                  colors={[`${accent}40`, `${colors.foreground}22`, `${accent}18`]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.artCanvas}
+                >
+                  <View style={[styles.artGlow, { backgroundColor: accent }]} />
+                  <View style={[styles.artGlowSmall, { backgroundColor: accent }]} />
+                  <View style={styles.artGrid}>
+                    <View style={[styles.artTile, styles.artTileTall, { borderColor: `${accent}99` }]}>
+                      <Feather name={slide.icon} size={22} color={colors.background} />
+                    </View>
+                    <View style={[styles.artTile, { backgroundColor: `${accent}36` }]}>
+                      <Feather
+                        name={index === 0 ? 'edit-3' : index === 1 ? 'activity' : index === 2 ? 'image' : index === 3 ? 'award' : 'compass'}
+                        size={17}
+                        color={accent}
+                      />
+                    </View>
+                    <View style={[styles.artTile, styles.artTileOffset, { backgroundColor: 'rgba(250,248,245,0.12)' }]}>
+                      <Feather name={index % 2 === 0 ? 'plus' : 'arrow-up-right'} size={18} color={accent} />
+                    </View>
+                    {index === 0 && <Text style={styles.artLabel}>Make room for your lane</Text>}
+                    {index === 1 && <Text style={styles.artLabel}>Small moves count</Text>}
+                    {index === 2 && <Text style={styles.artLabel}>Work in public</Text>}
+                    {index === 3 && <Text style={styles.artLabel}>Your practice, visible</Text>}
+                    {index === 4 && <Text style={styles.artLabel}>Keep exploring</Text>}
+                  </View>
+                  <View style={styles.artStroke} />
+                </LinearGradient>
               </View>
               <View style={styles.copy}>
                 <Text style={styles.title}>{slide.title}</Text>

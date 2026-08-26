@@ -348,31 +348,19 @@ export default function ProgressScreen() {
       fontSize: 14,
       color: colors.foreground,
     },
-    // Daily focus
-    dailyFocusBlock: {
+    loadingCard: {
       marginHorizontal: 16,
       marginTop: 16,
       padding: 18,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 14,
-      backgroundColor: colors.ink,
-      borderRadius: colors.radius + 4,
-      borderWidth: 2,
-      borderColor: colors.primary,
-      overflow: 'hidden',
-    },
-    dailyFocusIcon: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
+      minHeight: 86,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.cyanWash,
-    },
-    dailyFocusCopy: {
-      flex: 1,
-      gap: 3,
+      gap: 12,
+      backgroundColor: colors.ink,
+      borderRadius: colors.radius + 4,
+      borderWidth: 1,
+      borderColor: colors.border,
+      overflow: 'hidden',
     },
     profileSnapshot: {
       backgroundColor: colors.background,
@@ -430,25 +418,12 @@ export default function ProgressScreen() {
       fontSize: 12,
       color: colors.mutedForeground,
     },
-    dailyFocusLabel: {
+    loadingText: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 10,
       color: colors.cyan,
       textTransform: 'uppercase',
       letterSpacing: 1.5,
-    },
-    dailyFocusTitle: {
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 25,
-      color: colors.background,
-      letterSpacing: -0.5,
-    },
-    dailyFocusBody: {
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 13,
-      lineHeight: 18,
-      color: colors.background,
-      opacity: 0.78,
     },
     progressBarContainer: {
       width: '100%',
@@ -900,49 +875,17 @@ export default function ProgressScreen() {
 
           {progressLoading && !progress && (
             <View
-              style={[
-                s.dailyFocusBlock,
-                {
-                  minHeight: 112,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'column',
-                  gap: 12,
-                },
-              ]}
+              style={s.loadingCard}
               testID="dashboard-loading-state"
             >
               <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={s.dailyFocusLabel}>Loading your dashboard…</Text>
+              <Text style={s.loadingText}>Loading your dashboard…</Text>
             </View>
           )}
 
           {progress && (
             <>
-              <View testID="dashboard-loaded-state" accessibilityLabel="Dashboard daily focus">
-                <View style={s.dailyFocusBlock} testID="dashboard-daily-focus">
-                  <View style={s.dailyFocusIcon}>
-                    <Feather
-                      name={progress.checkedInToday ? 'check' : 'sun'}
-                      size={24}
-                      color={colors.accentForeground}
-                    />
-                  </View>
-                  <View style={s.dailyFocusCopy}>
-                    <Text style={s.dailyFocusLabel}>
-                      {progress.checkedInToday ? 'Nice work' : 'Your next move'}
-                    </Text>
-                    <Text style={s.dailyFocusTitle}>
-                      {progress.checkedInToday ? 'You showed up.' : 'Make your mark.'}
-                    </Text>
-                    <Text style={s.dailyFocusBody}>
-                      {progress.checkedInToday
-                        ? 'Keep the momentum going.'
-                        : 'One small move is enough to start.'}
-                    </Text>
-                  </View>
-                </View>
-              </View>
+              <View testID="dashboard-loaded-state" accessibilityLabel="Dashboard progress">
 
               {currentUser && (
                 <View style={s.profileSnapshot}>
