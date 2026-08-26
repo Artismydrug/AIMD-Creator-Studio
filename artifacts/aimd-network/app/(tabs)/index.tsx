@@ -26,6 +26,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import ChallengeCameraCapture from '@/components/ChallengeCameraCapture';
+import CreatorAppTour from '@/components/CreatorAppTour';
 import VerificationStatusTag from '@/components/VerificationStatusTag';
 import {
   ChallengeProofAsset,
@@ -895,6 +896,8 @@ export default function ProgressScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
           }
         >
+          <CreatorAppTour />
+
           {progressLoading && !progress && (
             <View
               style={[
