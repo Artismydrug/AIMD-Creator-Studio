@@ -54,6 +54,7 @@ import Gallery from '@/pages/Gallery';
 import Instructor from '@/pages/Instructor';
 import ArtistResort from '@/pages/ArtistResort';
 import HQ from '@/pages/HQ';
+import Privacy from '@/pages/Privacy';
 
 // ─── Clerk setup ──────────────────────────────────────────────────────────────
 // REQUIRED — resolves the publishable key from the request host so the same
@@ -273,6 +274,7 @@ function Router() {
       <Route path="/artist-resort" component={ArtistResort} />
       <Route path="/tattoo" component={Tattoo} />
       <Route path="/gallery" component={Gallery} />
+      <Route path="/privacy" component={Privacy} />
       {/* Creator app entry: dashboard when signed in, sign-in otherwise */}
       <Route path="/app" component={AppEntryRoute} />
       {/* Everything else requires auth */}

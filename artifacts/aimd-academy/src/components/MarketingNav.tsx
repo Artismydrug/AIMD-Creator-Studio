@@ -160,6 +160,7 @@ export function MarketingFooter() {
            <Link href="/artist-resort" className="hover:text-foreground">Artist Resort</Link>
           <Link href="/tattoo" className="hover:text-foreground">Tattoo Studio</Link>
           <Link href="/gallery" className="hover:text-foreground">Gallery</Link>
+           <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
           <Link href="/app" className="hover:text-foreground">Creator App</Link>
         </div>
         <p className="font-mono text-[10px] text-muted-foreground">
