@@ -248,12 +248,6 @@ export default function Privacy() {
               </p>
             </PolicySection>
 
-            <div className="mt-4 border-t border-[#E8E2D9] pt-8">
-              <Link href="/terms" className="inline-flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[#BC3A20] hover:text-[#2C2623]">
-                View Terms of Service
-                <ChevronRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-            </div>
           </div>
         </div>
       </main>
@@ -268,7 +262,6 @@ export default function Privacy() {
             <Link href="/" className="hover:text-[#BC3A20]">Home</Link>
             <Link href="/app" className="hover:text-[#BC3A20]">Creator App</Link>
             <Link href="/privacy" className="hover:text-[#BC3A20]">Privacy</Link>
-            <Link href="/terms" className="hover:text-[#BC3A20]">Terms</Link>
             <span>© {new Date().getFullYear()} AIMD</span>
           </div>
         </div>
