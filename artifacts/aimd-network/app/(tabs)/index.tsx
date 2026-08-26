@@ -349,17 +349,31 @@ export default function ProgressScreen() {
       fontSize: 14,
       color: colors.foreground,
     },
-    // Phase block
-    phaseBlock: {
+    // Daily focus
+    dailyFocusBlock: {
       marginHorizontal: 16,
       marginTop: 16,
-      padding: 20,
-      alignItems: 'flex-start',
+      padding: 18,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 14,
       backgroundColor: colors.ink,
       borderRadius: colors.radius + 4,
       borderWidth: 2,
       borderColor: colors.primary,
       overflow: 'hidden',
+    },
+    dailyFocusIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.cyanWash,
+    },
+    dailyFocusCopy: {
+      flex: 1,
+      gap: 3,
     },
     profileSnapshot: {
       backgroundColor: colors.background,
@@ -417,34 +431,25 @@ export default function ProgressScreen() {
       fontSize: 12,
       color: colors.mutedForeground,
     },
-    phaseLabel: {
+    dailyFocusLabel: {
       fontFamily: 'DMSans_700Bold',
-      fontSize: 12,
+      fontSize: 10,
       color: colors.cyan,
       textTransform: 'uppercase',
-      letterSpacing: 2,
-      marginBottom: 8,
+      letterSpacing: 1.5,
     },
-    phaseName: {
+    dailyFocusTitle: {
       fontFamily: 'DMSans_700Bold',
-      fontSize: 34,
+      fontSize: 25,
       color: colors.background,
-      letterSpacing: -1,
-      marginBottom: 4,
+      letterSpacing: -0.5,
     },
-    pointsText: {
+    dailyFocusBody: {
       fontFamily: 'DMSans_400Regular',
-      fontSize: 14,
-      color: colors.background,
-      opacity: 0.84,
-      marginBottom: 16,
-    },
-    nextPhaseContext: {
-      fontFamily: 'DMSans_500Medium',
       fontSize: 13,
+      lineHeight: 18,
       color: colors.background,
       opacity: 0.78,
-      marginTop: 8,
     },
     progressBarContainer: {
       width: '100%',
@@ -895,34 +900,44 @@ export default function ProgressScreen() {
           {progressLoading && !progress && (
             <View
               style={[
-                s.phaseBlock,
+                s.dailyFocusBlock,
                 {
-                  minHeight: 136,
+                  minHeight: 112,
                   alignItems: 'center',
                   justifyContent: 'center',
+                  flexDirection: 'column',
                   gap: 12,
                 },
               ]}
             >
               <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={s.phaseLabel}>Loading your dashboard…</Text>
+              <Text style={s.dailyFocusLabel}>Loading your dashboard…</Text>
             </View>
           )}
 
           {progress && (
             <>
-              <View style={s.phaseBlock}>
-                <Text style={s.phaseLabel}>Current Phase</Text>
-                <Text style={s.phaseName}>{progress.phase?.phase ?? '—'}</Text>
-                <Text style={s.pointsText}>{progress.points ?? 0} Points</Text>
-                <View style={s.progressBarContainer}>
-                  <View style={[s.progressBarFill, { width: `${Math.max(0, Math.min(100, progress.phase?.progressPercent ?? 0))}%` }]} />
+              <View style={s.dailyFocusBlock} testID="dashboard-daily-focus">
+                <View style={s.dailyFocusIcon}>
+                  <Feather
+                    name={progress.checkedInToday ? 'check' : 'sun'}
+                    size={24}
+                    color={colors.accentForeground}
+                  />
                 </View>
-                {progress.phase?.nextPhase && (
-                  <Text style={s.nextPhaseContext}>
-                    {(progress.phase.nextPhasePoints ?? 0) - (progress.points ?? 0)} points to {progress.phase.nextPhase}
+                <View style={s.dailyFocusCopy}>
+                  <Text style={s.dailyFocusLabel}>
+                    {progress.checkedInToday ? 'Nice work' : 'Your next move'}
                   </Text>
-                )}
+                  <Text style={s.dailyFocusTitle}>
+                    {progress.checkedInToday ? 'You showed up.' : 'Make your mark.'}
+                  </Text>
+                  <Text style={s.dailyFocusBody}>
+                    {progress.checkedInToday
+                      ? 'Keep the momentum going.'
+                      : 'One small move is enough to start.'}
+                  </Text>
+                </View>
               </View>
 
               {currentUser && (
