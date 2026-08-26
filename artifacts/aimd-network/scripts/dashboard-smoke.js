@@ -33,7 +33,7 @@ function assertDashboardSmokeContract() {
   assertIncludes(source, 'progressLoading && !progress', 'in-place loading condition');
   assertIncludes(source, '{progress && (', 'resolved dashboard condition');
   assertIncludes(source, 'Loading your dashboard…', 'loading copy');
-  assertIncludes(source, 'testID="creator-app-tour"', 'creator app tour');
+  assertIncludes(source, '<CreatorAppTour />', 'creator app tour');
 
   if (loadingState === -1 || loadedState === -1) {
     throw new Error('Dashboard smoke contract is missing state test IDs');
