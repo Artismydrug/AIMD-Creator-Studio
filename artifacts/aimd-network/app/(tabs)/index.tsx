@@ -27,8 +27,6 @@ import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import ChallengeCameraCapture from '@/components/ChallengeCameraCapture';
 import VerificationStatusTag from '@/components/VerificationStatusTag';
-import ProEcosystemPortal from '@/components/ProEcosystemPortal';
-import MoreFromAimd from '@/components/MoreFromAimd';
 import {
   ChallengeProofAsset,
   fromImagePickerAsset,
@@ -1201,8 +1199,6 @@ export default function ProgressScreen() {
             </View>
           )}
 
-          <ProEcosystemPortal user={currentUser} />
-          <MoreFromAimd />
         </ScrollView>
       )}
 
