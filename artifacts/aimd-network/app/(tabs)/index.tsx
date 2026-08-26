@@ -476,6 +476,9 @@ export default function ProgressScreen() {
     statCellNoBorder: {
       borderWidth: 1,
     },
+    statIcon: {
+      marginBottom: 5,
+    },
     statValue: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 22,
@@ -502,6 +505,11 @@ export default function ProgressScreen() {
       fontFamily: 'DMSans_700Bold',
       fontSize: 16,
       color: colors.foreground,
+    },
+    blockTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 7,
       marginBottom: 16,
     },
     nextBadgeBox: {
@@ -964,14 +972,17 @@ export default function ProgressScreen() {
 
               <View style={s.statsGrid}>
                 <View style={s.statCell}>
+                  <Feather name="zap" size={15} color={colors.cyan} style={s.statIcon} />
                   <Text style={s.statValue}>{progress.currentStreak}</Text>
                   <Text style={s.statLabel}>Day Streak</Text>
                 </View>
                 <View style={s.statCell}>
+                  <Feather name="check-circle" size={15} color={colors.cyan} style={s.statIcon} />
                   <Text style={s.statValue}>{progress.todayHabitsCompleted}/{progress.totalHabits}</Text>
                   <Text style={s.statLabel}>Habits Today</Text>
                 </View>
                 <View style={[s.statCell, s.statCellNoBorder]}>
+                  <Feather name="award" size={15} color={colors.cyan} style={s.statIcon} />
                   <Text style={s.statValue}>{(progress.recentBadges ?? []).length}</Text>
                   <Text style={s.statLabel}>Recent Badges</Text>
                 </View>
@@ -1025,7 +1036,10 @@ export default function ProgressScreen() {
 
               {((progress.nextBadge) || (progress.recentBadges && progress.recentBadges.length > 0)) && (
                 <View style={s.badgesBlock}>
-                  <Text style={s.blockTitle}>Milestones</Text>
+                  <View style={s.blockTitleRow}>
+                    <Feather name="award" size={17} color={colors.primary} />
+                    <Text style={s.blockTitle}>Milestones</Text>
+                  </View>
 
                   {progress.nextBadge && (
                     <View style={s.nextBadgeBox}>

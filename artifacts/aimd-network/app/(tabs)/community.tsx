@@ -27,7 +27,7 @@ export default function CommunityScreen() {
     titleMark: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary },
     titleCopy: { flex: 1, gap: 2 },
     title: { fontFamily: 'DMSans_700Bold', fontSize: 26, color: colors.foreground, letterSpacing: -0.6 },
-    subtitle: { fontFamily: 'DMSans_500Medium', fontSize: 12, color: colors.sunsetCoral, letterSpacing: 0.5 },
+     subtitle: { fontFamily: 'DMSans_700Bold', fontSize: 11, color: colors.sunsetCoral, letterSpacing: 1.2, textTransform: 'uppercase' },
     studioRule: { height: 3, width: 56, borderRadius: 3, backgroundColor: colors.cyan },
     switcher: {
       flexDirection: 'row',
@@ -66,7 +66,7 @@ export default function CommunityScreen() {
           </View>
           <View style={s.titleCopy}>
             <Text style={s.title}>Community</Text>
-            <Text style={s.subtitle}>Share the work. Stay connected.</Text>
+             <Text style={s.subtitle}>Make · Share · Connect.</Text>
           </View>
         </View>
         <View style={s.studioRule} />

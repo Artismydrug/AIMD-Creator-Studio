@@ -6,22 +6,20 @@ import Events from '@/pages/Events';
 
 type CommunityView = 'feed' | 'messages' | 'events';
 
-const VIEWS: Array<{ id: CommunityView; label: string; description: string; icon: typeof Flame }> = [
-  { id: 'feed', label: 'Feed', description: 'Share work and connect with creators.', icon: Flame },
-  { id: 'messages', label: 'Messages', description: 'Keep conversations with creators in one place.', icon: MessageSquare },
-  { id: 'events', label: 'Events', description: 'Find pop-ups, gallery activations, and studio gatherings.', icon: Calendar },
+const VIEWS: Array<{ id: CommunityView; label: string; icon: typeof Flame }> = [
+  { id: 'feed', label: 'Feed', icon: Flame },
+  { id: 'messages', label: 'Messages', icon: MessageSquare },
+  { id: 'events', label: 'Events', icon: Calendar },
 ];
 
 export default function Community() {
   const [activeView, setActiveView] = useState<CommunityView>('feed');
-  const currentView = VIEWS.find((view) => view.id === activeView)!;
-
   return (
     <div className="min-h-full">
       <header className="px-6 pt-8 pb-5 md:px-10 md:pt-10 border-b border-border bg-card/40">
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-primary mb-2">Creator Studio</p>
         <h1 className="font-display text-4xl md:text-5xl font-black uppercase tracking-tight">Community</h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">{currentView.description}</p>
+        <p className="mt-2 font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground">Make · Share · Connect.</p>
 
         <div className="mt-6 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Community views">
           {VIEWS.map((view) => {

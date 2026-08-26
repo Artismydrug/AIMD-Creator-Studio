@@ -21,16 +21,16 @@ import { MediaUpload } from '@/components/MediaUpload';
 
 const TIER_LABELS: Record<string, { label: string; color: string }> = {
   free:    { label: 'Discovering Artist',   color: 'text-foreground border-foreground/30 bg-foreground/5' },
-  academy: { label: 'Dedicated Artist',     color: 'text-emerald-800 border-emerald-700/40 bg-emerald-700/10' },
-  pro:     { label: 'Professional Artist',  color: 'text-violet-800 border-violet-700/40 bg-violet-700/10' },
+  academy: { label: 'Dedicated Artist',     color: 'text-emerald-300 border-emerald-400/40 bg-emerald-400/10' },
+  pro:     { label: 'Professional Artist',  color: 'text-violet-300 border-violet-400/40 bg-violet-400/10' },
 };
 
 const DISCIPLINE_COLORS: Record<string, string> = {
   'Tattooing':         'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  'Fine Art':          'bg-violet-700/10 text-violet-800 border-violet-700/25',
-  'Fine Art & Murals': 'bg-violet-700/10 text-violet-800 border-violet-700/25',
-  'Mural & Street Art':'bg-sky-700/10 text-sky-800 border-sky-700/25',
-  'Graphic Design':    'bg-rose-700/10 text-rose-800 border-rose-700/25',
+  'Fine Art':          'bg-violet-400/10 text-violet-300 border-violet-400/25',
+  'Fine Art & Murals': 'bg-violet-400/10 text-violet-300 border-violet-400/25',
+  'Mural & Street Art':'bg-sky-400/10 text-sky-300 border-sky-400/25',
+  'Graphic Design':    'bg-rose-400/10 text-rose-300 border-rose-400/25',
   'Illustration':      'bg-primary/10 text-primary border-primary/20',
 };
 
@@ -314,7 +314,7 @@ function ProfileContent({ user, badges, posts, isOwnProfile }: { user: any; badg
 
         {/* Bio */}
         {user.bio && (
-          <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-xl">{user.bio}</p>
+          <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-xl line-clamp-2">{user.bio}</p>
         )}
 
         {/* Portfolio link */}

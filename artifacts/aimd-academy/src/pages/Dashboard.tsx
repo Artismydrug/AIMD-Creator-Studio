@@ -14,12 +14,11 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-6 md:p-10 space-y-12">
+    <div className="p-6 md:p-10 space-y-8">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border">
         <div>
           <h1 className="text-4xl md:text-6xl font-black font-display uppercase tracking-tight">Creator Studio</h1>
-          <p className="text-muted-foreground font-mono mt-2 font-bold text-primary">Discipline Eats Talent.</p>
-          <p className="text-muted-foreground font-mono mt-1 text-xs uppercase tracking-wider">Welcome back to the grind.</p>
+          <p className="text-muted-foreground font-mono mt-2 font-bold text-primary">Discipline eats talent.</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="px-4 py-2 border border-primary/30 bg-primary/5 flex items-center gap-3">
@@ -40,15 +39,18 @@ export default function Dashboard() {
           { label: 'Enrolled Workshops', value: summary?.workshopsEnrolled || 0, icon: CheckCircle2 },
           { label: 'Badges Earned', value: summary?.badgesEarned || 0, icon: Trophy },
         ].map((stat, i) => (
-          <div key={i} className="p-6 border border-border bg-card">
-            <stat.icon className="w-6 h-6 text-primary mb-4" />
+          <div key={i} className="p-5 border border-border bg-card">
+            <div className="mb-4 flex items-center justify-between">
+              <stat.icon className="w-5 h-5 text-primary" />
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            </div>
             <div className="text-3xl font-black font-display">{stat.value}</div>
             <div className="text-xs font-mono uppercase text-muted-foreground mt-1">{stat.label}</div>
           </div>
         ))}
       </div>
 
-      <section className="border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-card to-primary/5 p-6 flex flex-col md:flex-row md:items-center justify-between gap-5">
+      <section className="border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-card to-primary/5 p-5 flex flex-col md:flex-row md:items-center justify-between gap-5">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-amber-400/20 border border-amber-400/40 flex items-center justify-center">
             <Coins className="w-6 h-6 text-amber-300" />
@@ -70,14 +72,14 @@ export default function Dashboard() {
           {/* Focus Plan */}
           <section className="border border-border bg-card p-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-10 -mt-10" />
-            <h2 className="text-2xl font-bold font-display uppercase mb-6 flex items-center gap-2">
+            <h2 className="text-2xl font-bold font-display uppercase mb-5 flex items-center gap-2">
               <TargetIcon className="w-6 h-6 text-primary" /> Today's Focus
             </h2>
             <div className="space-y-4">
               <div className="p-4 bg-background border border-border flex items-center justify-between group hover:border-primary/50 transition-colors">
                 <div>
                   <h4 className="font-bold text-lg">Log Daily Habit</h4>
-                  <p className="text-sm text-muted-foreground">Keep the {summary?.currentStreakDays} day streak alive</p>
+                  <p className="text-sm text-muted-foreground">Protect your streak.</p>
                 </div>
                 <Link href="/habits">
                   <Button variant="outline" className="rounded-none font-mono uppercase text-xs">Do it</Button>
@@ -87,7 +89,7 @@ export default function Dashboard() {
               {summary?.skillTracksActive ? (
                 <div className="p-4 bg-background border border-border flex items-center justify-between group hover:border-primary/50 transition-colors">
                   <div className="flex-1 mr-6">
-                    <h4 className="font-bold text-lg mb-2">Continue Skill Track</h4>
+                    <h4 className="font-bold text-lg mb-2">Continue skill track</h4>
                     <Progress value={summary.completionRate} className="h-2 rounded-none bg-border [&>div]:bg-primary" />
                   </div>
                   <Link href="/skill-tracks">
@@ -104,7 +106,7 @@ export default function Dashboard() {
           {/* Activity Feed */}
           <section>
             <h3 className="font-display font-bold text-xl uppercase mb-6 flex items-center justify-between">
-              Studio Activity
+              Activity
               <Link href="/studio-log">
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-none"><ArrowUpRight className="w-4 h-4" /></Button>
               </Link>

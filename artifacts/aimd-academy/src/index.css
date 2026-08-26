@@ -72,52 +72,39 @@
   --elevate-1: rgba(44, 38, 35, 0.03);
   --elevate-2: rgba(44, 38, 35, 0.06);
 
-  /* Warm Cream / Soft Linen background */
-  --background: 39 40% 97%;
-  --foreground: 20 11% 15%;
-
-  /* Warm Sand borders */
-  --border: 36 25% 88%;
-
-  /* Pure White cards */
-  --card: 0 0% 100%;
-  --card-foreground: 20 11% 15%;
-  --card-border: 36 25% 88%;
-
-  /* Warm light sidebar */
-  --sidebar: 38 28% 95%;
-  --sidebar-foreground: 20 11% 15%;
-  --sidebar-border: 36 25% 88%;
-  --sidebar-primary: 16 60% 49%;
+  /* Dark slate studio canvas */
+  --background: 212 25% 11%;
+  --foreground: 39 40% 97%;
+  --border: 212 16% 25%;
+  --card: 212 23% 15%;
+  --card-foreground: 39 40% 97%;
+  --card-border: 212 16% 25%;
+  --sidebar: 212 26% 8%;
+  --sidebar-foreground: 39 40% 97%;
+  --sidebar-border: 212 16% 20%;
+  --sidebar-primary: 330 100% 55%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 39 40% 92%;
-  --sidebar-accent-foreground: 20 11% 15%;
-  --sidebar-ring: 16 60% 49%;
-
-  --popover: 0 0% 100%;
-  --popover-foreground: 20 11% 15%;
-  --popover-border: 36 25% 88%;
-
-  /* Warm Terracotta primary */
-  --primary: 16 62% 41%; /* darkened for WCAG AA contrast on cream/white */
+  --sidebar-accent: 212 18% 18%;
+  --sidebar-accent-foreground: 39 40% 97%;
+  --sidebar-ring: 330 100% 55%;
+  --popover: 212 23% 15%;
+  --popover-foreground: 39 40% 97%;
+  --popover-border: 212 16% 25%;
+  /* Electric magenta primary */
+  --primary: 330 100% 55%;
   --primary-foreground: 0 0% 100%;
-
-  /* Amber secondary */
-  --secondary: 36 72% 56%;
-  --secondary-foreground: 20 11% 15%;
-
-  /* Hover / active surface */
-  --muted: 39 40% 92%;
-  --muted-foreground: 20 7% 40%;
-
-  --accent: 39 40% 92%;
-  --accent-foreground: 20 11% 15%;
+  --secondary: 36 95% 55%;
+  --secondary-foreground: 212 25% 11%;
+  --muted: 212 18% 20%;
+  --muted-foreground: 212 12% 70%;
+  --accent: 212 18% 20%;
+  --accent-foreground: 39 40% 97%;
 
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 98%;
 
-  --input: 36 25% 88%;
-  --ring: 16 60% 49%;
+  --input: 212 16% 25%;
+  --ring: 330 100% 55%;
 
   --chart-1: 16 60% 49%;
   --chart-2: 36 72% 56%;

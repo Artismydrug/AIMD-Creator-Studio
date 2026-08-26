@@ -1,98 +1,120 @@
 import { useListWorkshops } from '@workspace/api-client-react';
-import { Clock, BookOpen, PlayCircle, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Brush, Dumbbell, Headphones, Scissors, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
-export default function Workshops() {
-  const { data: workshops, isLoading } = useListWorkshops({}, { query: { queryKey: ['listWorkshops'] } });
-  const tattooApprenticeship = workshops?.find((workshop: any) =>
-    workshop.title.toLowerCase().includes('tattoo apprenticeship')
-    && workshop.title.toLowerCase().includes('poncho'),
-  );
+type Preview = {
+  title: string;
+  eyebrow: string;
+  description: string;
+  icon: typeof Brush;
+  accent: string;
+  iconSurface: string;
+  chips: string[];
+  tier: string;
+};
 
-  if (isLoading) return <div className="p-8 font-mono animate-pulse">Loading curriculum...</div>;
+const PREVIEWS: Preview[] = [
+  {
+    title: 'Fashion Workshop',
+    eyebrow: '01 / Fashion',
+    description: 'Design, sketching, garment construction',
+    icon: Scissors,
+    accent: 'text-amber-300',
+    iconSurface: 'bg-amber-400/15 border-amber-300/30',
+    chips: ['8 focused modules', '30-min drills', 'Artist feedback'],
+    tier: 'FASHION DESIGN - DEDICATED ARTIST MEMBERSHIP',
+  },
+  {
+    title: 'Music Workshop',
+    eyebrow: '02 / Music',
+    description: 'Audio production, beat-making, mixing',
+    icon: Headphones,
+    accent: 'text-cyan-300',
+    iconSurface: 'bg-cyan-400/15 border-cyan-300/30',
+    chips: ['10 focused modules', '30-min drills', 'Artist feedback'],
+    tier: 'MUSIC PRODUCTION - DEDICATED ARTIST MEMBERSHIP',
+  },
+  {
+    title: 'Basketball Workshop',
+    eyebrow: '03 / Basketball',
+    description: 'Skills, IQ, physical fitness',
+    icon: Dumbbell,
+    accent: 'text-orange-300',
+    iconSurface: 'bg-orange-400/15 border-orange-300/30',
+    chips: ['12 focused modules', '30-min drills', 'Artist feedback'],
+    tier: 'BASKETBALL - DEDICATED ARTIST MEMBERSHIP',
+  },
+  {
+    title: 'Visual Arts Workshop',
+    eyebrow: '04 / Visual Arts',
+    description: 'Painting, illustration, mixed media',
+    icon: Brush,
+    accent: 'text-fuchsia-300',
+    iconSurface: 'bg-fuchsia-400/15 border-fuchsia-300/30',
+    chips: ['10 focused modules', '30-min drills', 'Artist feedback'],
+    tier: 'VISUAL ARTS - DEDICATED ARTIST MEMBERSHIP',
+  },
+];
+
+export default function Workshops() {
+  const { isLoading } = useListWorkshops({}, { query: { queryKey: ['listWorkshops'] } });
+
+  if (isLoading) return <div className="p-8 font-mono animate-pulse text-muted-foreground">Loading workshops…</div>;
 
   return (
-    <div className="p-6 md:p-10 space-y-12">
-       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border">
-        <div>
-          <h1 className="text-4xl md:text-5xl font-black font-display uppercase tracking-tight">Workshops</h1>
-           <p className="text-muted-foreground font-mono mt-2">A first look at the tattoo apprenticeship coming to Creator Studio.</p>
-        </div>
+    <div className="p-6 md:p-10 space-y-8">
+      <header className="flex flex-col gap-3 pb-6 border-b border-border">
+        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-primary flex items-center gap-2">
+          <Sparkles className="w-3.5 h-3.5" /> AIMD Workshop Preview
+        </p>
+        <h1 className="text-4xl md:text-5xl font-black font-display uppercase tracking-tight">One craft. One apprenticeship.</h1>
+        <p className="text-muted-foreground font-mono text-sm">Choose your lane. Build the work.</p>
       </header>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        {tattooApprenticeship ? (
-          <WorkshopCard workshop={tattooApprenticeship} />
-        ) : (
-          <div className="md:col-span-2 border border-border bg-card p-8 text-center">
-            <h2 className="text-xl font-bold font-display uppercase tracking-tight mb-2">No workshops available</h2>
-            <p className="text-muted-foreground">There are no published workshops to display right now.</p>
-          </div>
-        )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 lg:gap-6">
+        {PREVIEWS.map((preview) => <WorkshopCard key={preview.title} preview={preview} />)}
       </div>
     </div>
   );
 }
 
-function WorkshopCard({ workshop }: { workshop: any }) {
+function WorkshopCard({ preview }: { preview: Preview }) {
+  const Icon = preview.icon;
+
   return (
-    <div className="border-2 border-fuchsia-500/50 bg-card flex flex-col group relative overflow-hidden">
-      <div className="h-64 bg-muted relative overflow-hidden">
-        {workshop.thumbnailUrl ? (
-          <img src={workshop.thumbnailUrl} className="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" alt="" />
-        ) : (
-          <div className="w-full h-full bg-zinc-950 flex items-center justify-center border-b border-border">
-            <PlayCircle className="w-12 h-12 text-fuchsia-400" />
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/85 via-zinc-950/10 to-transparent" />
-        
-        <div className="absolute top-4 left-4 flex flex-col gap-2">
-          <Badge className="rounded-none bg-background/90 text-foreground backdrop-blur-sm font-mono uppercase text-[10px] w-fit">
-            {workshop.category}
-          </Badge>
-          <Badge className="rounded-none bg-fuchsia-500 text-white backdrop-blur-sm font-mono uppercase text-[10px] w-fit">
-            Coming Soon
-          </Badge>
-        </div>
-        <div className="absolute bottom-5 left-6 right-6">
-          <p className="font-mono text-[10px] tracking-[.2em] text-cyan-300 uppercase">AIMD / Workshop 01</p>
-          <p className="mt-1 font-display font-black text-3xl uppercase tracking-tight text-white">Tattoo</p>
-        </div>
-      </div>
+    <article className="group relative overflow-hidden border border-white/10 bg-slate-950 text-white shadow-xl transition-transform duration-300 hover:-translate-y-1">
+      <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500/10 via-transparent to-amber-400/10 pointer-events-none" />
+      <div className="relative flex min-h-[330px] flex-col p-5 md:p-6">
+        <Badge className="w-fit rounded-full border border-fuchsia-300/30 bg-fuchsia-500/15 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-fuchsia-100 hover:bg-fuchsia-500/15">
+          Coming Soon
+        </Badge>
 
-      <div className="p-6 flex-1 flex flex-col">
-        <h3 className="text-2xl font-bold font-display uppercase tracking-tight mb-2 line-clamp-2">{workshop.title}</h3>
-        <p className="text-muted-foreground text-sm mb-6 flex-1">Train your eye. Build your hand. Learn the studio mindset with Poncho.</p>
-        
-        <div className="grid grid-cols-3 gap-2 pt-4 border-t border-border font-mono text-[10px] uppercase text-muted-foreground mb-5">
-          <div className="flex flex-col gap-1 border border-border bg-muted/40 p-2">
-            <BookOpen className="w-4 h-4 text-primary" />
-            {workshop.totalModules} modules
-          </div>
-          <div className="flex flex-col gap-1 border border-border bg-muted/40 p-2">
-            <Clock className="w-4 h-4 text-cyan-500" />
-            30-sec drills
-          </div>
-          <div className="flex flex-col gap-1 border border-border bg-muted/40 p-2">
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            Feedback
-          </div>
-        </div>
-
-        <div className="mb-5 flex items-center gap-3 border border-cyan-500/30 bg-cyan-500/10 p-3">
-          <BookOpen className="w-5 h-5 shrink-0 text-cyan-400" />
+        <div className="mt-7 flex items-start justify-between gap-4">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-300">Dedicated Artist membership</p>
-            <p className="text-sm text-foreground">$39/month when it opens</p>
+            <p className={`font-mono text-[10px] uppercase tracking-[0.2em] ${preview.accent}`}>{preview.eyebrow}</p>
+            <h2 className="mt-2 font-display text-2xl font-black uppercase tracking-tight">{preview.title}</h2>
+            <p className="mt-2 max-w-xs text-sm text-slate-300">{preview.description}</p>
+          </div>
+          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${preview.iconSurface}`}>
+            <Icon className={`h-6 w-6 ${preview.accent}`} />
           </div>
         </div>
-        
-        <Button disabled className="w-full rounded-none font-mono uppercase bg-muted text-muted-foreground">
-          <Sparkles className="w-4 h-4 mr-2" /> Coming Soon
-        </Button>
+
+        <div className="mt-auto pt-6">
+          <div className="flex flex-wrap gap-2">
+            {preview.chips.map((chip) => (
+              <span key={chip} className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wide text-slate-200">
+                <Sparkles className={`h-3 w-3 ${preview.accent}`} /> {chip}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-5 border-t border-white/10 pt-4">
+            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-fuchsia-200">{preview.tier}</p>
+            <p className="mt-1 text-xs text-slate-300">Workshop access begins at $39/month when it opens.</p>
+          </div>
+        </div>
       </div>
-    </div>
+    </article>
   );
 }

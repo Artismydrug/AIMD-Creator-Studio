@@ -283,12 +283,13 @@ export default function ProfileScreen() {
     stateText: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 14, textAlign: 'center' },
     overview: { alignItems: 'center', gap: 10, padding: 20, borderRadius: colors.radius + 4, borderWidth: 2, borderColor: colors.primary },
     username: { color: colors.foreground, fontFamily: 'DMSans_700Bold', fontSize: 22 },
-    bio: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 20, textAlign: 'center' },
+     bio: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 20, textAlign: 'center' },
     tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
     tag: { backgroundColor: colors.card, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 5 },
     tagText: { color: colors.mutedForeground, fontFamily: 'DMSans_500Medium', fontSize: 12 },
     metrics: { backgroundColor: colors.card, borderColor: colors.cyan, borderRadius: colors.radius + 2, borderWidth: 2, flexDirection: 'row', overflow: 'hidden' },
-    metric: { alignItems: 'center', flex: 1, gap: 3, paddingVertical: 14 },
+     metric: { alignItems: 'center', flex: 1, gap: 3, paddingVertical: 12 },
+     metricIcon: { marginBottom: 2 },
     metricDivider: { backgroundColor: colors.border, width: 1 },
     metricValue: { color: colors.foreground, fontFamily: 'DMSans_700Bold', fontSize: 17 },
     metricLabel: { color: colors.mutedForeground, fontFamily: 'DMSans_500Medium', fontSize: 10, textTransform: 'uppercase' },
@@ -337,7 +338,7 @@ export default function ProfileScreen() {
           <View style={[s.overview, { backgroundColor: colors.magentaWash }]}>
           <Avatar username={me.username} avatarUrl={me.avatarUrl} size={94} />
           <Text style={s.username}>{me.username}</Text>
-          {me.bio ? <Text style={s.bio}>{me.bio}</Text> : <Text style={s.bio}>Add a short bio so the community can find your work.</Text>}
+           {me.bio ? <Text style={s.bio} numberOfLines={2}>{me.bio}</Text> : <Text style={s.bio}>Add a bio.</Text>}
           {mediumTags.length > 0 && (
             <View style={s.tags}>
               {mediumTags.map((tag) => <View key={tag} style={s.tag}><Text style={s.tagText}>{tag}</Text></View>)}
@@ -346,19 +347,19 @@ export default function ProfileScreen() {
         </View>
 
         <View style={s.metrics}>
-          <View style={s.metric}><Text style={s.metricValue}>{publicProfile?.followerCount ?? '—'}</Text><Text style={s.metricLabel}>Followers</Text></View>
+           <View style={s.metric}><Feather name="users" size={14} color={colors.cyan} style={s.metricIcon} /><Text style={s.metricValue}>{publicProfile?.followerCount ?? '—'}</Text><Text style={s.metricLabel}>Followers</Text></View>
           <View style={s.metricDivider} />
-          <View style={s.metric}><Text style={s.metricValue}>{publicProfile?.followingCount ?? '—'}</Text><Text style={s.metricLabel}>Following</Text></View>
+           <View style={s.metric}><Feather name="user-plus" size={14} color={colors.cyan} style={s.metricIcon} /><Text style={s.metricValue}>{publicProfile?.followingCount ?? '—'}</Text><Text style={s.metricLabel}>Following</Text></View>
           <View style={s.metricDivider} />
-          <View style={s.metric}><Text style={s.metricValue}>{progress?.currentStreak ?? 0}</Text><Text style={s.metricLabel}>Day streak</Text></View>
+           <View style={s.metric}><Feather name="zap" size={14} color={colors.cyan} style={s.metricIcon} /><Text style={s.metricValue}>{progress?.currentStreak ?? 0}</Text><Text style={s.metricLabel}>Day streak</Text></View>
         </View>
 
         <View style={[s.statusCard, { backgroundColor: colors.goldWash }]}>
-          <Text style={s.statusTitle}>{progress?.phase?.phase ?? 'Discovering'} phase · {me.tier === 'free' ? 'Free access' : me.tier}</Text>
+           <Text style={s.statusTitle}><Feather name="shield" size={14} color={colors.primary} />  {progress?.phase?.phase ?? 'Discovering'} · {me.tier === 'free' ? 'Free' : me.tier}</Text>
           <Text style={s.statusText}>
             {me.tier === 'free'
-              ? 'Your free creator access is active.'
-              : 'Your current membership access is active.'}
+               ? 'Access active.'
+               : 'Membership active.'}
           </Text>
           {progressError && <Text style={[s.statusText, { color: colors.destructive }]}>Progress details are temporarily unavailable.</Text>}
         </View>

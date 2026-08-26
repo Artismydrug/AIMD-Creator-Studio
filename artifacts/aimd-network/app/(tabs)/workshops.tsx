@@ -66,6 +66,45 @@ const featuredTracks = [
   },
 ];
 
+const workshopPreviews = [
+  {
+    icon: 'scissors' as const,
+    title: 'Fashion Workshop',
+    eyebrow: '01 / Fashion',
+    description: 'Design, sketching, garment construction',
+    chips: ['8 focused modules', '30-min drills', 'Artist feedback'],
+    accent: 'gold' as const,
+    tier: 'FASHION DESIGN',
+  },
+  {
+    icon: 'headphones' as const,
+    title: 'Music Workshop',
+    eyebrow: '02 / Music',
+    description: 'Audio production, beat-making, mixing',
+    chips: ['10 focused modules', '30-min drills', 'Artist feedback'],
+    accent: 'cyan' as const,
+    tier: 'MUSIC PRODUCTION',
+  },
+  {
+    icon: 'activity' as const,
+    title: 'Basketball Workshop',
+    eyebrow: '03 / Basketball',
+    description: 'Skills, IQ, physical fitness',
+    chips: ['12 focused modules', '30-min drills', 'Artist feedback'],
+    accent: 'coral' as const,
+    tier: 'BASKETBALL',
+  },
+  {
+    icon: 'feather' as const,
+    title: 'Visual Arts Workshop',
+    eyebrow: '04 / Visual Arts',
+    description: 'Painting, illustration, mixed media',
+    chips: ['10 focused modules', '30-min drills', 'Artist feedback'],
+    accent: 'magenta' as const,
+    tier: 'VISUAL ARTS',
+  },
+];
+
 type CapturedVideo = {
   uri: string;
   contentType: string;
@@ -229,6 +268,20 @@ export default function WorkshopsScreen() {
     trackIcon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
     trackTitle: { fontFamily: 'DMSans_700Bold', fontSize: 15, color: colors.foreground },
     trackMeta: { fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.mutedForeground },
+    previewGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 20, paddingBottom: 10 },
+    previewCard: { width: '48%', minHeight: 228, padding: 12, borderRadius: colors.radius, backgroundColor: colors.ink, borderWidth: 1, gap: 8 },
+    previewTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
+    previewBadge: { borderRadius: 99, borderWidth: 1, paddingHorizontal: 7, paddingVertical: 4 },
+    previewBadgeText: { fontFamily: 'DMSans_700Bold', fontSize: 8, color: colors.background, letterSpacing: 0.7 },
+    previewIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+    previewEyebrow: { fontFamily: 'DMSans_700Bold', fontSize: 8, letterSpacing: 1, textTransform: 'uppercase' },
+    previewTitle: { fontFamily: 'DMSans_700Bold', fontSize: 15, lineHeight: 18, color: colors.background },
+    previewBody: { fontFamily: 'DMSans_400Regular', fontSize: 11, lineHeight: 15, color: 'rgba(250,248,245,0.7)' },
+    previewChips: { gap: 4, marginTop: 'auto' },
+    previewChip: { fontFamily: 'DMSans_500Medium', fontSize: 9, color: colors.background },
+    previewFooter: { borderTopWidth: 1, borderTopColor: 'rgba(250,248,245,0.16)', paddingTop: 7, marginTop: 3 },
+    previewTier: { fontFamily: 'DMSans_700Bold', fontSize: 8, color: colors.cyan, letterSpacing: 0.5 },
+    previewPrice: { fontFamily: 'DMSans_400Regular', fontSize: 9, lineHeight: 12, color: 'rgba(250,248,245,0.68)', marginTop: 2 },
     card: { padding: 16, borderRadius: colors.radius, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, gap: 8 },
     selectedCard: { borderColor: colors.electricMagenta, borderWidth: 2 },
     category: { fontFamily: 'DMSans_700Bold', fontSize: 10, color: colors.sunsetCoral, textTransform: 'uppercase', letterSpacing: 1.2 },
@@ -277,16 +330,52 @@ export default function WorkshopsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
         <View style={s.header}>
-          <Text style={s.eyebrow}>Dedicated Artist · Workshops & Masterclasses</Text>
-          <Text style={s.title}>Build mastery. Show the work.</Text>
-          <Text style={s.intro}>Video-led instruction across visual arts, tattoo prep, audio production, garment design, and more — with direct instructor feedback.</Text>
+          <Text style={s.eyebrow}>AIMD Workshop Preview</Text>
+          <Text style={s.title}>One craft. One apprenticeship.</Text>
+          <Text style={s.intro}>Choose your lane. Build the work.</Text>
+        </View>
+
+        <View style={s.previewGrid} testID="workshop-preview-grid">
+          {workshopPreviews.map((preview) => {
+            const accent = preview.accent === 'magenta'
+              ? colors.electricMagenta
+              : preview.accent === 'cyan'
+                ? colors.cyan
+                : preview.accent === 'gold'
+                  ? colors.gold
+                  : colors.sunsetCoral;
+            return (
+              <View key={preview.title} style={[s.previewCard, { borderColor: `${accent}66` }]}>
+                <View style={s.previewTop}>
+                  <View style={[s.previewBadge, { borderColor: `${accent}88`, backgroundColor: `${accent}22` }]}>
+                    <Text style={s.previewBadgeText}>COMING SOON</Text>
+                  </View>
+                  <View style={[s.previewIcon, { backgroundColor: `${accent}26` }]}>
+                    <Feather name={preview.icon} size={17} color={accent} />
+                  </View>
+                </View>
+                <Text style={[s.previewEyebrow, { color: accent }]}>{preview.eyebrow}</Text>
+                <Text style={s.previewTitle}>{preview.title}</Text>
+                <Text style={s.previewBody}>{preview.description}</Text>
+                <View style={s.previewChips}>
+                  {preview.chips.map((chip) => (
+                    <Text key={chip} style={s.previewChip}>· {chip}</Text>
+                  ))}
+                </View>
+                <View style={s.previewFooter}>
+                  <Text style={s.previewTier}>{preview.tier} · DEDICATED</Text>
+                  <Text style={s.previewPrice}>Access begins at $39/month when it opens.</Text>
+                </View>
+              </View>
+            );
+          })}
         </View>
 
         {!hasPhaseTwo ? (
           <View style={s.locked}>
             <Feather name="play-circle" size={28} color={colors.gold} />
             <Text style={s.lockedTitle}>Start with a real Module 1 preview</Text>
-            <Text style={s.lockedBody}>Choose a workshop, then open its first lesson. Dedicated Artist unlocks every remaining module, progress tracking, and direct instructor feedback.</Text>
+            <Text style={s.lockedBody}>Module 1 previews are open. Dedicated Artist unlocks the full curriculum and feedback.</Text>
             <View style={{ alignSelf: 'stretch', gap: 8 }}>
               {workshops?.map((workshop) => {
                 const isSelected = selectedWorkshopId === workshop.id;
@@ -401,7 +490,7 @@ export default function WorkshopsScreen() {
             <View style={s.submissionHub} testID="assignment-hub">
               <Text style={s.submissionHubEyebrow}>Assignment Submission</Text>
               <Text style={s.submissionHubTitle}>Submit a 30-second practice drill</Text>
-              <Text style={s.submissionHubBody}>Select an official drill, record one focused fake-skin or station-practice clip live in the app, and receive a master-instructor video breakdown and critique.</Text>
+              <Text style={s.submissionHubBody}>Record one focused drill. Send it to your instructor.</Text>
               {workshopDetailError ? (
                 <View style={{ alignItems: 'center', gap: 8 }}>
                   <Text style={[s.submissionHubBody, { textAlign: 'center' }]}>
