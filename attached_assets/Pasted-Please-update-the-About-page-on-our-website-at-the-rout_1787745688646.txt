@@ -1,0 +1,28 @@
+Please update the About page on our website at the route "/about" (accessible at https://www.artismydrug.com/about). 
+
+Incorporate the following text content and style it professionally with sections, clear headings, a prominent link to our non-profit, and a creative image gallery or alternating image grid showcasing our journey milestones (such as our early shop features, the mobile tattoo bus, tours, and the new Concrete Jungle container space).
+
+---
+
+# About Us — Art Is My Drug
+
+## Our Journey: From a Local Hub to a Creative Movement
+Art Is My Drug started with a vision to build a true community of creators. In 2014, Edward “Ponchotheartist” Davila opened his very first shop in Torrance, CA. What started as a 1,000 sq. ft. tattoo shop quickly grew into something much bigger, expanding to over 4,000 sq. ft. and serving as a bustling hub for the community. We brought not just tattoos, but fashion, poetry, music, and all forms of art under one roof. 
+
+Our momentum pushed us beyond the walls of a traditional shop:
+- 2017: We built the first Mobile Tattoo Bus.
+- National & California Tours: We collaborated on high-profile projects with Hulu, Mammoth/Heavyhitters, Coachella activations, LA Weekly, and more.
+
+## The Next Era: Concrete Jungle & The Artist Resort
+In 2024, we took a massive leap forward and moved to Vintageland/Concrete Jungle—a sprawling 100,000 sq. ft. space featuring 3 levels dedicated to creation. 
+
+We are now scaling to build our long-time dream: The Artist Resort. Our plan is to build a sustainable compound utilizing shipping containers, and our very first container compound is already set up right here at Concrete Jungle!
+
+---
+
+## Supporting the Creators of Tomorrow
+We are deeply committed to lifting up the next generation. In 2024, we officially launched our Non-Profit organization dedicated to supporting and nurturing the youth. We have already hosted over a dozen art workshops and plan to keep building the creators of tomorrow. 
+
+[Click here to learn more about and support our Non-Profit initiative](#) *(Link to your non-profit)*
+
+---
