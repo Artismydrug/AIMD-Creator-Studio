@@ -266,6 +266,7 @@ export default function ProgressScreen() {
 
   const topPad = Platform.OS === 'web' ? 67 : insets.top + 8;
   const isSubmitting = uploading || submitMut.isPending;
+  const isFreeCreator = currentUser?.tier === 'free';
 
   const s = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
@@ -825,19 +826,30 @@ export default function ProgressScreen() {
           <Text style={s.tagline} numberOfLines={1}>Discipline Eats Talent</Text>
         </View>
         {/* Tier badge + profile link */}
-        <TouchableOpacity
-          style={{ alignItems: 'flex-end', gap: 4 }}
-          onPress={() => router.push('/profile')}
-          testID="dashboard-profile-button"
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+        <View style={{ alignItems: 'flex-end', gap: 4 }}>
+          <TouchableOpacity
+            style={{ alignItems: 'center', flexDirection: 'row', gap: 5, paddingVertical: 2 }}
+            accessibilityRole="button"
+            accessibilityLabel={isFreeCreator
+              ? 'View membership options for your free Discovering Artist account'
+              : 'View your profile'}
+            onPress={() => router.push(isFreeCreator ? '/membership' : '/profile')}
+            testID={isFreeCreator ? 'dashboard-membership-button' : 'dashboard-tier-button'}
+          >
             <Feather name="shield" size={12} color={colors.cyan} />
             <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 11, color: colors.foreground, textTransform: 'uppercase' }}>
               {currentUser?.tier === 'pro' ? 'Pro' : currentUser?.tier === 'academy' || currentUser?.tier === 'workshop' ? 'Dedicated' : 'Free'}
             </Text>
-          </View>
-          <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.primary }}>My Profile</Text>
-        </TouchableOpacity>
+          </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Open your profile"
+            onPress={() => router.push('/profile')}
+            testID="dashboard-profile-button"
+          >
+            <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.primary }}>My Profile</Text>
+          </TouchableOpacity>
+        </View>
         {/* Feed shortcut */}
         <TouchableOpacity style={s.feedBtn} onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

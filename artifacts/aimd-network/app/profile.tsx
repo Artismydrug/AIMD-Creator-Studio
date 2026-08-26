@@ -294,7 +294,8 @@ export default function ProfileScreen() {
     metricValue: { color: colors.foreground, fontFamily: 'DMSans_700Bold', fontSize: 17 },
     metricLabel: { color: colors.mutedForeground, fontFamily: 'DMSans_500Medium', fontSize: 10, textTransform: 'uppercase' },
     statusCard: { borderColor: colors.gold, borderRadius: colors.radius + 2, borderWidth: 2, gap: 6, padding: 14 },
-    statusTitle: { color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 15 },
+     statusCardHeader: { alignItems: 'center', flexDirection: 'row', gap: 10, justifyContent: 'space-between' },
+    statusTitle: { color: colors.foreground, flex: 1, fontFamily: 'DMSans_600SemiBold', fontSize: 15 },
     statusText: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 13, lineHeight: 19 },
     badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     badge: { alignItems: 'center', backgroundColor: colors.muted, borderRadius: colors.radius, flexDirection: 'row', gap: 6, paddingHorizontal: 10, paddingVertical: 7 },
@@ -354,15 +355,24 @@ export default function ProfileScreen() {
            <View style={s.metric}><Feather name="zap" size={14} color={colors.cyan} style={s.metricIcon} /><Text style={s.metricValue}>{progress?.currentStreak ?? 0}</Text><Text style={s.metricLabel}>Day streak</Text></View>
         </View>
 
-        <View style={[s.statusCard, { backgroundColor: colors.goldWash }]}>
-           <Text style={s.statusTitle}><Feather name="shield" size={14} color={colors.primary} />  {progress?.phase?.phase ?? 'Discovering'} · {me.tier === 'free' ? 'Free' : me.tier}</Text>
+        <Pressable
+          style={[s.statusCard, { backgroundColor: colors.goldWash }]}
+          accessibilityRole="button"
+          accessibilityLabel={me.tier === 'free' ? 'View membership options' : 'Manage your AIMD membership'}
+          onPress={() => router.push('/membership')}
+          testID="profile-membership-button"
+        >
+          <View style={s.statusCardHeader}>
+            <Text style={s.statusTitle}><Feather name="shield" size={14} color={colors.primary} />  {progress?.phase?.phase ?? 'Discovering'} · {me.tier === 'free' ? 'Free' : me.tier}</Text>
+            <Feather name="chevron-right" size={18} color={colors.primary} />
+          </View>
           <Text style={s.statusText}>
             {me.tier === 'free'
-               ? 'Access active.'
-               : 'Membership active.'}
+               ? 'Free access. See what’s coming next.'
+               : 'Membership active. Manage your access.'}
           </Text>
           {progressError && <Text style={[s.statusText, { color: colors.destructive }]}>Progress details are temporarily unavailable.</Text>}
-        </View>
+        </Pressable>
 
         <View>
           <Text style={[styles.sectionTitle, { color: colors.foreground, marginBottom: 10 }]}>Unlocked badges</Text>
