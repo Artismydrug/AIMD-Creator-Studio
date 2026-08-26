@@ -2831,7 +2831,7 @@ components:
     # ── AIMD Store ─────────────────────────────────────────────────────────
     StoreProduct:
       type: object
-      required: [id, name, description, category, imageKey, fulfillmentType, featured, inventoryLabel, priceId, unitAmount, currency]
+      required: [id, name, description, category, imageKey, imageUrl, productUrl, fulfillmentType, featured, inventoryLabel, priceId, unitAmount, currency]
       properties:
         id:
           type: string
@@ -2843,6 +2843,14 @@ components:
           type: string
           enum: ["apparel", "canvas", "digital"]
         imageKey:
+          type: string
+        imageUrl:
+          type: string
+          format: uri
+        productUrl:
+          type: string
+          format: uri
+        apparelNote:
           type: string
         fulfillmentType:
           type: string

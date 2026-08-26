@@ -14,6 +14,9 @@ export interface StoreProduct {
   description: string;
   category: StoreProductCategory;
   imageKey: string;
+  imageUrl: string;
+  productUrl: string;
+  apparelNote?: string;
   fulfillmentType: StoreProductFulfillmentType;
   featured: boolean;
   inventoryLabel: string;

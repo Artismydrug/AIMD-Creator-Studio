@@ -3,7 +3,6 @@ import { useListStoreProducts, StoreProductCategory } from '@workspace/api-clien
 import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
 import { ImageIcon, PackageX } from 'lucide-react';
 import { ProductCard } from '@/components/store/ProductCard';
-import { isVerifiedStorefrontProduct } from '@/components/store/StoreUtils';
 
 import galleryImg from '@assets/generated_images/gallery-wall.jpg';
 
@@ -32,12 +31,11 @@ export default function Gallery() {
     refetch,
   } = useListStoreProducts();
 
-  const verifiedProducts = allProducts.filter(p => isVerifiedStorefrontProduct(p.imageKey));
   const categoryFilter = filterToCategory[activeFilter];
 
   const displayedProducts = categoryFilter
-    ? verifiedProducts.filter(p => p.category === categoryFilter)
-    : verifiedProducts;
+    ? allProducts.filter(p => p.category === categoryFilter)
+    : allProducts;
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#252019] flex flex-col">

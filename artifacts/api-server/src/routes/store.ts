@@ -30,6 +30,9 @@ type CatalogProduct = {
   description: string;
   category: "apparel" | "canvas" | "digital";
   imageKey: string;
+  imageUrl: string;
+  productUrl: string;
+  apparelNote?: string;
   fulfillmentType: "physical" | "digital";
   featured: boolean;
   inventoryLabel: string;
@@ -39,12 +42,16 @@ type CatalogProduct = {
 };
 
 function mapCatalogRow(row: Record<string, unknown>): CatalogProduct {
+  const apparelNote = String(row.apparel_note ?? "").trim();
   return {
     id: String(row.id),
     name: String(row.name),
     description: String(row.description ?? ""),
     category: String(row.category) as CatalogProduct["category"],
     imageKey: String(row.image_key ?? ""),
+    imageUrl: String(row.image_url),
+    productUrl: String(row.product_url),
+    ...(apparelNote ? { apparelNote } : {}),
     fulfillmentType: String(row.fulfillment_type) as CatalogProduct["fulfillmentType"],
     featured: row.featured === true || row.featured === "true",
     inventoryLabel: String(row.inventory_label ?? ""),
@@ -65,6 +72,9 @@ async function queryCatalogProducts(priceIds?: string[]): Promise<CatalogProduct
       COALESCE(p.description, '') AS description,
       p.metadata->>'category' AS category,
       p.metadata->>'image_key' AS image_key,
+      p.metadata->>'image_url' AS image_url,
+      p.metadata->>'product_url' AS product_url,
+      p.metadata->>'apparel_note' AS apparel_note,
       p.metadata->>'fulfillment_type' AS fulfillment_type,
       p.metadata->>'featured' AS featured,
       COALESCE(p.metadata->>'inventory_label', '') AS inventory_label,
@@ -79,8 +89,11 @@ async function queryCatalogProducts(priceIds?: string[]): Promise<CatalogProduct
     WHERE
       p.active = true
       AND p.metadata->>'catalog' = 'aimd_store'
+      AND p.metadata->>'gallery_published' = 'true'
       AND p.metadata->>'category' IN ('apparel', 'canvas', 'digital')
       AND p.metadata->>'fulfillment_type' IN ('physical', 'digital')
+      AND p.metadata->>'image_url' LIKE 'https://%'
+      AND p.metadata->>'product_url' ~ '^https://(www\.)?artismydrug\.org/product-page/.+'
       AND pr.unit_amount IS NOT NULL
       ${priceFilter}
     ORDER BY

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { StoreProduct } from '@workspace/api-client-react';
-import { getProductImage, formatPrice, getProductStoreUrl, getApparelNote } from './StoreUtils';
+import { formatPrice } from './StoreUtils';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Eye, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -13,8 +13,6 @@ const CATEGORY_LABELS = {
 
 export function QuickView({ product, open, onOpenChange }: { product: StoreProduct, open: boolean, onOpenChange: (open: boolean) => void }) {
   const isOutOfStock = product.inventoryLabel === 'Out of Stock';
-  const apparelNote = getApparelNote(product.imageKey);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden bg-[#fffdf9] text-[#252019] border-[#252019]/20 rounded-none shadow-2xl" data-testid={`dialog-quickview-${product.id}`}>
@@ -27,7 +25,7 @@ export function QuickView({ product, open, onOpenChange }: { product: StoreProdu
         <div className="flex flex-col md:flex-row">
           <div className="w-full md:w-1/2 aspect-square md:aspect-auto bg-[#f2ede3] border-b md:border-b-0 md:border-r border-[#252019]/15 overflow-hidden relative">
             <img 
-              src={getProductImage(product.imageKey)} 
+              src={product.imageUrl}
               alt={product.name} 
               className="w-full h-full object-cover" 
               data-testid={`img-quickview-${product.id}`}
@@ -53,9 +51,9 @@ export function QuickView({ product, open, onOpenChange }: { product: StoreProdu
                   <span className={`inline-block w-2 h-2 rounded-full ${isOutOfStock ? 'bg-destructive' : 'bg-green-500'}`} />
                   <span className="font-mono text-xs uppercase text-[#685f56]">{product.inventoryLabel}</span>
                 </div>
-                {apparelNote && (
+                {product.apparelNote && (
                   <p className="font-mono text-[10px] text-[#685f56] border-l-2 border-primary/50 pl-2 py-0.5" data-testid={`text-quickview-apparel-note-${product.id}`}>
-                    {apparelNote}
+                    {product.apparelNote}
                   </p>
                 )}
               </div>
@@ -65,7 +63,7 @@ export function QuickView({ product, open, onOpenChange }: { product: StoreProdu
                 className="w-full rounded-none uppercase font-mono font-bold tracking-widest h-12 bg-primary hover:bg-primary/90 glow-coral text-primary-foreground"
                 data-testid={`link-quickview-buy-${product.id}`}
               >
-                <a href={getProductStoreUrl(product.imageKey)} target="_blank" rel="noreferrer">
+                <a href={product.productUrl} target="_blank" rel="noreferrer">
                   {isOutOfStock ? "View Store" : "Buy Now"} <ExternalLink className="w-4 h-4 ml-2" />
                 </a>
               </Button>
@@ -86,7 +84,7 @@ export function ProductCard({ product }: { product: StoreProduct }) {
       <div className="group flex flex-col border border-[#252019]/15 bg-[#fffdf9] text-[#252019] overflow-hidden hover:border-primary/50 transition-colors shadow-sm hover:shadow-md" data-testid={`card-product-${product.id}`}>
         <div className="relative aspect-square overflow-hidden bg-[#f2ede3]">
           <img 
-            src={getProductImage(product.imageKey)} 
+              src={product.imageUrl}
             alt={product.name} 
               className="w-full h-full object-cover transition-transform duration-700 motion-reduce:transition-none group-hover:scale-105 motion-reduce:group-hover:scale-100"
             loading="lazy"
@@ -125,7 +123,7 @@ export function ProductCard({ product }: { product: StoreProduct }) {
               className="flex-1 rounded-none font-mono text-[10px] uppercase font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow"
               data-testid={`link-buy-now-${product.id}`}
             >
-              <a href={getProductStoreUrl(product.imageKey)} target="_blank" rel="noreferrer">
+              <a href={product.productUrl} target="_blank" rel="noreferrer">
                 <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Buy
               </a>
             </Button>

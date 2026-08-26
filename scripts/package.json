@@ -6,6 +6,7 @@
   "scripts": {
     "hello": "tsx ./src/hello.ts",
     "seed:store": "tsx ./src/seed-store-products.ts",
+    "check:store": "tsx ./src/check-store-catalog.ts",
     "seed:revenuecat": "tsx ./src/seed-revenuecat.ts",
     "seed:products": "tsx ./src/seed-products.ts",
     "seed:creator-studio": "tsx ./src/seed-creator-studio.ts",
