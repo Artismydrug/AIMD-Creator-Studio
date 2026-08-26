@@ -1,6 +1,6 @@
 import express, { type Express } from "express";
 import request from "supertest";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { pool } from "@workspace/db";
 import challengesRouter, { isChallengeSubmissionOpen } from "./challenges";
 
@@ -70,6 +70,11 @@ async function createProofUpload(
 }
 
 beforeAll(async () => {
+  // Keep proof validation tests inside the configured challenge window.
+  // The route must still reject real submissions after its deadline.
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-08-23T12:00:00.000Z"));
+
   const { rows } = await pool.query<TestUser>(
     `INSERT INTO users (email, username, is_admin)
      VALUES
@@ -90,17 +95,21 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  const ids = [creator?.id, otherCreator?.id, admin?.id].filter(Boolean);
-  if (ids.length > 0) {
-    await pool.query(
-      `DELETE FROM challenge_submissions WHERE user_id = ANY($1::int[])`,
-      [ids],
-    );
-    await pool.query(
-      `DELETE FROM challenge_media_uploads WHERE user_id = ANY($1::int[])`,
-      [ids],
-    );
-    await pool.query(`DELETE FROM users WHERE id = ANY($1::int[])`, [ids]);
+  try {
+    const ids = [creator?.id, otherCreator?.id, admin?.id].filter(Boolean);
+    if (ids.length > 0) {
+      await pool.query(
+        `DELETE FROM challenge_submissions WHERE user_id = ANY($1::int[])`,
+        [ids],
+      );
+      await pool.query(
+        `DELETE FROM challenge_media_uploads WHERE user_id = ANY($1::int[])`,
+        [ids],
+      );
+      await pool.query(`DELETE FROM users WHERE id = ANY($1::int[])`, [ids]);
+    }
+  } finally {
+    vi.useRealTimers();
   }
 });
 
