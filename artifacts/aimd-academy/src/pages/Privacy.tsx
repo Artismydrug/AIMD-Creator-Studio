@@ -14,7 +14,7 @@ import {
   Trash2,
   UserRound,
 } from 'lucide-react';
-import aimdLogo from '@assets/aimd-logo.jpg';
+import aimdLogo from '@assets/AIMD_Logo_Original-White_1787712004194.png';
 
 const sections = [
   { id: 'overview', label: 'Overview' },
@@ -83,7 +83,9 @@ export default function Privacy() {
       <header className="sticky top-0 z-40 border-b border-[#E8E2D9]/90 bg-[#FAF8F5]/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
           <Link href="/" className="flex items-center gap-3" aria-label="Art Is My Drug home">
-            <img src={aimdLogo} alt="AIMD — Art Is My Drug" width={120} height={36} className="h-9 w-auto object-contain" />
+            <span className="inline-flex h-10 min-w-[78px] items-center justify-center bg-[#2C2623] px-2.5 shadow-[0_3px_0_rgba(44,38,35,0.16)]">
+              <img src={aimdLogo} alt="AIMD — Art Is My Drug" width={120} height={36} className="h-8 w-auto object-contain" />
+            </span>
           </Link>
           <Link
             href="/app"
@@ -255,7 +257,9 @@ export default function Privacy() {
       <footer className="border-t border-[#E8E2D9] bg-[#F2ECE1]">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 sm:px-8 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
-            <img src={aimdLogo} alt="" width={100} height={30} className="h-7 w-auto object-contain" />
+            <span className="inline-flex h-9 min-w-[70px] items-center justify-center bg-[#2C2623] px-2">
+              <img src={aimdLogo} alt="" width={100} height={30} className="h-7 w-auto object-contain" />
+            </span>
             <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[#8A8077]">Art Is My Drug</span>
           </div>
           <div className="flex flex-wrap gap-x-5 gap-y-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[#6E6660]">

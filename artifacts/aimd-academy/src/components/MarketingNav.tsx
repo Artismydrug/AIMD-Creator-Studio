@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { SignInButton, useAuth, useUser } from '@clerk/react';
 import { Button } from '@/components/ui/button';
 import { Menu, X, ArrowRight } from 'lucide-react';
-import aimdLogo from '@assets/aimd-logo.jpg';
+import aimdLogo from '@assets/AIMD_Logo_Original-White_1787712004194.png';
 
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
