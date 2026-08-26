@@ -107,6 +107,13 @@ export default function WorkshopsScreen() {
   } = useListWorkshops(
     { tier: 'workshop' },
   );
+  const previewWorkshops = useMemo(
+    () => (workshops ?? []).filter((workshop) => {
+      const searchable = `${workshop.title} ${workshop.instructorName ?? ''}`.toLowerCase();
+      return searchable.includes('poncho') || searchable.includes('tattoo') || searchable.includes('fine art');
+    }).slice(0, 1),
+    [workshops],
+  );
   const workshopQueryId = selectedWorkshopId ?? 0;
   const {
     data: workshopDetail,
@@ -134,10 +141,10 @@ export default function WorkshopsScreen() {
   });
 
   useEffect(() => {
-    if (selectedWorkshopId === null && workshops?.[0]) {
-      setSelectedWorkshopId(workshops[0].id);
+    if (selectedWorkshopId === null && previewWorkshops[0]) {
+      setSelectedWorkshopId(previewWorkshops[0].id);
     }
-  }, [selectedWorkshopId, workshops]);
+  }, [selectedWorkshopId, previewWorkshops]);
 
   useEffect(() => {
     const firstModule = workshopDetail?.modules?.[0];
@@ -353,14 +360,14 @@ export default function WorkshopsScreen() {
                   <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 13, color: colors.foreground }}>Retry</Text>
                 </TouchableOpacity>
               </View>
-            ) : !workshops?.length ? (
+            ) : !previewWorkshops.length ? (
               <View style={{ alignItems: 'center', paddingVertical: 16, gap: 8 }}>
                 <Feather name="play-circle" size={28} color={colors.mutedForeground} />
                 <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.mutedForeground, textAlign: 'center' }}>
                   The preview is coming soon.
                 </Text>
               </View>
-            ) : workshops.map((workshop) => {
+            ) : previewWorkshops.map((workshop) => {
               const isSelected = selectedWorkshopId === workshop.id;
               return (
                 <View key={workshop.id} style={{ gap: 8 }}>
