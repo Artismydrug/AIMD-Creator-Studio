@@ -42,6 +42,15 @@ export async function ensureAuthSchema(): Promise<void> {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name TEXT
   `);
 
+  // Keep deleted Clerk identities from being JIT-provisioned again by an
+  // unexpired mobile session token.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS deleted_clerk_users (
+      clerk_id TEXT PRIMARY KEY,
+      deleted_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `);
+
   // Add a unique index on users.username if it doesn't already exist.
   // Wrapped in a try/catch: if duplicate usernames already exist in the DB,
   // the index creation will fail — the app logs a warning and continues; the

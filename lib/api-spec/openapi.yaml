@@ -1027,6 +1027,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+    delete:
+      operationId: deleteCurrentUser
+      tags: [users]
+      summary: Permanently delete the authenticated user's account
+      description: Deletes the authenticated Clerk identity and all local account data.
+      responses:
+        "204":
+          description: Account deleted
+        "401":
+          description: Unauthorized
+        "503":
+          description: Account deletion is temporarily unavailable
+        "500":
+          description: Account deletion failed
     patch:
       operationId: updateCurrentUser
       tags: [users]

@@ -140,6 +140,17 @@ beforeAll(async () => {
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS clerk_id TEXT UNIQUE`);
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name TEXT`);
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name TEXT`);
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS deleted_clerk_users (
+        clerk_id TEXT PRIMARY KEY,
+        deleted_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )
+    `);
+  } catch (error: any) {
+    // Another Vitest file may initialize this idempotent table concurrently.
+    if (!["42P07", "23505"].includes(error?.code)) throw error;
+  }
 });
 
 afterEach(async () => {
@@ -150,6 +161,7 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
+  await pool.query("DELETE FROM deleted_clerk_users WHERE clerk_id LIKE 'user_clerk_%'").catch(() => {});
   delete process.env.CLERK_WEBHOOK_SECRET;
   await pool.end().catch(() => {});
 });

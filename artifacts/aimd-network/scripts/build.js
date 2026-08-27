@@ -5,6 +5,9 @@ const { spawn } = require('child_process');
 const { Readable } = require('stream');
 const { pipeline } = require('stream/promises');
 const { assertDashboardSmokeContract } = require('./dashboard-smoke');
+const { assertAccountDeletionSmokeContract } = require('./account-deletion-smoke');
+
+assertAccountDeletionSmokeContract();
 
 let metroProcess = null;
 let metroPort = Number(process.env.METRO_PORT || 8081);

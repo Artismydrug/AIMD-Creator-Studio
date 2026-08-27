@@ -1197,6 +1197,13 @@ export const GetCurrentUserResponse = zod.object({
 
 
 /**
+ * Deletes the authenticated Clerk identity and all local account data.
+ * @summary Permanently delete the authenticated user's account
+ */
+export const DeleteCurrentUserResponse = zod.void()
+
+
+/**
  * @summary Update current user profile
  */
 export const updateCurrentUserBodyBioMax = 500;

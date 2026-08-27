@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { createClerkClient, getAuth } from "@clerk/express";
 import { eq, sql } from "drizzle-orm";
 import { db, pool, usersTable } from "@workspace/db";
 import {
@@ -13,6 +14,8 @@ import {
 } from "@workspace/api-zod";
 import { ObjectPermission, getObjectAclPolicy } from "../lib/objectAcl";
 import { ObjectNotFoundError, ObjectStorageService } from "../lib/objectStorage";
+import { deleteLocalAccount } from "../lib/accountDeletion";
+import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -85,6 +88,52 @@ router.get("/users/me", async (req, res): Promise<void> => {
     return;
   }
   res.json(GetCurrentUserResponse.parse(user));
+});
+
+router.delete("/users/me", async (req, res): Promise<void> => {
+  if (!req.dbUser) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const clerkUserId = getAuth(req).userId;
+  // A local row must be bound to the same Clerk identity that is making the
+  // request. This prevents an email-only/legacy session from deleting a row
+  // whose Clerk identity cannot be verified.
+  if (!clerkUserId || req.dbUser.clerkId !== clerkUserId) {
+    res.status(401).json({ error: "Unable to verify account ownership." });
+    return;
+  }
+
+  const secretKey = process.env.CLERK_SECRET_KEY;
+  if (!secretKey) {
+    logger.error("CLERK_SECRET_KEY is not set — account deletion is unavailable");
+    res.status(503).json({ error: "Account deletion is temporarily unavailable." });
+    return;
+  }
+
+  try {
+    const clerk = createClerkClient({ secretKey });
+
+    // Delete the identity first. If this fails, leave the local account intact
+    // so a retry cannot strand a still-active Clerk account without its data.
+    try {
+      await clerk.users.deleteUser(clerkUserId);
+    } catch (error: any) {
+      // A prior attempt may have deleted Clerk successfully before local
+      // cleanup failed. Treat an already-gone identity as safe to finish.
+      if (error?.status !== 404) throw error;
+    }
+
+    await deleteLocalAccount({
+      clerkUserId,
+      localUserId: req.dbUser.id,
+    });
+    res.status(204).send();
+  } catch (error) {
+    logger.error({ err: error, clerkUserId }, "Self-service account deletion failed");
+    res.status(500).json({ error: "We could not delete your account. Please try again." });
+  }
 });
 
 router.patch("/users/me", async (req, res): Promise<void> => {

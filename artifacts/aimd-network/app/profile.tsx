@@ -24,6 +24,7 @@ import {
   useGetCurrentUser,
   useGetProgress,
   useGetUserProfile,
+  useDeleteCurrentUser,
   useListBadges,
   useUpdateCurrentUser,
 } from '@workspace/api-client-react';
@@ -248,6 +249,7 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { signOut } = useAuth();
+  const deleteAccount = useDeleteCurrentUser();
   const {
     data: me,
     isLoading: meLoading,
@@ -281,6 +283,9 @@ export default function ProfileScreen() {
     headerButton: { padding: 6 },
     content: { gap: 16, padding: 16, paddingBottom: Platform.OS === 'web' ? 100 : insets.bottom + 36 },
     accountActions: { borderTopWidth: 1, paddingTop: 16 },
+    deleteAccountSection: { gap: 8, paddingTop: 8 },
+    deleteAccountTitle: { color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 15 },
+    deleteAccountDescription: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 13, lineHeight: 19 },
     signOutButton: { alignItems: 'center', borderRadius: 10, borderWidth: 1, flexDirection: 'row', gap: 8, justifyContent: 'center', minHeight: 46 },
     signOutText: { fontFamily: 'DMSans_700Bold', fontSize: 14 },
     state: { alignItems: 'center', gap: 12, justifyContent: 'center', minHeight: 320, padding: 24 },
@@ -342,6 +347,27 @@ export default function ProfileScreen() {
             void signOut()
               .then(() => router.replace('/(auth)/sign-in'))
               .catch(() => Alert.alert('Could not sign out', 'Please try again.'));
+          },
+        },
+      ],
+    );
+  };
+  const handleDeleteAccount = () => {
+    if (deleteAccount.isPending) return;
+
+    Alert.alert(
+      'Delete your account permanently?',
+      'This permanently removes your AIMD profile, posts, habits, badges, messages, and other account data. This cannot be undone.',
+      [
+        { text: 'Keep my account', style: 'cancel' },
+        {
+          text: 'Delete permanently',
+          style: 'destructive',
+          onPress: () => {
+            void deleteAccount.mutateAsync(undefined)
+              .then(() => signOut())
+              .then(() => router.replace('/(auth)/sign-in'))
+              .catch(() => Alert.alert('Could not delete account', 'Your account is still active. Please try again.'));
           },
         },
       ],
@@ -430,6 +456,7 @@ export default function ProfileScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Sign out of Creator Studio"
+            disabled={deleteAccount.isPending}
             onPress={handleSignOut}
             style={[s.signOutButton, { borderColor: colors.border }]}
             testID="sign-out"
@@ -437,6 +464,23 @@ export default function ProfileScreen() {
             <Feather name="log-out" size={16} color={colors.destructive} />
             <Text style={[s.signOutText, { color: colors.destructive }]}>Sign out</Text>
           </Pressable>
+          <View style={[s.deleteAccountSection, { borderTopColor: colors.border }]}>
+            <Text style={s.deleteAccountTitle}>Delete account</Text>
+            <Text style={s.deleteAccountDescription}>
+              Permanently remove your AIMD account and all associated data. This action cannot be undone.
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Delete my AIMD account permanently"
+              disabled={deleteAccount.isPending}
+              onPress={handleDeleteAccount}
+              style={[s.signOutButton, { borderColor: colors.destructive, opacity: deleteAccount.isPending ? 0.55 : 1 }]}
+              testID="delete-account"
+            >
+              <Feather name="trash-2" size={16} color={colors.destructive} />
+              <Text style={[s.signOutText, { color: colors.destructive }]}>Delete my account</Text>
+            </Pressable>
+          </View>
         </View>
       </KeyboardAwareScrollView>
     </View>

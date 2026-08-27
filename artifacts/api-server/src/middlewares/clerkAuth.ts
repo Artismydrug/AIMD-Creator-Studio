@@ -1,5 +1,5 @@
 import { getAuth } from "@clerk/express";
-import { db, usersTable } from "@workspace/db";
+import { db, deletedClerkUsersTable, usersTable } from "@workspace/db";
 import { and, eq, isNull } from "drizzle-orm";
 import type { Request, Response, NextFunction } from "express";
 import { validateRoleMetadataHints } from "../lib/roleMetadataSync";
@@ -40,6 +40,17 @@ export async function clerkAuth(
 
     if (!clerkUserId && !email) {
       return next();
+    }
+
+    // An unexpired mobile token can still pass JWT verification after the
+    // Clerk identity is deleted. Never JIT-provision a replacement row.
+    if (clerkUserId) {
+      const [deletedIdentity] = await db
+        .select({ clerkId: deletedClerkUsersTable.clerkId })
+        .from(deletedClerkUsersTable)
+        .where(eq(deletedClerkUsersTable.clerkId, clerkUserId))
+        .limit(1);
+      if (deletedIdentity) return next();
     }
 
     // 1. Look up existing user.

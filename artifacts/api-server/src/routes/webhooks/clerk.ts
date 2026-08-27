@@ -14,14 +14,13 @@ import type { Request, Response } from "express";
 import { Webhook } from "svix";
 import {
   db,
+  deletedClerkUsersTable,
   usersTable,
-  eventRsvpsTable,
-  eventAttendancesTable,
-  sponsorshipsTable,
 } from "@workspace/db";
 import { and, eq, isNull } from "drizzle-orm";
 import { logger } from "../../lib/logger";
 import { validateRoleMetadataHints } from "../../lib/roleMetadataSync";
+import { deleteLocalAccountByClerkId } from "../../lib/accountDeletion";
 
 // ── Clerk event payload types (minimal) ──────────────────────────────────────
 
@@ -115,6 +114,16 @@ export async function handleClerkWebhook(req: Request, res: Response): Promise<v
 // ── Handlers ─────────────────────────────────────────────────────────────────
 
 async function handleUserUpdated(data: ClerkUserPayload): Promise<void> {
+  const [deletedIdentity] = await db
+    .select({ clerkId: deletedClerkUsersTable.clerkId })
+    .from(deletedClerkUsersTable)
+    .where(eq(deletedClerkUsersTable.clerkId, data.id))
+    .limit(1);
+  if (deletedIdentity) {
+    logger.info({ clerkUserId: data.id }, "user.updated: deleted identity ignored");
+    return;
+  }
+
   const primaryEmail = data.email_addresses
     .find((e) => e.id === data.primary_email_address_id)
     ?.email_address?.toLowerCase()
@@ -205,43 +214,6 @@ async function handleUserUpdated(data: ClerkUserPayload): Promise<void> {
 }
 
 async function handleUserDeleted(data: ClerkUserPayload): Promise<void> {
-  const [existing] = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.clerkId, data.id))
-    .limit(1);
-
-  if (!existing) {
-    logger.info({ clerkUserId: data.id }, "user.deleted: no local row found, nothing to do");
-    return;
-  }
-
-  const userId = existing.id;
-
-  // Remove child rows whose FK references do NOT cascade, then delete the user.
-  // Tables with ON DELETE CASCADE (studio_posts, badges, habits, enrollments,
-  // habit_logs, post_likes, completed_modules) are handled automatically by Postgres.
-  await db.transaction(async (tx) => {
-    // event_rsvps — no cascade
-    await tx.delete(eventRsvpsTable).where(eq(eventRsvpsTable.userId, userId));
-
-    // event_attendances — no cascade
-    await tx.delete(eventAttendancesTable).where(eq(eventAttendancesTable.userId, userId));
-
-    // sponsorships — two nullable FKs; null them out to preserve the record
-    await tx
-      .update(sponsorshipsTable)
-      .set({ sponsorUserId: null })
-      .where(eq(sponsorshipsTable.sponsorUserId, userId));
-
-    await tx
-      .update(sponsorshipsTable)
-      .set({ creatorId: null })
-      .where(eq(sponsorshipsTable.creatorId, userId));
-
-    // Delete the user; cascading FKs handle the remaining child rows.
-    await tx.delete(usersTable).where(eq(usersTable.id, userId));
-  });
-
-  logger.info({ clerkUserId: data.id, localUserId: userId }, "user.deleted: local row removed");
+  await deleteLocalAccountByClerkId(data.id);
+  logger.info({ clerkUserId: data.id }, "user.deleted: local account cleanup complete");
 }
