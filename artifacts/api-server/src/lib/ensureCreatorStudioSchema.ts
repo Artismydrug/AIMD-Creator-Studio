@@ -179,4 +179,42 @@ export async function ensureCreatorStudioSchema(
       created_at timestamptz NOT NULL DEFAULT now()
     )
   `);
+  await database.query(`
+    CREATE TABLE IF NOT EXISTS user_blocks (
+      id serial PRIMARY KEY,
+      blocker_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      blocked_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      CONSTRAINT user_blocks_not_self CHECK (blocker_id <> blocked_id),
+      CONSTRAINT user_blocks_unique UNIQUE (blocker_id, blocked_id)
+    )
+  `);
+  await database.query(`
+    CREATE INDEX IF NOT EXISTS user_blocks_blocked_idx
+      ON user_blocks (blocked_id)
+  `);
+  await database.query(`
+    CREATE TABLE IF NOT EXISTS content_reports (
+      id serial PRIMARY KEY,
+      reporter_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      post_id integer,
+      reported_user_id integer,
+      message_id integer,
+      reason text NOT NULL,
+      details text,
+      status text NOT NULL DEFAULT 'open',
+      reviewed_by integer REFERENCES users(id) ON DELETE SET NULL,
+      reviewed_at timestamptz,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      CONSTRAINT content_reports_one_target CHECK (
+        (CASE WHEN post_id IS NOT NULL THEN 1 ELSE 0 END) +
+        (CASE WHEN reported_user_id IS NOT NULL THEN 1 ELSE 0 END) +
+        (CASE WHEN message_id IS NOT NULL THEN 1 ELSE 0 END) = 1
+      )
+    )
+  `);
+  await database.query(`
+    CREATE INDEX IF NOT EXISTS content_reports_status_created_idx
+      ON content_reports (status, created_at DESC)
+  `);
 }

@@ -65,12 +65,17 @@ router.get("/studio-posts", async (req, res): Promise<void> => {
   const followingCondition = sql`${studioPostsTable.userId} IN (
     SELECT following_id FROM user_follows WHERE follower_id = ${viewerUserId}
   )`;
+  const visibleCondition = sql`NOT EXISTS (
+    SELECT 1 FROM user_blocks
+    WHERE blocker_id = ${viewerUserId}
+      AND blocked_id = ${studioPostsTable.userId}
+  )`;
   const posts = filterUserId && followingOnly
     ? await db
         .select(baseSelect)
         .from(studioPostsTable)
         .innerJoin(usersTable, eq(studioPostsTable.userId, usersTable.id))
-        .where(and(eq(studioPostsTable.userId, filterUserId), followingCondition))
+        .where(and(visibleCondition, eq(studioPostsTable.userId, filterUserId), followingCondition))
         .orderBy(desc(studioPostsTable.createdAt))
         .limit(limit)
         .offset(offset)
@@ -79,7 +84,7 @@ router.get("/studio-posts", async (req, res): Promise<void> => {
         .select(baseSelect)
         .from(studioPostsTable)
         .innerJoin(usersTable, eq(studioPostsTable.userId, usersTable.id))
-        .where(eq(studioPostsTable.userId, filterUserId))
+        .where(and(visibleCondition, eq(studioPostsTable.userId, filterUserId)))
         .orderBy(desc(studioPostsTable.createdAt))
         .limit(limit)
         .offset(offset)
@@ -88,7 +93,7 @@ router.get("/studio-posts", async (req, res): Promise<void> => {
         .select(baseSelect)
         .from(studioPostsTable)
         .innerJoin(usersTable, eq(studioPostsTable.userId, usersTable.id))
-        .where(followingCondition)
+        .where(and(visibleCondition, followingCondition))
         .orderBy(desc(studioPostsTable.createdAt))
         .limit(limit)
         .offset(offset)
@@ -96,6 +101,7 @@ router.get("/studio-posts", async (req, res): Promise<void> => {
         .select(baseSelect)
         .from(studioPostsTable)
         .innerJoin(usersTable, eq(studioPostsTable.userId, usersTable.id))
+        .where(visibleCondition)
         .orderBy(desc(studioPostsTable.createdAt))
         .limit(limit)
         .offset(offset);
@@ -154,11 +160,16 @@ router.get("/studio-posts/:id", async (req, res): Promise<void> => {
     return;
   }
   const viewerUserId = req.dbUser?.id ?? -1;
+  const visibleCondition = sql`NOT EXISTS (
+    SELECT 1 FROM user_blocks
+    WHERE blocker_id = ${viewerUserId}
+      AND blocked_id = ${studioPostsTable.userId}
+  )`;
   const [post] = await db
     .select(buildPostSelect(viewerUserId))
     .from(studioPostsTable)
     .innerJoin(usersTable, eq(studioPostsTable.userId, usersTable.id))
-    .where(eq(studioPostsTable.id, params.data.id));
+    .where(and(eq(studioPostsTable.id, params.data.id), visibleCondition));
 
   if (!post) {
     res.status(404).json({ error: "Post not found" });

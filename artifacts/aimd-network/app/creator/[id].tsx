@@ -24,6 +24,7 @@ import {
   getBaseUrl,
 } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
+import SafetyActions from '@/components/SafetyActions';
 
 const TIER_COLORS: Record<string, string> = {
   pro: '#a855f7',
@@ -463,19 +464,31 @@ export default function CreatorProfileScreen() {
                 <Text style={[s.tierText, { color: tierColor }]}>{profile.tier}</Text>
               </View>
               {!isOwnProfile && (
-                <TouchableOpacity
-                  accessibilityRole="button"
-                  accessibilityLabel={`${profile.followedByMe ? 'Unfollow' : 'Follow'} ${profile.username}`}
-                  accessibilityState={{ selected: profile.followedByMe, busy: followPending }}
-                  disabled={followPending}
-                  onPress={handleFollow}
-                  style={[s.followButton, profile.followedByMe && { backgroundColor: colors.primary }]}
-                  testID={`creator-follow-${profile.id}`}
-                >
-                  <Text style={[s.followButtonText, { color: profile.followedByMe ? colors.primaryForeground : colors.primary }]}>
-                    {profile.followedByMe ? 'Following' : 'Follow'}
-                  </Text>
-                </TouchableOpacity>
+                <>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={`${profile.followedByMe ? 'Unfollow' : 'Follow'} ${profile.username}`}
+                    accessibilityState={{ selected: profile.followedByMe, busy: followPending }}
+                    disabled={followPending}
+                    onPress={handleFollow}
+                    style={[s.followButton, profile.followedByMe && { backgroundColor: colors.primary }]}
+                    testID={`creator-follow-${profile.id}`}
+                  >
+                    <Text style={[s.followButtonText, { color: profile.followedByMe ? colors.primaryForeground : colors.primary }]}>
+                      {profile.followedByMe ? 'Following' : 'Follow'}
+                    </Text>
+                  </TouchableOpacity>
+                  <SafetyActions
+                    userId={profile.id}
+                    username={profile.username}
+                    blockedByMe={profile.blockedByMe}
+                    onBlocked={() => {
+                      queryClient.invalidateQueries({ queryKey: getGetUserProfileQueryKey(profile.id) });
+                      queryClient.invalidateQueries({ queryKey: getListStudioPostsQueryKey({ userId: profile.id, limit: 10 }) });
+                      refetchProfile();
+                    }}
+                  />
+                </>
               )}
               <View style={[s.tierBadge, { backgroundColor: colors.primary + '20' }]}>
                 <Text style={[s.tierText, { color: colors.primary }]}>{phase}</Text>

@@ -920,6 +920,7 @@ export interface PublicCreatorProfile {
   followerCount: number;
   followingCount: number;
   followedByMe: boolean;
+  blockedByMe: boolean;
   recentBadges: PublicCreatorProfileRecentBadgesItem[];
 }
 
@@ -929,6 +930,68 @@ export interface FollowRelationship {
   followingCount: number;
   followedByMe: boolean;
 }
+
+export interface BlockRelationship {
+  userId: number;
+  blockedByMe: boolean;
+}
+
+export type ReportReason = typeof ReportReason[keyof typeof ReportReason];
+
+
+export const ReportReason = {
+  spam: 'spam',
+  harassment: 'harassment',
+  hate: 'hate',
+  sexual_content: 'sexual_content',
+  violence: 'violence',
+  scam: 'scam',
+  other: 'other',
+} as const;
+
+export interface ContentReportInput {
+  postId?: number;
+  userId?: number;
+  messageId?: number;
+  reason: ReportReason;
+  /** @maxLength 1000 */
+  details?: string;
+}
+
+export type ContentReportStatus = typeof ContentReportStatus[keyof typeof ContentReportStatus];
+
+
+export const ContentReportStatus = {
+  open: 'open',
+  reviewing: 'reviewing',
+  resolved: 'resolved',
+  dismissed: 'dismissed',
+} as const;
+
+export interface ContentReport {
+  id: number;
+  reporterId: number;
+  reporterName?: string;
+  /** @nullable */
+  postId?: number | null;
+  /** @nullable */
+  reportedUserId?: number | null;
+  /** @nullable */
+  reportedUserName?: string | null;
+  /** @nullable */
+  messageId?: number | null;
+  reason: ReportReason;
+  /** @nullable */
+  details?: string | null;
+  status: ContentReportStatus;
+  /** @nullable */
+  reviewedBy?: number | null;
+  /** @nullable */
+  reviewedAt?: string | null;
+  createdAt: string;
+}
+
+export type ContentReportList = ContentReport[];
 
 export interface ConversationParticipant {
   userId: number;

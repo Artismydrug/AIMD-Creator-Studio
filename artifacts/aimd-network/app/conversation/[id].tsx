@@ -21,6 +21,7 @@ import {
 } from '@workspace/api-client-react';
 import type { ConversationMessage } from '@workspace/api-client-react';
 import { useGetCurrentUser } from '@workspace/api-client-react';
+import SafetyActions from '@/components/SafetyActions';
 
 function formatTime(dateStr: string): string {
   const d = new Date(dateStr);
@@ -102,6 +103,10 @@ export default function ConversationScreen() {
   }, [messages, localMessages]);
 
   const reversed = useMemo(() => [...allMessages].reverse(), [allMessages]);
+  const otherParticipant = useMemo(
+    () => user?.id == null ? undefined : allMessages.find((message) => message.senderId !== user.id),
+    [allMessages, user?.id],
+  );
 
   const sendMutation = useSendMessage({
     mutation: {
@@ -158,6 +163,21 @@ export default function ConversationScreen() {
       backgroundColor: colors.background,
       gap: 10,
     },
+    safetyBar: {
+      minHeight: 48,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingLeft: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      backgroundColor: colors.background,
+    },
+    safetyText: {
+      color: colors.mutedForeground,
+      fontFamily: 'DMSans_500Medium',
+      fontSize: 12,
+    },
     input: {
       flex: 1,
       fontFamily: 'DMSans_400Regular',
@@ -203,6 +223,16 @@ export default function ConversationScreen() {
       behavior="padding"
       keyboardVerticalOffset={0}
     >
+      {otherParticipant && user?.id !== otherParticipant.senderId ? (
+        <View style={s.safetyBar}>
+          <Text style={s.safetyText}>Something feel unsafe?</Text>
+          <SafetyActions
+            userId={otherParticipant.senderId}
+            username={otherParticipant.senderName}
+            onBlocked={() => refetch()}
+          />
+        </View>
+      ) : null}
       <FlatList
         data={reversed}
         keyExtractor={(item) => String(item.id)}

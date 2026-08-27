@@ -1354,6 +1354,7 @@ export const GetUserProfileResponse = zod.object({
   "followerCount": zod.int(),
   "followingCount": zod.int(),
   "followedByMe": zod.boolean(),
+  "blockedByMe": zod.boolean(),
   "recentBadges": zod.array(zod.object({
   "id": zod.int(),
   "name": zod.string(),
@@ -1392,6 +1393,85 @@ export const UnfollowUserResponse = zod.object({
   "followingCount": zod.int(),
   "followedByMe": zod.boolean()
 })
+
+
+/**
+ * @summary Block a creator
+ */
+export const BlockUserParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const BlockUserResponse = zod.object({
+  "userId": zod.int(),
+  "blockedByMe": zod.boolean()
+})
+
+
+/**
+ * @summary Unblock a creator
+ */
+export const UnblockUserParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const UnblockUserResponse = zod.object({
+  "userId": zod.int(),
+  "blockedByMe": zod.boolean()
+})
+
+
+/**
+ * @summary Report a post, creator, or message
+ */
+export const createContentReportBodyDetailsMax = 1000;
+
+
+
+export const CreateContentReportBody = zod.object({
+  "postId": zod.int().optional(),
+  "userId": zod.int().optional(),
+  "messageId": zod.int().optional(),
+  "reason": zod.enum(['spam', 'harassment', 'hate', 'sexual_content', 'violence', 'scam', 'other']),
+  "details": zod.string().max(createContentReportBodyDetailsMax).optional()
+})
+
+export const CreateContentReportResponse = zod.object({
+  "id": zod.int(),
+  "reporterId": zod.int(),
+  "reporterName": zod.string().optional(),
+  "postId": zod.int().nullish(),
+  "reportedUserId": zod.int().nullish(),
+  "reportedUserName": zod.string().nullish(),
+  "messageId": zod.int().nullish(),
+  "reason": zod.enum(['spam', 'harassment', 'hate', 'sexual_content', 'violence', 'scam', 'other']),
+  "details": zod.string().nullish(),
+  "status": zod.enum(['open', 'reviewing', 'resolved', 'dismissed']),
+  "reviewedBy": zod.int().nullish(),
+  "reviewedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List reports for authorized staff
+ */
+export const ListModerationReportsResponseItem = zod.object({
+  "id": zod.int(),
+  "reporterId": zod.int(),
+  "reporterName": zod.string().optional(),
+  "postId": zod.int().nullish(),
+  "reportedUserId": zod.int().nullish(),
+  "reportedUserName": zod.string().nullish(),
+  "messageId": zod.int().nullish(),
+  "reason": zod.enum(['spam', 'harassment', 'hate', 'sexual_content', 'violence', 'scam', 'other']),
+  "details": zod.string().nullish(),
+  "status": zod.enum(['open', 'reviewing', 'resolved', 'dismissed']),
+  "reviewedBy": zod.int().nullish(),
+  "reviewedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListModerationReportsResponse = zod.array(ListModerationReportsResponseItem)
 
 
 /**

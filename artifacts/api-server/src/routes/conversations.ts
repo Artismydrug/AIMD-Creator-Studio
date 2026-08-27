@@ -53,6 +53,15 @@ router.get("/conversations", async (req, res): Promise<void> => {
       ) AS "unreadCount"
     FROM conversations c
     JOIN conversation_participants cp ON cp.conversation_id = c.id AND cp.user_id = ${userId}
+    WHERE NOT EXISTS (
+      SELECT 1
+      FROM conversation_participants blocked_cp
+      JOIN user_blocks ub ON (
+        (ub.blocker_id = ${userId} AND ub.blocked_id = blocked_cp.user_id)
+        OR (ub.blocker_id = blocked_cp.user_id AND ub.blocked_id = ${userId})
+      )
+      WHERE blocked_cp.conversation_id = c.id
+    )
     ORDER BY (
       SELECT max(m.created_at) FROM messages m WHERE m.conversation_id = c.id
     ) DESC NULLS LAST
@@ -73,6 +82,16 @@ router.post("/conversations", async (req, res): Promise<void> => {
 
   const allIds = [...new Set([userId, ...participantIds])];
   const isGroup = allIds.length > 2;
+  const blocked = await db.execute(sql`
+    SELECT 1 FROM user_blocks
+    WHERE (blocker_id = ${userId} AND blocked_id = ANY(${allIds}::int[]))
+       OR (blocked_id = ${userId} AND blocker_id = ANY(${allIds}::int[]))
+    LIMIT 1
+  `);
+  if (blocked.rows.length > 0) {
+    res.status(403).json({ error: "Messaging is unavailable because this creator is blocked." });
+    return;
+  }
 
   // For DMs: check if conversation already exists between these two users
   if (!isGroup) {
@@ -120,6 +139,20 @@ router.get("/conversations/:id/messages", async (req, res): Promise<void> => {
     SELECT 1 FROM conversation_participants WHERE conversation_id = ${convId} AND user_id = ${userId}
   `);
   if (check.rows.length === 0) { res.status(403).json({ error: "Not a participant" }); return; }
+  const blocked = await db.execute(sql`
+    SELECT 1
+    FROM conversation_participants cp
+    JOIN user_blocks ub ON (
+      (ub.blocker_id = ${userId} AND ub.blocked_id = cp.user_id)
+      OR (ub.blocker_id = cp.user_id AND ub.blocked_id = ${userId})
+    )
+    WHERE cp.conversation_id = ${convId} AND cp.user_id != ${userId}
+    LIMIT 1
+  `);
+  if (blocked.rows.length > 0) {
+    res.status(403).json({ error: "Messaging is unavailable because this creator is blocked." });
+    return;
+  }
 
   // Mark as read
   await db.execute(sql`
@@ -161,6 +194,20 @@ router.post("/conversations/:id/messages", async (req, res): Promise<void> => {
     SELECT 1 FROM conversation_participants WHERE conversation_id = ${convId} AND user_id = ${userId}
   `);
   if (check.rows.length === 0) { res.status(403).json({ error: "Not a participant" }); return; }
+  const blocked = await db.execute(sql`
+    SELECT 1
+    FROM conversation_participants cp
+    JOIN user_blocks ub ON (
+      (ub.blocker_id = ${userId} AND ub.blocked_id = cp.user_id)
+      OR (ub.blocker_id = cp.user_id AND ub.blocked_id = ${userId})
+    )
+    WHERE cp.conversation_id = ${convId} AND cp.user_id != ${userId}
+    LIMIT 1
+  `);
+  if (blocked.rows.length > 0) {
+    res.status(403).json({ error: "Messaging is unavailable because this creator is blocked." });
+    return;
+  }
 
   const result = await db.execute(sql`
     INSERT INTO messages (conversation_id, sender_id, content)

@@ -46,6 +46,8 @@ tags:
     description: User profile and creator directory
   - name: conversations
     description: Messaging and conversations
+  - name: moderation
+    description: Community safety reports and blocking
   - name: progress
     description: Creator progress, daily check-in, streaks, phases, and badges
   - name: rewards
@@ -1204,6 +1206,80 @@ paths:
           description: Authentication required
         "404":
           description: Creator not found
+
+  /users/{id}/block:
+    post:
+      operationId: blockUser
+      tags: [users]
+      summary: Block a creator
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Block relationship
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlockRelationship"
+        "401":
+          description: Authentication required
+        "404":
+          description: Creator not found
+    delete:
+      operationId: unblockUser
+      tags: [users]
+      summary: Unblock a creator
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Block relationship
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlockRelationship"
+
+  /moderation/reports:
+    post:
+      operationId: createContentReport
+      tags: [moderation]
+      summary: Report a post, creator, or message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContentReportInput"
+      responses:
+        "201":
+          description: Report queued for moderation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentReport"
+        "401":
+          description: Authentication required
+    get:
+      operationId: listModerationReports
+      tags: [moderation]
+      summary: List reports for authorized staff
+      responses:
+        "200":
+          description: Moderation reports
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentReportList"
+        "403":
+          description: Admin access required
 
   # ── Conversations ─────────────────────────────────────────────────────────
   /conversations:
@@ -3048,7 +3124,7 @@ components:
       type: object
       required:
         [id, username, tier, bookingOpen, postCount, badgesEarned, currentStreak,
-         workshopsEnrolled, followerCount, followingCount, followedByMe, recentBadges]
+         workshopsEnrolled, followerCount, followingCount, followedByMe, blockedByMe, recentBadges]
       properties:
         id:
           type: integer
@@ -3086,6 +3162,8 @@ components:
           type: integer
         followedByMe:
           type: boolean
+        blockedByMe:
+          type: boolean
         recentBadges:
           type: array
           items:
@@ -3116,6 +3194,74 @@ components:
           type: integer
         followedByMe:
           type: boolean
+
+    BlockRelationship:
+      type: object
+      required: [userId, blockedByMe]
+      properties:
+        userId:
+          type: integer
+        blockedByMe:
+          type: boolean
+
+    ReportReason:
+      type: string
+      enum: [spam, harassment, hate, sexual_content, violence, scam, other]
+
+    ContentReportInput:
+      type: object
+      required: [reason]
+      properties:
+        postId:
+          type: integer
+        userId:
+          type: integer
+        messageId:
+          type: integer
+        reason:
+          $ref: "#/components/schemas/ReportReason"
+        details:
+          type: string
+          maxLength: 1000
+
+    ContentReport:
+      type: object
+      required: [id, reporterId, reason, status, createdAt]
+      properties:
+        id:
+          type: integer
+        reporterId:
+          type: integer
+        reporterName:
+          type: string
+        postId:
+          type: ["integer", "null"]
+        reportedUserId:
+          type: ["integer", "null"]
+        reportedUserName:
+          type: ["string", "null"]
+        messageId:
+          type: ["integer", "null"]
+        reason:
+          $ref: "#/components/schemas/ReportReason"
+        details:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [open, reviewing, resolved, dismissed]
+        reviewedBy:
+          type: ["integer", "null"]
+        reviewedAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    ContentReportList:
+      type: array
+      items:
+        $ref: "#/components/schemas/ContentReport"
 
     # ── Conversations ─────────────────────────────────────────────────────
     ConversationParticipant:

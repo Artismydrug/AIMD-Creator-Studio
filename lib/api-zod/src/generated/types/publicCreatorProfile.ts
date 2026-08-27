@@ -31,5 +31,6 @@ export interface PublicCreatorProfile {
   followerCount: number;
   followingCount: number;
   followedByMe: boolean;
+  blockedByMe: boolean;
   recentBadges: PublicCreatorProfileRecentBadgesItem[];
 }

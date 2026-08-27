@@ -220,6 +220,11 @@ router.get("/users/:id/profile", async (req, res): Promise<void> => {
         WHERE viewer_follow.follower_id = ${viewerUserId}
           AND viewer_follow.following_id = u.id
       ) AS "followedByMe",
+      EXISTS(
+        SELECT 1 FROM user_blocks viewer_block
+        WHERE viewer_block.blocker_id = ${viewerUserId}
+          AND viewer_block.blocked_id = u.id
+      ) AS "blockedByMe",
       COALESCE((
         SELECT json_agg(json_build_object(
           'id', b2.id, 'name', b2.name,

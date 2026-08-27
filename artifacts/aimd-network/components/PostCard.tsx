@@ -27,6 +27,7 @@ import {
 } from '@workspace/api-client-react';
 import type { StudioPost } from '@workspace/api-client-react';
 import { useRouter } from 'expo-router';
+import SafetyActions from '@/components/SafetyActions';
 
 /** Resolve a relative imageUrl (e.g. /api/storage/objects/…) to an absolute URL for React Native. */
 function resolveImageUrl(url: string | null | undefined): string | null {
@@ -371,19 +372,27 @@ export default function PostCard({ post, currentUserId, onFollowChanged, onRefre
           </View>
         </TouchableOpacity>
         {!isOwnPost && (
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel={`${followedByMe ? 'Unfollow' : 'Follow'} ${post.username ?? 'creator'}`}
-            accessibilityState={{ selected: followedByMe, busy: followMutation.isPending || unfollowMutation.isPending }}
-            disabled={followMutation.isPending || unfollowMutation.isPending}
-            onPress={handleFollow}
-            style={[s.followButton, followedByMe && { backgroundColor: colors.primary }]}
-            testID={`follow-user-${post.userId}`}
-          >
-            <Text style={[s.followButtonText, { color: followedByMe ? colors.primaryForeground : colors.primary }]}>
-              {followedByMe ? 'Following' : 'Follow'}
-            </Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={`${followedByMe ? 'Unfollow' : 'Follow'} ${post.username ?? 'creator'}`}
+              accessibilityState={{ selected: followedByMe, busy: followMutation.isPending || unfollowMutation.isPending }}
+              disabled={followMutation.isPending || unfollowMutation.isPending}
+              onPress={handleFollow}
+              style={[s.followButton, followedByMe && { backgroundColor: colors.primary }]}
+              testID={`follow-user-${post.userId}`}
+            >
+              <Text style={[s.followButtonText, { color: followedByMe ? colors.primaryForeground : colors.primary }]}>
+                {followedByMe ? 'Following' : 'Follow'}
+              </Text>
+            </TouchableOpacity>
+            <SafetyActions
+              userId={post.userId}
+              username={post.username}
+              postId={post.id}
+              onBlocked={() => onRefresh?.()}
+            />
+          </>
         )}
       </View>
 
