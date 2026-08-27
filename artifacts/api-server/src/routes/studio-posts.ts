@@ -44,6 +44,7 @@ function buildPostSelect(viewerUserId: number) {
 }
 
 router.get("/studio-posts", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
   const parsed = ListStudioPostsQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -154,6 +155,7 @@ router.post("/studio-posts", async (req, res): Promise<void> => {
 });
 
 router.get("/studio-posts/:id", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
   const params = GetStudioPostParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });

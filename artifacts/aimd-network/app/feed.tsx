@@ -20,11 +20,14 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import {
+  getListStudioPostsQueryKey,
   useListStudioPosts,
   useCreateStudioPost,
   useGetCurrentUser,
   customFetch,
+  type StudioPost,
 } from '@workspace/api-client-react';
 import PostCard from '@/components/PostCard';
 
@@ -48,6 +51,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [composing, setComposing] = useState(false);
   const [caption, setCaption] = useState('');
   const [tags, setTags] = useState('');
@@ -61,20 +65,47 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
   const [refreshing, setRefreshing] = useState(false);
   const [feedMode, setFeedMode] = useState<'all' | 'following'>('all');
 
-  const { data: posts, isLoading, isError, refetch } = useListStudioPosts({
-    followingOnly: feedMode === 'following',
-  });
+  const { data: posts, isLoading, isError, refetch } = useListStudioPosts(
+    { followingOnly: feedMode === 'following' },
+    {
+      request: {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' },
+      },
+    },
+  );
   const { data: me } = useGetCurrentUser();
 
   const createMutation = useCreateStudioPost({
     mutation: {
-      onSuccess: () => {
-        refetch();
+      onSuccess: (createdPost) => {
+        const allPostsQueryKey = getListStudioPostsQueryKey({
+          followingOnly: false,
+        });
+        queryClient.setQueryData<StudioPost[]>(
+          allPostsQueryKey,
+          (currentPosts = []) => {
+            if (currentPosts.some((post) => post.id === createdPost.id)) {
+              return currentPosts;
+            }
+            return [createdPost, ...currentPosts];
+          },
+        );
+        setFeedMode('all');
+        queryClient.invalidateQueries({
+          queryKey: ['/api/studio-posts'],
+          refetchType: 'inactive',
+        });
         setComposing(false);
         setCaption('');
         setTags('');
         setSelectedImage(null);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      },
+      onError: (error) => {
+        const message =
+          error instanceof Error ? error.message : 'Could not publish your post.';
+        Alert.alert('Post failed', message);
       },
     },
   });

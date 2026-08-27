@@ -71,7 +71,18 @@ export default function CreatorProfileScreen() {
     isLoading: postsLoading,
   } = useListStudioPosts(
     { userId: creatorId, limit: 10 },
-    { query: { enabled: creatorId != null, queryKey: creatorId != null ? getListStudioPostsQueryKey({ userId: creatorId, limit: 10 }) : [] } }
+    {
+      query: {
+        enabled: creatorId != null,
+        queryKey: creatorId != null
+          ? getListStudioPostsQueryKey({ userId: creatorId, limit: 10 })
+          : [],
+      },
+      request: {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' },
+      },
+    }
   );
   const followMutation = useFollowUser({
     mutation: {
