@@ -36,6 +36,7 @@ type SafetyActionsProps = {
   messageId?: number;
   blockedByMe?: boolean;
   onBlocked?: (blocked: boolean) => void;
+  triggerColor?: string;
 };
 
 export default function SafetyActions({
@@ -45,6 +46,7 @@ export default function SafetyActions({
   messageId,
   blockedByMe = false,
   onBlocked,
+  triggerColor,
 }: SafetyActionsProps) {
   const colors = useColors();
   const [visible, setVisible] = useState(false);
@@ -239,7 +241,7 @@ export default function SafetyActions({
         style={s.trigger}
         testID={`safety-actions-${userId}${postId ? `-post-${postId}` : ''}`}
       >
-        <Feather name="more-horizontal" size={20} color={colors.mutedForeground} />
+        <Feather name="more-horizontal" size={20} color={triggerColor ?? colors.mutedForeground} />
       </TouchableOpacity>
 
       <Modal visible={visible} transparent animationType="slide" onRequestClose={close}>

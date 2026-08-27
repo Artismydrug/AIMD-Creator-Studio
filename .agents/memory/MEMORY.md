@@ -14,3 +14,4 @@
 - [Workspace static build environment](workspace-static-build-env.md) — static workspace builds load Vite configs without workflow PORT or BASE_PATH values.
 - [Stripe catalog mirror refresh](stripe-catalog-sync.md) — metadata-only Stripe edits may need per-entity mirror refresh beyond incremental backfill.
 - [Drizzle SQL array parameters](drizzle-array-parameters.md) — bind PostgreSQL arrays with a typed ARRAY expression, not direct JavaScript-array interpolation.
+- [React Native web pager sizing](react-native-web-pager-sizing.md) — fixed-height FlatList pages must disable flex shrinking or web can compress multiple pages into one viewport.

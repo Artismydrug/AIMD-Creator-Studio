@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -73,9 +74,10 @@ interface PostCardProps {
   currentUserId?: number;
   onFollowChanged?: () => void;
   onRefresh?: () => void;
+  immersive?: boolean;
 }
 
-export default function PostCard({ post, currentUserId, onFollowChanged, onRefresh }: PostCardProps) {
+export default function PostCard({ post, currentUserId, onFollowChanged, onRefresh, immersive = false }: PostCardProps) {
   const colors = useColors();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -164,6 +166,160 @@ export default function PostCard({ post, currentUserId, onFollowChanged, onRefre
       padding: 14,
       marginHorizontal: 12,
       marginTop: 12,
+    },
+    immersiveCard: {
+      flex: 1,
+      width: '100%',
+      margin: 0,
+      padding: 0,
+      borderWidth: 0,
+      borderRadius: 0,
+      overflow: 'hidden',
+      backgroundColor: colors.ink,
+    },
+    mediaSurface: {
+      flex: 1,
+      backgroundColor: colors.ink,
+      overflow: 'hidden',
+    },
+    immersiveImage: {
+      ...StyleSheet.absoluteFillObject,
+      width: undefined,
+      height: undefined,
+    },
+    immersiveFallback: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 32,
+      backgroundColor: colors.ink,
+    },
+    fallbackMark: {
+      width: 76,
+      height: 76,
+      borderRadius: 38,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.primary,
+      marginBottom: 18,
+    },
+    fallbackEyebrow: {
+      color: colors.cyan,
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 11,
+      letterSpacing: 1.8,
+      textTransform: 'uppercase',
+      textAlign: 'center',
+    },
+    fallbackCaption: {
+      color: '#FFFFFF',
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 26,
+      lineHeight: 32,
+      textAlign: 'center',
+      marginTop: 10,
+    },
+    topGradient: {
+      ...StyleSheet.absoluteFillObject,
+      height: '42%',
+      bottom: undefined,
+    },
+    bottomGradient: {
+      ...StyleSheet.absoluteFillObject,
+      height: '58%',
+      top: undefined,
+    },
+    immersiveContent: {
+      position: 'absolute',
+      left: 16,
+      right: 84,
+      bottom: 28,
+    },
+    immersiveAuthorButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 14,
+    },
+    immersiveAvatarFrame: {
+      borderWidth: 2,
+      borderColor: '#FFFFFF',
+      borderRadius: 23,
+    },
+    immersiveUserInfo: {
+      flex: 1,
+      minWidth: 0,
+    },
+    immersiveUsername: {
+      color: '#FFFFFF',
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 15,
+    },
+    immersiveMeta: {
+      color: 'rgba(255,255,255,0.78)',
+      fontFamily: 'DMSans_400Regular',
+      fontSize: 12,
+      marginTop: 2,
+    },
+    immersiveCaption: {
+      color: '#FFFFFF',
+      fontFamily: 'DMSans_500Medium',
+      fontSize: 17,
+      lineHeight: 23,
+      marginBottom: 10,
+    },
+    immersiveTagsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    immersiveTag: {
+      color: '#FFFFFF',
+      fontFamily: 'DMSans_600SemiBold',
+      fontSize: 11,
+      backgroundColor: 'rgba(23,52,58,0.68)',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 99,
+    },
+    immersiveActions: {
+      position: 'absolute',
+      right: 12,
+      bottom: 28,
+      alignItems: 'center',
+      gap: 16,
+    },
+    immersiveAction: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+      minWidth: 44,
+    },
+    immersiveActionIcon: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(23,52,58,0.72)',
+    },
+    immersiveActionCount: {
+      color: '#FFFFFF',
+      fontFamily: 'DMSans_600SemiBold',
+      fontSize: 11,
+    },
+    immersiveFollow: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.primary,
+      borderWidth: 2,
+      borderColor: '#FFFFFF',
+    },
+    immersiveFollowSelected: {
+      backgroundColor: 'rgba(23,52,58,0.72)',
     },
     cardHeader: {
       flexDirection: 'row',
@@ -356,84 +512,214 @@ export default function PostCard({ post, currentUserId, onFollowChanged, onRefre
   }), [colors]);
 
   return (
-    <View style={[s.card, { borderTopColor: frameColor, borderTopWidth: 4 }]}>
-      <View style={s.cardHeader}>
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel={`Open ${post.username ?? 'creator'} profile`}
-          onPress={() => router.push(`/creator/${post.userId}`)}
-          style={s.authorButton}
-        >
-          <Avatar username={post.username} avatarUrl={post.userAvatarUrl} />
-          <View style={s.userInfo}>
-            <Text style={s.username}>{post.username ?? `User #${post.userId}`}</Text>
-            <Text style={s.time}>{formatTime(post.createdAt)}</Text>
-            <Text style={s.socialMeta}>{followerCount} followers · {post.followingCount} following</Text>
+    <>
+      {immersive ? (
+        <View style={s.immersiveCard}>
+          <View style={s.mediaSurface}>
+            {resolveImageUrl(post.imageUrl) && post.mediaType !== 'video' ? (
+              <Image
+                source={{ uri: resolveImageUrl(post.imageUrl)! }}
+                style={s.immersiveImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={s.immersiveFallback}>
+                <View style={s.fallbackMark}>
+                  <Feather
+                    name={post.mediaType === 'video' ? 'play' : 'aperture'}
+                    size={32}
+                    color={colors.primaryForeground}
+                  />
+                </View>
+                <Text style={s.fallbackEyebrow}>
+                  {post.mediaType === 'video' ? 'Video post' : 'Creator in progress'}
+                </Text>
+              </View>
+            )}
+
+            <LinearGradient
+              pointerEvents="none"
+              colors={['rgba(23,52,58,0.78)', 'transparent']}
+              style={s.topGradient}
+            />
+            <LinearGradient
+              pointerEvents="none"
+              colors={['transparent', 'rgba(23,52,58,0.96)']}
+              style={s.bottomGradient}
+            />
+
+            <View style={s.immersiveContent}>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={`Open ${post.username ?? 'creator'} profile`}
+                onPress={() => router.push(`/creator/${post.userId}`)}
+                style={s.immersiveAuthorButton}
+              >
+                <View style={s.immersiveAvatarFrame}>
+                  <Avatar username={post.username} avatarUrl={post.userAvatarUrl} size={42} />
+                </View>
+                <View style={s.immersiveUserInfo}>
+                  <Text style={s.immersiveUsername} numberOfLines={1}>
+                    {post.username ?? `User #${post.userId}`}
+                  </Text>
+                  <Text style={s.immersiveMeta}>
+                    {formatTime(post.createdAt)} · {followerCount} followers
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <Text style={s.immersiveCaption} numberOfLines={4}>{post.caption}</Text>
+              {post.tags && post.tags.length > 0 && (
+                <View style={s.immersiveTagsRow}>
+                  {post.tags.slice(0, 4).map((tag, i) => (
+                    <Text key={i} style={s.immersiveTag}>#{tag}</Text>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            <View style={s.immersiveActions}>
+              {!isOwnPost && (
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={`${followedByMe ? 'Unfollow' : 'Follow'} ${post.username ?? 'creator'}`}
+                  accessibilityState={{
+                    selected: followedByMe,
+                    busy: followMutation.isPending || unfollowMutation.isPending,
+                  }}
+                  disabled={followMutation.isPending || unfollowMutation.isPending}
+                  onPress={handleFollow}
+                  style={[s.immersiveFollow, followedByMe && s.immersiveFollowSelected]}
+                  testID={`follow-user-${post.userId}`}
+                >
+                  <Feather
+                    name={followedByMe ? 'check' : 'plus'}
+                    size={22}
+                    color="#FFFFFF"
+                  />
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={`${liked ? 'Unlike' : 'Like'} post`}
+                accessibilityState={{ selected: liked, busy: likeMutation.isPending }}
+                style={s.immersiveAction}
+                onPress={handleLike}
+                testID={`like-post-${post.id}`}
+              >
+                <View style={s.immersiveActionIcon}>
+                  <Feather name="heart" size={22} color={liked ? colors.primary : '#FFFFFF'} />
+                </View>
+                <Text style={s.immersiveActionCount}>{likeCount}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Open critiques"
+                style={s.immersiveAction}
+                onPress={handleOpenComments}
+                testID={`comment-post-${post.id}`}
+              >
+                <View style={s.immersiveActionIcon}>
+                  <Feather name="message-circle" size={21} color="#FFFFFF" />
+                </View>
+                <Text style={s.immersiveActionCount}>Critique</Text>
+              </TouchableOpacity>
+
+              {!isOwnPost && (
+                <SafetyActions
+                  userId={post.userId}
+                  username={post.username}
+                  postId={post.id}
+                  onBlocked={() => onRefresh?.()}
+                  triggerColor="#FFFFFF"
+                />
+              )}
+            </View>
           </View>
-        </TouchableOpacity>
-        {!isOwnPost && (
-          <>
+        </View>
+      ) : (
+        <View style={[s.card, { borderTopColor: frameColor, borderTopWidth: 4 }]}>
+          <View style={s.cardHeader}>
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel={`${followedByMe ? 'Unfollow' : 'Follow'} ${post.username ?? 'creator'}`}
-              accessibilityState={{ selected: followedByMe, busy: followMutation.isPending || unfollowMutation.isPending }}
-              disabled={followMutation.isPending || unfollowMutation.isPending}
-              onPress={handleFollow}
-              style={[s.followButton, followedByMe && { backgroundColor: colors.primary }]}
-              testID={`follow-user-${post.userId}`}
+              accessibilityLabel={`Open ${post.username ?? 'creator'} profile`}
+              onPress={() => router.push(`/creator/${post.userId}`)}
+              style={s.authorButton}
             >
-              <Text style={[s.followButtonText, { color: followedByMe ? colors.primaryForeground : colors.primary }]}>
-                {followedByMe ? 'Following' : 'Follow'}
-              </Text>
+              <Avatar username={post.username} avatarUrl={post.userAvatarUrl} />
+              <View style={s.userInfo}>
+                <Text style={s.username}>{post.username ?? `User #${post.userId}`}</Text>
+                <Text style={s.time}>{formatTime(post.createdAt)}</Text>
+                <Text style={s.socialMeta}>{followerCount} followers · {post.followingCount} following</Text>
+              </View>
             </TouchableOpacity>
-            <SafetyActions
-              userId={post.userId}
-              username={post.username}
-              postId={post.id}
-              onBlocked={() => onRefresh?.()}
-            />
-          </>
-        )}
-      </View>
+            {!isOwnPost && (
+              <>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={`${followedByMe ? 'Unfollow' : 'Follow'} ${post.username ?? 'creator'}`}
+                  accessibilityState={{ selected: followedByMe, busy: followMutation.isPending || unfollowMutation.isPending }}
+                  disabled={followMutation.isPending || unfollowMutation.isPending}
+                  onPress={handleFollow}
+                  style={[s.followButton, followedByMe && { backgroundColor: colors.primary }]}
+                  testID={`follow-user-${post.userId}`}
+                >
+                  <Text style={[s.followButtonText, { color: followedByMe ? colors.primaryForeground : colors.primary }]}>
+                    {followedByMe ? 'Following' : 'Follow'}
+                  </Text>
+                </TouchableOpacity>
+                <SafetyActions
+                  userId={post.userId}
+                  username={post.username}
+                  postId={post.id}
+                  onBlocked={() => onRefresh?.()}
+                />
+              </>
+            )}
+          </View>
 
-      <Text style={s.caption}>{post.caption}</Text>
+          <Text style={s.caption}>{post.caption}</Text>
 
-      {resolveImageUrl(post.imageUrl) ? (
-        <View style={[s.imageFrame, { borderColor: frameColor }]}>
-          <Image
-            source={{ uri: resolveImageUrl(post.imageUrl)! }}
-            style={s.postImage}
-            resizeMode="cover"
-          />
-          <View style={s.imageStamp}>
-            <Feather name="aperture" size={15} color={frameColor} />
+          {resolveImageUrl(post.imageUrl) ? (
+            <View style={[s.imageFrame, { borderColor: frameColor }]}>
+              <Image
+                source={{ uri: resolveImageUrl(post.imageUrl)! }}
+                style={s.postImage}
+                resizeMode="cover"
+              />
+              <View style={s.imageStamp}>
+                <Feather name="aperture" size={15} color={frameColor} />
+              </View>
+            </View>
+          ) : null}
+
+          {post.tags && post.tags.length > 0 && (
+            <View style={s.tagsRow}>
+              {post.tags.map((tag, i) => (
+                <Text key={i} style={s.tag}>#{tag}</Text>
+              ))}
+            </View>
+          )}
+
+          <View style={s.actions}>
+            <TouchableOpacity accessibilityLabel="Like post" style={s.actionBtn} onPress={handleLike} testID={`like-post-${post.id}`}>
+              <Feather
+                name={liked ? 'heart' : 'heart'}
+                size={18}
+                color={liked ? colors.primary : colors.mutedForeground}
+              />
+              <Text style={[s.actionCount, liked && { color: colors.primary }]}>{likeCount}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity accessibilityLabel="Open critiques" style={s.actionBtn} onPress={handleOpenComments} testID={`comment-post-${post.id}`}>
+              <Feather name="message-circle" size={18} color={colors.mutedForeground} />
+              <Text style={s.actionCount}>Critique</Text>
+            </TouchableOpacity>
           </View>
         </View>
-      ) : null}
-
-      {post.tags && post.tags.length > 0 && (
-        <View style={s.tagsRow}>
-          {post.tags.map((tag, i) => (
-            <Text key={i} style={s.tag}>#{tag}</Text>
-          ))}
-        </View>
       )}
-
-      <View style={s.actions}>
-        <TouchableOpacity accessibilityLabel="Like post" style={s.actionBtn} onPress={handleLike} testID={`like-post-${post.id}`}>
-          <Feather
-            name={liked ? 'heart' : 'heart'}
-            size={18}
-            color={liked ? colors.primary : colors.mutedForeground}
-          />
-          <Text style={[s.actionCount, liked && { color: colors.primary }]}>{likeCount}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity accessibilityLabel="Open critiques" style={s.actionBtn} onPress={handleOpenComments} testID={`comment-post-${post.id}`}>
-          <Feather name="message-circle" size={18} color={colors.mutedForeground} />
-          <Text style={s.actionCount}>Critique</Text>
-        </TouchableOpacity>
-      </View>
 
       <Modal visible={showComments} animationType="slide" transparent>
         <KeyboardAvoidingView
@@ -498,6 +784,6 @@ export default function PostCard({ post, currentUserId, onFollowChanged, onRefre
           </View>
         </KeyboardAvoidingView>
       </Modal>
-    </View>
+    </>
   );
 }

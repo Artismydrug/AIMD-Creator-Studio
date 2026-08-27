@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Image,
   Alert,
+  useWindowDimensions,
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -64,6 +65,11 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
   const [uploading, setUploading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [feedMode, setFeedMode] = useState<'all' | 'following'>('all');
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [pagerHeight, setPagerHeight] = useState(0);
+  const { height: windowHeight } = useWindowDimensions();
+  const topPad = embedded ? 0 : Platform.OS === 'web' ? 67 : insets.top + 8;
+  const pageHeight = pagerHeight || Math.max(480, windowHeight - topPad - 112);
 
   const { data: posts, isLoading, isError, refetch } = useListStudioPosts(
     { followingOnly: feedMode === 'following' },
@@ -183,7 +189,11 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
   };
 
   const isPending = uploading || createMutation.isPending;
-   const topPad = embedded ? 0 : Platform.OS === 'web' ? 67 : insets.top + 8;
+
+  const handleFeedModeChange = (mode: 'all' | 'following') => {
+    setFeedMode(mode);
+    setActiveIndex(0);
+  };
 
   const s = useMemo(
     () =>
@@ -199,49 +209,96 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
           borderBottomColor: colors.border,
           gap: 16,
         },
+        headerCopy: {
+          flex: 1,
+          minWidth: 0,
+        },
+        headerEyebrow: {
+          fontFamily: 'DMSans_700Bold',
+          fontSize: 10,
+          color: colors.sunsetCoral,
+          letterSpacing: 1.6,
+          textTransform: 'uppercase',
+          marginBottom: 2,
+        },
         headerTitle: {
           fontFamily: 'DMSans_700Bold',
-          fontSize: 20,
+          fontSize: 21,
           color: colors.foreground,
-          letterSpacing: 1,
+          letterSpacing: -0.2,
+        },
+        headerHint: {
+          fontFamily: 'DMSans_400Regular',
+          fontSize: 11,
+          color: colors.mutedForeground,
+          marginTop: 2,
         },
         composeBtn: {
-          width: 38,
-          height: 38,
+          width: 42,
+          height: 42,
           backgroundColor: colors.primary,
           alignItems: 'center',
           justifyContent: 'center',
-          borderRadius: colors.radius || 0,
+          borderRadius: 21,
+          shadowColor: colors.primary,
+          shadowOpacity: 0.22,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: 3,
         },
         profileBtn: {
-          width: 38,
-          height: 38,
+          width: 40,
+          height: 40,
           alignItems: 'center',
           justifyContent: 'center',
           borderWidth: 1,
           borderColor: colors.border,
-          borderRadius: colors.radius || 0,
+          borderRadius: 20,
+          backgroundColor: colors.card,
         },
         filterBar: {
           flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
           gap: 8,
           paddingHorizontal: 16,
           paddingVertical: 10,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border,
+          backgroundColor: colors.background,
+        },
+        filterGroup: {
+          flexDirection: 'row',
+          gap: 8,
+          padding: 3,
+          borderRadius: 99,
+          backgroundColor: colors.muted,
         },
         filterButton: {
-          borderWidth: 1,
-          borderColor: colors.border,
-          borderRadius: colors.radius || 0,
-          paddingVertical: 7,
-          paddingHorizontal: 12,
+          borderRadius: 99,
+          paddingVertical: 8,
+          paddingHorizontal: 13,
         },
         filterText: {
           fontFamily: 'DMSans_600SemiBold',
-          fontSize: 13,
+          fontSize: 12,
         },
-        listContent: { paddingBottom: Platform.OS === 'web' ? 100 : 100 },
+        feedCount: {
+          fontFamily: 'DMSans_600SemiBold',
+          fontSize: 11,
+          color: colors.mutedForeground,
+          letterSpacing: 0.5,
+        },
+        pagerViewport: {
+          flex: 1,
+          minHeight: 0,
+        },
+        pager: {
+          flex: 1,
+        },
+        page: {
+          width: '100%',
+          flexGrow: 0,
+          flexShrink: 0,
+        },
         centered: {
           flex: 1,
           alignItems: 'center',
@@ -365,8 +422,10 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
              <Feather name="arrow-left" size={24} color={colors.foreground} />
            </TouchableOpacity>
          )}
-        <View style={{ flex: 1 }}>
+        <View style={s.headerCopy}>
+          <Text style={s.headerEyebrow}>Creator Studio</Text>
           <Text style={s.headerTitle}>Studio Feed</Text>
+          <Text style={s.headerHint}>Swipe up to explore</Text>
         </View>
         <TouchableOpacity
           accessibilityRole="button"
@@ -378,36 +437,44 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
           <Feather name="user" size={18} color={colors.foreground} />
         </TouchableOpacity>
         <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Create a new studio post"
           style={s.composeBtn}
           onPress={() => {
             setComposing(true);
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           }}
+          testID="create-studio-post"
         >
           <Feather name="edit-2" size={18} color={colors.primaryForeground} />
         </TouchableOpacity>
       </View>
       <View style={s.filterBar}>
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel="Show all posts"
-          accessibilityState={{ selected: feedMode === 'all' }}
-          onPress={() => setFeedMode('all')}
-          style={[s.filterButton, feedMode === 'all' && { backgroundColor: colors.primary, borderColor: colors.primary }]}
-          testID="feed-filter-all"
-        >
-          <Text style={[s.filterText, { color: feedMode === 'all' ? colors.primaryForeground : colors.foreground }]}>All Posts</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel="Show posts from creators you follow"
-          accessibilityState={{ selected: feedMode === 'following' }}
-          onPress={() => setFeedMode('following')}
-          style={[s.filterButton, feedMode === 'following' && { backgroundColor: colors.primary, borderColor: colors.primary }]}
-          testID="feed-filter-following"
-        >
-          <Text style={[s.filterText, { color: feedMode === 'following' ? colors.primaryForeground : colors.foreground }]}>Following Only</Text>
-        </TouchableOpacity>
+        <View style={s.filterGroup}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Show all posts"
+            accessibilityState={{ selected: feedMode === 'all' }}
+            onPress={() => handleFeedModeChange('all')}
+            style={[s.filterButton, feedMode === 'all' && { backgroundColor: colors.primary }]}
+            testID="feed-filter-all"
+          >
+            <Text style={[s.filterText, { color: feedMode === 'all' ? colors.primaryForeground : colors.foreground }]}>All</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Show posts from creators you follow"
+            accessibilityState={{ selected: feedMode === 'following' }}
+            onPress={() => handleFeedModeChange('following')}
+            style={[s.filterButton, feedMode === 'following' && { backgroundColor: colors.primary }]}
+            testID="feed-filter-following"
+          >
+            <Text style={[s.filterText, { color: feedMode === 'following' ? colors.primaryForeground : colors.foreground }]}>Following</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={s.feedCount}>
+          {posts?.length ? `${Math.min(activeIndex + 1, posts.length)} / ${posts.length}` : 'Ready to create'}
+        </Text>
       </View>
 
       {isLoading ? (
@@ -423,38 +490,84 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
           </TouchableOpacity>
         </View>
       ) : (
-        <FlatList
-          data={posts}
-          keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => (
-            <PostCard
-              post={item}
-              currentUserId={me?.id}
-              onFollowChanged={refetch}
-              onRefresh={refetch}
-            />
-          )}
-          contentContainerStyle={s.listContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              tintColor={colors.primary}
-            />
-          }
-          ListEmptyComponent={
-            <View style={s.centered}>
-              <Feather name="image" size={48} color={colors.muted} />
-              <Text style={s.emptyTitle}>{feedMode === 'following' ? 'Your following feed is quiet' : 'No posts yet'}</Text>
-              <Text style={s.emptyText}>
-                {feedMode === 'following'
-                  ? 'Follow creators to see their studio posts here.'
-                  : 'Share what you’re creating'}
-              </Text>
-            </View>
-          }
-        />
+        <View
+          style={s.pagerViewport}
+          onLayout={(event) => {
+            const nextHeight = Math.round(event.nativeEvent.layout.height);
+            if (nextHeight > 0 && nextHeight !== pagerHeight) {
+              setPagerHeight(nextHeight);
+            }
+          }}
+        >
+          <FlatList
+            key={feedMode}
+            data={posts ?? []}
+            keyExtractor={(item) => String(item.id)}
+            renderItem={({ item }) => (
+              <View
+                style={[
+                  s.page,
+                  {
+                    height: pageHeight,
+                    minHeight: pageHeight,
+                    maxHeight: pageHeight,
+                  },
+                ]}
+              >
+                <PostCard
+                  post={item}
+                  currentUserId={me?.id}
+                  onFollowChanged={refetch}
+                  onRefresh={refetch}
+                  immersive
+                />
+              </View>
+            )}
+            style={s.pager}
+            showsVerticalScrollIndicator={false}
+            pagingEnabled
+            snapToInterval={pageHeight}
+            snapToOffsets={(posts ?? []).map((_, index) => index * pageHeight)}
+            snapToAlignment="start"
+            decelerationRate="fast"
+            disableIntervalMomentum
+            scrollEventThrottle={16}
+            getItemLayout={(_, index) => ({
+              length: pageHeight,
+              offset: pageHeight * index,
+              index,
+            })}
+            onScroll={(event) => {
+              const nextIndex = Math.round(event.nativeEvent.contentOffset.y / pageHeight);
+              const boundedIndex = Math.max(0, Math.min(nextIndex, (posts?.length ?? 1) - 1));
+              if (boundedIndex !== activeIndex) {
+                setActiveIndex(boundedIndex);
+              }
+            }}
+            onMomentumScrollEnd={(event) => {
+              const nextIndex = Math.round(event.nativeEvent.contentOffset.y / pageHeight);
+              setActiveIndex(Math.max(0, Math.min(nextIndex, (posts?.length ?? 1) - 1)));
+            }}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor={colors.primary}
+              />
+            }
+            ListEmptyComponent={
+              <View style={[s.centered, { height: pageHeight }]}>
+                <Feather name="image" size={48} color={colors.muted} />
+                <Text style={s.emptyTitle}>{feedMode === 'following' ? 'Your following feed is quiet' : 'No posts yet'}</Text>
+                <Text style={s.emptyText}>
+                  {feedMode === 'following'
+                    ? 'Follow creators to see their studio posts here.'
+                    : 'Share what you’re creating'}
+                </Text>
+              </View>
+            }
+          />
+        </View>
       )}
 
       <Modal visible={composing} animationType="slide" transparent>
