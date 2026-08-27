@@ -3,6 +3,8 @@ import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { pool } from "@workspace/db";
 import { clerkAuth } from "../middlewares/clerkAuth";
+import { ObjectStorageService } from "../lib/objectStorage";
+import { deleteLocalAccount } from "../lib/accountDeletion";
 
 const mocks = vi.hoisted(() => ({
   getAuth: vi.fn(),
@@ -15,6 +17,11 @@ vi.mock("@clerk/express", () => ({
 }));
 
 import usersRouter from "./users";
+
+const deleteObjectEntityIfOwned = vi.spyOn(
+  ObjectStorageService.prototype,
+  "deleteObjectEntityIfOwned",
+);
 
 type TestUser = {
   id: number;
@@ -67,6 +74,7 @@ beforeAll(async () => {
   user = rows[0]!;
   mocks.getAuth.mockReturnValue({ userId: clerkUserId });
   mocks.deleteUser.mockResolvedValue({});
+  deleteObjectEntityIfOwned.mockResolvedValue("deleted");
 });
 
 afterAll(async () => {
@@ -77,17 +85,82 @@ afterAll(async () => {
 
 describe("DELETE /api/users/me", () => {
   it("deletes the Clerk identity first, removes local data, and leaves a tombstone", async () => {
+    const avatarPath = `/api/storage/objects/account-delete-avatar-${suffix}`;
+    const postPath = `/objects/account-delete-post-${suffix}`;
+    const sharedUsername = `account_delete_shared_${suffix}`;
+    const sharedEmail = `${sharedUsername}@example.test`;
+
+    await pool.query(
+      "UPDATE users SET avatar_url = $1 WHERE id = $2",
+      [avatarPath, user.id],
+    );
+    await pool.query(
+      `INSERT INTO studio_posts (user_id, image_url, caption)
+       VALUES ($1, $2, $3)`,
+      [user.id, postPath, "Deletion cleanup test"],
+    );
+    const { rows: sharedRows } = await pool.query<{ id: number }>(
+      `INSERT INTO users (email, username, clerk_id, avatar_url)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id`,
+      [sharedEmail, sharedUsername, `clerk_shared_${suffix}`, postPath],
+    );
+
     const res = await request(appFor()).delete("/api/users/me");
 
     expect(res.status).toBe(204);
     expect(mocks.deleteUser).toHaveBeenCalledWith(clerkUserId);
+    expect(deleteObjectEntityIfOwned).toHaveBeenCalledWith(avatarPath, String(user.id));
+    expect(deleteObjectEntityIfOwned).not.toHaveBeenCalledWith(postPath, String(user.id));
     const local = await pool.query("SELECT id FROM users WHERE id = $1", [user.id]);
     expect(local.rows).toHaveLength(0);
+    await pool.query("DELETE FROM users WHERE id = $1", [sharedRows[0]!.id]);
     const tombstone = await pool.query(
       "SELECT clerk_id FROM deleted_clerk_users WHERE clerk_id = $1",
       [clerkUserId],
     );
     expect(tombstone.rows).toHaveLength(1);
+  });
+
+  it("leaves local data in place when object cleanup fails, then retries idempotently", async () => {
+    const retryClerkUserId = `user_account_delete_retry_${suffix}`;
+    const retryUsername = `account_delete_retry_${suffix}`;
+    const retryPath = `/objects/account-delete-retry-${suffix}`;
+    const { rows } = await pool.query<{ id: number }>(
+      `INSERT INTO users (email, username, clerk_id, avatar_url)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id`,
+      [
+        `${retryUsername}@example.test`,
+        retryUsername,
+        retryClerkUserId,
+        retryPath,
+      ],
+    );
+    const retryUserId = rows[0]!.id;
+
+    deleteObjectEntityIfOwned
+      .mockReset()
+      .mockRejectedValueOnce(new Error("storage unavailable"));
+    await expect(
+      deleteLocalAccount({
+        clerkUserId: retryClerkUserId,
+        localUserId: retryUserId,
+      }),
+    ).rejects.toThrow("storage unavailable");
+
+    const retained = await pool.query("SELECT id FROM users WHERE id = $1", [retryUserId]);
+    expect(retained.rows).toHaveLength(1);
+
+    deleteObjectEntityIfOwned.mockResolvedValue("deleted");
+    await deleteLocalAccount({
+      clerkUserId: retryClerkUserId,
+      localUserId: retryUserId,
+    });
+
+    const removed = await pool.query("SELECT id FROM users WHERE id = $1", [retryUserId]);
+    expect(removed.rows).toHaveLength(0);
+    await pool.query("DELETE FROM deleted_clerk_users WHERE clerk_id = $1", [retryClerkUserId]);
   });
 
   it("does not recreate a local user for a stale token after deletion", async () => {

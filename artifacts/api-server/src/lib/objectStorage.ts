@@ -165,6 +165,55 @@ export class ObjectStorageService {
     return objectFile;
   }
 
+  /**
+   * Delete a private object only when its ACL explicitly names the supplied
+   * user as owner. Public visibility does not change ownership.
+   *
+   * Missing objects are treated as already cleaned so an interrupted account
+   * deletion can be retried safely. References that are not private object
+   * entity paths are ignored because they may point to shared or
+   * platform-owned assets.
+   */
+  async deleteObjectEntityIfOwned(
+    rawPath: string,
+    ownerId: string,
+  ): Promise<'deleted' | 'skipped'> {
+    const pathWithoutApiPrefix = rawPath.startsWith('/api/storage/')
+      ? rawPath.slice('/api/storage'.length)
+      : rawPath;
+    const normalizedPath = this.normalizeObjectEntityPath(pathWithoutApiPrefix);
+    if (!normalizedPath.startsWith('/objects/')) {
+      return 'skipped';
+    }
+
+    let objectFile: File;
+    try {
+      objectFile = await this.getObjectEntityFile(normalizedPath);
+    } catch (error) {
+      if (error instanceof ObjectNotFoundError) {
+        return 'skipped';
+      }
+      throw error;
+    }
+
+    const policy = await getObjectAclPolicy(objectFile);
+    if (policy?.owner !== ownerId) {
+      return 'skipped';
+    }
+
+    try {
+      await objectFile.delete({ ignoreNotFound: true });
+    } catch (error: any) {
+      // A concurrent cleanup may win between getObjectEntityFile() and delete.
+      if (error?.code === 404 || error?.statusCode === 404) {
+        return 'skipped';
+      }
+      throw error;
+    }
+
+    return 'deleted';
+  }
+
   normalizeObjectEntityPath(rawPath: string): string {
     if (!rawPath.startsWith('https://storage.googleapis.com/')) {
       return rawPath;
