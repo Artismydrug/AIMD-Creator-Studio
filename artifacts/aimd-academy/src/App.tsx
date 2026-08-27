@@ -45,6 +45,7 @@ import Mission from '@/pages/Mission';
 import CheckIn from '@/pages/CheckIn';
 import Directory from '@/pages/Directory';
 import Messages from '@/pages/Messages';
+import Notifications from '@/pages/Notifications';
 import Community from '@/pages/Community';
 import ChallengesHabits from '@/pages/ChallengesHabits';
 import Admin from '@/pages/Admin';
@@ -244,6 +245,7 @@ function AuthenticatedShell() {
           <Route path="/checkin"        component={CheckIn} />
           <Route path="/directory"      component={Directory} />
           <Route path="/messages"       component={Messages} />
+          <Route path="/notifications"  component={Notifications} />
           <Route path="/admin"          component={Admin} />
           <Route path="/instructor"     component={Instructor} />
           <Route path="/hq"              component={HQ} />

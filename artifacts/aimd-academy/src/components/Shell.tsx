@@ -1,8 +1,8 @@
 import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Award, Briefcase, Calendar, Flame, GraduationCap, HeartHandshake, ImagePlus, Menu, ShieldCheck, Sparkles, Timer, User, Users, X, Video, LayoutDashboard, Building2 } from 'lucide-react';
+import { Award, Bell, Briefcase, Calendar, Flame, GraduationCap, HeartHandshake, ImagePlus, Menu, ShieldCheck, Sparkles, Timer, User, Users, X, Video, LayoutDashboard, Building2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useGetCurrentUser, useGetInstructorSelf } from '@workspace/api-client-react';
+import { getGetNotificationsQueryKey, useGetCurrentUser, useGetInstructorSelf, useGetNotifications } from '@workspace/api-client-react';
 import { useAuth, useClerk } from '@clerk/react';
 import { LogIn, LogOut } from 'lucide-react';
 
@@ -166,11 +166,13 @@ function SidebarContent({
   location,
   user,
   isInstructor,
+  unreadCount = 0,
   onNav,
 }: {
   location: string;
   user: { username?: string; avatarUrl?: string | null; tier?: string; studioReadyBadge?: boolean; isAdmin?: boolean } | undefined;
   isInstructor?: boolean;
+  unreadCount?: number;
   onNav?: () => void;
 }) {
   let navSections = NAV_SECTIONS;
@@ -243,7 +245,7 @@ function SidebarContent({
       </div>
 
       {/* Profile footer — auth-aware (sign in/sign out) */}
-      <SidebarFooter user={user} onNav={onNav} />
+      <SidebarFooter user={user} onNav={onNav} unreadCount={unreadCount} />
     </div>
   );
 }
@@ -251,9 +253,11 @@ function SidebarContent({
 function SidebarFooter({
   user,
   onNav,
+  unreadCount = 0,
 }: {
   user: Parameters<typeof SidebarContent>[0]['user'];
   onNav?: () => void;
+  unreadCount?: number;
 }) {
   const { isSignedIn } = useAuth();
   const { signOut } = useClerk();
@@ -293,6 +297,12 @@ function SidebarFooter({
             </div>
           </div>
         </Link>
+        <Link href="/notifications" onClick={onNav}>
+          <button className="relative p-1.5 text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors" aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ''}`}>
+            <Bell className="w-4 h-4" />
+            {unreadCount > 0 && <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-primary text-zinc-950 text-[9px] font-black flex items-center justify-center">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+          </button>
+        </Link>
         <button
           onClick={() => signOut({ redirectUrl: '/' })}
           className="p-1.5 text-sidebar-foreground/40 hover:text-sidebar-foreground/80 transition-colors"
@@ -309,12 +319,14 @@ function MobileDrawer({
   location,
   user,
   isInstructor,
+  unreadCount,
 }: {
   open: boolean;
   onClose: () => void;
   location: string;
   user: Parameters<typeof SidebarContent>[0]['user'];
   isInstructor: boolean;
+  unreadCount: number;
 }) {
   return (
     <>
@@ -340,7 +352,7 @@ function MobileDrawer({
           <X className="w-5 h-5" />
         </button>
 
-        <SidebarContent location={location} user={user} isInstructor={isInstructor} onNav={onClose} />
+        <SidebarContent location={location} user={user} isInstructor={isInstructor} unreadCount={unreadCount} onNav={onClose} />
       </div>
     </>
   );
@@ -350,8 +362,10 @@ function MobileDrawer({
 
 function MobileBottomNav({
   location,
+  unreadCount,
 }: {
   location: string;
+  unreadCount: number;
 }) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-[90] md:hidden bg-sidebar/95 backdrop-blur-md border-t border-border px-3 py-2">
@@ -395,6 +409,7 @@ function MobileBottomNav({
           label="Profile"
           icon={User}
           active={location === '/profile'}
+          badge={unreadCount}
         />
       </div>
     </nav>
@@ -406,11 +421,13 @@ function BottomTab({
   label,
   icon: Icon,
   active,
+  badge = 0,
 }: {
   href: string;
   label: string;
   icon: React.ElementType;
   active: boolean;
+  badge?: number;
 }) {
   return (
     <Link href={href}>
@@ -419,7 +436,7 @@ function BottomTab({
           active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
         }`}
       >
-        <Icon className="w-5 h-5" />
+        <div className="relative"><Icon className="w-5 h-5" />{badge > 0 && <span className="absolute -top-2 -right-3 min-w-4 h-4 px-1 rounded-full bg-primary text-zinc-950 text-[9px] font-black flex items-center justify-center">{badge > 99 ? '99+' : badge}</span>}</div>
         <span className="text-[10px] font-medium tracking-wide">{label}</span>
         {active && (
           <span className="w-1 h-1 bg-primary rounded-full animate-pulse" />
@@ -436,8 +453,10 @@ export function Shell({ children }: { children: ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const { data: user } = useGetCurrentUser();
+  const { data: notifications } = useGetNotifications({ query: { queryKey: getGetNotificationsQueryKey(), refetchInterval: 30_000 } });
   const { data: instructorData } = useGetInstructorSelf({ query: { queryKey: ['getInstructorSelf'], retry: false } });
   const isInstructor = !!instructorData || !!user?.isAdmin;
+  const unreadCount = notifications?.unreadCount ?? 0;
 
   // Landing page renders full-bleed, no chrome
   if (location === '/') {
@@ -453,6 +472,7 @@ export function Shell({ children }: { children: ReactNode }) {
         location={location}
         user={user}
         isInstructor={isInstructor}
+        unreadCount={unreadCount}
       />
 
       {/* ── Root layout ── */}
@@ -460,7 +480,7 @@ export function Shell({ children }: { children: ReactNode }) {
 
         {/* Desktop sidebar — hidden on mobile */}
         <aside className="hidden md:flex flex-col w-64 flex-shrink-0 sticky top-0 h-screen bg-sidebar border-r border-border overflow-hidden shadow-sm">
-          <SidebarContent location={location} user={user} isInstructor={isInstructor} />
+          <SidebarContent location={location} user={user} isInstructor={isInstructor} unreadCount={unreadCount} />
         </aside>
 
         {/* Main column */}
@@ -489,14 +509,15 @@ export function Shell({ children }: { children: ReactNode }) {
             </Link>
 
             {/* Avatar shortcut */}
-            <Link href="/profile">
-              <Avatar className="w-8 h-8 border border-primary/30 rounded-none cursor-pointer">
-                <AvatarImage src={user?.avatarUrl ?? ''} />
-                <AvatarFallback className="bg-primary/10 text-primary rounded-none font-mono text-xs">
-                  {user?.username?.[0]?.toUpperCase() ?? 'A'}
-                </AvatarFallback>
-              </Avatar>
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link href="/notifications"><button className="relative p-1 text-muted-foreground hover:text-primary" aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ''}`}><Bell className="w-4 h-4" />{unreadCount > 0 && <span className="absolute -top-1 -right-2 min-w-4 h-4 px-1 rounded-full bg-primary text-zinc-950 text-[9px] font-black flex items-center justify-center">{unreadCount > 99 ? '99+' : unreadCount}</span>}</button></Link>
+              <Link href="/profile">
+                <Avatar className="w-8 h-8 border border-primary/30 rounded-none cursor-pointer">
+                  <AvatarImage src={user?.avatarUrl ?? ''} />
+                  <AvatarFallback className="bg-primary/10 text-primary rounded-none font-mono text-xs">{user?.username?.[0]?.toUpperCase() ?? 'A'}</AvatarFallback>
+                </Avatar>
+              </Link>
+            </div>
           </header>
 
           {/* Page content — extra bottom padding on mobile for bottom nav */}
@@ -509,6 +530,7 @@ export function Shell({ children }: { children: ReactNode }) {
       {/* ── Mobile bottom nav ── */}
       <MobileBottomNav
         location={location}
+        unreadCount={unreadCount}
       />
     </>
   );

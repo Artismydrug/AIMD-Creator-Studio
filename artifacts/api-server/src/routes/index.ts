@@ -25,6 +25,7 @@ import progressRouter from "./progress";
 import tattooBookingsRouter from "./tattoo-bookings";
 import instructorRouter from "./instructor";
 import hqRouter from "./hq";
+import notificationsRouter from "./notifications";
 
 const router: IRouter = Router();
 
@@ -46,6 +47,7 @@ router.use("/payments", paymentsRouter);
 router.use("/store", storeRouter);
 router.use(commentsRouter);
 router.use(conversationsRouter);
+router.use(notificationsRouter);
 router.use(moderationRouter);
 router.use(checkinRouter);
 router.use(challengesRouter);

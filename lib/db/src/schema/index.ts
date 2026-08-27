@@ -3,6 +3,7 @@ export * from "./user-follows";
 export * from "./auth";
 export * from "./habits";
 export * from "./studio-posts";
+export * from "./notifications";
 export * from "./workshops";
 export * from "./assignments";
 export * from "./badges";

@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
+import { createNotification } from "../lib/notifications";
 
 const router: IRouter = Router();
 
@@ -82,10 +83,14 @@ router.post("/conversations", async (req, res): Promise<void> => {
 
   const allIds = [...new Set([userId, ...participantIds])];
   const isGroup = allIds.length > 2;
+  const participantIdArray = sql`ARRAY[${sql.join(
+    allIds.map((id) => sql`${id}`),
+    sql`, `,
+  )}]::int[]`;
   const blocked = await db.execute(sql`
     SELECT 1 FROM user_blocks
-    WHERE (blocker_id = ${userId} AND blocked_id = ANY(${allIds}::int[]))
-       OR (blocked_id = ${userId} AND blocker_id = ANY(${allIds}::int[]))
+    WHERE (blocker_id = ${userId} AND blocked_id = ANY(${participantIdArray}))
+       OR (blocked_id = ${userId} AND blocker_id = ANY(${participantIdArray}))
     LIMIT 1
   `);
   if (blocked.rows.length > 0) {
@@ -216,6 +221,18 @@ router.post("/conversations/:id/messages", async (req, res): Promise<void> => {
   `);
 
   const msg = result.rows[0] as any;
+  const recipients = await db.execute(sql`
+    SELECT user_id FROM conversation_participants
+    WHERE conversation_id = ${convId} AND user_id != ${userId}
+  `);
+  await Promise.all(
+    recipients.rows.map((row) => createNotification({
+      recipientUserId: (row as { user_id: number }).user_id,
+      actorUserId: userId,
+      type: "direct_message",
+      conversationId: convId,
+    })),
+  );
   const userRow = await db.execute(sql`SELECT username, avatar_url AS "senderAvatar" FROM users WHERE id = ${userId}`);
   const u = userRow.rows[0] as any;
 

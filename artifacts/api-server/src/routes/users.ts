@@ -16,6 +16,7 @@ import { ObjectPermission, getObjectAclPolicy } from "../lib/objectAcl";
 import { ObjectNotFoundError, ObjectStorageService } from "../lib/objectStorage";
 import { deleteLocalAccount } from "../lib/accountDeletion";
 import { logger } from "../lib/logger";
+import { createNotification, removeActiveNotification } from "../lib/notifications";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -72,7 +73,7 @@ async function isOwnedPublicAvatar(userId: number, avatarUrl: string): Promise<b
     return canWrite && policy?.owner === String(userId) && policy.visibility === "public";
   } catch (error) {
     if (!(error instanceof ObjectNotFoundError)) {
-      console.warn("Unable to validate avatar object", error);
+      logger.warn({ err: error, userId }, "Unable to validate avatar object");
     }
     return false;
   }
@@ -316,6 +317,16 @@ router.post("/users/:id/follow", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Creator not found" });
     return;
   }
+  const blocked = await pool.query(
+    `SELECT 1 FROM user_blocks
+     WHERE (blocker_id = $1 AND blocked_id = $2) OR (blocker_id = $2 AND blocked_id = $1)
+     LIMIT 1`,
+    [followerUserId, targetUserId],
+  );
+  if (blocked.rows.length > 0) {
+    res.status(403).json({ error: "Following is unavailable because this creator is blocked." });
+    return;
+  }
 
   await pool.query(
     `INSERT INTO user_follows (follower_id, following_id)
@@ -323,6 +334,13 @@ router.post("/users/:id/follow", async (req, res): Promise<void> => {
      ON CONFLICT (follower_id, following_id) DO NOTHING`,
     [followerUserId, targetUserId],
   );
+  if (!snapshotBeforeInsert.followedByMe) {
+    await createNotification({
+      recipientUserId: targetUserId,
+      actorUserId: followerUserId,
+      type: "follow",
+    });
+  }
   const snapshot = await getFollowSnapshot(targetUserId, followerUserId);
   res.json(FollowUserResponse.parse({
     targetUserId,
@@ -349,6 +367,13 @@ router.delete("/users/:id/follow", async (req, res): Promise<void> => {
     `DELETE FROM user_follows WHERE follower_id = $1 AND following_id = $2`,
     [followerUserId, targetUserId],
   );
+  if (snapshotBeforeDelete.followedByMe) {
+    await removeActiveNotification({
+      recipientUserId: targetUserId,
+      actorUserId: followerUserId,
+      type: "follow",
+    });
+  }
   const snapshot = await getFollowSnapshot(targetUserId, followerUserId);
   res.json(UnfollowUserResponse.parse({
     targetUserId,

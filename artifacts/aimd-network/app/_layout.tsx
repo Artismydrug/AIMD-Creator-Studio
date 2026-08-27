@@ -77,6 +77,13 @@ function RootLayoutNav() {
       <Stack.Screen name="feed" options={{ headerShown: false }} />
        <Stack.Screen name="profile" options={{ headerShown: false }} />
       <Stack.Screen name="membership" options={{ headerShown: false }} />
+       <Stack.Screen
+         name="notifications"
+         options={{
+           headerShown: false,
+           presentation: 'card',
+         }}
+       />
       <Stack.Screen
         name="conversation/[id]"
         options={{

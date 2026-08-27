@@ -1051,6 +1051,55 @@ export interface MessageInput {
   content: string;
 }
 
+export interface NotificationActor {
+  id: number;
+  username: string;
+  /** @nullable */
+  avatarUrl: string | null;
+}
+
+export interface ConversationDestination {
+  conversationId: number;
+}
+
+export interface PostDestination {
+  postId: number;
+}
+
+export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
+
+
+export const NotificationType = {
+  direct_message: 'direct_message',
+  follow: 'follow',
+  like: 'like',
+  critique: 'critique',
+} as const;
+
+export interface Notification {
+  id: number;
+  type: NotificationType;
+  actor: NotificationActor | null;
+  /** @nullable */
+  conversationId: number | null;
+  /** @nullable */
+  postId: number | null;
+  conversationDestination: ConversationDestination | null;
+  postDestination: PostDestination | null;
+  createdAt: string;
+  /** @nullable */
+  readAt: string | null;
+}
+
+export interface NotificationsResponse {
+  notifications: Notification[];
+  unreadCount: number;
+}
+
+export interface MarkAllNotificationsReadResult {
+  updatedCount: number;
+}
+
 export interface Comment {
   id: number;
   postId: number;

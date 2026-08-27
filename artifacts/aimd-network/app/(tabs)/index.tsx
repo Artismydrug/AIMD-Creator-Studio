@@ -46,6 +46,8 @@ import {
   getBaseUrl,
   DailySpinResult,
   useGetCurrentUser,
+  useGetNotifications,
+  getGetNotificationsQueryKey,
 } from '@workspace/api-client-react';
 
 function resolveMediaUrl(url: string | null | undefined): string | null {
@@ -85,6 +87,9 @@ export default function ProgressScreen() {
     refetch: refetchChallenge
   } = useGetCurrentChallenge();
   const { data: currentUser, refetch: refetchCurrentUser } = useGetCurrentUser();
+  const { data: notifications } = useGetNotifications({
+    query: { queryKey: getGetNotificationsQueryKey(), refetchInterval: 60_000 },
+  });
   const {
     data: profileSnapshot,
     isError: profileIsError,
@@ -267,6 +272,7 @@ export default function ProgressScreen() {
   const topPad = Platform.OS === 'web' ? 67 : insets.top + 8;
   const isSubmitting = uploading || submitMut.isPending;
   const isFreeCreator = currentUser?.tier === 'free';
+  const unreadNotifications = notifications?.unreadCount ?? 0;
 
   const s = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
@@ -848,6 +854,20 @@ export default function ProgressScreen() {
             testID="dashboard-profile-button"
           >
             <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.primary }}>My Profile</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={unreadNotifications ? `Open notifications, ${unreadNotifications} unread` : 'Open notifications'}
+            onPress={() => router.push('/notifications')}
+            testID="dashboard-notifications-button"
+            style={{ position: 'relative', padding: 5 }}
+          >
+            <Feather name="bell" size={19} color={colors.foreground} />
+            {unreadNotifications > 0 ? (
+              <View style={{ alignItems: 'center', backgroundColor: colors.destructive, borderRadius: 10, justifyContent: 'center', minWidth: 18, paddingHorizontal: 4, position: 'absolute', right: -5, top: -3 }}>
+                <Text style={{ color: colors.primaryForeground, fontFamily: 'DMSans_700Bold', fontSize: 10 }}>{unreadNotifications > 99 ? '99+' : unreadNotifications}</Text>
+              </View>
+            ) : null}
           </TouchableOpacity>
         </View>
         {/* Feed shortcut */}

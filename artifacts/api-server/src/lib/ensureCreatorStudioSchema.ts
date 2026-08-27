@@ -16,6 +16,7 @@ type SqlExecutor = {
  *  - assignment_extensions     (capture metadata + instructor feedback)
  *  - user_follows              (creator social graph)
  *  - studio_post_media_uploads (validated short videos bound to posts)
+ *  - notifications             (private creator activity alerts)
  *
  * Statements mirror lib/db/src/schema/{users,instructor}.ts exactly and are
  * safe to run on every boot (IF NOT EXISTS everywhere, additive only). This
@@ -128,6 +129,32 @@ export async function ensureCreatorStudioSchema(
       created_at timestamptz NOT NULL DEFAULT now(),
       consumed_at timestamptz
     )
+  `);
+  await database.query(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id serial PRIMARY KEY,
+      recipient_user_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      actor_user_id integer REFERENCES users(id) ON DELETE SET NULL,
+      type text NOT NULL CHECK (type IN ('direct_message', 'follow', 'like', 'critique')),
+      conversation_id integer REFERENCES conversations(id) ON DELETE CASCADE,
+      post_id integer REFERENCES studio_posts(id) ON DELETE CASCADE,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      read_at timestamptz
+    )
+  `);
+  await database.query(`
+    CREATE INDEX IF NOT EXISTS notifications_recipient_created_idx
+      ON notifications (recipient_user_id, created_at DESC)
+  `);
+  await database.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS notifications_active_follow_unique
+      ON notifications (recipient_user_id, actor_user_id, type)
+      WHERE type = 'follow' AND read_at IS NULL
+  `);
+  await database.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS notifications_active_like_unique
+      ON notifications (recipient_user_id, actor_user_id, post_id, type)
+      WHERE type = 'like' AND read_at IS NULL
   `);
 
   await database.query(`

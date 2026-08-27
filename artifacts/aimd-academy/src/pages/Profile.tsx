@@ -1,6 +1,6 @@
-import { useParams, Link } from 'wouter';
+import { useParams, Link, useLocation } from 'wouter';
 import { useState, useEffect } from 'react';
-import { useGetCurrentUser, useListBadges, useUpdateCurrentUser } from '@workspace/api-client-react';
+import { useCreateConversation, useFollowUser, useGetCurrentUser, useListBadges, useUnfollowUser, useUpdateCurrentUser } from '@workspace/api-client-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useClerk } from '@clerk/react';
 import {
@@ -280,6 +280,14 @@ function EditProfileDialog({ user }: { user: any }) {
 function ProfileContent({ user, badges, posts, isOwnProfile }: { user: any; badges: any[]; posts: any[]; isOwnProfile?: boolean }) {
   const tier = TIER_LABELS[user.tier] ?? TIER_LABELS['free'];
   const hasStudioReady = user.studioReadyBadge;
+  const [, navigate] = useLocation();
+  const queryClient = useQueryClient();
+  const follow = useFollowUser({ mutation: { onSuccess: () => queryClient.invalidateQueries({ queryKey: ['publicProfile', user.id] }) } });
+  const unfollow = useUnfollowUser({ mutation: { onSuccess: () => queryClient.invalidateQueries({ queryKey: ['publicProfile', user.id] }) } });
+  const conversation = useCreateConversation();
+  const following = Boolean(user.followedByMe);
+  const isWorking = follow.isPending || unfollow.isPending;
+  const openConversation = () => conversation.mutate({ data: { participantIds: [user.id] } }, { onSuccess: ({ id }) => navigate(`/messages?conversation=${id}`) });
 
   return (
     <div className="max-w-4xl mx-auto pb-16">
@@ -349,14 +357,21 @@ function ProfileContent({ user, badges, posts, isOwnProfile }: { user: any; badg
               </Button>
             )}
             {!isOwnProfile && (
-              <Button asChild variant="outline" className="rounded-none border-border text-foreground/80 hover:bg-muted font-mono text-xs uppercase h-9">
-                <Link href="/messages">
-                  <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
-                  Message
-                </Link>
+              <Button variant="outline" onClick={() => following ? unfollow.mutate({ id: user.id }) : follow.mutate({ id: user.id })} disabled={isWorking} className="rounded-none border-border text-foreground/80 hover:bg-muted font-mono text-xs uppercase h-9">
+                <Users className="w-3.5 h-3.5 mr-1.5" />
+                {isWorking ? 'Working…' : following ? 'Following' : 'Follow'}
+              </Button>
+            )}
+            {!isOwnProfile && (
+              <Button variant="outline" onClick={openConversation} disabled={conversation.isPending} className="rounded-none border-border text-foreground/80 hover:bg-muted font-mono text-xs uppercase h-9">
+                <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
+                {conversation.isPending ? 'Opening…' : 'Message'}
               </Button>
             )}
           </div>
+          {!isOwnProfile && (follow.isError || unfollow.isError || conversation.isError) && (
+            <p className="font-mono text-[10px] text-destructive">Could not complete that action. Please try again.</p>
+          )}
         </div>
 
         {/* Bio */}
@@ -383,6 +398,8 @@ function ProfileContent({ user, badges, posts, isOwnProfile }: { user: any; badg
           <Stat icon={Award}      label="Badges"   value={badges.length} />
           <Stat icon={Flame}      label="Streak"   value={`${user.currentStreak ?? 0}d`} />
           <Stat icon={GraduationCap} label="Enrolled" value={user.workshopsEnrolled ?? 0} />
+          <Stat icon={Users} label="Followers" value={user.followerCount ?? 0} />
+          <Stat icon={Users} label="Following" value={user.followingCount ?? 0} />
         </div>
 
         {/* Badges */}

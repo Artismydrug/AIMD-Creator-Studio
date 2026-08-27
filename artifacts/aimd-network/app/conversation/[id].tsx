@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -18,11 +18,14 @@ import * as Haptics from 'expo-haptics';
 import {
   useListMessages,
   useSendMessage,
+  getListConversationsQueryKey,
+  getGetNotificationsQueryKey,
 } from '@workspace/api-client-react';
 import type { ConversationMessage } from '@workspace/api-client-react';
 import { useGetCurrentUser } from '@workspace/api-client-react';
 import SafetyActions from '@/components/SafetyActions';
 import EmojiPicker from '@/components/EmojiPicker';
+import { useQueryClient } from '@tanstack/react-query';
 
 function formatTime(dateStr: string): string {
   const d = new Date(dateStr);
@@ -85,6 +88,7 @@ export default function ConversationScreen() {
   const insets = useSafeAreaInsets();
   const { id, name } = useLocalSearchParams<{ id: string; name?: string }>();
   const navigation = useNavigation();
+  const queryClient = useQueryClient();
   const { data: user } = useGetCurrentUser();
   const convId = parseInt(id ?? '0', 10);
   const [text, setText] = useState('');
@@ -95,6 +99,11 @@ export default function ConversationScreen() {
   }, [navigation, name]);
 
   const { data: messages, isLoading, isError, refetch } = useListMessages(convId);
+  useEffect(() => {
+    if (!messages) return;
+    void queryClient.invalidateQueries({ queryKey: getListConversationsQueryKey() });
+    void queryClient.invalidateQueries({ queryKey: getGetNotificationsQueryKey() });
+  }, [messages, queryClient]);
 
   const allMessages = useMemo(() => {
     const remote = messages ?? [];
@@ -114,6 +123,8 @@ export default function ConversationScreen() {
       onSuccess: (msg) => {
         setLocalMessages((prev) => [...prev, msg]);
         refetch();
+        void queryClient.invalidateQueries({ queryKey: getListConversationsQueryKey() });
+        void queryClient.invalidateQueries({ queryKey: getGetNotificationsQueryKey() });
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       },
     },

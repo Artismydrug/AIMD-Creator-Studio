@@ -18,6 +18,7 @@ import {
   LikeStudioPostParams,
   LikeStudioPostResponse,
 } from "@workspace/api-zod";
+import { createNotification, removeActiveNotification } from "../lib/notifications";
 
 const router: IRouter = Router();
 
@@ -275,6 +276,7 @@ router.post("/studio-posts/:id/like", async (req, res): Promise<void> => {
     .where(and(eq(postLikesTable.postId, params.data.id), eq(postLikesTable.userId, userId)));
 
   let likedByMe: boolean;
+  let postOwnerId: number | undefined;
   if (existing) {
     await db.delete(postLikesTable).where(eq(postLikesTable.id, existing.id));
     await db
@@ -283,6 +285,24 @@ router.post("/studio-posts/:id/like", async (req, res): Promise<void> => {
       .where(eq(studioPostsTable.id, params.data.id));
     likedByMe = false;
   } else {
+    const ownerResult = await db.execute(sql`
+      SELECT user_id FROM studio_posts WHERE id = ${params.data.id}
+    `);
+    postOwnerId = (ownerResult.rows[0] as { user_id?: number } | undefined)?.user_id;
+    if (!postOwnerId) {
+      res.status(404).json({ error: "Post not found" });
+      return;
+    }
+    const blocked = await db.execute(sql`
+      SELECT 1 FROM user_blocks
+      WHERE (blocker_id = ${userId} AND blocked_id = ${postOwnerId})
+         OR (blocker_id = ${postOwnerId} AND blocked_id = ${userId})
+      LIMIT 1
+    `);
+    if (blocked.rows.length > 0) {
+      res.status(403).json({ error: "This creator is blocked." });
+      return;
+    }
     await db.insert(postLikesTable).values({ postId: params.data.id, userId });
     await db
       .update(studioPostsTable)
@@ -300,6 +320,21 @@ router.post("/studio-posts/:id/like", async (req, res): Promise<void> => {
   if (!post) {
     res.status(404).json({ error: "Post not found" });
     return;
+  }
+  if (likedByMe) {
+    await createNotification({
+      recipientUserId: post.userId,
+      actorUserId: userId,
+      type: "like",
+      postId: post.id,
+    });
+  } else {
+    await removeActiveNotification({
+      recipientUserId: post.userId,
+      actorUserId: userId,
+      type: "like",
+      postId: post.id,
+    });
   }
   res.json(LikeStudioPostResponse.parse({ ...post, likedByMe }));
 });

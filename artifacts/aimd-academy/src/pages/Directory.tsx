@@ -12,7 +12,8 @@ import {
   SlidersHorizontal,
   Users,
 } from 'lucide-react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
+import { useCreateConversation } from '@workspace/api-client-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -57,6 +58,13 @@ const AVATAR_BG = [
 
 function CreatorCard({ creator, idx }: { creator: Creator; idx: number }) {
   const avatarClass = AVATAR_BG[idx % AVATAR_BG.length];
+  const [, navigate] = useLocation();
+  const conversation = useCreateConversation();
+  const messageCreator = () => {
+    conversation.mutate({ data: { participantIds: [creator.id] } }, {
+      onSuccess: ({ id }) => navigate(`/messages?conversation=${id}`),
+    });
+  };
 
   return (
     <div className="flex flex-col bg-zinc-900 border border-zinc-800 overflow-hidden group transition-all hover:border-zinc-600">
@@ -122,7 +130,11 @@ function CreatorCard({ creator, idx }: { creator: Creator; idx: number }) {
         </div>
 
         {/* CTA */}
+        <div className="space-y-2">
         <div className="flex gap-2">
+          <Button asChild variant="outline" className="h-9 rounded-none border-zinc-700 text-zinc-300 hover:text-emerald-400 font-mono text-xs uppercase">
+            <Link href={`/profile/${creator.id}`}>View Profile</Link>
+          </Button>
           {creator.bookingOpen ? (
             <Button
               asChild
@@ -142,15 +154,15 @@ function CreatorCard({ creator, idx }: { creator: Creator; idx: number }) {
             </Button>
           )}
           <Button
-            asChild
             variant="outline"
             size="icon"
             className="h-9 w-9 rounded-none border-zinc-700 text-zinc-400 hover:text-emerald-400 hover:border-emerald-500/40"
-            title="Message"
+            title={conversation.isError ? 'Could not start conversation. Try again.' : 'Message'}
+            aria-label="Message creator"
+            disabled={conversation.isPending}
+            onClick={messageCreator}
           >
-            <Link href="/messages">
-              <MessageSquare className="w-3.5 h-3.5" />
-            </Link>
+            <MessageSquare className="w-3.5 h-3.5" />
           </Button>
           {creator.portfolioUrl && (
             <Button
@@ -164,6 +176,8 @@ function CreatorCard({ creator, idx }: { creator: Creator; idx: number }) {
               </a>
             </Button>
           )}
+        </div>
+        {conversation.isError && <p className="font-mono text-[10px] text-destructive">Could not start a conversation. Please try again.</p>}
         </div>
       </div>
     </div>

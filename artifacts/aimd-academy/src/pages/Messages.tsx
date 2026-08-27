@@ -4,6 +4,8 @@ import { MessageSquare, Send, Users, Plus, Search, ChevronLeft, Circle } from 'l
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useGetCurrentUser } from '@workspace/api-client-react';
+import { getGetNotificationsQueryKey } from '@workspace/api-client-react';
+import { useLocation } from 'wouter';
 import EmojiPicker from '@/components/EmojiPicker';
 
 // ─── API helpers ──────────────────────────────────────────────────────────────
@@ -149,6 +151,7 @@ function ThreadView({ convId, convName, onBack }: { convId: number; convName: st
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['messages', convId] });
       qc.invalidateQueries({ queryKey: ['conversations'] });
+      qc.invalidateQueries({ queryKey: getGetNotificationsQueryKey() });
     },
   });
 
@@ -216,6 +219,7 @@ function ThreadView({ convId, convName, onBack }: { convId: number; convName: st
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Messages() {
+  const [location] = useLocation();
   const [activeConvId, setActiveConvId] = useState<number | null>(null);
   const [search, setSearch] = useState('');
 
@@ -224,6 +228,13 @@ export default function Messages() {
     queryFn: fetchConversations,
     refetchInterval: 8000,
   });
+
+  useEffect(() => {
+    const id = Number(new URLSearchParams(location.split('?')[1] ?? '').get('conversation'));
+    if (id && conversations.some((conversation: any) => conversation.id === id)) {
+      setActiveConvId(id);
+    }
+  }, [location, conversations]);
 
   const filtered = conversations.filter((c: any) => {
     const name = c.isGroup

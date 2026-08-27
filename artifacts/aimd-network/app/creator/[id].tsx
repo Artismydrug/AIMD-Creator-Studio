@@ -9,7 +9,7 @@ import {
   Platform,
   Image,
 } from 'react-native';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -22,6 +22,7 @@ import {
   useUnfollowUser,
   useGetCurrentUser,
   getBaseUrl,
+  useCreateConversation,
 } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import SafetyActions from '@/components/SafetyActions';
@@ -51,6 +52,7 @@ function resolveImageUrl(url: string | null | undefined): string | null {
 export default function CreatorProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
+  const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
@@ -99,6 +101,13 @@ export default function CreatorProfileScreen() {
       onSuccess: () => {
         refetchProfile();
         queryClient.invalidateQueries({ queryKey: ['/api/studio-posts'] });
+      },
+    },
+  });
+  const createConversation = useCreateConversation({
+    mutation: {
+      onSuccess: (conversation) => {
+        router.push({ pathname: '/conversation/[id]', params: { id: conversation.id, name: profile?.username ?? 'Messages' } });
       },
     },
   });
@@ -187,6 +196,15 @@ export default function CreatorProfileScreen() {
     followButtonText: {
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 13,
+    },
+    messageButton: {
+      backgroundColor: colors.primary,
+      borderRadius: colors.radius,
+      flexDirection: 'row',
+      gap: 6,
+      marginTop: 2,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
     },
     usernameRow: {
       flexDirection: 'row',
@@ -450,6 +468,10 @@ export default function CreatorProfileScreen() {
       followMutation.mutate({ id: profile.id });
     }
   };
+  const handleMessage = () => {
+    if (!profile || isOwnProfile) return;
+    createConversation.mutate({ data: { participantIds: [profile.id] } });
+  };
 
   return (
     <View style={s.container}>
@@ -505,6 +527,18 @@ export default function CreatorProfileScreen() {
                       {profile.followedByMe ? 'Following' : 'Follow'}
                     </Text>
                   </TouchableOpacity>
+                   <TouchableOpacity
+                     accessibilityRole="button"
+                     accessibilityLabel={`Message ${profile.username}`}
+                     accessibilityState={{ busy: createConversation.isPending }}
+                     disabled={createConversation.isPending}
+                     onPress={handleMessage}
+                     style={[s.messageButton, { opacity: createConversation.isPending ? 0.6 : 1 }]}
+                     testID={`creator-message-${profile.id}`}
+                   >
+                     <Feather name="message-circle" size={14} color={colors.primaryForeground} />
+                     <Text style={[s.followButtonText, { color: colors.primaryForeground }]}>Message</Text>
+                   </TouchableOpacity>
                   <SafetyActions
                     userId={profile.id}
                     username={profile.username}

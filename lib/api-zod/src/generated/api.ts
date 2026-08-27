@@ -1566,6 +1566,69 @@ export const SendMessageResponse = zod.object({
 
 
 /**
+ * @summary List recent notifications for the current creator
+ */
+export const GetNotificationsResponse = zod.object({
+  "notifications": zod.array(zod.object({
+  "id": zod.int(),
+  "type": zod.enum(['direct_message', 'follow', 'like', 'critique']),
+  "actor": zod.union([zod.object({
+  "id": zod.int(),
+  "username": zod.string(),
+  "avatarUrl": zod.string().nullable()
+}),zod.null()]),
+  "conversationId": zod.int().nullable(),
+  "postId": zod.int().nullable(),
+  "conversationDestination": zod.union([zod.object({
+  "conversationId": zod.int()
+}),zod.null()]),
+  "postDestination": zod.union([zod.object({
+  "postId": zod.int()
+}),zod.null()]),
+  "createdAt": zod.coerce.date(),
+  "readAt": zod.coerce.date().nullable()
+})),
+  "unreadCount": zod.int()
+})
+
+
+/**
+ * @summary Mark one notification as read
+ */
+export const MarkNotificationReadParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const MarkNotificationReadResponse = zod.object({
+  "id": zod.int(),
+  "type": zod.enum(['direct_message', 'follow', 'like', 'critique']),
+  "actor": zod.union([zod.object({
+  "id": zod.int(),
+  "username": zod.string(),
+  "avatarUrl": zod.string().nullable()
+}),zod.null()]),
+  "conversationId": zod.int().nullable(),
+  "postId": zod.int().nullable(),
+  "conversationDestination": zod.union([zod.object({
+  "conversationId": zod.int()
+}),zod.null()]),
+  "postDestination": zod.union([zod.object({
+  "postId": zod.int()
+}),zod.null()]),
+  "createdAt": zod.coerce.date(),
+  "readAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * @summary Mark all notifications as read
+ */
+export const MarkAllNotificationsReadResponse = zod.object({
+  "updatedCount": zod.int()
+})
+
+
+/**
  * Returns points, phase, streaks, recent badges, habit completions,
  * check-in status, and today's reward spin availability/result.
  * The saved creator timezone is authoritative once established; supply

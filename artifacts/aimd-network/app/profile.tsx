@@ -29,6 +29,8 @@ import {
   useListStudioPosts,
   getListStudioPostsQueryKey,
   useUpdateCurrentUser,
+  useGetNotifications,
+  getGetNotificationsQueryKey,
 } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import StudioVideo from '@/components/StudioVideo';
@@ -260,6 +262,9 @@ export default function ProfileScreen() {
     refetch: refetchMe,
   } = useGetCurrentUser();
   const { data: progress, isError: progressError, refetch: refetchProgress } = useGetProgress();
+  const { data: notifications } = useGetNotifications({
+    query: { queryKey: getGetNotificationsQueryKey(), refetchInterval: 60_000 },
+  });
   const { data: badges, isError: badgesError, refetch: refetchBadges } = useListBadges();
   const { data: posts, isLoading: postsLoading } = useListStudioPosts(
     { userId: me?.id, limit: 10 },
@@ -298,6 +303,9 @@ export default function ProfileScreen() {
     },
     headerTitle: { color: colors.foreground, flex: 1, fontFamily: 'DMSans_700Bold', fontSize: 20 },
     headerButton: { padding: 6 },
+    notificationButton: { padding: 6, position: 'relative' },
+    notificationBadge: { alignItems: 'center', backgroundColor: colors.destructive, borderRadius: 10, justifyContent: 'center', minWidth: 18, paddingHorizontal: 4, position: 'absolute', right: -2, top: -2 },
+    notificationBadgeText: { color: colors.primaryForeground, fontFamily: 'DMSans_700Bold', fontSize: 10 },
     content: { gap: 16, padding: 16, paddingBottom: Platform.OS === 'web' ? 100 : insets.bottom + 36 },
     accountActions: { borderTopWidth: 1, paddingTop: 16 },
     deleteAccountSection: { gap: 8, paddingTop: 8 },
@@ -402,6 +410,7 @@ export default function ProfileScreen() {
     );
   };
   const mediumTags = [me.discipline, me.location].filter((value): value is string => !!value);
+  const unreadNotifications = notifications?.unreadCount ?? 0;
 
   return (
     <View style={s.screen}>
@@ -410,6 +419,20 @@ export default function ProfileScreen() {
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </Pressable>
         <Text style={s.headerTitle}>Your studio</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={unreadNotifications ? `Open notifications, ${unreadNotifications} unread` : 'Open notifications'}
+          onPress={() => router.push('/notifications')}
+          style={s.notificationButton}
+          testID="profile-notifications-button"
+        >
+          <Feather name="bell" size={21} color={colors.foreground} />
+          {unreadNotifications > 0 ? (
+            <View style={s.notificationBadge} testID="profile-notifications-badge">
+              <Text style={s.notificationBadgeText}>{unreadNotifications > 99 ? '99+' : unreadNotifications}</Text>
+            </View>
+          ) : null}
+        </Pressable>
       </View>
 
       <KeyboardAwareScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
