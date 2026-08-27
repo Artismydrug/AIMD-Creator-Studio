@@ -12,7 +12,7 @@ type AppStoreApp = Extract<App, { type: "app_store" }>;
 
 const PROJECT_NAME = "AIMD Network";
 const IOS_APP_NAME = "AIMD Network iOS";
-const IOS_BUNDLE_ID = "com.artismydrug.aimdnetwork";
+const IOS_BUNDLE_ID = "app.replit.creatorstudiobyaimd";
 
 const productSpecs = [
   // ── Dedicated Artist (formerly Academy) ─────────────────────────────────────
