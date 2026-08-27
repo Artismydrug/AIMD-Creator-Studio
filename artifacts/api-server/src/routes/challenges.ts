@@ -30,13 +30,6 @@ function isoWeek(date: Date): string {
   return `${d.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
 }
 
-function challengeWeekStart(deadline: Date): Date {
-  const start = new Date(deadline);
-  start.setUTCDate(start.getUTCDate() - 6);
-  start.setUTCHours(0, 0, 0, 0);
-  return start;
-}
-
 export function isChallengeSubmissionOpen(
   receivedAt: Date,
   deadline: Date,
@@ -57,13 +50,14 @@ type StoredChallengeMedia = {
 // Hard-coded current challenge brief — in a future iteration this can be
 // stored in the DB so admins can manage it from a dashboard.
 const CURRENT_CHALLENGE = {
-  week: "Week 34",
+  week: "Week 39",
   theme: "Ocean & Maritime",
   prompt:
     "Create a flash sheet with 3+ designs inspired by the ocean — nautical, sea creatures, waves, or maritime heritage. Any medium. Show process if you can.",
-  deadline: "2026-08-24T06:59:00.000Z", // Sunday Aug 23, 11:59 PM Pacific
+  deadline: "2026-09-26T06:59:00.000Z", // Friday Sep 25, 11:59 PM Pacific
   prize: "250 AIMD Points + Studio Ready fast-track entry",
 };
+const CURRENT_CHALLENGE_START = new Date("2026-08-27T00:00:00.000Z");
 
 // ─── GET /challenges/current ──────────────────────────────────────────────────
 
@@ -212,7 +206,7 @@ router.post("/challenges/submit", async (req, res): Promise<void> => {
     res.status(410).json({ error: "This weekly challenge is closed" });
     return;
   }
-  const weekStart = challengeWeekStart(deadline);
+    const weekStart = CURRENT_CHALLENGE_START;
   const client = await pool.connect();
 
   try {

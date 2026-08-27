@@ -39,7 +39,7 @@ async function createProofUpload(
   {
     purpose = "challenge_final",
     captureSource = "native_camera",
-    capturedAt = "2026-08-21T18:00:00.000Z",
+    capturedAt = "2026-09-21T18:00:00.000Z",
   }: {
     purpose?: "challenge_final" | "challenge_process";
     captureSource?: "native_camera" | "media_library";

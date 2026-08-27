@@ -239,7 +239,7 @@ export function WeeklyChallenge() {
   // useCountdown must be called unconditionally before any early returns so
   // the hook count stays stable across renders (Rules of Hooks).
   // We fall back to the server-side deadline constant when data is not yet loaded.
-  const FALLBACK_DEADLINE = new Date('2026-08-24T06:59:00.000Z');
+  const FALLBACK_DEADLINE = new Date('2026-09-26T06:59:00.000Z');
   const deadline = data ? new Date(data.challenge.deadline) : FALLBACK_DEADLINE;
   const cd = useCountdown(deadline);
 
