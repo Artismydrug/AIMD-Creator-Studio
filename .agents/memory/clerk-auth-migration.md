@@ -31,6 +31,12 @@ Explicitly register `@clerk/expo` as an Expo config plugin when shipping an iOS 
 
 **How to apply:** After a Clerk Expo upgrade or native build failure, verify the plugin loads during the Expo workflow and rerun the production bundles before retrying the remote iOS build.
 
+The production Expo bundling environment must also forward the managed Clerk publishable key as `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` and construct `EXPO_PUBLIC_CLERK_PROXY_URL` from the deployment domain plus the managed proxy path.
+
+**Why:** The development command injects the key separately, so preview can work while a signed TestFlight build starts blank before Clerk renders.
+
+**How to apply:** Keep this forwarding in the production bundle environment and fail the build when the managed publishable key is absent; never hand-edit the managed Clerk secrets.
+
 ## Programmatic test identity resolution
 Always resolve the active Clerk session's local user before changing roles or tiers in an authenticated test.
 
