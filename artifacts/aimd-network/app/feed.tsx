@@ -22,7 +22,7 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getListStudioPostsQueryKey,
@@ -79,6 +79,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { compose } = useLocalSearchParams<{ compose?: string }>();
   const queryClient = useQueryClient();
   const [composing, setComposing] = useState(false);
   const [caption, setCaption] = useState('');
@@ -95,6 +96,12 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
   const { height: windowHeight } = useWindowDimensions();
   const topPad = embedded ? 0 : Platform.OS === 'web' ? 67 : insets.top + 8;
   const pageHeight = pagerHeight || Math.max(480, windowHeight - topPad - 112);
+
+  useEffect(() => {
+    if (!embedded && compose === '1') {
+      setComposing(true);
+    }
+  }, [compose, embedded]);
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);

@@ -299,6 +299,7 @@ export default function ProfileScreen() {
     tagText: { color: colors.mutedForeground, fontFamily: 'DMSans_500Medium', fontSize: 12 },
     metrics: { backgroundColor: colors.card, borderColor: colors.cyan, borderRadius: colors.radius + 2, borderWidth: 2, flexDirection: 'row', overflow: 'hidden' },
      metric: { alignItems: 'center', flex: 1, gap: 3, paddingVertical: 12 },
+     metricPressed: { opacity: 0.65 },
      metricIcon: { marginBottom: 2 },
     metricDivider: { backgroundColor: colors.border, width: 1 },
     metricValue: { color: colors.foreground, fontFamily: 'DMSans_700Bold', fontSize: 17 },
@@ -397,11 +398,23 @@ export default function ProfileScreen() {
         </View>
 
         <View style={s.metrics}>
-           <View style={s.metric}><Feather name="users" size={14} color={colors.cyan} style={s.metricIcon} /><Text style={s.metricValue}>{publicProfile?.followerCount ?? '—'}</Text><Text style={s.metricLabel}>Followers</Text></View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Create a new studio post"
+            onPress={() => router.push({ pathname: '/feed', params: { compose: '1' } })}
+            style={({ pressed }) => [s.metric, pressed && s.metricPressed]}
+            testID="profile-posts-button"
+          >
+            <Feather name="grid" size={14} color={colors.cyan} style={s.metricIcon} />
+            <Text style={s.metricValue}>{publicProfile?.postCount ?? 0}</Text>
+            <Text style={s.metricLabel}>Posts</Text>
+          </Pressable>
           <View style={s.metricDivider} />
-           <View style={s.metric}><Feather name="user-plus" size={14} color={colors.cyan} style={s.metricIcon} /><Text style={s.metricValue}>{publicProfile?.followingCount ?? '—'}</Text><Text style={s.metricLabel}>Following</Text></View>
+          <View style={s.metric}><Feather name="users" size={14} color={colors.cyan} style={s.metricIcon} /><Text style={s.metricValue}>{publicProfile?.followerCount ?? '—'}</Text><Text style={s.metricLabel}>Followers</Text></View>
           <View style={s.metricDivider} />
-           <View style={s.metric}><Feather name="zap" size={14} color={colors.cyan} style={s.metricIcon} /><Text style={s.metricValue}>{progress?.currentStreak ?? 0}</Text><Text style={s.metricLabel}>Day streak</Text></View>
+          <View style={s.metric}><Feather name="user-plus" size={14} color={colors.cyan} style={s.metricIcon} /><Text style={s.metricValue}>{publicProfile?.followingCount ?? '—'}</Text><Text style={s.metricLabel}>Following</Text></View>
+          <View style={s.metricDivider} />
+          <View style={s.metric}><Feather name="zap" size={14} color={colors.cyan} style={s.metricIcon} /><Text style={s.metricValue}>{progress?.currentStreak ?? 0}</Text><Text style={s.metricLabel}>Day streak</Text></View>
         </View>
 
         <Pressable
