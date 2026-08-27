@@ -29,6 +29,7 @@ import {
 import type { StudioPost } from '@workspace/api-client-react';
 import { useRouter } from 'expo-router';
 import SafetyActions from '@/components/SafetyActions';
+import StudioVideo from '@/components/StudioVideo';
 
 /** Resolve a relative imageUrl (e.g. /api/storage/objects/…) to an absolute URL for React Native. */
 function resolveImageUrl(url: string | null | undefined): string | null {
@@ -75,9 +76,23 @@ interface PostCardProps {
   onFollowChanged?: () => void;
   onRefresh?: () => void;
   immersive?: boolean;
+  active?: boolean;
+  reducedMotion?: boolean;
+  muted?: boolean;
+  onMutedChange?: (muted: boolean) => void;
 }
 
-export default function PostCard({ post, currentUserId, onFollowChanged, onRefresh, immersive = false }: PostCardProps) {
+export default function PostCard({
+  post,
+  currentUserId,
+  onFollowChanged,
+  onRefresh,
+  immersive = false,
+  active = false,
+  reducedMotion = false,
+  muted = true,
+  onMutedChange = () => undefined,
+}: PostCardProps) {
   const colors = useColors();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -186,6 +201,9 @@ export default function PostCard({ post, currentUserId, onFollowChanged, onRefre
       ...StyleSheet.absoluteFillObject,
       width: undefined,
       height: undefined,
+    },
+    immersiveVideo: {
+      ...StyleSheet.absoluteFillObject,
     },
     immersiveFallback: {
       flex: 1,
@@ -397,6 +415,10 @@ export default function PostCard({ post, currentUserId, onFollowChanged, onRefre
       aspectRatio: 1,
       backgroundColor: colors.muted,
     },
+    postVideo: {
+      width: '100%',
+      aspectRatio: 1,
+    },
     imageStamp: {
       position: 'absolute',
       right: 10,
@@ -516,7 +538,16 @@ export default function PostCard({ post, currentUserId, onFollowChanged, onRefre
       {immersive ? (
         <View style={s.immersiveCard}>
           <View style={s.mediaSurface}>
-            {resolveImageUrl(post.imageUrl) && post.mediaType !== 'video' ? (
+            {resolveImageUrl(post.imageUrl) && post.mediaType === 'video' ? (
+              <StudioVideo
+                uri={resolveImageUrl(post.imageUrl)!}
+                active={active}
+                reducedMotion={reducedMotion}
+                muted={muted}
+                onMutedChange={onMutedChange}
+                style={s.immersiveVideo}
+              />
+            ) : resolveImageUrl(post.imageUrl) ? (
               <Image
                 source={{ uri: resolveImageUrl(post.imageUrl)! }}
                 style={s.immersiveImage}
@@ -684,13 +715,28 @@ export default function PostCard({ post, currentUserId, onFollowChanged, onRefre
 
           {resolveImageUrl(post.imageUrl) ? (
             <View style={[s.imageFrame, { borderColor: frameColor }]}>
-              <Image
-                source={{ uri: resolveImageUrl(post.imageUrl)! }}
-                style={s.postImage}
-                resizeMode="cover"
-              />
+              {post.mediaType === 'video' ? (
+                <StudioVideo
+                  uri={resolveImageUrl(post.imageUrl)!}
+                  active={active}
+                  reducedMotion={reducedMotion}
+                  muted={muted}
+                  onMutedChange={onMutedChange}
+                  style={s.postVideo}
+                />
+              ) : (
+                <Image
+                  source={{ uri: resolveImageUrl(post.imageUrl)! }}
+                  style={s.postImage}
+                  resizeMode="cover"
+                />
+              )}
               <View style={s.imageStamp}>
-                <Feather name="aperture" size={15} color={frameColor} />
+                <Feather
+                  name={post.mediaType === 'video' ? 'film' : 'aperture'}
+                  size={15}
+                  color={frameColor}
+                />
               </View>
             </View>
           ) : null}

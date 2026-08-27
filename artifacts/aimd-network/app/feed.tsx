@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,12 +14,14 @@ import {
   Image,
   Alert,
   useWindowDimensions,
+  AccessibilityInfo,
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -32,19 +34,44 @@ import {
 } from '@workspace/api-client-react';
 import PostCard from '@/components/PostCard';
 
-/** Upload an image directly to the API server. Returns the objectPath. */
-async function uploadImageToServer(
+const MAX_STUDIO_VIDEO_BYTES = 50 * 1024 * 1024;
+const MAX_STUDIO_VIDEO_DURATION_MS = 60 * 1000;
+const FEED_MUTED_PREFERENCE_KEY = 'aimd:feed-videos-muted';
+
+type SelectedMedia = {
+  uri: string;
+  contentType: string;
+  fileName: string;
+  fileSize?: number;
+  duration?: number | null;
+  mediaType: 'image' | 'video';
+};
+
+/** Upload creator media directly to the API server. Returns the objectPath. */
+async function uploadMediaToServer(
   uri: string,
   contentType: string,
+  mediaType: 'image' | 'video',
+  onProgress: (progress: number) => void,
 ): Promise<string> {
+  onProgress(0.1);
   const fileResponse = await fetch(uri);
   const arrayBuffer = await fileResponse.arrayBuffer();
 
+  if (mediaType === 'video' && arrayBuffer.byteLength > MAX_STUDIO_VIDEO_BYTES) {
+    throw new Error('Video must be 50 MB or smaller.');
+  }
+
+  onProgress(0.35);
   const result = await customFetch<{ objectPath: string }>('/api/storage/uploads', {
     method: 'POST',
-    headers: { 'Content-Type': contentType },
+    headers: {
+      'Content-Type': contentType,
+      'X-AIMD-UPLOAD-PURPOSE': 'studio_post',
+    },
     body: arrayBuffer,
   });
+  onProgress(1);
   return result.objectPath;
 }
 
@@ -56,13 +83,11 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
   const [composing, setComposing] = useState(false);
   const [caption, setCaption] = useState('');
   const [tags, setTags] = useState('');
-  const [selectedImage, setSelectedImage] = useState<{
-    uri: string;
-    contentType: string;
-    fileName: string;
-    fileSize: number;
-  } | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<SelectedMedia | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const [videosMuted, setVideosMuted] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [feedMode, setFeedMode] = useState<'all' | 'following'>('all');
   const [activeIndex, setActiveIndex] = useState(0);
@@ -70,6 +95,27 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
   const { height: windowHeight } = useWindowDimensions();
   const topPad = embedded ? 0 : Platform.OS === 'web' ? 67 : insets.top + 8;
   const pageHeight = pagerHeight || Math.max(480, windowHeight - topPad - 112);
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const subscription = AccessibilityInfo.addEventListener(
+      'reduceMotionChanged',
+      setReduceMotion,
+    );
+    AsyncStorage.getItem(FEED_MUTED_PREFERENCE_KEY)
+      .then((value) => {
+        if (value !== null) setVideosMuted(value !== 'false');
+      })
+      .catch(() => undefined);
+    return () => subscription.remove();
+  }, []);
+
+  const handleMutedChange = useCallback((muted: boolean) => {
+    setVideosMuted(muted);
+    AsyncStorage.setItem(FEED_MUTED_PREFERENCE_KEY, String(muted)).catch(
+      () => undefined,
+    );
+  }, []);
 
   const { data: posts, isLoading, isError, refetch } = useListStudioPosts(
     { followingOnly: feedMode === 'following' },
@@ -105,7 +151,8 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
         setComposing(false);
         setCaption('');
         setTags('');
-        setSelectedImage(null);
+        setSelectedMedia(null);
+        setUploadProgress(0);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       },
       onError: (error) => {
@@ -121,6 +168,54 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
     await refetch();
     setRefreshing(false);
   }, [refetch]);
+
+  const usePickedMedia = (asset: ImagePicker.ImagePickerAsset) => {
+    const mediaType = asset.type === 'video' ? 'video' : 'image';
+    if (
+      mediaType === 'video' &&
+      asset.duration != null &&
+      asset.duration > MAX_STUDIO_VIDEO_DURATION_MS
+    ) {
+      Alert.alert('Video is too long', 'Choose a video that is 60 seconds or shorter.');
+      return;
+    }
+    if (
+      mediaType === 'video' &&
+      asset.fileSize != null &&
+      asset.fileSize > MAX_STUDIO_VIDEO_BYTES
+    ) {
+      Alert.alert('Video is too large', 'Choose a video that is 50 MB or smaller.');
+      return;
+    }
+
+    const ext = (
+      asset.uri.split('.').pop() ?? (mediaType === 'video' ? 'mp4' : 'jpg')
+    )
+      .split('?')[0]
+      .toLowerCase();
+    const mimeMap: Record<string, string> = {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      webp: 'image/webp',
+      heic: 'image/heic',
+      mp4: 'video/mp4',
+      mov: 'video/quicktime',
+      webm: 'video/webm',
+    };
+    setSelectedMedia({
+      uri: asset.uri,
+      contentType:
+        asset.mimeType ??
+        mimeMap[ext] ??
+        (mediaType === 'video' ? 'video/mp4' : 'image/jpeg'),
+      fileName: asset.fileName ?? `studio-media.${ext}`,
+      fileSize: asset.fileSize,
+      duration: asset.duration,
+      mediaType,
+    });
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
 
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -139,24 +234,43 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
     });
 
     if (!result.canceled && result.assets[0]) {
-      const asset = result.assets[0];
-      const ext = (asset.uri.split('.').pop() ?? 'jpg').toLowerCase();
-      const mimeMap: Record<string, string> = {
-        jpg: 'image/jpeg',
-        jpeg: 'image/jpeg',
-        png: 'image/png',
-        webp: 'image/webp',
-        heic: 'image/heic',
-      };
-      const contentType = mimeMap[ext] ?? 'image/jpeg';
-      setSelectedImage({
-        uri: asset.uri,
-        contentType,
-        fileName: asset.fileName ?? `photo.${ext}`,
-        fileSize: asset.fileSize ?? 1,
-      });
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      usePickedMedia(result.assets[0]);
     }
+  };
+
+  const handlePickVideo = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission needed',
+        'Allow access to your media library to choose a short video.',
+      );
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['videos'],
+      allowsEditing: false,
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets[0]) usePickedMedia(result.assets[0]);
+  };
+
+  const handleRecordVideo = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert(
+        'Camera access needed',
+        'Allow camera access to record a Studio video.',
+      );
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['videos'],
+      allowsEditing: false,
+      videoMaxDuration: 60,
+      videoQuality: ImagePicker.UIImagePickerControllerQualityType.Medium,
+    });
+    if (!result.canceled && result.assets[0]) usePickedMedia(result.assets[0]);
   };
 
   const handleSubmit = async () => {
@@ -166,23 +280,35 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
       .map((t) => t.trim())
       .filter(Boolean);
 
-    if (!selectedImage) {
+    if (!selectedMedia) {
       createMutation.mutate({ data: { caption: caption.trim(), tags: tagList } });
       return;
     }
 
     setUploading(true);
+    setUploadProgress(0);
     try {
-      const objectPath = await uploadImageToServer(
-        selectedImage.uri,
-        selectedImage.contentType,
+      const objectPath = await uploadMediaToServer(
+        selectedMedia.uri,
+        selectedMedia.contentType,
+        selectedMedia.mediaType,
+        setUploadProgress,
       );
       const imageUrl = `/api/storage${objectPath}`;
       createMutation.mutate({
-        data: { caption: caption.trim(), tags: tagList, imageUrl },
+        data: {
+          caption: caption.trim(),
+          tags: tagList,
+          imageUrl,
+          mediaType: selectedMedia.mediaType,
+        },
       });
-    } catch (err) {
-      Alert.alert('Upload failed', 'Could not upload the image. Please try again.');
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Could not upload this media. Try a smaller file.';
+      Alert.alert('Upload failed', message);
     } finally {
       setUploading(false);
     }
@@ -394,6 +520,57 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
           fontSize: 13,
           color: colors.mutedForeground,
         },
+        mediaActions: {
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          gap: 8,
+        },
+        mediaHint: {
+          fontFamily: 'DMSans_400Regular',
+          fontSize: 11,
+          color: colors.mutedForeground,
+          marginTop: 8,
+        },
+        videoPreview: {
+          width: 92,
+          height: 72,
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 4,
+          backgroundColor: colors.ink,
+          borderRadius: colors.radius,
+        },
+        videoPreviewText: {
+          color: '#FFFFFF',
+          fontFamily: 'DMSans_600SemiBold',
+          fontSize: 10,
+        },
+        selectedMediaName: {
+          flex: 1,
+          fontFamily: 'DMSans_500Medium',
+          fontSize: 12,
+          color: colors.mutedForeground,
+        },
+        uploadStatus: {
+          marginTop: 12,
+          gap: 6,
+        },
+        uploadTrack: {
+          height: 5,
+          overflow: 'hidden',
+          backgroundColor: colors.muted,
+          borderRadius: 99,
+        },
+        uploadFill: {
+          height: '100%',
+          backgroundColor: colors.primary,
+          borderRadius: 99,
+        },
+        uploadText: {
+          fontFamily: 'DMSans_500Medium',
+          fontSize: 12,
+          color: colors.mutedForeground,
+        },
         previewThumb: {
           width: 56,
           height: 56,
@@ -503,7 +680,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
             key={feedMode}
             data={posts ?? []}
             keyExtractor={(item) => String(item.id)}
-            renderItem={({ item }) => (
+            renderItem={({ item, index }) => (
               <View
                 style={[
                   s.page,
@@ -520,6 +697,10 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
                   onFollowChanged={refetch}
                   onRefresh={refetch}
                   immersive
+                  active={index === activeIndex}
+                  reducedMotion={reduceMotion}
+                  muted={videosMuted}
+                  onMutedChange={handleMutedChange}
                 />
               </View>
             )}
@@ -581,7 +762,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
               <TouchableOpacity
                 onPress={() => {
                   setComposing(false);
-                  setSelectedImage(null);
+                  setSelectedMedia(null);
                   setCaption('');
                   setTags('');
                 }}
@@ -614,29 +795,67 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
               autoFocus
             />
 
-            <View style={s.imageRow}>
+            <View style={s.mediaActions}>
               <TouchableOpacity style={s.imagePickerBtn} onPress={handlePickImage}>
                 <Feather name="image" size={16} color={colors.mutedForeground} />
-                <Text style={s.imagePickerText}>
-                  {selectedImage ? 'Change photo' : 'Add photo'}
-                </Text>
+                <Text style={s.imagePickerText}>Photo</Text>
               </TouchableOpacity>
-              {selectedImage && (
-                <>
+              <TouchableOpacity style={s.imagePickerBtn} onPress={handlePickVideo}>
+                <Feather name="film" size={16} color={colors.mutedForeground} />
+                <Text style={s.imagePickerText}>Choose video</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.imagePickerBtn} onPress={handleRecordVideo}>
+                <Feather name="video" size={16} color={colors.mutedForeground} />
+                <Text style={s.imagePickerText}>Record</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={s.mediaHint}>Videos can be up to 60 seconds and 50 MB.</Text>
+
+            {selectedMedia ? (
+              <View style={s.imageRow}>
+                {selectedMedia.mediaType === 'image' ? (
                   <Image
-                    source={{ uri: selectedImage.uri }}
+                    source={{ uri: selectedMedia.uri }}
                     style={s.previewThumb}
                     resizeMode="cover"
                   />
-                  <TouchableOpacity
-                    style={s.removeImgBtn}
-                    onPress={() => setSelectedImage(null)}
-                  >
-                    <Feather name="x-circle" size={18} color={colors.mutedForeground} />
-                  </TouchableOpacity>
-                </>
-              )}
-            </View>
+                ) : (
+                  <View style={s.videoPreview}>
+                    <Feather name="play-circle" size={24} color="#FFFFFF" />
+                    <Text style={s.videoPreviewText}>
+                      {selectedMedia.duration
+                        ? `${Math.ceil(selectedMedia.duration / 1000)} sec`
+                        : 'Video ready'}
+                    </Text>
+                  </View>
+                )}
+                <Text style={s.selectedMediaName} numberOfLines={1}>
+                  {selectedMedia.fileName}
+                </Text>
+                <TouchableOpacity
+                  style={s.removeImgBtn}
+                  onPress={() => setSelectedMedia(null)}
+                >
+                  <Feather name="x-circle" size={18} color={colors.mutedForeground} />
+                </TouchableOpacity>
+              </View>
+            ) : null}
+
+            {uploading ? (
+              <View style={s.uploadStatus}>
+                <View style={s.uploadTrack}>
+                  <View
+                    style={[
+                      s.uploadFill,
+                      { width: `${Math.max(8, Math.round(uploadProgress * 100))}%` },
+                    ]}
+                  />
+                </View>
+                <Text style={s.uploadText}>
+                  {uploadProgress < 0.35 ? 'Preparing media…' : 'Uploading media…'}
+                </Text>
+              </View>
+            ) : null}
 
             <TextInput
               style={s.tagsInput}

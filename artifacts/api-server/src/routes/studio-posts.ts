@@ -1,6 +1,12 @@
 import { Router, type IRouter } from "express";
-import { eq, and, desc, sql } from "drizzle-orm";
-import { db, studioPostsTable, postLikesTable, usersTable } from "@workspace/db";
+import { eq, and, desc, isNull, sql } from "drizzle-orm";
+import {
+  db,
+  studioPostsTable,
+  studioPostMediaUploadsTable,
+  postLikesTable,
+  usersTable,
+} from "@workspace/db";
 import {
   ListStudioPostsQueryParams,
   ListStudioPostsResponse,
@@ -14,6 +20,8 @@ import {
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
+
+class UnverifiedStudioVideoError extends Error {}
 
 function buildPostSelect(viewerUserId: number) {
   return {
@@ -132,10 +140,52 @@ router.post("/studio-posts", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [post] = await db
-    .insert(studioPostsTable)
-    .values({ ...parsed.data, userId, tags: parsed.data.tags ?? [] })
-    .returning();
+  if (parsed.data.mediaType === "video" && !parsed.data.imageUrl) {
+    res.status(400).json({ error: "Video posts require an uploaded video" });
+    return;
+  }
+  const videoObjectPath =
+    parsed.data.mediaType === "video" && parsed.data.imageUrl?.startsWith("/api/storage/objects/")
+      ? parsed.data.imageUrl.slice("/api/storage".length)
+      : null;
+  if (parsed.data.mediaType === "video" && !videoObjectPath) {
+    res.status(400).json({ error: "Video posts require a validated Studio upload" });
+    return;
+  }
+
+  let post: typeof studioPostsTable.$inferSelect;
+  try {
+    post = await db.transaction(async (tx) => {
+      const [created] = await tx
+        .insert(studioPostsTable)
+        .values({ ...parsed.data, userId, tags: parsed.data.tags ?? [] })
+        .returning();
+
+      if (videoObjectPath) {
+        const [claimedUpload] = await tx
+          .update(studioPostMediaUploadsTable)
+          .set({ postId: created.id, consumedAt: new Date() })
+          .where(
+            and(
+              eq(studioPostMediaUploadsTable.userId, userId),
+              eq(studioPostMediaUploadsTable.objectPath, videoObjectPath),
+              eq(studioPostMediaUploadsTable.mediaType, "video"),
+              isNull(studioPostMediaUploadsTable.postId),
+              isNull(studioPostMediaUploadsTable.consumedAt),
+            ),
+          )
+          .returning();
+        if (!claimedUpload) throw new UnverifiedStudioVideoError();
+      }
+      return created;
+    });
+  } catch (error) {
+    if (error instanceof UnverifiedStudioVideoError) {
+      res.status(400).json({ error: "Video upload is missing, already used, or belongs to another creator" });
+      return;
+    }
+    throw error;
+  }
 
   const [freshPost] = await db
     .select(buildPostSelect(userId))

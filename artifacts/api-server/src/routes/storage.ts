@@ -98,9 +98,14 @@ const CHALLENGE_UPLOAD_PURPOSES = new Set([
 const ASSIGNMENT_UPLOAD_PURPOSE = 'assignment';
 const INSTRUCTOR_FEEDBACK_PURPOSE = 'instructor_feedback';
 const HABIT_PROOF_UPLOAD_PURPOSE = 'habit_proof';
+const STUDIO_POST_UPLOAD_PURPOSE = 'studio_post';
 
 /** Hard cap for assignment drill submissions. */
 const ASSIGNMENT_MAX_DURATION_SECONDS = 30;
+/** Studio videos stay short enough for swipe-feed playback. */
+const STUDIO_POST_MAX_DURATION_SECONDS = 60;
+/** Studio videos are capped below the route-wide video ceiling. */
+const STUDIO_POST_MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
 /**
  * Discriminated result from ffprobe measurement.
@@ -134,8 +139,8 @@ async function measureVideoDurationSeconds(
         [
           '-v', 'error',
           '-select_streams', 'v:0',
-          '-show_entries', 'format=duration',
-          '-of', 'default=noprint_wrappers=1:nokey=1',
+          '-show_entries', 'stream=index:format=duration',
+          '-of', 'json',
           tmpPath!,
         ],
         { timeout: 15_000 },
@@ -147,18 +152,24 @@ async function measureVideoDurationSeconds(
             resolve({ ok: false, reason });
             return;
           }
-          const trimmed = stdout.trim();
-          // Empty output from -select_streams v:0 means no video stream found
-          if (!trimmed) {
-            resolve({ ok: false, reason: 'no_video_stream' });
-            return;
-          }
-          const parsed = parseFloat(trimmed);
-          if (!Number.isFinite(parsed)) {
+          try {
+            const probe = JSON.parse(stdout) as {
+              streams?: Array<{ index?: number }>;
+              format?: { duration?: string };
+            };
+            if (!probe.streams?.length) {
+              resolve({ ok: false, reason: 'no_video_stream' });
+              return;
+            }
+            const parsed = Number(probe.format?.duration);
+            if (!Number.isFinite(parsed) || parsed <= 0) {
+              resolve({ ok: false, reason: 'unreadable' });
+              return;
+            }
+            resolve({ ok: true, seconds: parsed });
+          } catch {
             resolve({ ok: false, reason: 'unreadable' });
-            return;
           }
-          resolve({ ok: true, seconds: parsed });
         },
       );
     });
@@ -268,14 +279,34 @@ router.post(
     const isAssignmentFootage = purpose === ASSIGNMENT_UPLOAD_PURPOSE;
     const isInstructorFeedback = purpose === INSTRUCTOR_FEEDBACK_PURPOSE;
     const isHabitProof = purpose === HABIT_PROOF_UPLOAD_PURPOSE;
+    const isStudioPost = purpose === STUDIO_POST_UPLOAD_PURPOSE;
     const captureSource = getHeader(req, 'x-aimd-capture-source');
     const capturedAt = parseCaptureTimestamp(getHeader(req, 'x-aimd-captured-at'));
     const exifTimestamp = parseCaptureTimestamp(getHeader(req, 'x-aimd-exif-timestamp'));
     const devicePlatform = getHeader(req, 'x-aimd-device-platform');
     const cameraFacing = getHeader(req, 'x-aimd-camera-facing');
 
-    if (purpose && !isChallengeProof && !isAssignmentFootage && !isInstructorFeedback && !isHabitProof) {
+    if (
+      purpose &&
+      !isChallengeProof &&
+      !isAssignmentFootage &&
+      !isInstructorFeedback &&
+      !isHabitProof &&
+      !isStudioPost
+    ) {
       res.status(400).json({ error: 'Invalid upload purpose' });
+      return;
+    }
+    if (isStudioPost && !isImage && !isVideo) {
+      res.status(400).json({ error: 'Studio posts must use an image or video' });
+      return;
+    }
+    if (isVideo && !purpose) {
+      res.status(400).json({ error: 'Video uploads require a valid upload purpose' });
+      return;
+    }
+    if (isStudioPost && isVideo && req.body.length > STUDIO_POST_MAX_VIDEO_BYTES) {
+      res.status(413).json({ error: 'Studio videos must be 50 MB or smaller' });
       return;
     }
     if (isHabitProof && !isImage && !isVideo) {
@@ -300,7 +331,7 @@ router.post(
     // FAIL CLOSED: if ffprobe cannot determine duration, we reject the upload.
     // This prevents bypass via corrupt containers or missing video streams.
     let measuredDurationSeconds: number | null = null;
-    if (isAssignmentFootage) {
+    if (isAssignmentFootage || (isStudioPost && isVideo)) {
       const durationResult = await measureVideoDurationSeconds(req.body);
       if (!durationResult.ok) {
         const detail =
@@ -310,17 +341,24 @@ router.post(
               ? 'No video stream found in uploaded file'
               : 'Uploaded file is unreadable or corrupt';
         res.status(422).json({
-          error: `Assignment video could not be validated: ${detail}`,
+          error: `${
+            isAssignmentFootage ? 'Assignment' : 'Studio'
+          } video could not be validated: ${detail}`,
           reason: durationResult.reason,
         });
         return;
       }
       measuredDurationSeconds = durationResult.seconds;
-      if (measuredDurationSeconds > ASSIGNMENT_MAX_DURATION_SECONDS) {
+      const maxAllowed = isAssignmentFootage
+        ? ASSIGNMENT_MAX_DURATION_SECONDS
+        : STUDIO_POST_MAX_DURATION_SECONDS;
+      if (measuredDurationSeconds > maxAllowed) {
         res.status(422).json({
-          error: `Assignment video exceeds the ${ASSIGNMENT_MAX_DURATION_SECONDS}-second limit`,
+          error: `${
+            isAssignmentFootage ? 'Assignment' : 'Studio'
+          } video exceeds the ${maxAllowed}-second limit`,
           measuredDurationSeconds,
-          maxAllowed: ASSIGNMENT_MAX_DURATION_SECONDS,
+          maxAllowed,
         });
         return;
       }
@@ -407,6 +445,20 @@ router.post(
         );
       }
 
+      if (isStudioPost && isVideo && measuredDurationSeconds !== null) {
+        await pool.query(
+          `INSERT INTO studio_post_media_uploads
+             (user_id, object_path, media_type, measured_duration_seconds, file_size_bytes)
+           VALUES ($1, $2, 'video', $3, $4)`,
+          [
+            Number(ownerId),
+            objectPath,
+            Math.ceil(measuredDurationSeconds),
+            storedMedia.buffer.length,
+          ],
+        );
+      }
+
       // Record the assignment media upload durably so POST /assignments can
       // verify the submission passed the ffprobe drill gate. The measured
       // duration stored here is authoritative (ceil to whole seconds).
@@ -434,7 +486,12 @@ router.post(
         mediaType,
         sha256,
         proofRecorded: isChallengeProof,
-        measuredDurationSeconds: isAssignmentFootage ? recordedDurationSeconds : undefined,
+        measuredDurationSeconds:
+          isAssignmentFootage
+            ? recordedDurationSeconds
+            : isStudioPost && isVideo && measuredDurationSeconds !== null
+              ? Math.ceil(measuredDurationSeconds)
+              : undefined,
       });
     } catch (error) {
       req.log.error({ err: error }, 'Error uploading object');

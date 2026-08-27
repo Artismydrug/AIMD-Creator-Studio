@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.2.0
  */
 
+/**
+ * Rendering type for imageUrl. Video media is limited to 60 seconds and 50 MB at upload.
+ */
 export type StudioPostMediaType = typeof StudioPostMediaType[keyof typeof StudioPostMediaType];
 
 

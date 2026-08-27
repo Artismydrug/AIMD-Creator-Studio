@@ -2344,7 +2344,7 @@ components:
     # ── Studio Posts ──────────────────────────────────────────────────────
     StudioPost:
       type: object
-      required: [id, userId, caption, likes, createdAt, followerCount, followingCount, followedByMe]
+      required: [id, userId, mediaType, caption, likes, createdAt, followerCount, followingCount, followedByMe]
       properties:
         id:
           type: integer
@@ -2366,6 +2366,7 @@ components:
           type: string
           enum: ["image", "video"]
           default: "image"
+          description: Rendering type for imageUrl. Video media is limited to 60 seconds and 50 MB at upload.
         caption:
           type: string
         tags:

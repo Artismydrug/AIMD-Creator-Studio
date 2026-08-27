@@ -15,6 +15,7 @@ type SqlExecutor = {
  *  - assignment_media_uploads  (ffprobe-verified drill videos)
  *  - assignment_extensions     (capture metadata + instructor feedback)
  *  - user_follows              (creator social graph)
+ *  - studio_post_media_uploads (validated short videos bound to posts)
  *
  * Statements mirror lib/db/src/schema/{users,instructor}.ts exactly and are
  * safe to run on every boot (IF NOT EXISTS everywhere, additive only). This
@@ -114,6 +115,19 @@ export async function ensureCreatorStudioSchema(
   await database.query(`
     CREATE INDEX IF NOT EXISTS user_follows_following_idx
       ON user_follows (following_id)
+  `);
+  await database.query(`
+    CREATE TABLE IF NOT EXISTS studio_post_media_uploads (
+      id serial PRIMARY KEY,
+      user_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      object_path text NOT NULL UNIQUE,
+      media_type text NOT NULL,
+      measured_duration_seconds integer NOT NULL,
+      file_size_bytes integer NOT NULL,
+      post_id integer UNIQUE REFERENCES studio_posts(id) ON DELETE SET NULL,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      consumed_at timestamptz
+    )
   `);
 
   await database.query(`

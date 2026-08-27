@@ -225,6 +225,9 @@ export interface HeatmapDay {
   level: number;
 }
 
+/**
+ * Rendering type for imageUrl. Video media is limited to 60 seconds and 50 MB at upload.
+ */
 export type StudioPostMediaType = typeof StudioPostMediaType[keyof typeof StudioPostMediaType];
 
 
@@ -244,7 +247,8 @@ export interface StudioPost {
   followedByMe: boolean;
   /** @nullable */
   imageUrl?: string | null;
-  mediaType?: StudioPostMediaType;
+  /** Rendering type for imageUrl. Video media is limited to 60 seconds and 50 MB at upload. */
+  mediaType: StudioPostMediaType;
   caption: string;
   tags?: string[];
   likes: number;
