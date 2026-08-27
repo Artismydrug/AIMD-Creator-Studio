@@ -171,7 +171,7 @@ function RewardTiers() {
 
 // ─── Challenge tab ────────────────────────────────────────────────────────────
 
-function WeeklyChallenge() {
+export function WeeklyChallenge() {
   const [submitOpen, setSubmitOpen] = useState(false);
   const [caption, setCaption] = useState('');
   const [imageUrl, setImageUrl] = useState('');

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Flame, Timer } from 'lucide-react';
-import StudioLog from '@/pages/StudioLog';
+import { WeeklyChallenge } from '@/pages/StudioLog';
 import Habits from '@/pages/Habits';
 
 type View = 'challenges' | 'habits';
@@ -46,8 +46,10 @@ export default function ChallengesHabits() {
         </div>
       </header>
 
-      <div role="tabpanel">
-        {activeView === 'challenges' ? <StudioLog /> : <Habits />}
+      <div role="tabpanel" className="px-6 md:px-10 py-8">
+        <div className="max-w-3xl mx-auto">
+          {activeView === 'challenges' ? <WeeklyChallenge /> : <Habits />}
+        </div>
       </div>
     </div>
   );
