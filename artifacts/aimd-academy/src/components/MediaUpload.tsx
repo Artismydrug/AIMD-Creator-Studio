@@ -13,7 +13,13 @@ const MAX_AUDIO_BYTES = 25 * 1024 * 1024;
 
 async function uploadMedia(file: File, purpose?: string): Promise<{ url: string; mediaType: MediaType }> {
   const headers: Record<string, string> = { 'Content-Type': file.type };
-  if (purpose) headers['X-AIMD-UPLOAD-PURPOSE'] = purpose;
+  if (purpose) {
+    headers['X-AIMD-UPLOAD-PURPOSE'] = purpose;
+    if (purpose === 'challenge_final' || purpose === 'challenge_process') {
+      headers['X-AIMD-CAPTURE-SOURCE'] = 'media_library';
+      headers['X-AIMD-DEVICE-PLATFORM'] = 'web';
+    }
+  }
   const res = await fetch('/api/storage/uploads', {
     method: 'POST',
     headers,

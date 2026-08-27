@@ -65,11 +65,19 @@ async function fetchCurrentChallenge() {
 }
 
 async function submitChallengeEntry(caption: string, imageUrl: string, tags: string[]) {
+  const objectPath = imageUrl.startsWith('/api/storage')
+    ? imageUrl.slice('/api/storage'.length)
+    : '';
   const r = await fetch('/api/challenges/submit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ caption, imageUrl: imageUrl || null, tags }),
+    body: JSON.stringify({
+      caption,
+      finalMedia: { objectPath },
+      processMedia: null,
+      tags,
+    }),
   });
   if (!r.ok) {
     const data = await r.json().catch(() => ({}));
@@ -304,8 +312,13 @@ export function WeeklyChallenge() {
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                      <label className="font-mono text-xs uppercase text-muted-foreground">Artwork Photo (Optional)</label>
-                      <MediaUpload url={imageUrl} mediaType="image" onChange={(u) => setImageUrl(u)} />
+                       <label className="font-mono text-xs uppercase text-muted-foreground">Artwork / Challenge Proof (Required)</label>
+                       <MediaUpload
+                         url={imageUrl}
+                         mediaType="image"
+                         onChange={(u) => setImageUrl(u)}
+                         purpose="challenge_final"
+                       />
                     </div>
                     <div className="space-y-2">
                       <label className="font-mono text-xs uppercase text-muted-foreground">Caption / Artist Notes</label>
@@ -333,7 +346,7 @@ export function WeeklyChallenge() {
                     <Button
                       className="rounded-none bg-primary hover:bg-primary/90 text-primary-foreground"
                       onClick={() => submitMutation.mutate()}
-                      disabled={!caption || submitMutation.isPending}
+                       disabled={!caption.trim() || !imageUrl || submitMutation.isPending}
                     >
                       {submitMutation.isPending ? 'Submitting…' : 'Submit Entry'}
                     </Button>

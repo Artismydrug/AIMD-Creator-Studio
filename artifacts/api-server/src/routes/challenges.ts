@@ -240,17 +240,15 @@ router.post("/challenges/submit", async (req, res): Promise<void> => {
     if (
       !finalUpload ||
       finalUpload.purpose !== "challenge_final" ||
-      finalUpload.capture_source !== "native_camera" ||
-      !finalUpload.captured_at ||
       finalUpload.consumed_at
     ) {
       await client.query("ROLLBACK");
-      res.status(400).json({ error: "A fresh in-app camera capture is required" });
+      res.status(400).json({ error: "A valid unused challenge proof upload is required" });
       return;
     }
 
-    const capturedAt = new Date(finalUpload.captured_at);
-    if (capturedAt < weekStart || capturedAt > deadline) {
+    const capturedAt = finalUpload.captured_at ? new Date(finalUpload.captured_at) : null;
+    if (capturedAt && (capturedAt < weekStart || capturedAt > deadline)) {
       await client.query("ROLLBACK");
       res.status(400).json({
         error: "Final media must be captured during the active challenge window",

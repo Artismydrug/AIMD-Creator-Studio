@@ -14,6 +14,7 @@ type TestUser = {
 let creator: TestUser;
 let otherCreator: TestUser;
 let admin: TestUser;
+let libraryCreator: TestUser;
 const suffix = `${Date.now()}_${Math.floor(Math.random() * 10000)}`;
 
 function appFor(user: TestUser): Express {
@@ -80,7 +81,8 @@ beforeAll(async () => {
      VALUES
        ($1, $2, false),
        ($3, $4, false),
-       ($5, $6, true)
+        ($5, $6, true),
+        ($7, $8, false)
      RETURNING id, email, username, is_admin`,
     [
       `challenge_creator_${suffix}@example.test`,
@@ -89,14 +91,16 @@ beforeAll(async () => {
       `challenge_other_${suffix}`,
       `challenge_admin_${suffix}@example.test`,
       `challenge_admin_${suffix}`,
+      `challenge_library_${suffix}@example.test`,
+      `challenge_library_${suffix}`,
     ],
   );
-  [creator, otherCreator, admin] = rows;
+  [creator, otherCreator, admin, libraryCreator] = rows;
 });
 
 afterAll(async () => {
   try {
-    const ids = [creator?.id, otherCreator?.id, admin?.id].filter(Boolean);
+    const ids = [creator?.id, otherCreator?.id, admin?.id, libraryCreator?.id].filter(Boolean);
     if (ids.length > 0) {
       await pool.query(
         `DELETE FROM challenge_submissions WHERE user_id = ANY($1::int[])`,
@@ -132,19 +136,20 @@ describe("challenge proof-of-work submissions", () => {
     expect(res.body.error).toBeTruthy();
   });
 
-  it("rejects a library upload as the final proof", async () => {
-    const proof = await createProofUpload(creator.id, {
+  it("accepts a self-attested library upload for human review", async () => {
+    const proof = await createProofUpload(libraryCreator.id, {
       captureSource: "media_library",
+      capturedAt: null,
     });
-    const res = await request(appFor(creator))
+    const res = await request(appFor(libraryCreator))
       .post("/api/challenges/submit")
       .send({
         caption: "A finished study",
         finalMedia: { objectPath: proof.objectPath },
       });
 
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/camera/i);
+    expect(res.status).toBe(201);
+    expect(res.body.verificationStatus).toBe("pending_review");
   });
 
   it("does not allow a creator to submit another creator's upload", async () => {
@@ -157,7 +162,7 @@ describe("challenge proof-of-work submissions", () => {
       });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/camera/i);
+    expect(res.body.error).toMatch(/valid unused challenge proof/i);
   });
 
   it("creates a pending entry and keeps hashes and device metadata private", async () => {

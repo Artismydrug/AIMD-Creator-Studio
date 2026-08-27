@@ -208,7 +208,7 @@ function parseCaptureTimestamp(value: string | null): Date | null {
  * Purpose-specific rules:
  *   - assignment:           video only; server-side ffprobe enforces ≤30 s (FAIL CLOSED)
  *   - instructor_feedback:  video OR audio; private ACL
- *   - challenge_final/process: video only; native-camera rules apply
+ *   - challenge_final/process: image or video; self-attested capture metadata is retained
  *   - (no purpose):         image only; public ACL
  */
 router.post(
@@ -371,20 +371,12 @@ router.post(
         res.status(400).json({ error: 'Capture source is required for proof uploads' });
         return;
       }
-      if (purpose === 'challenge_final' && captureSource !== 'native_camera') {
-        res.status(400).json({ error: 'Final challenge media must be captured in the app' });
-        return;
-      }
-      if (purpose === 'challenge_final' && !capturedAt) {
-        res.status(400).json({ error: 'Final challenge media requires a native capture timestamp' });
-        return;
-      }
       if (capturedAt && capturedAt.getTime() > Date.now() + 5 * 60 * 1000) {
         res.status(400).json({ error: 'Capture timestamp cannot be in the future' });
         return;
       }
-      if (devicePlatform !== 'ios' && devicePlatform !== 'android') {
-        res.status(400).json({ error: 'Proof uploads require a supported native platform' });
+      if (devicePlatform !== 'ios' && devicePlatform !== 'android' && devicePlatform !== 'web') {
+        res.status(400).json({ error: 'Proof uploads require a supported platform' });
         return;
       }
       if (

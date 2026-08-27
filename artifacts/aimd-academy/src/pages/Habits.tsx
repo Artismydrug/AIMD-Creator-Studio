@@ -7,7 +7,7 @@ import {
   useGetHabitHeatmap 
 } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Play, Pause, Square, Plus, Trash2, Check, Flame, Lock, Sparkles, History as HistoryIcon } from 'lucide-react';
+import { Play, Pause, Square, Plus, Trash2, Check, Flame, History as HistoryIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
@@ -16,10 +16,7 @@ import { Progress } from '@/components/ui/progress';
 import { Link } from 'wouter';
 import { MediaUpload, type MediaType } from '@/components/MediaUpload';
 
-// ─── Heatmap gate ─────────────────────────────────────────────────────────────
-
-function HeatmapSection({ heatmap, tier }: { heatmap: any[] | undefined; tier: string | undefined }) {
-  const isLocked = tier === 'free';
+function HeatmapSection({ heatmap }: { heatmap: any[] | undefined }) {
   const recentDays = heatmap?.slice(-60) ?? [];
   const activeDays = recentDays.filter((day) => day.count > 0).length;
   const goalDays = 60;
@@ -30,30 +27,10 @@ function HeatmapSection({ heatmap, tier }: { heatmap: any[] | undefined; tier: s
     <section className="bg-card border border-border p-6 relative overflow-hidden">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-mono text-sm uppercase text-muted-foreground">
-          {isLocked ? 'Visual Heatmap' : '60-Day Consistency'}
+          60-Day Consistency
         </h3>
-        {isLocked && (
-          <span className="font-mono text-[10px] text-amber-400 border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 uppercase tracking-widest flex items-center gap-1">
-            <Lock className="w-2.5 h-2.5" /> Dedicated+
-          </span>
-        )}
       </div>
-      {isLocked ? (
-        <div className="flex flex-col items-center justify-center py-8 gap-3">
-          <div className="flex gap-1 opacity-20 pointer-events-none select-none">
-            {[...Array(30)].map((_, i) => (
-              <div key={i} className={`w-4 h-4 rounded-none ${
-                i % 7 === 0 ? 'bg-border' : i % 3 === 0 ? 'bg-primary/30' : 'bg-primary/60'
-              }`} />
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground font-mono text-center">
-            Visual heatmaps & session analytics unlock on Dedicated Artist.{' '}
-            <Link href="/plans" className="text-primary underline">Upgrade →</Link>
-          </p>
-        </div>
-      ) : (
-        <>
+      <>
           {recentDays.length > 0 ? (
             <div className="flex flex-wrap gap-1" aria-label="Practice activity by day">
               {recentDays.map((day, i) => (
@@ -109,8 +86,7 @@ function HeatmapSection({ heatmap, tier }: { heatmap: any[] | undefined; tier: s
               </p>
             </div>
           </div>
-        </>
-      )}
+      </>
     </section>
   );
 }
@@ -122,8 +98,6 @@ export default function Habits() {
   const { data: heatmap } = useGetHabitHeatmap({ query: { queryKey: ['getHabitHeatmap'] } });
 
   const habits = response?.habits ?? [];
-  const meta   = response?.meta;
-  const tier   = meta?.tier;
 
   if (isLoading) return <div className="p-8 font-mono animate-pulse">Loading tracking systems...</div>;
 
@@ -144,7 +118,7 @@ export default function Habits() {
       </header>
 
       {/* Heatmap */}
-      <HeatmapSection heatmap={heatmap as any} tier={tier} />
+      <HeatmapSection heatmap={heatmap as any} />
 
       {/* Habits Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
