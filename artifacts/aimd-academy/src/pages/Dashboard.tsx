@@ -1,13 +1,98 @@
-import { useGetDashboardSummary, useGetActivityFeed, useGetCurrentUser } from '@workspace/api-client-react';
-import { Flame, Zap, CheckCircle2, TrendingUp, Trophy, ArrowUpRight, Coins } from 'lucide-react';
+import { useState } from 'react';
+import {
+  getGetProgressQueryKey,
+  useCheckInProgress,
+  useGetActivityFeed,
+  useGetCurrentUser,
+  useGetDashboardSummary,
+  useGetProgress,
+  useSpinDailyReward,
+  type DailySpinResult,
+  type ProgressSummary,
+} from '@workspace/api-client-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@clerk/react';
+import {
+  ArrowUpRight,
+  Check,
+  CheckCircle2,
+  Coins,
+  Flame,
+  Gift,
+  Loader2,
+  Sparkles,
+  TrendingUp,
+  Trophy,
+  Zap,
+} from 'lucide-react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function Dashboard() {
   const { data: summary, isLoading } = useGetDashboardSummary({ query: { queryKey: ['getDashboardSummary'] } });
   const { data: feed } = useGetActivityFeed({ limit: 5 }, { query: { queryKey: ['getActivityFeed', 5] } });
   const { data: user } = useGetCurrentUser({ query: { queryKey: ['getCurrentUser'] } });
+  const { isSignedIn } = useAuth();
+  const queryClient = useQueryClient();
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  const progressQueryKey = getGetProgressQueryKey({ timezone });
+  const {
+    data: progress,
+    isLoading: isProgressLoading,
+    isError: isProgressError,
+    refetch: refetchProgress,
+  } = useGetProgress(
+    { timezone },
+    {
+      query: {
+        queryKey: progressQueryKey,
+        enabled: isSignedIn === true,
+        staleTime: 30_000,
+      },
+    },
+  );
+  const [rewardOpen, setRewardOpen] = useState(false);
+  const [spinResult, setSpinResult] = useState<DailySpinResult | null>(null);
+
+  const syncProgress = (nextProgress: ProgressSummary) => {
+    queryClient.setQueryData(progressQueryKey, nextProgress);
+    queryClient.invalidateQueries({ queryKey: ['getDashboardSummary'] });
+    queryClient.invalidateQueries({ queryKey: ['getCurrentUser'] });
+  };
+
+  const checkInMutation = useCheckInProgress({
+    mutation: {
+      onSuccess: syncProgress,
+    },
+  });
+
+  const spinMutation = useSpinDailyReward({
+    mutation: {
+      onSuccess: (result) => {
+        setSpinResult(result);
+        queryClient.setQueryData<ProgressSummary>(progressQueryKey, (current) =>
+          current
+            ? {
+                ...current,
+                points: result.newBalance,
+                spinAvailableToday: false,
+                todaySpin: result,
+              }
+            : current,
+        );
+        queryClient.invalidateQueries({ queryKey: ['getDashboardSummary'] });
+        queryClient.invalidateQueries({ queryKey: ['getCurrentUser'] });
+      },
+    },
+  });
 
   if (isLoading) {
     return <div className="p-8 font-mono animate-pulse">Loading studio data...</div>;
@@ -50,6 +135,22 @@ export default function Dashboard() {
         ))}
       </div>
 
+      <DailyLoopCard
+        progress={progress}
+        isLoading={isProgressLoading}
+        isError={isProgressError}
+        isSignedIn={isSignedIn === true}
+        isCheckingIn={checkInMutation.isPending}
+        isSpinning={spinMutation.isPending}
+        checkInError={checkInMutation.isError}
+        onCheckIn={() => checkInMutation.mutate({ data: { timezone } })}
+        onRetryProgress={() => refetchProgress()}
+        onOpenReward={() => {
+          setSpinResult(null);
+          setRewardOpen(true);
+        }}
+      />
+
       <section className="border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-card to-primary/5 p-5 flex flex-col md:flex-row md:items-center justify-between gap-5">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-amber-400/20 border border-amber-400/40 flex items-center justify-center">
@@ -57,7 +158,7 @@ export default function Dashboard() {
           </div>
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-amber-300">AIMD Points</p>
-            <p className="font-display text-3xl font-black text-foreground">{user?.points ?? 0}</p>
+            <p className="font-display text-3xl font-black text-foreground">{progress?.points ?? user?.points ?? 0}</p>
           </div>
         </div>
         <div className="flex gap-3">
@@ -78,11 +179,11 @@ export default function Dashboard() {
             <div className="space-y-4">
               <div className="p-4 bg-background border border-border flex items-center justify-between group hover:border-primary/50 transition-colors">
                 <div>
-                  <h4 className="font-bold text-lg">Log Daily Habit</h4>
-                  <p className="text-sm text-muted-foreground">Protect your streak.</p>
+                  <h4 className="font-bold text-lg">Build your practice</h4>
+                  <p className="text-sm text-muted-foreground">Turn today’s check-in into studio time.</p>
                 </div>
                 <Link href="/habits">
-                  <Button variant="outline" className="rounded-none font-mono uppercase text-xs">Do it</Button>
+                  <Button variant="outline" className="rounded-none font-mono uppercase text-xs">Open habits</Button>
                 </Link>
               </div>
               
@@ -127,6 +228,251 @@ export default function Dashboard() {
           </section>
         </div>
       </div>
+
+      <Dialog
+        open={rewardOpen}
+        onOpenChange={(open) => {
+          setRewardOpen(open);
+          if (!open) {
+            setSpinResult(null);
+            spinMutation.reset();
+          }
+        }}
+      >
+        <DialogContent className="border-primary/30 bg-card sm:max-w-md" data-testid="daily-reward-dialog">
+          <DialogHeader className="text-center sm:text-center">
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full border border-primary/40 bg-primary/10">
+              {spinResult ? <Gift className="h-6 w-6 text-primary" /> : <Sparkles className="h-6 w-6 text-primary" />}
+            </div>
+            <DialogTitle className="font-display text-2xl font-black uppercase">
+              {spinResult ? (spinResult.alreadySpun ? 'Reward claimed' : 'You won!') : 'Daily reward'}
+            </DialogTitle>
+            <DialogDescription className="font-mono text-xs uppercase tracking-wider">
+              {spinResult
+                ? 'Your points are safely recorded to your Creator Studio balance.'
+                : 'One spin. A little momentum for today.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {spinResult ? (
+            <div className="space-y-5 text-center">
+              <div className="py-3">
+                <div className="font-display text-6xl font-black text-primary">+{spinResult.pointsAwarded}</div>
+                <div className="mt-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">AIMD points</div>
+              </div>
+              <div className="border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground">
+                New balance: <span className="font-bold text-foreground">{spinResult.newBalance} points</span>
+              </div>
+              <Button
+                className="w-full rounded-none bg-primary font-mono text-xs uppercase text-primary-foreground hover:bg-primary/90"
+                onClick={() => setRewardOpen(false)}
+                data-testid="daily-reward-close"
+              >
+                Keep creating
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-5 text-center">
+              <div
+                className={`mx-auto flex h-32 w-32 items-center justify-center rounded-full border-2 border-primary/50 bg-primary/10 ${
+                  spinMutation.isPending ? 'motion-safe:animate-spin' : ''
+                }`}
+                aria-label={spinMutation.isPending ? 'Reward wheel is spinning' : 'Reward wheel'}
+                role="img"
+              >
+                <div className="flex h-20 w-20 items-center justify-center rounded-full border border-primary/40 bg-background">
+                  <Gift className="h-10 w-10 text-primary" />
+                </div>
+              </div>
+              {spinMutation.isError && (
+                <p className="text-sm text-destructive" role="alert">
+                  We couldn’t process the reward right now. Please try again.
+                </p>
+              )}
+              <Button
+                className="w-full rounded-none bg-primary font-mono text-xs uppercase text-primary-foreground hover:bg-primary/90"
+                onClick={() => spinMutation.mutate({ data: { timezone } })}
+                disabled={spinMutation.isPending}
+                data-testid="daily-reward-spin"
+              >
+                {spinMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 motion-safe:animate-spin" />
+                    Spinning…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Tap to spin
+                  </>
+                )}
+              </Button>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                The server decides your reward
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function DailyLoopCard({
+  progress,
+  isLoading,
+  isError,
+  isSignedIn,
+  isCheckingIn,
+  isSpinning,
+  checkInError,
+  onCheckIn,
+  onRetryProgress,
+  onOpenReward,
+}: {
+  progress: ProgressSummary | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  isSignedIn: boolean;
+  isCheckingIn: boolean;
+  isSpinning: boolean;
+  checkInError: boolean;
+  onCheckIn: () => void;
+  onRetryProgress: () => void;
+  onOpenReward: () => void;
+}) {
+  return (
+    <section className="relative overflow-hidden border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-background p-5 md:p-7" data-testid="daily-loop-card">
+      <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+      <div className="relative">
+        <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-start">
+          <div>
+            <div className="mb-2 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-primary">
+              <Sparkles className="h-4 w-4" /> Daily loop
+            </div>
+            <h2 className="font-display text-3xl font-black uppercase tracking-tight">Make something. Mark the day.</h2>
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+              A small check-in keeps your creative streak alive. Come back tomorrow and keep the work moving.
+            </p>
+          </div>
+          {progress?.phase && (
+            <div className="border border-border bg-background/60 px-4 py-3 md:min-w-40">
+              <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Current phase</div>
+              <div className="mt-1 font-display text-lg font-bold uppercase text-primary">{progress.phase.phase}</div>
+            </div>
+          )}
+        </div>
+
+        {isLoading ? (
+          <div className="grid gap-3 md:grid-cols-3">
+            {[1, 2, 3].map((item) => <div key={item} className="h-20 animate-pulse border border-border bg-background/50" />)}
+          </div>
+        ) : !isSignedIn ? (
+          <div className="flex flex-col items-start justify-between gap-4 border border-border bg-background/60 p-4 md:flex-row md:items-center">
+            <div>
+              <p className="font-bold">Sign in to start your daily loop.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Your streak and rewards are saved to your Creator Studio account.</p>
+            </div>
+            <Link href="/sign-in">
+              <Button className="rounded-none bg-primary font-mono text-xs uppercase text-primary-foreground hover:bg-primary/90">Sign in</Button>
+            </Link>
+          </div>
+        ) : isError || !progress ? (
+          <div className="flex flex-col items-start justify-between gap-4 border border-destructive/30 bg-destructive/5 p-4 md:flex-row md:items-center">
+            <div>
+              <p className="font-bold">Your daily loop is temporarily unavailable.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Your progress is safe. Try loading it again.</p>
+            </div>
+            <Button variant="outline" className="rounded-none font-mono text-xs uppercase" onClick={onRetryProgress}>Try again</Button>
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-3 md:grid-cols-3">
+              <LoopStat icon={Flame} label="Day streak" value={`${progress.currentStreak}`} detail={`Best: ${progress.longestStreak}`} />
+              <LoopStat
+                icon={CheckCircle2}
+                label="Habits today"
+                value={`${progress.todayHabitsCompleted}/${progress.totalHabits}`}
+                detail={progress.totalHabits ? `${Math.round((progress.todayHabitsCompleted / progress.totalHabits) * 100)}% complete` : 'Add your first habit'}
+              />
+              <LoopStat icon={Coins} label="AIMD points" value={`${progress.points}`} detail={progress.timezone ? progress.timezone.replace('_', ' ') : 'Your balance'} />
+            </div>
+
+            {progress.totalHabits > 0 && (
+              <div className="mt-5">
+                <div className="mb-2 flex justify-between font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <span>Today’s practice</span>
+                  <span>{progress.todayHabitsCompleted} of {progress.totalHabits}</span>
+                </div>
+                <Progress value={(progress.todayHabitsCompleted / progress.totalHabits) * 100} className="h-2 rounded-none bg-border [&>div]:bg-primary" />
+              </div>
+            )}
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              {progress.checkedInToday ? (
+                <div className="inline-flex min-h-10 items-center gap-2 border border-primary/30 bg-primary/10 px-4 py-2 font-mono text-xs font-bold uppercase text-primary" data-testid="check-in-complete">
+                  <Check className="h-4 w-4" /> Checked in today
+                </div>
+              ) : (
+                <Button
+                  className="rounded-none bg-primary font-mono text-xs uppercase text-primary-foreground hover:bg-primary/90"
+                  onClick={onCheckIn}
+                  disabled={isCheckingIn}
+                  data-testid="daily-check-in"
+                >
+                  {isCheckingIn ? <Loader2 className="mr-2 h-4 w-4 motion-safe:animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                  {isCheckingIn ? 'Checking in…' : 'Check in today'}
+                </Button>
+              )}
+
+              {progress.spinAvailableToday ? (
+                <Button
+                  variant="outline"
+                  className="rounded-none border-primary/40 font-mono text-xs uppercase hover:bg-primary/10"
+                  onClick={onOpenReward}
+                  disabled={isSpinning}
+                  data-testid="daily-reward-open"
+                >
+                  <Gift className="mr-2 h-4 w-4 text-primary" /> Open daily reward
+                </Button>
+              ) : (
+                <div className="inline-flex min-h-10 items-center gap-2 px-2 py-2 font-mono text-xs uppercase text-muted-foreground" data-testid="daily-reward-complete">
+                  <Check className="h-4 w-4 text-primary" /> Reward claimed today
+                </div>
+              )}
+            </div>
+            {checkInError && (
+              <p className="mt-3 text-sm text-destructive" role="alert">
+                We couldn’t record your check-in. Please try again.
+              </p>
+            )}
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function LoopStat({
+  icon: Icon,
+  label,
+  value,
+  detail,
+}: {
+  icon: typeof Flame;
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="border border-border bg-background/60 p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <Icon className="h-4 w-4 text-primary" />
+        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+      </div>
+      <div className="font-display text-2xl font-black">{value}</div>
+      <div className="mt-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="mt-2 truncate text-xs text-muted-foreground">{detail}</div>
     </div>
   );
 }

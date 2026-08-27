@@ -3,9 +3,7 @@ import {
   Briefcase,
   ChevronDown,
   GraduationCap,
-  HeartHandshake,
   Mail,
-  Play,
   Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -116,56 +114,8 @@ export default function Mission() {
   return (
     <div className="min-h-screen bg-background text-white">
 
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="px-6 md:px-16 pt-16 pb-12 max-w-5xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/30 text-primary font-mono text-[11px] uppercase tracking-widest mb-6">
-          <HeartHandshake className="w-3.5 h-3.5" />
-          Art Is My Drug
-        </div>
-
-        <h1 className="font-display font-black text-4xl md:text-6xl uppercase tracking-tight leading-[0.95] mb-6">
-          Building the Future
-          <br />
-          <span className="text-primary">for Creators</span>
-          <br />
-          & Artists
-        </h1>
-
-        <p className="text-muted-foreground text-lg md:text-xl max-w-2xl leading-relaxed mb-12">
-          AIMD isn't a platform. It's a pipeline — from daily discipline to professional studio
-          placement — owned and operated by artists, for artists. No investors. No shortcuts.
-        </p>
-
-        {/* Video player */}
-        <div className="relative w-full aspect-video bg-muted/40 border border-border overflow-hidden group">
-          {/* Glowing top edge */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/60 to-transparent" />
-
-          {/* Thumbnail / dark background */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-zinc-800/60 via-zinc-900 to-background" />
-
-          {/* Play button */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-            <button
-              className="w-16 h-16 rounded-full bg-primary hover:bg-primary/90 flex items-center justify-center shadow-lg shadow-emerald-500/40 transition-all active:scale-95"
-              aria-label="Play promo video"
-            >
-              <Play className="w-6 h-6 text-zinc-950 ml-0.5" fill="currentColor" />
-            </button>
-            <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest">
-              AIMD Studio Promo · 2026
-            </p>
-          </div>
-
-          {/* Overlay label */}
-          <div className="absolute top-4 left-4 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-            Studio Focus · Workshops · Community Unity
-          </div>
-        </div>
-      </section>
-
       {/* ── Three Pillars ────────────────────────────────────────────────── */}
-      <section className="px-6 md:px-16 py-16 max-w-5xl mx-auto">
+      <section className="px-6 md:px-16 pt-16 pb-16 max-w-5xl mx-auto">
         <div className="mb-10">
           <p className="font-mono text-[11px] text-primary uppercase tracking-widest mb-2">
             The Pipeline
@@ -291,34 +241,6 @@ export default function Mission() {
         </div>
       </section>
 
-      {/* ── Bottom CTA ───────────────────────────────────────────────────── */}
-      <section className="px-6 md:px-16 py-16 border-t border-border">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
-          <div>
-            <h2 className="font-display font-black text-2xl md:text-3xl uppercase tracking-tight mb-2">
-              Ready to start the pipeline?
-            </h2>
-            <p className="text-muted-foreground text-sm">
-              Join creators who are building their careers through discipline, not luck.
-            </p>
-          </div>
-          <div className="flex gap-3 flex-shrink-0">
-            <Button
-              asChild
-              className="bg-primary hover:bg-primary/90 text-zinc-950 font-bold uppercase tracking-wider rounded-none px-6"
-            >
-              <a href="/aimd-academy/plans">Join the Pipeline →</a>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="border-border text-foreground/80 hover:bg-muted hover:text-white rounded-none px-6 uppercase tracking-wider font-bold"
-            >
-              <a href="/aimd-academy/sponsor">Sponsor a Creator</a>
-            </Button>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
