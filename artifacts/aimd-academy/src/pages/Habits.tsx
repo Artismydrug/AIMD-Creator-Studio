@@ -20,6 +20,11 @@ import { MediaUpload, type MediaType } from '@/components/MediaUpload';
 
 function HeatmapSection({ heatmap, tier }: { heatmap: any[] | undefined; tier: string | undefined }) {
   const isLocked = tier === 'free';
+  const recentDays = heatmap?.slice(-60) ?? [];
+  const activeDays = recentDays.filter((day) => day.count > 0).length;
+  const goalDays = 60;
+  const goalProgress = Math.min(1, activeDays / goalDays);
+  const flameScale = 0.7 + goalProgress * 1.3;
 
   return (
     <section className="bg-card border border-border p-6 relative overflow-hidden">
@@ -47,26 +52,64 @@ function HeatmapSection({ heatmap, tier }: { heatmap: any[] | undefined; tier: s
             <Link href="/plans" className="text-primary underline">Upgrade →</Link>
           </p>
         </div>
-      ) : heatmap && heatmap.length > 0 ? (
-        <div className="flex flex-wrap gap-1" aria-label="Practice activity by day">
-          {heatmap.slice(-60).map((day, i) => (
-            <div
-              key={i}
-              className={`w-5 h-5 rounded-full transition-colors ${
-                day.level === 0 ? 'bg-background border border-border' :
-                day.level === 1 ? 'bg-orange-950 border border-orange-800' :
-                day.level === 2 ? 'bg-orange-700' :
-                day.level === 3 ? 'bg-orange-500' :
-                'bg-orange-300'
-              }`}
-              title={`${day.date}: ${day.count} practice ${day.count === 1 ? 'session' : 'sessions'}`}
-              role="img"
-              aria-label={`${day.date}, ${day.count} ${day.count === 1 ? 'session' : 'sessions'}`}
-            />
-          ))}
-        </div>
       ) : (
-        <p className="text-sm text-muted-foreground font-mono">No logs yet — start tracking to see your heatmap.</p>
+        <>
+          {recentDays.length > 0 ? (
+            <div className="flex flex-wrap gap-1" aria-label="Practice activity by day">
+              {recentDays.map((day, i) => (
+                <div
+                  key={i}
+                  className={`w-5 h-5 rounded-full transition-colors ${
+                    day.level === 0 ? 'bg-background border border-border' :
+                    day.level === 1 ? 'bg-orange-950 border border-orange-800' :
+                    day.level === 2 ? 'bg-orange-700' :
+                    day.level === 3 ? 'bg-orange-500' :
+                    'bg-orange-300'
+                  }`}
+                  title={`${day.date}: ${day.count} practice ${day.count === 1 ? 'session' : 'sessions'}`}
+                  role="img"
+                  aria-label={`${day.date}, ${day.count} ${day.count === 1 ? 'session' : 'sessions'}`}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground font-mono">No logs yet — start tracking to see your heatmap.</p>
+          )}
+
+          <div className="mt-6 pt-5 border-t border-border flex flex-col sm:flex-row items-center gap-4">
+            <div
+              className="relative flex h-20 w-20 shrink-0 items-center justify-center"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={goalDays}
+              aria-valuenow={activeDays}
+              aria-label={`${activeDays} of ${goalDays} practice days completed`}
+            >
+              <div
+                className="absolute inset-1 rounded-full bg-orange-500/10 blur-xl transition-transform duration-500"
+                style={{ transform: `scale(${flameScale})` }}
+              />
+              <Flame
+                aria-hidden="true"
+                className="relative text-orange-400 drop-shadow-[0_0_12px_rgba(251,146,60,0.8)] transition-all duration-500"
+                style={{
+                  width: `${32 + goalProgress * 32}px`,
+                  height: `${32 + goalProgress * 32}px`,
+                  transform: `scale(${flameScale})`,
+                  fill: goalProgress > 0 ? 'currentColor' : 'transparent',
+                }}
+              />
+            </div>
+            <div className="text-center sm:text-left">
+              <p className="font-display font-black text-lg uppercase tracking-tight text-foreground">
+                {activeDays === 0 ? 'Light the first spark' : activeDays >= goalDays ? 'The practice is blazing' : 'Keep the flame alive'}
+              </p>
+              <p className="text-xs text-muted-foreground font-mono mt-1">
+                {activeDays} / {goalDays} days lit · Your flame grows with your consistency.
+              </p>
+            </div>
+          </div>
+        </>
       )}
     </section>
   );
