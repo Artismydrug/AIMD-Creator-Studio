@@ -22,6 +22,7 @@ import {
 import type { ConversationMessage } from '@workspace/api-client-react';
 import { useGetCurrentUser } from '@workspace/api-client-react';
 import SafetyActions from '@/components/SafetyActions';
+import EmojiPicker from '@/components/EmojiPicker';
 
 function formatTime(dateStr: string): string {
   const d = new Date(dateStr);
@@ -250,6 +251,7 @@ export default function ConversationScreen() {
       />
 
       <View style={s.inputArea}>
+        <EmojiPicker onSelect={(emoji) => setText((current) => `${current}${emoji}`)} />
         <TextInput
           style={s.input}
           value={text}

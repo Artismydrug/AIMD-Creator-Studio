@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { MediaUpload, type MediaType } from '@/components/MediaUpload';
+import EmojiPicker from '@/components/EmojiPicker';
 import { useGetRewards } from '@workspace/api-client-react';
 
 // ─── Tab type ─────────────────────────────────────────────────────────────────
@@ -509,6 +510,7 @@ function CommentThread({ postId, onCount }: { postId: number; onCount: (n: numbe
 
       {/* Composer */}
       <div className="px-5 pb-4 flex gap-2">
+        <EmojiPicker onSelect={(emoji) => setDraft(current => `${current}${emoji}`)} />
         <input
           ref={inputRef}
           value={draft}

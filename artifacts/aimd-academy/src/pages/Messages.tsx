@@ -4,6 +4,7 @@ import { MessageSquare, Send, Users, Plus, Search, ChevronLeft, Circle } from 'l
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useGetCurrentUser } from '@workspace/api-client-react';
+import EmojiPicker from '@/components/EmojiPicker';
 
 // ─── API helpers ──────────────────────────────────────────────────────────────
 
@@ -191,6 +192,7 @@ function ThreadView({ convId, convName, onBack }: { convId: number; convName: st
       {/* Composer */}
       <div className="px-4 py-3 border-t border-border bg-background flex-shrink-0">
         <div className="flex gap-2">
+          <EmojiPicker onSelect={(emoji) => setDraft(current => `${current}${emoji}`)} />
           <Input
             value={draft}
             onChange={e => setDraft(e.target.value)}

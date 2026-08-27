@@ -30,6 +30,7 @@ import type { StudioPost } from '@workspace/api-client-react';
 import { useRouter } from 'expo-router';
 import SafetyActions from '@/components/SafetyActions';
 import StudioVideo from '@/components/StudioVideo';
+import EmojiPicker from '@/components/EmojiPicker';
 
 /** Resolve a relative imageUrl (e.g. /api/storage/objects/…) to an absolute URL for React Native. */
 function resolveImageUrl(url: string | null | undefined): string | null {
@@ -807,6 +808,7 @@ export default function PostCard({
             )}
 
             <View style={s.inputRow}>
+              <EmojiPicker onSelect={(emoji) => setCommentText((current) => `${current}${emoji}`)} />
               <TextInput
                 style={s.input}
                 value={commentText}
