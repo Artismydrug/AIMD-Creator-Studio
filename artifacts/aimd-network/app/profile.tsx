@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@clerk/expo';
 import {
   customFetch,
   getBaseUrl,
@@ -246,6 +247,7 @@ export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { signOut } = useAuth();
   const {
     data: me,
     isLoading: meLoading,
@@ -278,6 +280,9 @@ export default function ProfileScreen() {
     headerTitle: { color: colors.foreground, flex: 1, fontFamily: 'DMSans_700Bold', fontSize: 20 },
     headerButton: { padding: 6 },
     content: { gap: 16, padding: 16, paddingBottom: Platform.OS === 'web' ? 100 : insets.bottom + 36 },
+    accountActions: { borderTopWidth: 1, paddingTop: 16 },
+    signOutButton: { alignItems: 'center', borderRadius: 10, borderWidth: 1, flexDirection: 'row', gap: 8, justifyContent: 'center', minHeight: 46 },
+    signOutText: { fontFamily: 'DMSans_700Bold', fontSize: 14 },
     state: { alignItems: 'center', gap: 12, justifyContent: 'center', minHeight: 320, padding: 24 },
     stateTitle: { color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 17 },
     stateText: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 14, textAlign: 'center' },
@@ -323,6 +328,24 @@ export default function ProfileScreen() {
     refetchPublicProfile();
     refetchProgress();
     refetchBadges();
+  };
+  const handleSignOut = () => {
+    Alert.alert(
+      'Sign out?',
+      'You can sign back in with the same account whenever you are ready.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign out',
+          style: 'destructive',
+          onPress: () => {
+            void signOut()
+              .then(() => router.replace('/(auth)/sign-in'))
+              .catch(() => Alert.alert('Could not sign out', 'Please try again.'));
+          },
+        },
+      ],
+    );
   };
   const mediumTags = [me.discipline, me.location].filter((value): value is string => !!value);
 
@@ -402,6 +425,19 @@ export default function ProfileScreen() {
           avatarUrl={me.avatarUrl}
           onSaved={handleSaved}
         />
+
+        <View style={[s.accountActions, { borderTopColor: colors.border }]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Sign out of Creator Studio"
+            onPress={handleSignOut}
+            style={[s.signOutButton, { borderColor: colors.border }]}
+            testID="sign-out"
+          >
+            <Feather name="log-out" size={16} color={colors.destructive} />
+            <Text style={[s.signOutText, { color: colors.destructive }]}>Sign out</Text>
+          </Pressable>
+        </View>
       </KeyboardAwareScrollView>
     </View>
   );
