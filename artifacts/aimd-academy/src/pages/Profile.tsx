@@ -451,9 +451,11 @@ export default function Profile() {
     enabled: !!userId,
   });
 
+  const profileUserId = isOwnProfile ? currentUser?.id : userId;
   const { data: posts = [] } = useQuery({
-    queryKey: ['userPosts', userId ?? 1],
-    queryFn: () => fetchUserPosts(userId ?? 1),
+    queryKey: ['userPosts', profileUserId],
+    queryFn: () => fetchUserPosts(profileUserId!),
+    enabled: !!profileUserId,
   });
 
   const user = isOwnProfile ? currentUser : publicUser;

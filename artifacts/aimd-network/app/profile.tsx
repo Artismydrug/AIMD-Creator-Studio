@@ -26,9 +26,12 @@ import {
   useGetUserProfile,
   useDeleteCurrentUser,
   useListBadges,
+  useListStudioPosts,
+  getListStudioPostsQueryKey,
   useUpdateCurrentUser,
 } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
+import StudioVideo from '@/components/StudioVideo';
 
 type LocalImage = { uri: string; contentType: string } | null;
 
@@ -258,6 +261,19 @@ export default function ProfileScreen() {
   } = useGetCurrentUser();
   const { data: progress, isError: progressError, refetch: refetchProgress } = useGetProgress();
   const { data: badges, isError: badgesError, refetch: refetchBadges } = useListBadges();
+  const { data: posts, isLoading: postsLoading } = useListStudioPosts(
+    { userId: me?.id, limit: 10 },
+    {
+      query: {
+        enabled: !!me,
+        queryKey: me ? getListStudioPostsQueryKey({ userId: me.id, limit: 10 }) : [],
+      },
+      request: {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' },
+      },
+    },
+  );
   const {
     data: publicProfile,
     refetch: refetchPublicProfile,
@@ -267,6 +283,7 @@ export default function ProfileScreen() {
       queryKey: me ? getGetUserProfileQueryKey(me.id) : [],
     },
   });
+  const [videosMuted, setVideosMuted] = useState(true);
   const topPadding = Platform.OS === 'web' ? 67 : insets.top + 10;
 
   const s = useMemo(() => StyleSheet.create({
@@ -311,6 +328,16 @@ export default function ProfileScreen() {
     badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     badge: { alignItems: 'center', backgroundColor: colors.muted, borderRadius: colors.radius, flexDirection: 'row', gap: 6, paddingHorizontal: 10, paddingVertical: 7 },
     badgeText: { color: colors.foreground, fontFamily: 'DMSans_500Medium', fontSize: 12 },
+     portfolio: { gap: 10 },
+     portfolioHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
+     portfolioTitle: { color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 16 },
+     portfolioCount: { color: colors.mutedForeground, fontFamily: 'DMSans_500Medium', fontSize: 12 },
+     portfolioPost: { backgroundColor: colors.card, borderColor: colors.border, borderRadius: colors.radius, borderWidth: 1, overflow: 'hidden' },
+     portfolioMedia: { height: 220, width: '100%' },
+     portfolioImage: { backgroundColor: colors.muted, height: 220, width: '100%' },
+     portfolioCaption: { color: colors.foreground, fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 20, padding: 14 },
+     portfolioMeta: { alignItems: 'center', borderTopColor: colors.border, borderTopWidth: 1, flexDirection: 'row', gap: 6, paddingHorizontal: 14, paddingBottom: 12 },
+     portfolioMetaText: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 11 },
   }), [colors, insets.bottom, topPadding]);
 
   if (meLoading) {
@@ -453,6 +480,45 @@ export default function ProfileScreen() {
             </View>
           )}
         </View>
+
+         <View style={s.portfolio}>
+           <View style={s.portfolioHeader}>
+             <Text style={s.portfolioTitle}>Studio work</Text>
+             <Text style={s.portfolioCount}>{posts?.length ?? 0} posts</Text>
+           </View>
+           {postsLoading ? (
+             <ActivityIndicator color={colors.primary} style={{ paddingVertical: 20 }} />
+           ) : (posts ?? []).length === 0 ? (
+             <Text style={s.statusText}>Your published work will appear here as your portfolio.</Text>
+           ) : (
+             (posts ?? []).map((post) => (
+               <View key={post.id} style={s.portfolioPost}>
+                 {post.imageUrl && post.mediaType === 'video' ? (
+                   <StudioVideo
+                     uri={resolveImageUrl(post.imageUrl) ?? post.imageUrl}
+                     active={false}
+                     reducedMotion
+                     muted={videosMuted}
+                     onMutedChange={setVideosMuted}
+                     style={s.portfolioMedia}
+                   />
+                 ) : post.imageUrl ? (
+                   <Image
+                     source={{ uri: resolveImageUrl(post.imageUrl) ?? post.imageUrl }}
+                     style={s.portfolioImage}
+                     resizeMode="cover"
+                   />
+                 ) : null}
+                 {post.caption ? <Text style={s.portfolioCaption}>{post.caption}</Text> : null}
+                 <View style={s.portfolioMeta}>
+                   <Feather name="heart" size={13} color={colors.mutedForeground} />
+                   <Text style={s.portfolioMetaText}>{post.likes ?? 0}</Text>
+                   <Text style={s.portfolioMetaText}>{new Date(post.createdAt).toLocaleDateString()}</Text>
+                 </View>
+               </View>
+             ))
+           )}
+         </View>
 
         <ProfileEditor
           key={`${me.id}-${me.username}-${me.avatarUrl ?? ''}-${me.bio ?? ''}-${me.discipline ?? ''}-${me.location ?? ''}`}

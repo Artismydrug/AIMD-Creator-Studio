@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -25,6 +25,7 @@ import {
 } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import SafetyActions from '@/components/SafetyActions';
+import StudioVideo from '@/components/StudioVideo';
 
 const TIER_COLORS: Record<string, string> = {
   pro: '#a855f7',
@@ -54,6 +55,7 @@ export default function CreatorProfileScreen() {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { data: me } = useGetCurrentUser();
+  const [videosMuted, setVideosMuted] = useState(true);
 
   const creatorId = id ? Number(id) : undefined;
 
@@ -358,6 +360,20 @@ export default function CreatorProfileScreen() {
       lineHeight: 20,
       marginBottom: 8,
     },
+     postMedia: {
+       width: '100%',
+       height: 220,
+       marginBottom: 12,
+       borderRadius: 6,
+       overflow: 'hidden',
+     },
+     postImage: {
+       width: '100%',
+       height: 220,
+       marginBottom: 12,
+       borderRadius: 6,
+       backgroundColor: colors.muted,
+     },
     postMeta: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -605,6 +621,22 @@ export default function CreatorProfileScreen() {
             ) : (
               (posts ?? []).map((post) => (
                 <View key={post.id} style={s.postCard}>
+                 {post.imageUrl && post.mediaType === 'video' ? (
+                   <StudioVideo
+                     uri={resolveImageUrl(post.imageUrl) ?? post.imageUrl}
+                     active={false}
+                     reducedMotion
+                     muted={videosMuted}
+                     onMutedChange={setVideosMuted}
+                     style={s.postMedia}
+                   />
+                 ) : post.imageUrl ? (
+                   <Image
+                     source={{ uri: resolveImageUrl(post.imageUrl) ?? post.imageUrl }}
+                     style={s.postImage}
+                     resizeMode="cover"
+                   />
+                 ) : null}
                   {post.caption ? (
                     <Text style={s.postCaption} numberOfLines={4}>{post.caption}</Text>
                   ) : null}
