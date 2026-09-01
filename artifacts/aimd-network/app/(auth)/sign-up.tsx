@@ -19,6 +19,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // Handle any pending authentication sessions on Android
 WebBrowser.maybeCompleteAuthSession();
 
+const AUTH_SCHEME = 'aimd-network';
+
 function useWarmUpBrowser() {
   useEffect(() => {
     if (Platform.OS !== 'android') return;
@@ -42,6 +44,7 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
+  const [oauthError, setOauthError] = useState('');
 
   const handleSignUp = async () => {
     const { error } = await signUp.password({ emailAddress: email, password });
@@ -70,9 +73,13 @@ export default function SignUpScreen() {
     const key = provider === 'oauth_google' ? 'google' : 'apple';
     try {
       setOauthLoading(key);
-      const { createdSessionId, setActive } = await startSSOFlow({
+      setOauthError('');
+      const { createdSessionId, setActive, signIn: oauthSignIn, signUp: oauthSignUp } = await startSSOFlow({
         strategy: provider,
-        redirectUrl: AuthSession.makeRedirectUri(),
+        redirectUrl: AuthSession.makeRedirectUri({
+          scheme: AUTH_SCHEME,
+          path: 'oauth-callback',
+        }),
       });
       if (createdSessionId && setActive) {
         await setActive({
@@ -81,9 +88,14 @@ export default function SignUpScreen() {
             router.replace(decorateUrl('/') as Href);
           },
         });
+      } else if (oauthSignIn?.status === 'missing_requirements' || oauthSignUp?.status === 'missing_requirements') {
+        setOauthError('Apple sign-up needs one more step before your account can open. Please try again.');
+      } else {
+        setOauthError('Apple sign-up did not finish. Please try again.');
       }
     } catch (err) {
       console.error('OAuth error:', JSON.stringify(err, null, 2));
+      setOauthError('Apple sign-in is temporarily unavailable. Please try again.');
     } finally {
       setOauthLoading(null);
     }
@@ -182,6 +194,7 @@ export default function SignUpScreen() {
               )}
           </Pressable>
         )}
+        {!!oauthError && <Text style={s.oauthError} accessibilityRole="alert">{oauthError}</Text>}
 
         {/* Divider */}
         <View style={s.divider}>
@@ -306,6 +319,14 @@ const s = StyleSheet.create({
     fontFamily: 'DMSans_600SemiBold',
     fontSize: 15,
     color: '#e8e3d5',
+  },
+  oauthError: {
+    fontFamily: 'DMSans_400Regular',
+    fontSize: 12,
+    lineHeight: 18,
+    color: '#e05c5c',
+    textAlign: 'center',
+    marginTop: 4,
   },
   divider: {
     flexDirection: 'row',

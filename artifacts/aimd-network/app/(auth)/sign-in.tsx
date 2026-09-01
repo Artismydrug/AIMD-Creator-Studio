@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 WebBrowser.maybeCompleteAuthSession();
 
 type Step = 'sign_in' | 'forgot_email' | 'forgot_code';
+const AUTH_SCHEME = 'aimd-network';
 
 function useWarmUpBrowser() {
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function SignInScreen() {
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
+  const [oauthError, setOauthError] = useState('');
 
   // Forgot-password flow
   const [step, setStep] = useState<Step>('sign_in');
@@ -94,9 +96,13 @@ export default function SignInScreen() {
     const key = provider === 'oauth_google' ? 'google' : 'apple';
     try {
       setOauthLoading(key);
-      const { createdSessionId, setActive } = await startSSOFlow({
+      setOauthError('');
+      const { createdSessionId, setActive, signIn: oauthSignIn, signUp: oauthSignUp } = await startSSOFlow({
         strategy: provider,
-        redirectUrl: AuthSession.makeRedirectUri(),
+        redirectUrl: AuthSession.makeRedirectUri({
+          scheme: AUTH_SCHEME,
+          path: 'oauth-callback',
+        }),
       });
       if (createdSessionId && setActive) {
         await setActive({
@@ -105,9 +111,14 @@ export default function SignInScreen() {
             router.replace(decorateUrl('/') as Href);
           },
         });
+      } else if (oauthSignIn?.status === 'missing_requirements' || oauthSignUp?.status === 'missing_requirements') {
+        setOauthError('Apple sign-in needs one more step before your account can open. Please try again.');
+      } else {
+        setOauthError('Apple sign-in did not finish. Please try again.');
       }
     } catch (err) {
       console.error('OAuth error:', JSON.stringify(err, null, 2));
+      setOauthError('Apple sign-in is temporarily unavailable. Please try again.');
     } finally {
       setOauthLoading(null);
     }
@@ -409,6 +420,7 @@ export default function SignInScreen() {
               )}
           </Pressable>
         )}
+        {!!oauthError && <Text style={s.oauthError} accessibilityRole="alert">{oauthError}</Text>}
 
         {/* Divider */}
         <View style={s.divider}>
@@ -535,6 +547,14 @@ const s = StyleSheet.create({
     fontFamily: 'DMSans_600SemiBold',
     fontSize: 15,
     color: '#e8e3d5',
+  },
+  oauthError: {
+    fontFamily: 'DMSans_400Regular',
+    fontSize: 12,
+    lineHeight: 18,
+    color: '#e05c5c',
+    textAlign: 'center',
+    marginTop: 4,
   },
   divider: {
     flexDirection: 'row',
