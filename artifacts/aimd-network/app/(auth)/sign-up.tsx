@@ -74,7 +74,7 @@ export default function SignUpScreen() {
     try {
       setOauthLoading(key);
       setOauthError('');
-      const { createdSessionId, setActive, signIn: oauthSignIn, signUp: oauthSignUp } = await startSSOFlow({
+      const { createdSessionId, setActive, signUp: oauthSignUp } = await startSSOFlow({
         strategy: provider,
         redirectUrl: AuthSession.makeRedirectUri({
           scheme: AUTH_SCHEME,
@@ -88,7 +88,7 @@ export default function SignUpScreen() {
             router.replace(decorateUrl('/') as Href);
           },
         });
-      } else if (oauthSignIn?.status === 'missing_requirements' || oauthSignUp?.status === 'missing_requirements') {
+      } else if (oauthSignUp?.status === 'missing_requirements') {
         setOauthError('Apple sign-up needs one more step before your account can open. Please try again.');
       } else {
         setOauthError('Apple sign-up did not finish. Please try again.');

@@ -15,3 +15,4 @@
 - [Stripe catalog mirror refresh](stripe-catalog-sync.md) — metadata-only Stripe edits may need per-entity mirror refresh beyond incremental backfill.
 - [Drizzle SQL array parameters](drizzle-array-parameters.md) — bind PostgreSQL arrays with a typed ARRAY expression, not direct JavaScript-array interpolation.
 - [React Native web pager sizing](react-native-web-pager-sizing.md) — fixed-height FlatList pages must disable flex shrinking or web can compress multiple pages into one viewport.
+- [Clerk iPad OAuth callbacks](clerk-ipad-oauth-callbacks.md) — native SSO must use the app scheme explicitly and surface incomplete OAuth states instead of failing silently.
