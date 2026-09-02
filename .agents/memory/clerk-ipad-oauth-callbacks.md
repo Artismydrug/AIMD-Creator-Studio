@@ -8,3 +8,5 @@ Native Clerk OAuth must build its redirect URI with the app's registered URL sch
 **Why:** App Review on an iPad reported Sign in with Apple as unresponsive when the callback URI relied on implicit scheme inference and incomplete OAuth results were only logged.
 
 **How to apply:** Keep sign-in and sign-up OAuth flows aligned. After auth or routing changes, test the signed TestFlight build on iPad compatibility mode as well as iPhone, including cancel and incomplete-account cases.
+
+Device validation: canceling the Apple sign-in sheet returns to the Creator Studio sign-in screen, confirming the cancellation path is responsive rather than silently hanging.
