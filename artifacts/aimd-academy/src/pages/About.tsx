@@ -147,15 +147,12 @@ export default function About() {
               >
                 The Next Era:
                 {' '}
-                <span className="mt-4 block text-[#c85a32]">Concrete Jungle &amp; The Artist Resort</span>
+                <span className="mt-4 block text-[#c85a32]">Concrete Jungle</span>
               </h2>
             </div>
             <div className="border-l border-[#e9a319]/60 pl-6 md:pl-8">
               <p data-testid="text-next-era" className="text-lg leading-8 text-[#d2c5b4] md:text-xl md:leading-9">
                 In <strong className="text-[#f5eee2]">2024</strong>, we took a massive leap forward and moved to <strong className="text-[#f5eee2]">Vintageland/Concrete Jungle</strong>—a sprawling <strong className="text-[#f5eee2]">100,000 sq. ft. space</strong> featuring <strong className="text-[#f5eee2]">3 levels dedicated to creation.</strong>
-              </p>
-              <p className="mt-7 text-lg leading-8 text-[#d2c5b4] md:text-xl md:leading-9">
-                We are now scaling to build our long-time dream: <strong className="text-[#f5eee2]">The Artist Resort.</strong> Our plan is to build a sustainable compound utilizing shipping containers, and our very first container compound is already set up right here at Concrete Jungle!
               </p>
               <figure className="relative mt-10 overflow-hidden border border-[#f5eee2]/15 bg-[#171514]">
                 <img

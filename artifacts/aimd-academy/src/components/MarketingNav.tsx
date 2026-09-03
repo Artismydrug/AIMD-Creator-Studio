@@ -8,7 +8,6 @@ import aimdLogo from '@assets/AIMD_Logo_Original-White_1787712004194.png';
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
-  { href: '/artist-resort', label: 'Artist Resort' },
   { href: '/tattoo', label: 'Tattoo Studio' },
   { href: '/gallery', label: 'Gallery' },
 ];
@@ -157,10 +156,9 @@ export function MarketingFooter() {
         <div className="flex flex-wrap justify-center gap-4 font-mono text-xs uppercase text-muted-foreground">
           <Link href="/" className="hover:text-foreground">Home</Link>
           <Link href="/about" className="hover:text-foreground">About</Link>
-           <Link href="/artist-resort" className="hover:text-foreground">Artist Resort</Link>
           <Link href="/tattoo" className="hover:text-foreground">Tattoo Studio</Link>
           <Link href="/gallery" className="hover:text-foreground">Gallery</Link>
-           <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
+          <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
           <Link href="/app" className="hover:text-foreground">Creator App</Link>
         </div>
         <p className="font-mono text-[10px] text-muted-foreground">

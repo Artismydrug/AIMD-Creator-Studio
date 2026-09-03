@@ -53,7 +53,6 @@ import Onboarding from '@/pages/Onboarding';
 import Tattoo from '@/pages/Tattoo';
 import Gallery from '@/pages/Gallery';
 import Instructor from '@/pages/Instructor';
-import ArtistResort from '@/pages/ArtistResort';
 import HQ from '@/pages/HQ';
 import Privacy from '@/pages/Privacy';
 
@@ -273,7 +272,8 @@ function Router() {
       {/* Public marketing pages — the AIMD hub */}
       <Route path="/" component={Landing} />
       <Route path="/about" component={About} />
-      <Route path="/artist-resort" component={ArtistResort} />
+      {/* Retired public concept page; keep its source for a future relaunch. */}
+      <Route path="/artist-resort" component={NotFound} />
       <Route path="/tattoo" component={Tattoo} />
       <Route path="/gallery" component={Gallery} />
       <Route path="/privacy" component={Privacy} />
