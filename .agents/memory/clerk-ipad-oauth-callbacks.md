@@ -16,3 +16,9 @@ Protected app routes must not mount until Clerk has produced a usable bearer tok
 **Why:** App Review later reported that the app failed to load correctly after login on an iPad even though Sign in with Apple itself completed successfully; authenticated queries could start during the session-token handoff.
 
 **How to apply:** Treat the auth callback and the authenticated API session as separate readiness phases. Release checks must verify both phases and cold-launch the signed TestFlight build after a fresh install.
+
+Programmatic Clerk browser sessions created on Replit's shared artifact host do not transfer to Expo's separate development origin.
+
+**Why:** A browser test could verify Expo startup but its injected Clerk session redirected through the shared host and disappeared on return, falsely resembling a native auth failure.
+
+**How to apply:** Use browser automation for signed-out Expo startup only. Validate the authenticated native handoff with a signed TestFlight build on a physical device; do not change native auth solely because cross-origin browser injection fails.

@@ -13,11 +13,15 @@ function assertAuthHandoffSmokeContract() {
   const source = fs.readFileSync(layoutPath, 'utf8');
 
   assertIncludes(source, 'readyUserId !== userId', 'signed-in readiness gate');
-  assertIncludes(source, 'const token = await getToken()', 'token readiness check');
+  assertIncludes(source, 'const token = await withTimeout(', 'timed token readiness check');
   assertIncludes(source, 'queryClient.clear()', 'stale query cleanup');
   assertIncludes(source, 'testID="session-preparation-screen"', 'visible preparation screen');
   assertIncludes(source, 'testID="session-preparation-retry"', 'visible retry action');
   assertIncludes(source, 'TOKEN_ATTEMPTS', 'bounded token retry behavior');
+  assertIncludes(source, 'TOKEN_TIMEOUT_MS', 'per-attempt token timeout');
+  assertIncludes(source, 'TOKEN_BOOTSTRAP_LEASE_MS', 'prepared-token bootstrap lease');
+  assertIncludes(source, 'preparedToken.current', 'prepared token reuse');
+  assertIncludes(source, 'reloadAppAsync()', 'Clerk startup recovery action');
   assertIncludes(source, '<ClerkLoading>', 'visible Clerk startup state');
 
   console.log('Authenticated app handoff smoke contract passed');

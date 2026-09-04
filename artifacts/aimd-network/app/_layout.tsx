@@ -10,6 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { reloadAppAsync } from 'expo';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import {
   DMSans_400Regular,
@@ -51,11 +52,34 @@ const queryClient = new QueryClient({
   },
 });
 
-const TOKEN_ATTEMPTS = 6;
+const CLERK_STARTUP_TIMEOUT_MS = 10_000;
+const TOKEN_ATTEMPTS = 3;
 const TOKEN_RETRY_DELAY_MS = 300;
+const TOKEN_TIMEOUT_MS = 4_000;
+const TOKEN_BOOTSTRAP_LEASE_MS = 10_000;
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  message: string,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error(message)), timeoutMs);
+    promise.then(
+      (value) => {
+        clearTimeout(timeout);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timeout);
+        reject(error);
+      },
+    );
+  });
 }
 
 function SessionPreparationScreen({
@@ -97,16 +121,71 @@ function SessionPreparationScreen({
   );
 }
 
+function ClerkStartupScreen() {
+  const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(
+      () => setTimedOut(true),
+      CLERK_STARTUP_TIMEOUT_MS,
+    );
+    return () => clearTimeout(timeout);
+  }, []);
+
+  return (
+    <SessionPreparationScreen
+      error={timedOut ? 'Authentication services took too long to start.' : null}
+      onRetry={() => {
+        void reloadAppAsync();
+      }}
+    />
+  );
+}
+
 function AuthSessionBridge({ children }: { children: ReactNode }) {
   const { getToken, isLoaded, userId } = useAuth();
   const previousUserId = useRef<string | null | undefined>(undefined);
+  const preparedToken = useRef<{
+    token: string;
+    userId: string;
+    usableUntil: number;
+  } | null>(null);
   const [readyUserId, setReadyUserId] = useState<string | null>(null);
   const [preparationError, setPreparationError] = useState<string | null>(null);
   const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
-    setAuthTokenGetter(() => getToken());
-  }, [getToken]);
+    if (!isLoaded || !userId) {
+      preparedToken.current = null;
+      setAuthTokenGetter(null);
+      return;
+    }
+
+    const activeUserId = userId;
+    setAuthTokenGetter(async () => {
+      const bootstrapToken = preparedToken.current;
+      if (
+        bootstrapToken?.userId === activeUserId &&
+        bootstrapToken.usableUntil > Date.now()
+      ) {
+        return bootstrapToken.token;
+      }
+
+      const token = await withTimeout(
+        getToken(),
+        TOKEN_TIMEOUT_MS,
+        'Authentication token request timed out.',
+      );
+      if (!token) {
+        throw new Error('Authentication token is unavailable.');
+      }
+      return token;
+    });
+
+    return () => {
+      setAuthTokenGetter(null);
+    };
+  }, [getToken, isLoaded, userId]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -125,6 +204,7 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
     if (!isLoaded) return;
 
     if (!userId) {
+      preparedToken.current = null;
       setReadyUserId(null);
       setPreparationError(null);
       return;
@@ -137,9 +217,18 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
     async function prepareAuthenticatedSession() {
       for (let attempt = 0; attempt < TOKEN_ATTEMPTS; attempt += 1) {
         try {
-          const token = await getToken();
+          const token = await withTimeout(
+            getToken(),
+            TOKEN_TIMEOUT_MS,
+            'Authentication token request timed out.',
+          );
           if (token) {
             if (!cancelled) {
+              preparedToken.current = {
+                token,
+                userId: authenticatedUserId,
+                usableUntil: Date.now() + TOKEN_BOOTSTRAP_LEASE_MS,
+              };
               // Remove any signed-out or previous-account failures before the
               // dashboard mounts and starts its authenticated requests.
               queryClient.clear();
@@ -277,7 +366,7 @@ export default function RootLayout() {
       proxyUrl={proxyUrl}
     >
       <ClerkLoading>
-        <SessionPreparationScreen error={null} onRetry={() => undefined} />
+        <ClerkStartupScreen />
       </ClerkLoading>
       <ClerkLoaded>
         <AuthSessionBridge>
