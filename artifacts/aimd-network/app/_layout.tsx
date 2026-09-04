@@ -1,8 +1,15 @@
-import React, { useEffect, useRef, type ReactNode } from 'react';
+import React, { useEffect, useRef, useState, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import {
   DMSans_400Regular,
@@ -15,7 +22,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { setAuthTokenGetter, setBaseUrl } from '@workspace/api-client-react';
 import { StatusBar } from 'expo-status-bar';
-import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/expo';
+import { ClerkLoaded, ClerkLoading, ClerkProvider, useAuth } from '@clerk/expo';
 import { tokenCache } from '@clerk/expo/token-cache';
 import {
   initializeRevenueCat,
@@ -44,9 +51,58 @@ const queryClient = new QueryClient({
   },
 });
 
+const TOKEN_ATTEMPTS = 6;
+const TOKEN_RETRY_DELAY_MS = 300;
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function SessionPreparationScreen({
+  error,
+  onRetry,
+}: {
+  error: string | null;
+  onRetry: () => void;
+}) {
+  return (
+    <View style={sessionStyles.container} testID="session-preparation-screen">
+      {error ? (
+        <>
+          <Text style={sessionStyles.title}>Couldn’t finish signing you in</Text>
+          <Text style={sessionStyles.body}>
+            Your account is safe. Check your connection and try loading Creator Studio again.
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Retry opening Creator Studio"
+            onPress={onRetry}
+            style={({ pressed }) => [
+              sessionStyles.retryButton,
+              pressed && sessionStyles.retryButtonPressed,
+            ]}
+            testID="session-preparation-retry"
+          >
+            <Text style={sessionStyles.retryText}>Try Again</Text>
+          </Pressable>
+        </>
+      ) : (
+        <>
+          <ActivityIndicator color="#B8532D" size="large" />
+          <Text style={sessionStyles.title}>Opening Creator Studio…</Text>
+          <Text style={sessionStyles.body}>Preparing your secure account session.</Text>
+        </>
+      )}
+    </View>
+  );
+}
+
 function AuthSessionBridge({ children }: { children: ReactNode }) {
   const { getToken, isLoaded, userId } = useAuth();
   const previousUserId = useRef<string | null | undefined>(undefined);
+  const [readyUserId, setReadyUserId] = useState<string | null>(null);
+  const [preparationError, setPreparationError] = useState<string | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     setAuthTokenGetter(() => getToken());
@@ -65,8 +121,103 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
     previousUserId.current = nextUserId;
   }, [isLoaded, userId]);
 
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    if (!userId) {
+      setReadyUserId(null);
+      setPreparationError(null);
+      return;
+    }
+
+    const authenticatedUserId = userId;
+    let cancelled = false;
+    setPreparationError(null);
+
+    async function prepareAuthenticatedSession() {
+      for (let attempt = 0; attempt < TOKEN_ATTEMPTS; attempt += 1) {
+        try {
+          const token = await getToken();
+          if (token) {
+            if (!cancelled) {
+              // Remove any signed-out or previous-account failures before the
+              // dashboard mounts and starts its authenticated requests.
+              queryClient.clear();
+              setReadyUserId(authenticatedUserId);
+            }
+            return;
+          }
+        } catch (error) {
+          console.warn('Authenticated session token is not ready yet', error);
+        }
+
+        if (attempt < TOKEN_ATTEMPTS - 1) {
+          await wait(TOKEN_RETRY_DELAY_MS * (attempt + 1));
+        }
+      }
+
+      if (!cancelled) {
+        setPreparationError('A secure session token could not be created.');
+      }
+    }
+
+    void prepareAuthenticatedSession();
+    return () => {
+      cancelled = true;
+    };
+  }, [getToken, isLoaded, retryNonce, userId]);
+
+  if (userId && readyUserId !== userId) {
+    return (
+      <SessionPreparationScreen
+        error={preparationError}
+        onRetry={() => setRetryNonce((value) => value + 1)}
+      />
+    );
+  }
+
   return children;
 }
+
+const sessionStyles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    backgroundColor: '#FAF8F5',
+    flex: 1,
+    gap: 14,
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  title: {
+    color: '#2C2623',
+    fontFamily: 'DMSans_700Bold',
+    fontSize: 22,
+    textAlign: 'center',
+  },
+  body: {
+    color: '#6E6660',
+    fontFamily: 'DMSans_400Regular',
+    fontSize: 15,
+    lineHeight: 22,
+    maxWidth: 420,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: '#B8532D',
+    borderRadius: 10,
+    marginTop: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+  },
+  retryButtonPressed: {
+    opacity: 0.8,
+  },
+  retryText: {
+    color: '#FFFFFF',
+    fontFamily: 'DMSans_700Bold',
+    fontSize: 15,
+  },
+});
 
 function RootLayoutNav() {
   return (
@@ -125,6 +276,9 @@ export default function RootLayout() {
       tokenCache={tokenCache}
       proxyUrl={proxyUrl}
     >
+      <ClerkLoading>
+        <SessionPreparationScreen error={null} onRetry={() => undefined} />
+      </ClerkLoading>
       <ClerkLoaded>
         <AuthSessionBridge>
           <SafeAreaProvider>

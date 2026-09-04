@@ -6,6 +6,7 @@ const { Readable } = require('stream');
 const { pipeline } = require('stream/promises');
 const { assertDashboardSmokeContract } = require('./dashboard-smoke');
 const { assertAccountDeletionSmokeContract } = require('./account-deletion-smoke');
+const { assertAuthHandoffSmokeContract } = require('./auth-handoff-smoke');
 
 assertAccountDeletionSmokeContract();
 
@@ -594,6 +595,7 @@ async function main() {
   console.log('Building static Expo Go deployment...');
 
   setupSignalHandlers();
+  assertAuthHandoffSmokeContract();
   assertDashboardSmokeContract();
 
   const domain = getDeploymentDomain();
