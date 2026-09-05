@@ -14,6 +14,8 @@ type Summary = {
   pendingReviews: number;
 };
 
+const HQ_REQUEST_TIMEOUT_MS = 10_000;
+
 const money = (cents: number | null) =>
   cents == null ? 'Unavailable' : `$${(cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 
@@ -36,22 +38,62 @@ export default function HQScreen() {
   const role = String(user?.publicMetadata?.role ?? user?.publicMetadata?.aimdRole ?? '');
   const [summary, setSummary] = useState<Summary | null>(null);
   const [denied, setDenied] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     if (!isSignedIn || (role !== 'admin' && role !== 'instructor')) return;
     let cancelled = false;
-    getToken().then(async token => {
+    const controller = new AbortController();
+    setLoading(true);
+    setLoadError(false);
+
+    const request = (async (): Promise<{ kind: 'success'; summary: Summary } | { kind: 'denied' }> => {
+      const token = await getToken();
       const response = await fetch(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/hq/summary`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
+        signal: controller.signal,
       });
       if (!response.ok) {
-        if (!cancelled) setDenied(true);
-        return;
+        if (response.status === 401 || response.status === 403) {
+          return { kind: 'denied' };
+        }
+        throw new Error(`HQ metrics request failed with status ${response.status}`);
       }
-      if (!cancelled) setSummary(await response.json());
-    }).catch(() => { if (!cancelled) setDenied(true); });
-    return () => { cancelled = true; };
-  }, [getToken, isSignedIn, role]);
+      return { kind: 'success', summary: await response.json() as Summary };
+    })();
+
+    let timeout: ReturnType<typeof setTimeout>;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeout = setTimeout(() => {
+        controller.abort();
+        reject(new Error('HQ metrics request timed out.'));
+      }, HQ_REQUEST_TIMEOUT_MS);
+    });
+
+    Promise.race([request, timeoutPromise])
+      .then((result) => {
+        if (cancelled) return;
+        if (result.kind === 'denied') {
+          setDenied(true);
+        } else {
+          setSummary(result.summary);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLoadError(true);
+      })
+      .finally(() => {
+      clearTimeout(timeout);
+      if (!cancelled) setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [getToken, isSignedIn, retryNonce, role]);
 
   if (!isLoaded) return <View style={[styles.center, { backgroundColor: colors.background }]}><ActivityIndicator color={colors.primary} /></View>;
   if (!isSignedIn) return <Redirect href="/(auth)/sign-in" />;
@@ -65,7 +107,28 @@ export default function HQScreen() {
         <Text style={[styles.title, { color: colors.foreground }]}>Creator App HQ</Text>
         <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>The mobile control room for keeping the creative community moving.</Text>
       </View>
-      {!summary ? <View style={[styles.empty, { borderColor: colors.border }]}><ActivityIndicator color={colors.primary} /><Text style={[styles.emptyText, { color: colors.mutedForeground }]}>Loading verified HQ metrics…</Text></View> :
+      {!summary ? <View style={[styles.empty, { borderColor: colors.border }]}>
+        {loading ? (
+          <>
+            <ActivityIndicator color={colors.primary} />
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>Loading verified HQ metrics…</Text>
+          </>
+        ) : (
+          <>
+            <Feather name="cloud-off" size={30} color={colors.mutedForeground} />
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+              {loadError ? 'Could not load HQ metrics.' : 'HQ metrics are unavailable.'}
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setRetryNonce((value) => value + 1)}
+              style={[styles.retryButton, { borderColor: colors.border }]}
+            >
+              <Text style={[styles.retryText, { color: colors.foreground }]}>Retry</Text>
+            </Pressable>
+          </>
+        )}
+      </View> :
         <View style={styles.grid}>
           <Metric label="Free · Tier 1" value={summary.tiers.free} detail="Creator accounts" accent={colors.primary} />
           <Metric label="Dedicated · Tier 2" value={summary.tiers.dedicated} detail="Existing access" accent={colors.accent} />
@@ -101,6 +164,8 @@ const styles = StyleSheet.create({
   metricDetail: { fontSize: 11, marginTop: 4, lineHeight: 15 },
   empty: { minHeight: 180, borderWidth: 1, borderStyle: 'dashed', borderRadius: 14, alignItems: 'center', justifyContent: 'center', gap: 12 },
   emptyText: { fontSize: 12 },
+  retryButton: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 18, paddingVertical: 10 },
+  retryText: { fontSize: 13, fontWeight: '700' },
   note: { flexDirection: 'row', gap: 10, borderWidth: 1, borderRadius: 14, padding: 14, marginTop: 18, alignItems: 'flex-start' },
   noteText: { flex: 1, fontSize: 12, lineHeight: 18 },
 });

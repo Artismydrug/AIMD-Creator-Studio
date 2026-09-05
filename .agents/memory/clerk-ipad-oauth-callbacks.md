@@ -23,11 +23,11 @@ Local token availability is not sufficient readiness: the API must accept the be
 
 **How to apply:** Gate authenticated navigation on both token creation and a successful server probe. Bound token, probe, and screen-data waits so auth propagation delays never become permanent dashboard spinners.
 
-Keep the shared mobile API token getter continuously registered while Clerk settles after sign-in; do not tie its cleanup lifecycle to the identity of Clerk's `getToken` function. Store the latest function in a ref instead.
+Keep mobile API authentication continuously registered while Clerk settles after sign-in; credential-provider updates must not create an unauthenticated gap during protected navigation.
 
-**Why:** A signed iPad build passed its authenticated server probe, then a Clerk render changed the token function identity. Effect cleanup briefly removed the shared API token getter while the Dashboard mounted, so the first request burst had no bearer token and returned 401; manual Retry succeeded after registration stabilized.
+**Why:** A signed iPad build passed its authenticated server probe but briefly lost API authentication during the following render, so the first protected request burst failed while manual Retry succeeded.
 
-**How to apply:** Register the API token getter for the signed-in user/session lifecycle, read the latest Clerk token function through a ref, and only clear the getter on sign-out or user change. Verify production request ordering after every auth-handoff change.
+**How to apply:** Scope authentication transport to the signed-in user/session lifecycle, clear it only on identity transitions, and verify production request ordering after every auth-handoff change.
 
 Programmatic Clerk browser sessions created on Replit's shared artifact host do not transfer to Expo's separate development origin.
 

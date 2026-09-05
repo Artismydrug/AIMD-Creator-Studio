@@ -7,6 +7,7 @@ const { pipeline } = require('stream/promises');
 const { assertDashboardSmokeContract } = require('./dashboard-smoke');
 const { assertAccountDeletionSmokeContract } = require('./account-deletion-smoke');
 const { assertAuthHandoffSmokeContract } = require('./auth-handoff-smoke');
+const { assertHqLoadingSmokeContract } = require('./hq-loading-smoke');
 
 assertAccountDeletionSmokeContract();
 
@@ -597,6 +598,7 @@ async function main() {
   setupSignalHandlers();
   assertAuthHandoffSmokeContract();
   assertDashboardSmokeContract();
+  assertHqLoadingSmokeContract();
 
   const domain = getDeploymentDomain();
   const expoPublicReplId = getExpoPublicReplId();
