@@ -17,6 +17,12 @@ Protected app routes must not mount until Clerk has produced a usable bearer tok
 
 **How to apply:** Treat the auth callback and the authenticated API session as separate readiness phases. Release checks must verify both phases and cold-launch the signed TestFlight build after a fresh install.
 
+Local token availability is not sufficient readiness: the API must accept the bearer token on a lightweight protected endpoint before protected screens mount. Retry server verification with a fresh token after an initial rejection.
+
+**Why:** Production logs from a signed iPad build showed the first protected requests returning 401 in a few milliseconds, while the same endpoints succeeded shortly afterward and the progress query itself was fast.
+
+**How to apply:** Gate authenticated navigation on both token creation and a successful server probe. Bound token, probe, and screen-data waits so auth propagation delays never become permanent dashboard spinners.
+
 Programmatic Clerk browser sessions created on Replit's shared artifact host do not transfer to Expo's separate development origin.
 
 **Why:** A browser test could verify Expo startup but its injected Clerk session redirected through the shared host and disappeared on return, falsely resembling a native auth failure.

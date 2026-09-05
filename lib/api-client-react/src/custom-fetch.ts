@@ -1,5 +1,6 @@
 export type CustomFetchOptions = RequestInit & {
   responseType?: "json" | "text" | "blob" | "auto";
+  timeoutMs?: number;
 };
 
 export type ErrorType<T = unknown> = ApiError<T>;
@@ -335,7 +336,13 @@ export async function customFetch<T = unknown>(
   options: CustomFetchOptions = {},
 ): Promise<T> {
   input = applyBaseUrl(input);
-  const { responseType = "auto", headers: headersInit, ...init } = options;
+  const {
+    responseType = "auto",
+    headers: headersInit,
+    signal: callerSignal,
+    timeoutMs,
+    ...init
+  } = options;
 
   const method = resolveMethod(input, init.method);
 
@@ -368,7 +375,42 @@ export async function customFetch<T = unknown>(
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  const response = await fetch(input, { ...init, method, headers });
+  const timeoutController =
+    typeof timeoutMs === "number" && timeoutMs > 0
+      ? new AbortController()
+      : null;
+  const forwardAbort = () => timeoutController?.abort();
+  if (callerSignal && timeoutController) {
+    if (callerSignal.aborted) {
+      timeoutController.abort();
+    } else {
+      callerSignal.addEventListener("abort", forwardAbort, { once: true });
+    }
+  }
+  const timeout = timeoutController
+    ? setTimeout(() => timeoutController.abort(), timeoutMs)
+    : null;
+
+  let response: Response;
+  try {
+    response = await fetch(input, {
+      ...init,
+      method,
+      headers,
+      signal: timeoutController?.signal ?? callerSignal,
+    });
+  } catch (error) {
+    if (
+      timeoutController?.signal.aborted &&
+      !callerSignal?.aborted
+    ) {
+      throw new Error(`Request timed out after ${timeoutMs}ms.`);
+    }
+    throw error;
+  } finally {
+    if (timeout) clearTimeout(timeout);
+    callerSignal?.removeEventListener("abort", forwardAbort);
+  }
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);

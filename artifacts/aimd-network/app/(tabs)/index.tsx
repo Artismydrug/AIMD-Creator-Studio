@@ -78,7 +78,16 @@ export default function ProgressScreen() {
     isLoading: progressLoading,
     isError: progressIsError,
     refetch: refetchProgress
-  } = useGetProgress({ timezone });
+  } = useGetProgress(
+    { timezone },
+    {
+      query: {
+        queryKey: getGetProgressQueryKey({ timezone }),
+        retry: 0,
+      },
+      request: { timeoutMs: 10_000 },
+    },
+  );
 
   const {
     data: challengeData,

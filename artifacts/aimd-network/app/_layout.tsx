@@ -32,7 +32,8 @@ import {
 
 // Set API base URL before any component renders
 const domain = process.env.EXPO_PUBLIC_DOMAIN;
-if (domain) setBaseUrl(`https://${domain}`);
+const apiBaseUrl = domain ? `https://${domain}` : null;
+if (apiBaseUrl) setBaseUrl(apiBaseUrl);
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 const proxyUrl = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
@@ -53,8 +54,8 @@ const queryClient = new QueryClient({
 });
 
 const CLERK_STARTUP_TIMEOUT_MS = 10_000;
-const TOKEN_ATTEMPTS = 3;
-const TOKEN_RETRY_DELAY_MS = 300;
+const TOKEN_ATTEMPTS = 6;
+const TOKEN_RETRY_DELAY_MS = 500;
 const TOKEN_TIMEOUT_MS = 4_000;
 const TOKEN_BOOTSTRAP_LEASE_MS = 10_000;
 
@@ -80,6 +81,28 @@ function withTimeout<T>(
       },
     );
   });
+}
+
+async function verifyAuthenticatedApiSession(token: string): Promise<boolean> {
+  if (!apiBaseUrl) {
+    throw new Error('The API address is unavailable.');
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TOKEN_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/users/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
+    });
+
+    if (response.ok) return true;
+    if (response.status === 401 || response.status === 403) return false;
+    throw new Error(`Session verification failed with status ${response.status}.`);
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function SessionPreparationScreen({
@@ -218,11 +241,11 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
       for (let attempt = 0; attempt < TOKEN_ATTEMPTS; attempt += 1) {
         try {
           const token = await withTimeout(
-            getToken(),
+            getToken({ skipCache: attempt > 0 }),
             TOKEN_TIMEOUT_MS,
             'Authentication token request timed out.',
           );
-          if (token) {
+          if (token && await verifyAuthenticatedApiSession(token)) {
             if (!cancelled) {
               preparedToken.current = {
                 token,
@@ -237,7 +260,7 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
             return;
           }
         } catch (error) {
-          console.warn('Authenticated session token is not ready yet', error);
+          console.warn('Authenticated API session is not ready yet', error);
         }
 
         if (attempt < TOKEN_ATTEMPTS - 1) {
@@ -246,7 +269,7 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
       }
 
       if (!cancelled) {
-        setPreparationError('A secure session token could not be created.');
+        setPreparationError('The secure API session could not be verified.');
       }
     }
 
