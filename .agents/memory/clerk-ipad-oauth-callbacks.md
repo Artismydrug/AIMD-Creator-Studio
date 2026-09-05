@@ -29,6 +29,12 @@ Keep mobile API authentication continuously registered while Clerk settles after
 
 **How to apply:** Scope authentication transport to the signed-in user/session lifecycle, clear it only on identity transitions, and verify production request ordering after every auth-handoff change.
 
+Physical iPad TestFlight validation confirmed that continuous authentication transport and server-gated navigation open the Dashboard directly without requiring a manual Retry.
+
+**Why:** This reproduces the App Review device class and validates the native Apple sign-in handoff that browser preview sessions cannot exercise.
+
+**How to apply:** Preserve this lifecycle design and repeat the fresh-install Apple sign-in plus force-close/relaunch check before future App Store submissions that alter authentication or startup.
+
 Programmatic Clerk browser sessions created on Replit's shared artifact host do not transfer to Expo's separate development origin.
 
 **Why:** A browser test could verify Expo startup but its injected Clerk session redirected through the shared host and disappeared on return, falsely resembling a native auth failure.
