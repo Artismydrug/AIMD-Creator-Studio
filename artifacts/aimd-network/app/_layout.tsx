@@ -167,6 +167,7 @@ function ClerkStartupScreen() {
 
 function AuthSessionBridge({ children }: { children: ReactNode }) {
   const { getToken, isLoaded, userId } = useAuth();
+  const getTokenRef = useRef(getToken);
   const previousUserId = useRef<string | null | undefined>(undefined);
   const preparedToken = useRef<{
     token: string;
@@ -176,6 +177,11 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
   const [readyUserId, setReadyUserId] = useState<string | null>(null);
   const [preparationError, setPreparationError] = useState<string | null>(null);
   const [retryNonce, setRetryNonce] = useState(0);
+
+  // Clerk may return a new getToken function identity while auth state settles.
+  // Keep the shared API client's getter installed across those renders so the
+  // first protected queries cannot slip through without an Authorization header.
+  getTokenRef.current = getToken;
 
   useEffect(() => {
     if (!isLoaded || !userId) {
@@ -195,7 +201,7 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
       }
 
       const token = await withTimeout(
-        getToken(),
+        getTokenRef.current(),
         TOKEN_TIMEOUT_MS,
         'Authentication token request timed out.',
       );
@@ -208,7 +214,7 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
     return () => {
       setAuthTokenGetter(null);
     };
-  }, [getToken, isLoaded, userId]);
+  }, [isLoaded, userId]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -241,7 +247,7 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
       for (let attempt = 0; attempt < TOKEN_ATTEMPTS; attempt += 1) {
         try {
           const token = await withTimeout(
-            getToken({ skipCache: attempt > 0 }),
+            getTokenRef.current({ skipCache: attempt > 0 }),
             TOKEN_TIMEOUT_MS,
             'Authentication token request timed out.',
           );
@@ -277,7 +283,7 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [getToken, isLoaded, retryNonce, userId]);
+  }, [isLoaded, retryNonce, userId]);
 
   if (userId && readyUserId !== userId) {
     return (

@@ -21,7 +21,10 @@ function assertAuthHandoffSmokeContract() {
   assertIncludes(source, 'TOKEN_TIMEOUT_MS', 'per-attempt token timeout');
   assertIncludes(source, 'TOKEN_BOOTSTRAP_LEASE_MS', 'prepared-token bootstrap lease');
   assertIncludes(source, 'preparedToken.current', 'prepared token reuse');
-  assertIncludes(source, 'getToken({ skipCache: attempt > 0 })', 'fresh token retry');
+  assertIncludes(source, 'const getTokenRef = useRef(getToken)', 'stable token getter reference');
+  assertIncludes(source, 'getTokenRef.current = getToken', 'latest Clerk token getter');
+  assertIncludes(source, '}, [isLoaded, userId]);', 'continuous API token getter registration');
+  assertIncludes(source, 'getTokenRef.current({ skipCache: attempt > 0 })', 'fresh token retry');
   assertIncludes(source, 'verifyAuthenticatedApiSession(token)', 'server-accepted session gate');
   assertIncludes(source, '/api/users/me', 'authenticated API readiness probe');
   assertIncludes(source, 'reloadAppAsync()', 'Clerk startup recovery action');
