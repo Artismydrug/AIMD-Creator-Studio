@@ -18,3 +18,4 @@
 - [Clerk iPad OAuth callbacks](clerk-ipad-oauth-callbacks.md) — native SSO must use the app scheme explicitly and surface incomplete OAuth states instead of failing silently.
 - [SMS consent authority](sms-consent-authority.md) — local records stay pending; only the server-side AIMD SMS/HQ adapter may send confirmations or confirm consent.
 - [SMS signup placement](sms-signup-placement.md) — keep text-list signup only on the public homepage, without a standalone route or navigation entry.
+- [Durable public rate limits](durable-public-rate-limits.md) — compliance-sensitive throttles must use atomic shared storage, never process-local memory.
