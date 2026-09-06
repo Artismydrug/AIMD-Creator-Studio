@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: '/about', label: 'About' },
   { href: '/tattoo', label: 'Tattoo Studio' },
   { href: '/gallery', label: 'Gallery' },
+  { href: '/text-club', label: 'Text List' },
 ];
 
 /** Shared top navigation for public marketing pages (Home, Tattoo, Gallery). */
@@ -159,6 +160,8 @@ export function MarketingFooter() {
           <Link href="/tattoo" className="hover:text-foreground">Tattoo Studio</Link>
           <Link href="/gallery" className="hover:text-foreground">Gallery</Link>
           <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
+          <Link href="/sms-terms" className="hover:text-foreground">SMS Terms</Link>
+          <Link href="/text-club" className="text-primary hover:text-primary/75">Join the Text List</Link>
           <Link href="/app" className="hover:text-foreground">Creator App</Link>
         </div>
         <p className="font-mono text-[10px] text-muted-foreground">

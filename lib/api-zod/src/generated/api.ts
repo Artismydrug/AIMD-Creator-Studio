@@ -2335,3 +2335,35 @@ export const AssignInstructorToWorkshopResponse = zod.object({
 })
 
 
+/**
+ * @summary Start a public double-opt-in SMS subscription
+ */
+export const createSmsSubscriptionBodyFirstNameMax = 80;
+
+export const createSmsSubscriptionBodyPhoneMin = 10;
+export const createSmsSubscriptionBodyPhoneMax = 24;
+
+export const createSmsSubscriptionBodyPageUrlMax = 2048;
+
+export const createSmsSubscriptionBodySourceMax = 80;
+
+export const createSmsSubscriptionBodyConsentDisclosureVersionMax = 40;
+
+
+
+export const CreateSmsSubscriptionBody = zod.object({
+  "firstName": zod.string().min(1).max(createSmsSubscriptionBodyFirstNameMax),
+  "phone": zod.string().min(createSmsSubscriptionBodyPhoneMin).max(createSmsSubscriptionBodyPhoneMax),
+  "consentAccepted": zod.boolean(),
+  "pageUrl": zod.url().max(createSmsSubscriptionBodyPageUrlMax),
+  "source": zod.string().max(createSmsSubscriptionBodySourceMax).optional(),
+  "consentSource": zod.enum(['AIMD website text-club form']),
+  "consentDisclosureVersion": zod.string().max(createSmsSubscriptionBodyConsentDisclosureVersionMax)
+})
+
+export const CreateSmsSubscriptionResponse = zod.object({
+  "status": zod.enum(['pending']),
+  "message": zod.string()
+})
+
+

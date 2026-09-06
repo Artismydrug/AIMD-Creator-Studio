@@ -97,6 +97,8 @@ import type {
   SkillTrack,
   SkillTrackInput,
   SkillTrackUpdate,
+  SmsSubscriptionInput,
+  SmsSubscriptionResult,
   Sponsorship,
   SponsorshipCheckout,
   SponsorshipInput,
@@ -7220,5 +7222,76 @@ export const useAssignInstructorToWorkshop = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getAssignInstructorToWorkshopMutationOptions(options));
+    }
+
+export const getCreateSmsSubscriptionUrl = () => {
+
+
+
+
+  return `/api/sms/subscriptions`
+}
+
+/**
+ * @summary Start a public double-opt-in SMS subscription
+ */
+export const createSmsSubscription = async (smsSubscriptionInput: SmsSubscriptionInput, options?: Parameters<typeof customFetch>[1]): Promise<SmsSubscriptionResult> => {
+
+  return customFetch<SmsSubscriptionResult>(getCreateSmsSubscriptionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(smsSubscriptionInput)
+  }
+);}
+
+
+
+
+
+export const getCreateSmsSubscriptionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSmsSubscription>>, TError,{data: BodyType<SmsSubscriptionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSmsSubscription>>, TError,{data: BodyType<SmsSubscriptionInput>}, TContext> => {
+
+const mutationKey = ['createSmsSubscription'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSmsSubscription>>, {data: BodyType<SmsSubscriptionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createSmsSubscription(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSmsSubscriptionMutationResult = NonNullable<Awaited<ReturnType<typeof createSmsSubscription>>>
+    export type CreateSmsSubscriptionMutationBody = BodyType<SmsSubscriptionInput>
+    export type CreateSmsSubscriptionMutationError = ErrorType<void>
+
+    /**
+ * @summary Start a public double-opt-in SMS subscription
+ */
+export const useCreateSmsSubscription = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSmsSubscription>>, TError,{data: BodyType<SmsSubscriptionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createSmsSubscription>>,
+        TError,
+        {data: BodyType<SmsSubscriptionInput>},
+        TContext
+      > => {
+      return useMutation(getCreateSmsSubscriptionMutationOptions(options));
     }
 

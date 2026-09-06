@@ -1598,6 +1598,46 @@ export interface InstructorWorkshopAssignment {
   assignedAt: string;
 }
 
+export type SmsSubscriptionInputConsentSource = typeof SmsSubscriptionInputConsentSource[keyof typeof SmsSubscriptionInputConsentSource];
+
+
+export const SmsSubscriptionInputConsentSource = {
+  'AIMD_website_text-club_form': 'AIMD website text-club form',
+} as const;
+
+export interface SmsSubscriptionInput {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  firstName: string;
+  /**
+     * @minLength 10
+     * @maxLength 24
+     */
+  phone: string;
+  consentAccepted: boolean;
+  /** @maxLength 2048 */
+  pageUrl: string;
+  /** @maxLength 80 */
+  source?: string;
+  consentSource: SmsSubscriptionInputConsentSource;
+  /** @maxLength 40 */
+  consentDisclosureVersion: string;
+}
+
+export type SmsSubscriptionResultStatus = typeof SmsSubscriptionResultStatus[keyof typeof SmsSubscriptionResultStatus];
+
+
+export const SmsSubscriptionResultStatus = {
+  pending: 'pending',
+} as const;
+
+export interface SmsSubscriptionResult {
+  status: SmsSubscriptionResultStatus;
+  message: string;
+}
+
 export type GetActivityFeedParams = {
 limit?: number;
 };

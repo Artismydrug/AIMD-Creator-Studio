@@ -26,6 +26,7 @@ import tattooBookingsRouter from "./tattoo-bookings";
 import instructorRouter from "./instructor";
 import hqRouter from "./hq";
 import notificationsRouter from "./notifications";
+import smsSubscriptionsRouter from "./sms-subscriptions";
 
 const router: IRouter = Router();
 
@@ -56,5 +57,6 @@ router.use(progressRouter);
 router.use(tattooBookingsRouter);
 router.use(instructorRouter);
 router.use(hqRouter);
+router.use(smsSubscriptionsRouter);
 
 export default router;

@@ -5,6 +5,7 @@ import { ensureAuthSchema } from './lib/ensureAuthSchema';
 import { ensureChallengeTables } from './lib/ensureChallengeTables';
 import { ensureUserTierCompatibility } from './lib/ensureUserTierCompatibility';
 import { ensureCreatorStudioSchema } from './lib/ensureCreatorStudioSchema';
+import { ensureSmsSubscriptionTable } from './lib/ensureSmsSubscriptionTable';
 import app from "./app";
 import { logger } from "./lib/logger";
 
@@ -80,6 +81,9 @@ logger.info('Challenge tables verified');
 // tables exist before any route references them (idempotent).
 await ensureCreatorStudioSchema();
 logger.info('Creator Studio schema verified');
+
+await ensureSmsSubscriptionTable();
+logger.info('SMS subscription schema verified');
 
 // Stripe init is non-fatal — the server must start even if Stripe is unavailable
 try {

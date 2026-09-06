@@ -2079,6 +2079,33 @@ paths:
         "409":
           description: Already assigned
 
+  /sms/subscriptions:
+    post:
+      operationId: createSmsSubscription
+      tags: [marketing]
+      summary: Start a public double-opt-in SMS subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SmsSubscriptionInput"
+      responses:
+        "202":
+          description: Confirmation text requested
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SmsSubscriptionResult"
+        "400":
+          description: Invalid contact or consent
+        "409":
+          description: Number is already subscribed
+        "429":
+          description: Too many requests
+        "503":
+          description: SMS subscription service is not configured or unavailable
+
 components:
   securitySchemes:
     OrganizerKey:
@@ -4193,3 +4220,42 @@ components:
         assignedAt:
           type: string
           format: date-time
+
+    SmsSubscriptionInput:
+      type: object
+      required:
+        [firstName, phone, consentAccepted, pageUrl, consentSource, consentDisclosureVersion]
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 80
+        phone:
+          type: string
+          minLength: 10
+          maxLength: 24
+        consentAccepted:
+          type: boolean
+        pageUrl:
+          type: string
+          format: uri
+          maxLength: 2048
+        source:
+          type: string
+          maxLength: 80
+        consentSource:
+          type: string
+          enum: ["AIMD website text-club form"]
+        consentDisclosureVersion:
+          type: string
+          maxLength: 40
+
+    SmsSubscriptionResult:
+      type: object
+      required: [status, message]
+      properties:
+        status:
+          type: string
+          enum: [pending]
+        message:
+          type: string

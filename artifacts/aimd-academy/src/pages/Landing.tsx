@@ -331,6 +331,19 @@ export default function Landing() {
       {/* Community art showcase with lightbox */}
       <ArtShowcase />
 
+      <section className="border-b border-border bg-[#e9a319] px-6 py-14 text-[#2c2623]">
+        <div className="container mx-auto flex flex-col gap-7 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-2xl">
+            <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em]">Stay close to the work</p>
+            <h2 className="mt-3 text-4xl font-black uppercase tracking-[-0.04em] md:text-5xl">First access, straight to your phone.</h2>
+            <p className="mt-3 text-lg">Art drops, open appointments, events, Tattoo Bus stops, and limited releases.</p>
+          </div>
+          <Button asChild size="lg" className="h-14 shrink-0 rounded-none bg-[#2c2623] px-8 font-mono text-sm font-bold uppercase text-[#f5eee2] hover:bg-[#171514]">
+            <Link href="/text-club">Join the Text List <ArrowRight className="ml-2 h-4 w-4" /></Link>
+          </Button>
+        </div>
+      </section>
+
       <MarketingFooter />
     </div>
   );

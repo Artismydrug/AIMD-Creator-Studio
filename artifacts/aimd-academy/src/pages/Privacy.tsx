@@ -223,6 +223,9 @@ export default function Privacy() {
               <p>
                 We share information with service providers that help us run the service, such as Clerk for authentication and infrastructure providers for secure storage and delivery. We may share relevant User Content with authorized AIMD staff, instructors, or reviewers when needed to run a workshop, challenge, or proof-review feature. We do not sell your personal information.
               </p>
+              <p>
+                If you voluntarily join the AIMD Text List, we process your name, mobile number, signup source, consent record, and message status to deliver the texts you requested and honor STOP or HELP requests. Promotional messages begin only after you confirm the double opt-in.
+              </p>
             </PolicySection>
 
             <PolicySection id="retention" number="05" icon={Trash2} title="Retention & Your Choices">
