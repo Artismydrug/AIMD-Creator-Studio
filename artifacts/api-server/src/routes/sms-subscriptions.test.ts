@@ -67,6 +67,10 @@ function validBody(phone: string) {
 
 async function deleteFixtures(): Promise<void> {
   await pool.query(
+    "DELETE FROM sms_confirmation_attempts WHERE phone_e164 = ANY($1::text[])",
+    [testPhones],
+  );
+  await pool.query(
     "DELETE FROM sms_subscriptions WHERE phone_e164 = ANY($1::text[])",
     [testPhones],
   );
@@ -247,6 +251,54 @@ describe("SMS subscription consent guardrails", () => {
     expect(repeated.status).toBe(429);
     expect(repeated.body.error).toMatch(/wait.*another confirmation text/i);
     expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it("shares the pending cooldown across separate app instances", async () => {
+    const firstServer = app();
+    const secondServer = app();
+    const phone = "+12025550110";
+    testPhones.push(phone);
+
+    const first = await request(firstServer)
+      .post("/api/sms/subscriptions")
+      .send(validBody("(202) 555-0110"));
+    const repeated = await request(secondServer)
+      .post("/api/sms/subscriptions")
+      .send(validBody("(202) 555-0110"));
+
+    expect(first.status).toBe(202);
+    expect(repeated.status).toBe(429);
+    expect(fetch).toHaveBeenCalledOnce();
+
+    const { rows } = await pool.query<{ count: number }>(
+      "SELECT COUNT(*)::int AS count FROM sms_confirmation_attempts WHERE phone_e164 = $1",
+      [phone],
+    );
+    expect(rows[0].count).toBe(1);
+  });
+
+  it("allows another confirmation attempt after the shared cooldown expires", async () => {
+    const phone = "+12025550111";
+    testPhones.push(phone);
+
+    const first = await request(app())
+      .post("/api/sms/subscriptions")
+      .send(validBody("(202) 555-0111"));
+    expect(first.status).toBe(202);
+
+    await pool.query(
+      `UPDATE sms_confirmation_attempts
+          SET last_attempt_at = NOW() - INTERVAL '61 seconds'
+        WHERE phone_e164 = $1`,
+      [phone],
+    );
+
+    const afterExpiry = await request(app())
+      .post("/api/sms/subscriptions")
+      .send(validBody("(202) 555-0111"));
+
+    expect(afterExpiry.status).toBe(202);
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 
   it("returns an error rather than success when the adapter is unavailable", async () => {

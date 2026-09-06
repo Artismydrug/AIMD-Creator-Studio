@@ -1,14 +1,14 @@
 import { createHash } from "node:crypto";
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
-import { db, smsSubscriptionsTable } from "@workspace/db";
+import { db, pool, smsSubscriptionsTable } from "@workspace/db";
 import {
   CreateSmsSubscriptionBody,
   CreateSmsSubscriptionResponse,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
-const recentRequests = new Map<string, number>();
+const CONFIRMATION_COOLDOWN_SECONDS = 60;
 const CONFIRMATION_TEXT =
   "Art Is My Drug: Reply YES to confirm you want promotional texts from AIMD. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out.";
 
@@ -25,6 +25,25 @@ function requestKey(ip: string | undefined, phone: string): string {
   return createHash("sha256")
     .update(`${process.env.SESSION_SECRET || "aimd-sms"}|${ip || "unknown"}|${phone}`)
     .digest("hex");
+}
+
+async function claimConfirmationCooldown(
+  key: string,
+  phoneE164: string,
+): Promise<boolean> {
+  const { rowCount } = await pool.query(
+    `INSERT INTO sms_confirmation_attempts
+       (request_key, phone_e164, last_attempt_at)
+     VALUES ($1, $2, NOW())
+     ON CONFLICT (request_key) DO UPDATE
+       SET phone_e164 = EXCLUDED.phone_e164,
+           last_attempt_at = EXCLUDED.last_attempt_at
+       WHERE sms_confirmation_attempts.last_attempt_at
+             <= EXCLUDED.last_attempt_at - ($3 * INTERVAL '1 second')
+     RETURNING id`,
+    [key, phoneE164, CONFIRMATION_COOLDOWN_SECONDS],
+  );
+  return rowCount === 1;
 }
 
 router.post("/sms/subscriptions", async (req, res): Promise<void> => {
@@ -47,14 +66,6 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
     return;
   }
 
-  const key = requestKey(req.ip, phoneE164);
-  const lastRequestAt = recentRequests.get(key) || 0;
-  if (Date.now() - lastRequestAt < 60_000) {
-    res.status(429).json({ error: "Please wait before requesting another confirmation text." });
-    return;
-  }
-  recentRequests.set(key, Date.now());
-
   const [existing] = await db
     .select()
     .from(smsSubscriptionsTable)
@@ -63,6 +74,12 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
 
   if (existing?.consentStatus === "confirmed") {
     res.status(409).json({ error: "This mobile number is already on the AIMD Text List." });
+    return;
+  }
+
+  const key = requestKey(req.ip, phoneE164);
+  if (!(await claimConfirmationCooldown(key, phoneE164))) {
+    res.status(429).json({ error: "Please wait before requesting another confirmation text." });
     return;
   }
 

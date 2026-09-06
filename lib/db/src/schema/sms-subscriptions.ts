@@ -60,3 +60,22 @@ export type InsertSmsSubscription = z.infer<
   typeof insertSmsSubscriptionSchema
 >;
 export type SmsSubscription = typeof smsSubscriptionsTable.$inferSelect;
+
+export const smsConfirmationAttemptsTable = pgTable(
+  "sms_confirmation_attempts",
+  {
+    id: serial("id").primaryKey(),
+    requestKey: text("request_key").notNull(),
+    phoneE164: text("phone_e164").notNull(),
+    lastAttemptAt: timestamp("last_attempt_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("sms_confirmation_attempts_request_key_unique").on(
+      table.requestKey,
+    ),
+    index("sms_confirmation_attempts_phone_idx").on(table.phoneE164),
+    index("sms_confirmation_attempts_last_attempt_idx").on(table.lastAttemptAt),
+  ],
+);
