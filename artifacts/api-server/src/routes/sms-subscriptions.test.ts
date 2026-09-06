@@ -11,6 +11,7 @@ import {
   vi,
 } from "vitest";
 import { pool } from "@workspace/db";
+import { ensureSmsSubscriptionTable } from "../lib/ensureSmsSubscriptionTable";
 import smsSubscriptionsRouter from "./sms-subscriptions";
 
 const phones = {
@@ -78,7 +79,10 @@ async function deleteFixtures(): Promise<void> {
   );
 }
 
-beforeAll(deleteFixtures);
+beforeAll(async () => {
+  await ensureSmsSubscriptionTable();
+  await deleteFixtures();
+});
 
 beforeEach(async () => {
   process.env.AIMD_SMS_SUBSCRIBE_URL = "https://sms-adapter.example.test/subscribe";
@@ -318,7 +322,7 @@ describe("SMS subscription consent guardrails", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
-  it("blocks one requester from rotating through too many different phone numbers", async () => {
+  it("blocks one requester from submitting a different phone number", async () => {
     const instance = app();
     const phonesForRequester = [
       "+12025550112",
@@ -337,14 +341,14 @@ describe("SMS subscription consent guardrails", () => {
       );
     }
 
-    expect(responses.slice(0, 3).map((response) => response.status)).toEqual([
-      202,
-      202,
-      202,
+    expect(responses[0].status).toBe(202);
+    expect(responses.slice(1).map((response) => response.status)).toEqual([
+      429,
+      429,
+      429,
     ]);
-    expect(responses[3].status).toBe(429);
-    expect(responses[3].body.error).toMatch(/different numbers/i);
-    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(responses[1].body.error).toMatch(/different numbers/i);
+    expect(fetch).toHaveBeenCalledOnce();
   });
 
   it("returns an error rather than success when the adapter is unavailable", async () => {

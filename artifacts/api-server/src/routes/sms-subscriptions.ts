@@ -10,7 +10,7 @@ import {
 const router: IRouter = Router();
 const CONFIRMATION_COOLDOWN_SECONDS = 60;
 const REQUESTER_WINDOW_SECONDS = 60 * 60;
-const MAX_DISTINCT_PHONES_PER_REQUESTER = 3;
+const MAX_DISTINCT_PHONES_PER_REQUESTER = 1;
 const CONFIRMATION_TEXT =
   "Art Is My Drug: Reply YES to confirm you want promotional texts from AIMD. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out.";
 
