@@ -1,0 +1,131 @@
+Add a public SMS signup page to the EXISTING Art Is My Drug website in this project. Do not create a separate website or replace the current design.
+
+First inspect the project’s existing routes, navigation, footer, typography, colors, buttons, forms, mobile breakpoints, privacy page, and terms page. Build this feature using the website’s established components and visual style.
+
+PRIMARY GOAL
+
+Create a mobile-first public page where visitors can voluntarily join the Art Is My Drug promotional text list.
+
+Use an appropriate existing route structure. Prefer:
+
+/text-club
+
+If that conflicts with the current routing structure, use the closest equivalent. The public URL needs to be stable because it will be printed into QR codes.
+
+PAGE CONTENT
+
+Page title:
+Join the AIMD Text List
+
+Supporting copy:
+Get first access to art drops, available appointments, events, Tattoo Bus appearances, special projects, and limited releases from Art Is My Drug.
+
+Include these fields:
+
+1. First name
+2. Mobile phone number
+3. Required unchecked consent checkbox
+
+Use this checkbox disclosure:
+
+“By checking this box and submitting, I agree to receive recurring automated promotional and personalized marketing text messages from Art Is My Drug at the number provided. Consent is not a condition of purchase. Message frequency varies. Message and data rates may apply. Reply STOP to cancel or HELP for help. View our Privacy Policy and SMS Terms.”
+
+“Privacy Policy” and “SMS Terms” must link to the website’s real public policy pages. If those pages do not exist, create properly linked placeholder routes with clear TODO notices rather than using broken links.
+
+Do not pre-check the consent checkbox.
+
+VALIDATION
+
+- Require a first name.
+- Require a valid US mobile number.
+- Normalize the phone number to E.164 format before submission.
+- Require the consent checkbox.
+- Make errors clear and accessible.
+- Disable repeat submissions while processing.
+- Prevent obvious duplicate submissions.
+- Include accessible labels, keyboard support, and visible focus states.
+
+DOUBLE OPT-IN
+
+Use a double-opt-in process.
+
+After the form is submitted:
+
+1. Record the contact as pending, not immediately confirmed.
+2. Send a confirmation text through the existing server-side SMS/Twilio infrastructure.
+3. Confirmation text:
+
+“Art Is My Drug: Reply YES to confirm you want promotional texts from AIMD. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out.”
+
+4. Show this success screen:
+
+“Check your phone”
+
+“We sent you a confirmation message. Reply YES to finish joining the AIMD Text List. You will not receive promotional texts until you confirm.”
+
+Never place Twilio credentials, database credentials, API keys, or internal HQ credentials in browser code.
+
+INTEGRATION
+
+Inspect the project for existing API, database, Twilio, marketing-contact, or Operations HQ integrations before creating anything new.
+
+The form must submit through a server-side route in this website project. The browser must not call Twilio directly.
+
+The website ultimately needs to send the following information to AIMD Operations HQ:
+
+- firstName
+- phone in E.164 format
+- consentStatus: “pending”
+- consentSource: “AIMD website text-club form”
+- consentRequestedAt: server-generated timestamp
+- page URL
+- campaign/source parameter
+- consent disclosure version
+
+If an Operations HQ subscription endpoint already exists, use it. If it does not exist, create a clean server-side adapter controlled by an environment variable such as AIMD_SMS_SUBSCRIBE_URL. Fail clearly when it is not configured; do not pretend the signup succeeded and do not store contacts only in browser memory.
+
+Support optional URL parameters such as:
+
+/text-club?source=instagram
+/text-club?source=studio
+/text-club?source=tattoo-bus
+/text-club?source=art-show
+/text-club?source=email
+
+Preserve the source value with the consent record so Operations HQ can report where subscribers came from.
+
+QR CODE TOOLS
+
+Add an admin-only or internal utility associated with the page that creates downloadable QR codes pointing to the published /text-club URL.
+
+Provide:
+
+- High-resolution PNG download
+- SVG download for professional printing
+- Print-ready PDF flyer if the project already supports PDF generation
+- Source-specific QR codes for:
+  - General
+  - Instagram
+  - Studio
+  - Tattoo Bus
+  - Art show/event
+  - Email
+
+Do not guess the published website URL from the development domain. Use the project’s real production URL configuration or ask me for it if it cannot be determined.
+
+PUBLIC PROMOTION LINKS
+
+Add a tasteful “Join the Text List” link to:
+
+- The existing website footer
+- The mobile navigation, if appropriate
+- One existing contact, booking, or community section where it fits naturally
+
+Do not add intrusive popups or automatically open the signup form.
+
+DESIGN DIRECTION
+
+- Match the existing Art Is My Drug website.
+- Keep the signup page focused and uncluttered.
+- Optimize it for visitors arriving from a phone camera or Instagram.
+- Make the main form visible without
