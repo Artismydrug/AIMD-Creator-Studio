@@ -31,6 +31,7 @@ export const smsSubscriptionsTable = pgTable(
     confirmationError: text("confirmation_error"),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
     optedOutAt: timestamp("opted_out_at", { withTimezone: true }),
+    helpRequestedAt: timestamp("help_requested_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

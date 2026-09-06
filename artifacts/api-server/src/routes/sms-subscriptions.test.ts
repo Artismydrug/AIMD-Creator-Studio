@@ -37,6 +37,8 @@ const testPhones = [
 ];
 const originalEndpoint = process.env.AIMD_SMS_SUBSCRIBE_URL;
 const originalToken = process.env.AIMD_SMS_SUBSCRIBE_TOKEN;
+const originalWebhookSecret = process.env.AIMD_SMS_WEBHOOK_SECRET;
+const originalStatusWebhookUrl = process.env.AIMD_SMS_STATUS_WEBHOOK_URL;
 
 function app(): Express {
   const instance = express();
@@ -78,9 +80,13 @@ async function deleteFixtures(): Promise<void> {
 
 beforeAll(deleteFixtures);
 
-beforeEach(() => {
+beforeEach(async () => {
   process.env.AIMD_SMS_SUBSCRIBE_URL = "https://sms-adapter.example.test/subscribe";
-  delete process.env.AIMD_SMS_SUBSCRIBE_TOKEN;
+  process.env.AIMD_SMS_SUBSCRIBE_TOKEN = "test-adapter-token";
+  process.env.AIMD_SMS_STATUS_WEBHOOK_URL =
+    "https://artismydrug.com/api/webhooks/aimd-sms";
+  delete process.env.AIMD_SMS_WEBHOOK_SECRET;
+  await deleteFixtures();
   vi.stubGlobal(
     "fetch",
     vi.fn().mockResolvedValue(new Response(null, { status: 204 })),
@@ -102,6 +108,16 @@ afterAll(async () => {
     delete process.env.AIMD_SMS_SUBSCRIBE_TOKEN;
   } else {
     process.env.AIMD_SMS_SUBSCRIBE_TOKEN = originalToken;
+  }
+  if (originalWebhookSecret === undefined) {
+    delete process.env.AIMD_SMS_WEBHOOK_SECRET;
+  } else {
+    process.env.AIMD_SMS_WEBHOOK_SECRET = originalWebhookSecret;
+  }
+  if (originalStatusWebhookUrl === undefined) {
+    delete process.env.AIMD_SMS_STATUS_WEBHOOK_URL;
+  } else {
+    process.env.AIMD_SMS_STATUS_WEBHOOK_URL = originalStatusWebhookUrl;
   }
 });
 
@@ -193,8 +209,6 @@ describe("SMS subscription consent guardrails", () => {
   });
 
   it("keeps consent pending, preserves metadata, and rate-limits a repeated pending attempt", async () => {
-    process.env.AIMD_SMS_SUBSCRIBE_TOKEN = "test-adapter-token";
-
     const first = await request(app())
       .post("/api/sms/subscriptions")
       .send(validBody("(202) 555-0104"));
@@ -218,7 +232,10 @@ describe("SMS subscription consent guardrails", () => {
       source: "launch-footer",
       campaign: "launch-footer",
       consentDisclosureVersion: "launch-2026-09",
-      confirmationText: expect.stringContaining("Reply YES"),
+      confirmationText:
+        "Art Is My Drug: Reply YES to confirm you want promotional texts from AIMD. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out.",
+      statusWebhookUrl:
+        "https://artismydrug.com/api/webhooks/aimd-sms",
     });
 
     const { rows } = await pool.query<{
@@ -346,5 +363,250 @@ describe("SMS subscription consent guardrails", () => {
       [phones.adapterMissing],
     );
     expect(rows[0].count).toBe(0);
+  });
+
+  it("requires the provider token before storing or contacting the adapter", async () => {
+    delete process.env.AIMD_SMS_SUBSCRIBE_TOKEN;
+
+    const response = await request(app())
+      .post("/api/sms/subscriptions")
+      .send(validBody("+1 (202) 555-0101"));
+
+    expect(response.status).toBe(503);
+    expect(response.body.error).toMatch(/temporarily unavailable/i);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("requires a fixed canonical HTTPS provider callback URL", async () => {
+    delete process.env.AIMD_SMS_STATUS_WEBHOOK_URL;
+
+    const response = await request(app())
+      .post("/api/sms/subscriptions")
+      .set("host", "attacker.example")
+      .send(validBody("+1 (202) 555-0101"));
+
+    expect(response.status).toBe(503);
+    expect(fetch).not.toHaveBeenCalled();
+    const { rows } = await pool.query<{ count: number }>(
+      "SELECT COUNT(*)::int AS count FROM sms_subscriptions WHERE phone_e164 = $1",
+      [phones.normalized[0]],
+    );
+    expect(rows[0].count).toBe(0);
+  });
+
+  it.each([
+    ["YES", "confirmed"],
+    ["STOP", "opted_out"],
+  ])("synchronizes provider %s events to the local consent status", async (reply, expectedStatus) => {
+    await pool.query(
+      `INSERT INTO sms_subscriptions
+        (first_name, phone_e164, consent_status, consent_source, page_url,
+         consent_disclosure_version)
+       VALUES ($1, $2, 'pending', $3, $4, $5)`,
+      [
+        "Ada",
+        phones.adapterFailure,
+        "AIMD website text-club form",
+        "https://artismydrug.com/text-list",
+        "launch-2026-09",
+      ],
+    );
+
+    const response = await request(app())
+      .post("/api/webhooks/aimd-sms")
+      .set("authorization", "Bearer test-adapter-token")
+      .send({
+        eventId: `event-${reply.toLowerCase()}`,
+        occurredAt: new Date().toISOString(),
+        from: phones.adapterFailure,
+        message: reply,
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({ received: true, matched: true });
+    const { rows } = await pool.query<{
+      consent_status: string;
+      confirmed_at: Date | null;
+      opted_out_at: Date | null;
+    }>(
+      `SELECT consent_status, confirmed_at, opted_out_at
+         FROM sms_subscriptions
+        WHERE phone_e164 = $1`,
+      [phones.adapterFailure],
+    );
+    expect(rows[0].consent_status).toBe(expectedStatus);
+    if (expectedStatus === "confirmed") {
+      expect(rows[0].confirmed_at).toEqual(expect.any(Date));
+    } else {
+      expect(rows[0].opted_out_at).toEqual(expect.any(Date));
+    }
+  });
+
+  it("records HELP without changing the current consent status", async () => {
+    await pool.query(
+      `INSERT INTO sms_subscriptions
+        (first_name, phone_e164, consent_status, consent_source, page_url,
+         consent_disclosure_version)
+       VALUES ($1, $2, 'confirmed', $3, $4, $5)`,
+      [
+        "Ada",
+        phones.adapterFailure,
+        "AIMD website text-club form",
+        "https://artismydrug.com/text-list",
+        "launch-2026-09",
+      ],
+    );
+
+    const response = await request(app())
+      .post("/api/sms/subscriptions/webhook")
+      .set("x-aimd-sms-secret", "test-adapter-token")
+      .send({
+        eventId: "event-help",
+        occurredAt: new Date().toISOString(),
+        phoneE164: phones.adapterFailure,
+        keyword: "HELP",
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      received: true,
+      matched: true,
+      action: "help",
+      consentStatus: "confirmed",
+    });
+    const { rows } = await pool.query<{
+      consent_status: string;
+      help_requested_at: Date | null;
+    }>(
+      `SELECT consent_status, help_requested_at
+         FROM sms_subscriptions
+        WHERE phone_e164 = $1`,
+      [phones.adapterFailure],
+    );
+    expect(rows[0]).toMatchObject({
+      consent_status: "confirmed",
+      help_requested_at: expect.any(Date),
+    });
+  });
+
+  it("rejects provider events with an invalid secret", async () => {
+    const response = await request(app())
+      .post("/api/webhooks/aimd-sms")
+      .set("authorization", "Bearer wrong-token")
+      .send({
+        eventId: "event-invalid-secret",
+        occurredAt: new Date().toISOString(),
+        phone: phones.pending,
+        message: "STOP",
+      });
+
+    expect(response.status).toBe(401);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("never lets a delayed or duplicate YES reverse a STOP", async () => {
+    await pool.query(
+      `INSERT INTO sms_subscriptions
+        (first_name, phone_e164, consent_status, consent_source, page_url,
+         consent_disclosure_version)
+       VALUES ($1, $2, 'pending', $3, $4, $5)`,
+      [
+        "Ada",
+        phones.adapterFailure,
+        "AIMD website text-club form",
+        "https://artismydrug.com/text-list",
+        "launch-2026-09",
+      ],
+    );
+    const stopAt = new Date(Date.now() + 1_000);
+    const stop = await request(app())
+      .post("/api/webhooks/aimd-sms")
+      .set("authorization", "Bearer test-adapter-token")
+      .send({
+        eventId: "event-stop-first",
+        occurredAt: stopAt.toISOString(),
+        phone: phones.adapterFailure,
+        message: "STOP",
+      });
+    expect(stop.status).toBe(200);
+
+    const delayedYes = await request(app())
+      .post("/api/webhooks/aimd-sms")
+      .set("authorization", "Bearer test-adapter-token")
+      .send({
+        eventId: "event-old-yes",
+        occurredAt: new Date(stopAt.getTime() - 500).toISOString(),
+        phone: phones.adapterFailure,
+        message: "YES",
+      });
+    expect(delayedYes.body).toMatchObject({
+      ignored: true,
+      reason: "not_pending_or_stale",
+      consentStatus: "opted_out",
+    });
+
+    const laterYes = await request(app())
+      .post("/api/webhooks/aimd-sms")
+      .set("authorization", "Bearer test-adapter-token")
+      .send({
+        eventId: "event-later-yes",
+        occurredAt: new Date(stopAt.getTime() + 500).toISOString(),
+        phone: phones.adapterFailure,
+        message: "YES",
+      });
+    expect(laterYes.body).toMatchObject({
+      ignored: true,
+      reason: "not_pending_or_stale",
+      consentStatus: "opted_out",
+    });
+
+    const duplicateStop = await request(app())
+      .post("/api/webhooks/aimd-sms")
+      .set("authorization", "Bearer test-adapter-token")
+      .send({
+        eventId: "event-stop-first",
+        occurredAt: stopAt.toISOString(),
+        phone: phones.adapterFailure,
+        message: "STOP",
+      });
+    expect(duplicateStop.body).toMatchObject({ consentStatus: "opted_out" });
+  });
+
+  it("keeps STOP authoritative when YES and STOP arrive concurrently", async () => {
+    await pool.query(
+      `INSERT INTO sms_subscriptions
+        (first_name, phone_e164, consent_status, consent_source, page_url,
+         consent_disclosure_version)
+       VALUES ($1, $2, 'pending', $3, $4, $5)`,
+      [
+        "Ada",
+        phones.adapterFailure,
+        "AIMD website text-club form",
+        "https://artismydrug.com/text-list",
+        "launch-2026-09",
+      ],
+    );
+    const occurredAt = new Date(Date.now() + 1_000).toISOString();
+    const providerEvent = (message: "YES" | "STOP") =>
+      request(app())
+        .post("/api/webhooks/aimd-sms")
+        .set("authorization", "Bearer test-adapter-token")
+        .send({
+          eventId: `event-concurrent-${message.toLowerCase()}`,
+          occurredAt,
+          phone: phones.adapterFailure,
+          message,
+        });
+
+    const responses = await Promise.all([
+      providerEvent("YES"),
+      providerEvent("STOP"),
+    ]);
+    expect(responses.every((response) => response.status === 200)).toBe(true);
+    const { rows } = await pool.query<{ consent_status: string }>(
+      "SELECT consent_status FROM sms_subscriptions WHERE phone_e164 = $1",
+      [phones.adapterFailure],
+    );
+    expect(rows[0].consent_status).toBe("opted_out");
   });
 });

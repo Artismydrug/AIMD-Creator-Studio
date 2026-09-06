@@ -72,7 +72,7 @@ export function TextClubSignup() {
               </span>
               <h3 className="mt-6 text-4xl font-black uppercase tracking-tight">Check your phone</h3>
               <p className="mx-auto mt-4 max-w-md leading-7 text-[#5d554e]">
-                We sent you a confirmation message. Reply YES to finish joining the AIMD Text List.
+                We sent you a confirmation message. Reply YES to finish joining the AIMD Text List. You will not receive promotional texts until you confirm.
               </p>
             </div>
           ) : (

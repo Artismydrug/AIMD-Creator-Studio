@@ -16,9 +16,12 @@ export async function ensureSmsSubscriptionTable(): Promise<void> {
       confirmation_error TEXT,
       confirmed_at TIMESTAMPTZ,
       opted_out_at TIMESTAMPTZ,
+      help_requested_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE sms_subscriptions
+      ADD COLUMN IF NOT EXISTS help_requested_at TIMESTAMPTZ;
     CREATE UNIQUE INDEX IF NOT EXISTS sms_subscriptions_phone_unique
       ON sms_subscriptions(phone_e164);
     CREATE INDEX IF NOT EXISTS sms_subscriptions_status_requested_idx

@@ -1,6 +1,6 @@
-import { createHash } from "node:crypto";
-import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { createHash, timingSafeEqual } from "node:crypto";
+import { Router, type IRouter, type Request, type Response } from "express";
+import { and, eq, lte } from "drizzle-orm";
 import { db, pool, smsSubscriptionsTable } from "@workspace/db";
 import {
   CreateSmsSubscriptionBody,
@@ -12,7 +12,9 @@ const CONFIRMATION_COOLDOWN_SECONDS = 60;
 const CONFIRMATION_TEXT =
   "Art Is My Drug: Reply YES to confirm you want promotional texts from AIMD. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out.";
 
-function normalizeUsPhone(value: string): string | null {
+type SmsReplyAction = "yes" | "stop" | "help";
+
+export function normalizeUsPhone(value: string): string | null {
   const digits = value.replace(/\D/g, "");
   const national = digits.length === 11 && digits.startsWith("1")
     ? digits.slice(1)
@@ -46,6 +48,234 @@ async function claimConfirmationCooldown(
   return rowCount === 1;
 }
 
+function providerSecret(): string | null {
+  return (
+    process.env.AIMD_SMS_WEBHOOK_SECRET?.trim() ||
+    process.env.AIMD_SMS_SUBSCRIBE_TOKEN?.trim() ||
+    null
+  );
+}
+
+function hasValidProviderSecret(req: Request): boolean {
+  const configured = providerSecret();
+  if (!configured) return false;
+
+  const authorization = req.get("authorization");
+  const supplied = authorization?.startsWith("Bearer ")
+    ? authorization.slice("Bearer ".length).trim()
+    : req.get("x-aimd-sms-secret")?.trim();
+  if (!supplied) return false;
+
+  const expectedBuffer = Buffer.from(configured);
+  const suppliedBuffer = Buffer.from(supplied);
+  return (
+    expectedBuffer.length === suppliedBuffer.length &&
+    timingSafeEqual(expectedBuffer, suppliedBuffer)
+  );
+}
+
+function providerCallbackUrl(): string | null {
+  const raw = process.env.AIMD_SMS_STATUS_WEBHOOK_URL?.trim();
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    if (
+      url.protocol !== "https:" ||
+      url.username ||
+      url.password ||
+      url.hash ||
+      url.pathname !== "/api/webhooks/aimd-sms"
+    ) {
+      return null;
+    }
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function eventPayload(payload: Record<string, unknown>): Record<string, unknown> {
+  return payload.data && typeof payload.data === "object" && !Array.isArray(payload.data)
+    ? { ...payload, ...(payload.data as Record<string, unknown>) }
+    : payload;
+}
+
+function stringField(
+  payload: Record<string, unknown>,
+  ...keys: string[]
+): string | null {
+  for (const key of keys) {
+    const value = payload[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return null;
+}
+
+function actionFromValues(values: string[]): SmsReplyAction | null {
+  for (const value of values) {
+    const normalized = value.toLowerCase().replace(/[^a-z]+/g, " ").trim();
+    if (
+      normalized === "yes" ||
+      normalized.includes("confirmed") ||
+      normalized.includes("opt in") ||
+      normalized.includes("opted in")
+    ) {
+      return "yes";
+    }
+    if (
+      normalized === "stop" ||
+      normalized.includes("opt out") ||
+      normalized.includes("opted out") ||
+      normalized.includes("unsubscribed")
+    ) {
+      return "stop";
+    }
+    if (normalized === "help" || normalized.includes("help requested")) {
+      return "help";
+    }
+  }
+  return null;
+}
+
+function getReplyAction(payload: Record<string, unknown>): SmsReplyAction | null {
+  const flattened = eventPayload(payload);
+  const values = [
+    "keyword",
+    "reply",
+    "message",
+    "body",
+    "text",
+    "action",
+    "event",
+    "type",
+    "status",
+  ].flatMap((key) => {
+    const value = flattened[key];
+    return typeof value === "string" && value.trim() ? [value] : [];
+  });
+  return actionFromValues(values);
+}
+
+function parseProviderEventAt(value: unknown): Date | null {
+  const date =
+    typeof value === "number"
+      ? new Date(value < 10_000_000_000 ? value * 1_000 : value)
+      : typeof value === "string" && value.trim()
+        ? new Date(value)
+        : null;
+  if (!date || Number.isNaN(date.getTime())) return null;
+  if (date.getTime() > Date.now() + 5 * 60_000) return null;
+  return date;
+}
+
+async function handleProviderWebhook(req: Request, res: Response): Promise<void> {
+  if (!hasValidProviderSecret(req)) {
+    res.status(providerSecret() ? 401 : 503).json({
+      error: providerSecret()
+        ? "Invalid SMS provider credentials."
+        : "SMS provider webhook secret is not configured.",
+    });
+    return;
+  }
+
+  const payload =
+    req.body && typeof req.body === "object" && !Buffer.isBuffer(req.body)
+      ? (req.body as Record<string, unknown>)
+      : {};
+  const flattened = eventPayload(payload);
+  const phone = normalizeUsPhone(
+    stringField(flattened, "phone", "phoneE164", "phoneNumber", "from", "mobile") || "",
+  );
+  const action = getReplyAction(payload);
+  const providerEventAt = parseProviderEventAt(
+    flattened.occurredAt ??
+      flattened.occurred_at ??
+      flattened.eventAt ??
+      flattened.event_at ??
+      flattened.timestamp,
+  );
+  if (!phone || !action || !providerEventAt) {
+    res.status(400).json({
+      error: "A valid phone number, event timestamp, and YES, STOP, or HELP event are required.",
+    });
+    return;
+  }
+
+  const [subscription] = await db
+    .select()
+    .from(smsSubscriptionsTable)
+    .where(eq(smsSubscriptionsTable.phoneE164, phone))
+    .limit(1);
+  if (!subscription) {
+    res.status(202).json({ received: true, matched: false });
+    return;
+  }
+
+  const now = new Date();
+  let consentStatus = subscription.consentStatus;
+  let ignored = false;
+
+  if (action === "yes") {
+    const [confirmed] = await db
+      .update(smsSubscriptionsTable)
+      .set({
+        consentStatus: "confirmed",
+        confirmedAt: providerEventAt,
+        confirmationError: null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(smsSubscriptionsTable.id, subscription.id),
+          eq(smsSubscriptionsTable.consentStatus, "pending"),
+          lte(smsSubscriptionsTable.consentRequestedAt, providerEventAt),
+        ),
+      )
+      .returning({ consentStatus: smsSubscriptionsTable.consentStatus });
+
+    if (confirmed) {
+      consentStatus = confirmed.consentStatus;
+    } else {
+      ignored = true;
+      const [current] = await db
+        .select({ consentStatus: smsSubscriptionsTable.consentStatus })
+        .from(smsSubscriptionsTable)
+        .where(eq(smsSubscriptionsTable.id, subscription.id))
+        .limit(1);
+      consentStatus = current?.consentStatus || subscription.consentStatus;
+    }
+  } else if (action === "stop") {
+    const [optedOut] = await db
+      .update(smsSubscriptionsTable)
+      .set({
+        consentStatus: "opted_out",
+        optedOutAt: providerEventAt,
+        confirmationError: null,
+        updatedAt: now,
+      })
+      .where(eq(smsSubscriptionsTable.id, subscription.id))
+      .returning({ consentStatus: smsSubscriptionsTable.consentStatus });
+    consentStatus = optedOut?.consentStatus || subscription.consentStatus;
+  } else {
+    await db
+      .update(smsSubscriptionsTable)
+      .set({
+        helpRequestedAt: providerEventAt,
+        updatedAt: now,
+      })
+      .where(eq(smsSubscriptionsTable.id, subscription.id));
+  }
+
+  res.status(200).json({
+    received: true,
+    matched: true,
+    action,
+    ignored,
+    reason: ignored ? "not_pending_or_stale" : undefined,
+    consentStatus,
+  });
+}
+
 router.post("/sms/subscriptions", async (req, res): Promise<void> => {
   const parsed = CreateSmsSubscriptionBody.safeParse(req.body);
   if (!parsed.success || parsed.data.consentAccepted !== true) {
@@ -60,8 +290,17 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
   }
 
   const endpoint = process.env.AIMD_SMS_SUBSCRIBE_URL?.trim();
-  if (!endpoint) {
-    req.log.error("AIMD_SMS_SUBSCRIBE_URL is not configured");
+  const token = process.env.AIMD_SMS_SUBSCRIBE_TOKEN?.trim();
+  const statusWebhookUrl = providerCallbackUrl();
+  if (!endpoint || !token || !statusWebhookUrl) {
+    req.log.error(
+      {
+        hasSubscribeUrl: Boolean(endpoint),
+        hasSubscribeToken: Boolean(token),
+        hasValidStatusWebhookUrl: Boolean(statusWebhookUrl),
+      },
+      "AIMD SMS provider is not configured",
+    );
     res.status(503).json({ error: "Text signup is temporarily unavailable. Please try again later." });
     return;
   }
@@ -71,7 +310,6 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
     .from(smsSubscriptionsTable)
     .where(eq(smsSubscriptionsTable.phoneE164, phoneE164))
     .limit(1);
-
   if (existing?.consentStatus === "confirmed") {
     res.status(409).json({ error: "This mobile number is already on the AIMD Text List." });
     return;
@@ -111,9 +349,7 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        ...(process.env.AIMD_SMS_SUBSCRIBE_TOKEN
-          ? { authorization: `Bearer ${process.env.AIMD_SMS_SUBSCRIBE_TOKEN}` }
-          : {}),
+        authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         firstName: subscription.firstName,
@@ -126,10 +362,13 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
         campaign: subscription.source,
         consentDisclosureVersion: subscription.consentDisclosureVersion,
         confirmationText: CONFIRMATION_TEXT,
+        statusWebhookUrl,
       }),
       signal: AbortSignal.timeout(10_000),
     });
-    if (!response.ok) throw new Error(`HQ adapter returned HTTP ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`HQ adapter returned HTTP ${response.status}`);
+    }
 
     await db
       .update(smsSubscriptionsTable)
@@ -152,5 +391,8 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
     res.status(503).json({ error: "We could not send the confirmation text. Please try again later." });
   }
 });
+
+router.post("/webhooks/aimd-sms", handleProviderWebhook);
+router.post("/sms/subscriptions/webhook", handleProviderWebhook);
 
 export default router;
