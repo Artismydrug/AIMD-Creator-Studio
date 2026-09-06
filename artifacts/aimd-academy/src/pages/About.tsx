@@ -221,7 +221,7 @@ export default function About() {
                     <ArrowUpRight className="h-5 w-5 shrink-0 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
                   </a>
                   <Link
-                    href="/text-club"
+                    href="/#text-club"
                     className="mt-8 inline-flex items-center gap-2 border-b-2 border-[#2c2623] pb-2 font-mono text-sm font-bold uppercase tracking-[0.08em] hover:opacity-70"
                   >
                     Join the AIMD Text List
