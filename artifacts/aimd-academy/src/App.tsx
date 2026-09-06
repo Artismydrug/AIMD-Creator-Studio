@@ -55,7 +55,6 @@ import Gallery from '@/pages/Gallery';
 import Instructor from '@/pages/Instructor';
 import HQ from '@/pages/HQ';
 import Privacy from '@/pages/Privacy';
-import TextClub from '@/pages/TextClub';
 import SmsTerms from '@/pages/SmsTerms';
 
 // ─── Clerk setup ──────────────────────────────────────────────────────────────
@@ -279,7 +278,7 @@ function Router() {
       <Route path="/tattoo" component={Tattoo} />
       <Route path="/gallery" component={Gallery} />
       <Route path="/privacy" component={Privacy} />
-      <Route path="/text-club" component={TextClub} />
+      <Route path="/text-club"><Redirect to="/" /></Route>
       <Route path="/sms-terms" component={SmsTerms} />
       {/* Creator app entry: dashboard when signed in, sign-in otherwise */}
       <Route path="/app" component={AppEntryRoute} />

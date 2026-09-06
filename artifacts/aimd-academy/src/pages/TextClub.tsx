@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'wouter';
 import { ArrowRight, Check, MessageSquareText } from 'lucide-react';
 import { useCreateSmsSubscription } from '@workspace/api-client-react';
@@ -107,13 +107,4 @@ export function TextClubSignup() {
       </div>
     </section>
   );
-}
-
-/** Compatibility route for old links and future QR codes; the signup itself lives on the homepage. */
-export default function TextClub() {
-  useEffect(() => {
-    const source = new URLSearchParams(window.location.search).get('source') || 'general';
-    window.location.replace(`/?source=${encodeURIComponent(source)}#text-club`);
-  }, []);
-  return null;
 }

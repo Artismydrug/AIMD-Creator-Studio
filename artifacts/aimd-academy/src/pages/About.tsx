@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { Link } from 'wouter';
 import { ArrowUpRight, Container } from 'lucide-react';
 import { MarketingNav, MarketingFooter } from '@/components/MarketingNav';
 import heroStudioImg from '@assets/IMG_0341_Original_1787745840250.jpeg';
@@ -220,13 +219,6 @@ export default function About() {
                     Click here to learn more about and support our Non-Profit initiative www.artismydrug.org
                     <ArrowUpRight className="h-5 w-5 shrink-0 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
                   </a>
-                  <Link
-                    href="/#text-club"
-                    className="mt-8 inline-flex items-center gap-2 border-b-2 border-[#2c2623] pb-2 font-mono text-sm font-bold uppercase tracking-[0.08em] hover:opacity-70"
-                  >
-                    Join the AIMD Text List
-                    <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-                  </Link>
                 </div>
               </div>
             </div>
