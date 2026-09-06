@@ -30,13 +30,23 @@ export async function ensureSmsSubscriptionTable(): Promise<void> {
     CREATE TABLE IF NOT EXISTS sms_confirmation_attempts (
       id SERIAL PRIMARY KEY,
       request_key TEXT NOT NULL,
+      requester_key TEXT NOT NULL,
       phone_e164 TEXT NOT NULL,
       last_attempt_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE sms_confirmation_attempts
+      ADD COLUMN IF NOT EXISTS requester_key TEXT;
+    UPDATE sms_confirmation_attempts
+       SET requester_key = request_key
+     WHERE requester_key IS NULL;
+    ALTER TABLE sms_confirmation_attempts
+      ALTER COLUMN requester_key SET NOT NULL;
     CREATE UNIQUE INDEX IF NOT EXISTS sms_confirmation_attempts_request_key_unique
       ON sms_confirmation_attempts(request_key);
     CREATE INDEX IF NOT EXISTS sms_confirmation_attempts_phone_idx
       ON sms_confirmation_attempts(phone_e164);
+    CREATE INDEX IF NOT EXISTS sms_confirmation_attempts_requester_idx
+      ON sms_confirmation_attempts(requester_key);
     CREATE INDEX IF NOT EXISTS sms_confirmation_attempts_last_attempt_idx
       ON sms_confirmation_attempts(last_attempt_at);
   `);

@@ -318,6 +318,35 @@ describe("SMS subscription consent guardrails", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
+  it("blocks one requester from rotating through too many different phone numbers", async () => {
+    const instance = app();
+    const phonesForRequester = [
+      "+12025550112",
+      "+12025550113",
+      "+12025550114",
+      "+12025550115",
+    ];
+    testPhones.push(...phonesForRequester);
+
+    const responses = [];
+    for (const phone of phonesForRequester) {
+      responses.push(
+        await request(instance)
+          .post("/api/sms/subscriptions")
+          .send(validBody(phone)),
+      );
+    }
+
+    expect(responses.slice(0, 3).map((response) => response.status)).toEqual([
+      202,
+      202,
+      202,
+    ]);
+    expect(responses[3].status).toBe(429);
+    expect(responses[3].body.error).toMatch(/different numbers/i);
+    expect(fetch).toHaveBeenCalledTimes(3);
+  });
+
   it("returns an error rather than success when the adapter is unavailable", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       new Response(null, { status: 503 }),

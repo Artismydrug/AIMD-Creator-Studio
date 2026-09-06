@@ -9,6 +9,8 @@ import {
 
 const router: IRouter = Router();
 const CONFIRMATION_COOLDOWN_SECONDS = 60;
+const REQUESTER_WINDOW_SECONDS = 60 * 60;
+const MAX_DISTINCT_PHONES_PER_REQUESTER = 3;
 const CONFIRMATION_TEXT =
   "Art Is My Drug: Reply YES to confirm you want promotional texts from AIMD. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out.";
 
@@ -29,23 +31,68 @@ function requestKey(ip: string | undefined, phone: string): string {
     .digest("hex");
 }
 
-async function claimConfirmationCooldown(
+function requesterKey(req: { ip?: string; get(name: string): string | undefined }): string {
+  const secret = process.env.SESSION_SECRET || "aimd-sms";
+  return createHash("sha256")
+    .update(`${secret}|${req.ip || "unknown"}|${req.get("user-agent") || "unknown"}`)
+    .digest("hex");
+}
+
+async function claimConfirmationAttempt(
   key: string,
+  requester: string,
   phoneE164: string,
-): Promise<boolean> {
-  const { rowCount } = await pool.query(
-    `INSERT INTO sms_confirmation_attempts
-       (request_key, phone_e164, last_attempt_at)
-     VALUES ($1, $2, NOW())
-     ON CONFLICT (request_key) DO UPDATE
-       SET phone_e164 = EXCLUDED.phone_e164,
-           last_attempt_at = EXCLUDED.last_attempt_at
-       WHERE sms_confirmation_attempts.last_attempt_at
-             <= EXCLUDED.last_attempt_at - ($3 * INTERVAL '1 second')
-     RETURNING id`,
-    [key, phoneE164, CONFIRMATION_COOLDOWN_SECONDS],
-  );
-  return rowCount === 1;
+): Promise<"claimed" | "phone_cooldown" | "requester_limit"> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [requester]);
+
+    const currentPhone = await client.query(
+      `SELECT 1
+         FROM sms_confirmation_attempts
+        WHERE requester_key = $1
+          AND phone_e164 = $2
+          AND last_attempt_at > NOW() - ($3 * INTERVAL '1 second')
+        LIMIT 1`,
+      [requester, phoneE164, REQUESTER_WINDOW_SECONDS],
+    );
+    const distinctPhones = await client.query<{ count: string }>(
+      `SELECT COUNT(DISTINCT phone_e164)::text AS count
+         FROM sms_confirmation_attempts
+        WHERE requester_key = $1
+          AND last_attempt_at > NOW() - ($2 * INTERVAL '1 second')`,
+      [requester, REQUESTER_WINDOW_SECONDS],
+    );
+    if (
+      currentPhone.rowCount === 0 &&
+      Number(distinctPhones.rows[0]?.count || 0) >= MAX_DISTINCT_PHONES_PER_REQUESTER
+    ) {
+      await client.query("ROLLBACK");
+      return "requester_limit";
+    }
+
+    const claimed = await client.query(
+      `INSERT INTO sms_confirmation_attempts
+         (request_key, requester_key, phone_e164, last_attempt_at)
+       VALUES ($1, $2, $3, NOW())
+       ON CONFLICT (request_key) DO UPDATE
+         SET requester_key = EXCLUDED.requester_key,
+             phone_e164 = EXCLUDED.phone_e164,
+             last_attempt_at = EXCLUDED.last_attempt_at
+         WHERE sms_confirmation_attempts.last_attempt_at
+               <= EXCLUDED.last_attempt_at - ($4 * INTERVAL '1 second')
+       RETURNING id`,
+      [key, requester, phoneE164, CONFIRMATION_COOLDOWN_SECONDS],
+    );
+    await client.query("COMMIT");
+    return claimed.rowCount === 1 ? "claimed" : "phone_cooldown";
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => undefined);
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 function providerSecret(): string | null {
@@ -316,8 +363,19 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
   }
 
   const key = requestKey(req.ip, phoneE164);
-  if (!(await claimConfirmationCooldown(key, phoneE164))) {
+  const attempt = await claimConfirmationAttempt(
+    key,
+    requesterKey(req),
+    phoneE164,
+  );
+  if (attempt === "phone_cooldown") {
     res.status(429).json({ error: "Please wait before requesting another confirmation text." });
+    return;
+  }
+  if (attempt === "requester_limit") {
+    res.status(429).json({
+      error: "Too many different numbers were submitted from this connection. Please try again later.",
+    });
     return;
   }
 

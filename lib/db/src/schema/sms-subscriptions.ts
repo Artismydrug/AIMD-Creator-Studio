@@ -67,6 +67,7 @@ export const smsConfirmationAttemptsTable = pgTable(
   {
     id: serial("id").primaryKey(),
     requestKey: text("request_key").notNull(),
+    requesterKey: text("requester_key").notNull(),
     phoneE164: text("phone_e164").notNull(),
     lastAttemptAt: timestamp("last_attempt_at", { withTimezone: true })
       .notNull()
@@ -77,6 +78,7 @@ export const smsConfirmationAttemptsTable = pgTable(
       table.requestKey,
     ),
     index("sms_confirmation_attempts_phone_idx").on(table.phoneE164),
+    index("sms_confirmation_attempts_requester_idx").on(table.requesterKey),
     index("sms_confirmation_attempts_last_attempt_idx").on(table.lastAttemptAt),
   ],
 );
