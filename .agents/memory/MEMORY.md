@@ -17,3 +17,4 @@
 - [React Native web pager sizing](react-native-web-pager-sizing.md) — fixed-height FlatList pages must disable flex shrinking or web can compress multiple pages into one viewport.
 - [Clerk iPad OAuth callbacks](clerk-ipad-oauth-callbacks.md) — native SSO must use the app scheme explicitly and surface incomplete OAuth states instead of failing silently.
 - [SMS consent authority](sms-consent-authority.md) — local records stay pending; only the server-side AIMD SMS/HQ adapter may send confirmations or confirm consent.
+- [SMS signup placement](sms-signup-placement.md) — keep text-list signup embedded on the public homepage; compatibility URLs should jump there, not open a standalone page.

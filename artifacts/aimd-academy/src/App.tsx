@@ -340,6 +340,13 @@ function App() {
 function ScrollToTop() {
   const [location] = useLocation();
   useEffect(() => {
+    const anchor = window.location.hash.slice(1);
+    if (anchor) {
+      requestAnimationFrame(() => {
+        document.getElementById(anchor)?.scrollIntoView({ behavior: 'auto', block: 'start' });
+      });
+      return;
+    }
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [location]);
   return null;
