@@ -493,6 +493,7 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
         source: subscription.consentSource,
         pageUrl: AIMD_PUBLIC_PAGE_URL,
         disclosureVersion: subscription.consentDisclosureVersion,
+        requesterKey: requester,
       }),
       signal: AbortSignal.timeout(10_000),
     });

@@ -245,6 +245,7 @@ describe("SMS subscription consent guardrails", () => {
       pageUrl: "https://artismydrug.com",
       disclosureVersion: "launch-2026-09",
     });
+    expect(adapterBody.requesterKey).toBe(requesterKey);
     expect(Object.keys(adapterBody).sort()).toEqual([
       "consentAccepted",
       "consentStatus",
@@ -252,9 +253,9 @@ describe("SMS subscription consent guardrails", () => {
       "firstName",
       "pageUrl",
       "phone",
+      "requesterKey",
       "source",
     ]);
-    expect(adapterBody).not.toHaveProperty("requesterKey");
     expect(adapterBody).not.toHaveProperty("token");
     expect(adapterBody).not.toHaveProperty("confirmationText");
     expect(adapterBody).not.toHaveProperty("statusWebhookUrl");
@@ -313,6 +314,11 @@ describe("SMS subscription consent guardrails", () => {
     const requesterKey = forwardedHeaders.get("x-aimd-requester-key");
     expect(requesterKey).toMatch(/^[0-9a-f]{64}$/);
     expect(setCookie).toContain(`aimd_requester_id=${requesterKey}`);
+    const adapterBody = JSON.parse(String(vi.mocked(fetch).mock.calls[0][1]?.body));
+    expect(adapterBody).toMatchObject({ requesterKey });
+    expect(adapterBody.requesterKey).toMatch(/^[0-9a-f]{64}$/);
+    expect(adapterBody).not.toHaveProperty("token");
+    expect(adapterBody).not.toHaveProperty("phone");
     expect(response.body).not.toHaveProperty("requesterKey");
     expect(response.body).not.toHaveProperty("token");
     expect(response.headers).not.toHaveProperty("authorization");
