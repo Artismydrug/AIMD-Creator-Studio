@@ -14,3 +14,9 @@ Provider callbacks must use a configured canonical HTTPS URL, never a request-de
 **Why:** Provider callbacks can arrive late, duplicate, or concurrently. A delayed YES must never reverse an opt-out, and a public Host header must never redirect callback data.
 
 **How to apply:** Authenticate callbacks server-side, require a provider event timestamp, enforce the consent transition in the database update condition, and test concurrent YES/STOP delivery.
+
+Creator Studio may submit signups only to Operations HQ's dedicated HTTPS subscription endpoint ending in `/api/sms/subscribe`. It must never call HQ's `/api/sms/webhook`, which is reserved for Twilio-signed callbacks. HQ owns confirmation text and Twilio callback configuration, so neither belongs in the signup payload. Treat only HQ HTTP 201 as confirmation-text success.
+
+**Why:** Sending Creator Studio requests to the Twilio callback endpoint produces authorization failures and crosses the provider boundary; accepting arbitrary 2xx responses can falsely claim that a confirmation was sent.
+
+**How to apply:** Validate the configured subscription URL path before sending, keep the token and stable requester key server-only, send only HQ's documented signup fields, and map HQ error statuses without claiming success.
