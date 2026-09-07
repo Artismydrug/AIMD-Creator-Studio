@@ -12,8 +12,7 @@ const CONFIRMATION_COOLDOWN_SECONDS = 60;
 const REQUESTER_WINDOW_SECONDS = 60 * 60;
 const MAX_DISTINCT_PHONES_PER_REQUESTER = 1;
 const REQUESTER_KEY_PATTERN = /^[A-Za-z0-9_-]{32,128}$/;
-const CONFIRMATION_TEXT =
-  "Art Is My Drug: Reply YES to confirm you want promotional texts from AIMD. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out.";
+const AIMD_PUBLIC_PAGE_URL = "https://artismydrug.com";
 
 type SmsReplyAction = "yes" | "stop" | "help";
 
@@ -128,8 +127,8 @@ function hasValidProviderSecret(req: Request): boolean {
   );
 }
 
-function providerCallbackUrl(): string | null {
-  const raw = process.env.AIMD_SMS_STATUS_WEBHOOK_URL?.trim();
+function providerSubscribeUrl(): string | null {
+  const raw = process.env.AIMD_SMS_SUBSCRIBE_URL?.trim();
   if (!raw) return null;
   try {
     const url = new URL(raw);
@@ -138,7 +137,8 @@ function providerCallbackUrl(): string | null {
       url.username ||
       url.password ||
       url.hash ||
-      url.pathname !== "/api/webhooks/aimd-sms"
+      url.search ||
+      url.pathname !== "/api/sms/subscribe"
     ) {
       return null;
     }
@@ -146,6 +146,37 @@ function providerCallbackUrl(): string | null {
   } catch {
     return null;
   }
+}
+
+async function providerValidationMessage(response: globalThis.Response): Promise<string | null> {
+  try {
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) return null;
+    const payload = await response.json() as Record<string, unknown>;
+    const message =
+      typeof payload.error === "string"
+        ? payload.error
+        : typeof payload.message === "string"
+          ? payload.message
+          : null;
+    return message?.trim().slice(0, 240) || null;
+  } catch {
+    return null;
+  }
+}
+
+async function releaseRejectedAttempt(
+  key: string,
+  requester: string,
+  phoneE164: string,
+): Promise<void> {
+  await pool.query(
+    `DELETE FROM sms_confirmation_attempts
+      WHERE request_key = $1
+        AND requester_key = $2
+        AND phone_e164 = $3`,
+    [key, requester, phoneE164],
+  );
 }
 
 function eventPayload(payload: Record<string, unknown>): Record<string, unknown> {
@@ -343,17 +374,15 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
     return;
   }
 
-  const endpoint = process.env.AIMD_SMS_SUBSCRIBE_URL?.trim();
+  const endpoint = providerSubscribeUrl();
   const token = process.env.AIMD_SMS_SUBSCRIBE_TOKEN?.trim();
   const sessionSecret = process.env.SESSION_SECRET?.trim();
-  const statusWebhookUrl = providerCallbackUrl();
-  if (!endpoint || !token || !sessionSecret || !statusWebhookUrl) {
+  if (!endpoint || !token || !sessionSecret) {
     req.log.error(
       {
-        hasSubscribeUrl: Boolean(endpoint),
+        hasValidSubscribeUrl: Boolean(endpoint),
         hasSubscribeToken: Boolean(token),
         hasSessionSecret: Boolean(sessionSecret),
-        hasValidStatusWebhookUrl: Boolean(statusWebhookUrl),
       },
       "AIMD SMS provider is not configured",
     );
@@ -423,23 +452,28 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
       body: JSON.stringify({
         firstName: subscription.firstName,
         phone: subscription.phoneE164,
+        consentAccepted: true,
         consentStatus: "pending",
-        consentSource: subscription.consentSource,
-        consentRequestedAt: subscription.consentRequestedAt.toISOString(),
-        pageUrl: subscription.pageUrl,
-        source: subscription.source,
-        campaign: subscription.source,
-        consentDisclosureVersion: subscription.consentDisclosureVersion,
-        confirmationText: CONFIRMATION_TEXT,
-        statusWebhookUrl,
+        source: subscription.consentSource,
+        pageUrl: AIMD_PUBLIC_PAGE_URL,
+        disclosureVersion: subscription.consentDisclosureVersion,
       }),
       signal: AbortSignal.timeout(10_000),
     });
-    if (!response.ok) {
+    if (response.status !== 201) {
       const adapterError = new Error(`HQ adapter returned HTTP ${response.status}`) as Error & {
         status?: number;
+        publicMessage?: string;
       };
       adapterError.status = response.status;
+      if (response.status === 409) {
+        adapterError.publicMessage =
+          "This number previously opted out. Text START to rejoin the AIMD Text List.";
+      } else if (response.status === 422) {
+        adapterError.publicMessage =
+          (await providerValidationMessage(response)) ||
+          "Check the submitted name and mobile number, then try again.";
+      }
       throw adapterError;
     }
 
@@ -456,22 +490,38 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown SMS adapter error";
+    const providerStatus =
+      error instanceof Error && "status" in error
+        ? (error as Error & { status?: number }).status
+        : undefined;
     const status =
-      error instanceof Error &&
-      "status" in error &&
-      (error as Error & { status?: number }).status === 429
-        ? 429
+      providerStatus === 409 || providerStatus === 422 || providerStatus === 429
+        ? providerStatus
         : 503;
+    const publicMessage =
+      error instanceof Error && "publicMessage" in error
+        ? (error as Error & { publicMessage?: string }).publicMessage
+        : undefined;
+    if (
+      providerStatus === 401 ||
+      providerStatus === 403 ||
+      providerStatus === 409 ||
+      providerStatus === 422
+    ) {
+      await releaseRejectedAttempt(key, requester, phoneE164);
+    }
     await db
       .update(smsSubscriptionsTable)
       .set({ confirmationError: message })
       .where(eq(smsSubscriptionsTable.id, subscription.id));
     req.log.error({ err: error }, "SMS confirmation request failed");
     res.status(status).json({
-      error:
-        status === 429
+      error: publicMessage ||
+        (status === 429
           ? "Too many text signup attempts. Please wait before trying again."
-          : "We could not send the confirmation text. Please try again later.",
+          : providerStatus === 401 || providerStatus === 403
+            ? "Text signup is not configured correctly. Please try again later."
+            : "We could not send the confirmation text. Please try again later."),
     });
   }
 });

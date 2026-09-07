@@ -86,7 +86,8 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  process.env.AIMD_SMS_SUBSCRIBE_URL = "https://sms-adapter.example.test/subscribe";
+  process.env.AIMD_SMS_SUBSCRIBE_URL =
+    "https://sms-adapter.example.test/api/sms/subscribe";
   process.env.AIMD_SMS_SUBSCRIBE_TOKEN = "test-adapter-token";
   process.env.SESSION_SECRET = "test-session-secret-used-only-by-server";
   process.env.AIMD_SMS_STATUS_WEBHOOK_URL =
@@ -95,7 +96,7 @@ beforeEach(async () => {
   await deleteFixtures();
   vi.stubGlobal(
     "fetch",
-    vi.fn().mockResolvedValue(new Response(null, { status: 204 })),
+    vi.fn().mockResolvedValue(new Response(null, { status: 201 })),
   );
 });
 
@@ -243,19 +244,25 @@ describe("SMS subscription consent guardrails", () => {
     expect(adapterBody).toMatchObject({
       firstName: "Ada",
       phone: phones.pending,
+      consentAccepted: true,
       consentStatus: "pending",
-      consentSource: "AIMD website text-club form",
-      pageUrl: "https://artismydrug.com/text-list",
-      source: "launch-footer",
-      campaign: "launch-footer",
-      consentDisclosureVersion: "launch-2026-09",
-      confirmationText:
-        "Art Is My Drug: Reply YES to confirm you want promotional texts from AIMD. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out.",
-      statusWebhookUrl:
-        "https://artismydrug.com/api/webhooks/aimd-sms",
+      source: "AIMD website text-club form",
+      pageUrl: "https://artismydrug.com",
+      disclosureVersion: "launch-2026-09",
     });
+    expect(Object.keys(adapterBody).sort()).toEqual([
+      "consentAccepted",
+      "consentStatus",
+      "disclosureVersion",
+      "firstName",
+      "pageUrl",
+      "phone",
+      "source",
+    ]);
     expect(adapterBody).not.toHaveProperty("requesterKey");
     expect(adapterBody).not.toHaveProperty("token");
+    expect(adapterBody).not.toHaveProperty("confirmationText");
+    expect(adapterBody).not.toHaveProperty("statusWebhookUrl");
 
     const { rows } = await pool.query<{
       consent_status: string;
@@ -456,8 +463,9 @@ describe("SMS subscription consent guardrails", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it("requires a fixed canonical HTTPS provider callback URL", async () => {
-    delete process.env.AIMD_SMS_STATUS_WEBHOOK_URL;
+  it("requires the dedicated canonical HTTPS subscription endpoint", async () => {
+    process.env.AIMD_SMS_SUBSCRIBE_URL =
+      "https://sms-adapter.example.test/api/sms/webhook";
 
     const response = await request(app())
       .post("/api/sms/subscriptions")
@@ -471,6 +479,60 @@ describe("SMS subscription consent guardrails", () => {
       [phones.normalized[0]],
     );
     expect(rows[0].count).toBe(0);
+  });
+
+  it("accepts only an HQ 201 response as confirmation-text success", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(null, { status: 204 }),
+    );
+
+    const response = await request(app())
+      .post("/api/sms/subscriptions")
+      .send(validBody("+1 (202) 555-0101"));
+
+    expect(response.status).toBe(503);
+    expect(response.body.error).toMatch(/could not send/i);
+  });
+
+  it("shows HQ's opted-out guidance and releases the rejected attempt", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(new Response(null, { status: 409 }))
+      .mockResolvedValueOnce(new Response(null, { status: 201 }));
+
+    const first = await request(app())
+      .post("/api/sms/subscriptions")
+      .send(validBody("+1 (202) 555-0101"));
+    const retry = await request(app())
+      .post("/api/sms/subscriptions")
+      .send(validBody("+1 (202) 555-0101"));
+
+    expect(first.status).toBe(409);
+    expect(first.body.error).toMatch(/text START/i);
+    expect(retry.status).toBe(202);
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("passes through a safe HQ validation message and releases the rejected attempt", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: "Phone is not eligible for SMS." }), {
+          status: 422,
+          headers: { "content-type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 201 }));
+
+    const first = await request(app())
+      .post("/api/sms/subscriptions")
+      .send(validBody("+1 (202) 555-0101"));
+    const retry = await request(app())
+      .post("/api/sms/subscriptions")
+      .send(validBody("+1 (202) 555-0101"));
+
+    expect(first.status).toBe(422);
+    expect(first.body.error).toBe("Phone is not eligible for SMS.");
+    expect(retry.status).toBe(202);
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 
   it.each([
