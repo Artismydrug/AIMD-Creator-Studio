@@ -383,6 +383,24 @@ async function handleProviderWebhook(req: Request, res: Response): Promise<void>
 
 router.post("/sms/subscriptions", async (req, res): Promise<void> => {
   const requester = requesterKeyForBrowser(req, res);
+  req.log.info(
+    {
+      hasRequesterKey: Boolean(requester),
+      requesterKeyLength: requester.length,
+    },
+    "AIMD requester key prepared",
+  );
+  if (!REQUESTER_KEY_PATTERN.test(requester)) {
+    req.log.error(
+      {
+        hasRequesterKey: Boolean(requester),
+        requesterKeyLength: requester.length,
+      },
+      "AIMD requester key failed validation",
+    );
+    res.status(503).json({ error: "Text signup is temporarily unavailable. Please try again later." });
+    return;
+  }
   const parsed = CreateSmsSubscriptionBody.safeParse(req.body);
   if (!parsed.success || parsed.data.consentAccepted !== true) {
     res.status(400).json({ error: "A valid name, mobile number, and consent are required." });

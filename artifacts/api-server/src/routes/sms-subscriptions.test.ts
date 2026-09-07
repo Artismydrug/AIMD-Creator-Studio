@@ -321,6 +321,21 @@ describe("SMS subscription consent guardrails", () => {
     expect(response.text).not.toContain("test-adapter-token");
   });
 
+  it("validates the requester key before sending it to HQ", async () => {
+    const phone = "+12025550163";
+    testPhones.push(phone);
+
+    const response = await request(app())
+      .post("/api/sms/subscriptions")
+      .set("Cookie", requesterCookieA)
+      .send(validBody(phone));
+
+    expect(response.status).toBe(202);
+    const headers = new Headers(vi.mocked(fetch).mock.calls[0][1]?.headers);
+    expect(headers.get("x-aimd-requester-key")).toBe("a".repeat(64));
+    expect(headers.get("x-aimd-requester-key")).toMatch(/^[0-9a-f]{64}$/);
+  });
+
   it("uses the same requester key for two requests from the same browser cookie", async () => {
     const phone = "+12025550161";
     testPhones.push(phone);
