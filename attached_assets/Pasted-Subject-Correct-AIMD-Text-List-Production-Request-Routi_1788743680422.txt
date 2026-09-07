@@ -1,0 +1,82 @@
+Subject: Correct AIMD Text List Production Request Routing
+The production AIMD Text List integration is currently sending a request to the wrong Operations HQ endpoint.
+
+At approximately September 6, 2026, 6:01 PM Pacific, Operations HQ received:
+
+POST /api/sms/webhook → HTTP 403
+
+This endpoint only accepts signed callbacks directly from Twilio. Creator Studio must never call it.
+
+Please make these corrections:
+
+1. Submit signups only to the configured subscription endpoint
+Use the server-side environment variable:
+
+AIMD_SMS_SUBSCRIBE_URL
+
+It should be configured as:
+
+https://AIMDHQ.replit.app/api/sms/subscribe
+
+Do not hardcode or call /api/sms/webhook.
+
+2. Send the required server-side headers
+Authorization: Bearer [AIMD_SMS_SUBSCRIBE_TOKEN]
+X-AIMD-Requester-Key: [64-character lowercase hexadecimal requester key]
+Content-Type: application/json
+
+Requirements:
+
+Keep AIMD_SMS_SUBSCRIBE_TOKEN exclusively server-side.
+Generate X-AIMD-Requester-Key exclusively on the server.
+Never accept the requester key from form input.
+Never expose either value to browser JavaScript.
+The requester key must be stable for the requester and contain exactly 64 lowercase hexadecimal characters.
+3. Send this payload contract
+{
+  "firstName": "Submitted first name",
+  "phone": "+1XXXXXXXXXX",
+  "consentAccepted": true,
+  "consentStatus": "pending",
+  "source": "AIMD website text-club form",
+  "pageUrl": "https://artismydrug.com",
+  "disclosureVersion": "current"
+}
+
+The phone number must be normalized to E.164 format before sending.
+
+4. Remove client-controlled Twilio settings
+Do not call or separately submit to statusWebhookUrl.
+
+Do not allow the browser to control:
+
+Confirmation-message text
+Twilio webhook URLs
+Twilio delivery callbacks
+Operations HQ controls the confirmation text and automatically gives Twilio this callback:
+
+https://AIMDHQ.replit.app/api/sms/webhook
+
+Only Twilio should call that webhook with a valid X-Twilio-Signature.
+
+If confirmationText or statusWebhookUrl currently exist in the website payload, remove them. Operations HQ intentionally owns these values.
+
+5. Handle endpoint responses accurately
+201: Show that the confirmation text was sent and ask the visitor to reply YES.
+401: Show a generic configuration error; do not retry automatically.
+409: Explain that an opted-out number must text START.
+422: Show the validation message.
+429: Show a clear wait message; do not retry automatically.
+502 or 503: Show a temporary service error; do not claim the text was sent.
+Other non-2xx responses: Show a generic failure message.
+Never show success unless Operations HQ returns a successful response.
+
+6. Verify before reporting completion
+After making the correction:
+
+Confirm the server request goes to /api/sms/subscribe.
+Confirm no Creator Studio code directly calls /api/sms/webhook.
+Confirm the token and requester key remain server-only.
+Run the project’s typecheck and tests.
+Publish the corrected Creator Studio deployment.
+Do not run a broad campaign. Tell me when the corrected site is published so Operations HQ can verify one authorized internal test number.
