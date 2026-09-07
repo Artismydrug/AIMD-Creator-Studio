@@ -51,7 +51,10 @@ export function TextClubSignup() {
         onSuccess: () => setComplete(true),
         onError: (err: any) => {
           if (err?.status === 429) {
-            setError('Too many text signup attempts. Please wait before trying again.');
+            setError(
+              err?.data?.error ||
+                'Please wait before requesting another confirmation text.',
+            );
             return;
           }
           setError(err?.data?.error || err?.message || 'Text signup is temporarily unavailable. Please try again.');
