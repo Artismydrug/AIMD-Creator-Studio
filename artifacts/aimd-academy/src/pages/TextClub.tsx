@@ -21,7 +21,11 @@ export function TextClubSignup() {
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState('');
   const [complete, setComplete] = useState(false);
-  const mutation = useCreateSmsSubscription();
+  const mutation = useCreateSmsSubscription({
+    mutation: {
+      retry: false,
+    },
+  });
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -45,8 +49,13 @@ export function TextClubSignup() {
       },
       {
         onSuccess: () => setComplete(true),
-        onError: (err: any) =>
-          setError(err?.data?.error || err?.message || 'Text signup is temporarily unavailable. Please try again.'),
+        onError: (err: any) => {
+          if (err?.status === 429) {
+            setError('Too many text signup attempts. Please wait before trying again.');
+            return;
+          }
+          setError(err?.data?.error || err?.message || 'Text signup is temporarily unavailable. Please try again.');
+        },
       },
     );
   };

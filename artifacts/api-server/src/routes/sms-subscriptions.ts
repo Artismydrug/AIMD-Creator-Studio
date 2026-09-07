@@ -11,6 +11,7 @@ const router: IRouter = Router();
 const CONFIRMATION_COOLDOWN_SECONDS = 60;
 const REQUESTER_WINDOW_SECONDS = 60 * 60;
 const MAX_DISTINCT_PHONES_PER_REQUESTER = 1;
+const REQUESTER_KEY_PATTERN = /^[A-Za-z0-9_-]{32,128}$/;
 const CONFIRMATION_TEXT =
   "Art Is My Drug: Reply YES to confirm you want promotional texts from AIMD. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out.";
 
@@ -25,17 +26,23 @@ export function normalizeUsPhone(value: string): string | null {
   return `+1${national}`;
 }
 
-function requestKey(ip: string | undefined, phone: string): string {
+function requestKey(requester: string, phone: string): string {
   return createHash("sha256")
-    .update(`${process.env.SESSION_SECRET || "aimd-sms"}|${ip || "unknown"}|${phone}`)
+    .update(`${requester}|${phone}`)
     .digest("hex");
 }
 
-function requesterKey(req: { ip?: string; get(name: string): string | undefined }): string {
-  const secret = process.env.SESSION_SECRET || "aimd-sms";
-  return createHash("sha256")
+function generateRequesterKey(
+  secret: string,
+  req: { ip?: string; get(name: string): string | undefined },
+): string {
+  const key = createHash("sha256")
     .update(`${secret}|${req.ip || "unknown"}|${req.get("user-agent") || "unknown"}`)
     .digest("hex");
+  if (!REQUESTER_KEY_PATTERN.test(key)) {
+    throw new Error("Generated AIMD requester key does not match the required format");
+  }
+  return key;
 }
 
 async function claimConfirmationAttempt(
@@ -338,12 +345,14 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
 
   const endpoint = process.env.AIMD_SMS_SUBSCRIBE_URL?.trim();
   const token = process.env.AIMD_SMS_SUBSCRIBE_TOKEN?.trim();
+  const sessionSecret = process.env.SESSION_SECRET?.trim();
   const statusWebhookUrl = providerCallbackUrl();
-  if (!endpoint || !token || !statusWebhookUrl) {
+  if (!endpoint || !token || !sessionSecret || !statusWebhookUrl) {
     req.log.error(
       {
         hasSubscribeUrl: Boolean(endpoint),
         hasSubscribeToken: Boolean(token),
+        hasSessionSecret: Boolean(sessionSecret),
         hasValidStatusWebhookUrl: Boolean(statusWebhookUrl),
       },
       "AIMD SMS provider is not configured",
@@ -362,10 +371,11 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
     return;
   }
 
-  const key = requestKey(req.ip, phoneE164);
+  const requester = generateRequesterKey(sessionSecret, req);
+  const key = requestKey(requester, phoneE164);
   const attempt = await claimConfirmationAttempt(
     key,
-    requesterKey(req),
+    requester,
     phoneE164,
   );
   if (attempt === "phone_cooldown") {
@@ -408,6 +418,7 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
       headers: {
         "content-type": "application/json",
         authorization: `Bearer ${token}`,
+        "X-AIMD-Requester-Key": requester,
       },
       body: JSON.stringify({
         firstName: subscription.firstName,
@@ -425,7 +436,11 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
       signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) {
-      throw new Error(`HQ adapter returned HTTP ${response.status}`);
+      const adapterError = new Error(`HQ adapter returned HTTP ${response.status}`) as Error & {
+        status?: number;
+      };
+      adapterError.status = response.status;
+      throw adapterError;
     }
 
     await db
@@ -441,12 +456,23 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown SMS adapter error";
+    const status =
+      error instanceof Error &&
+      "status" in error &&
+      (error as Error & { status?: number }).status === 429
+        ? 429
+        : 503;
     await db
       .update(smsSubscriptionsTable)
       .set({ confirmationError: message })
       .where(eq(smsSubscriptionsTable.id, subscription.id));
     req.log.error({ err: error }, "SMS confirmation request failed");
-    res.status(503).json({ error: "We could not send the confirmation text. Please try again later." });
+    res.status(status).json({
+      error:
+        status === 429
+          ? "Too many text signup attempts. Please wait before trying again."
+          : "We could not send the confirmation text. Please try again later.",
+    });
   }
 });
 

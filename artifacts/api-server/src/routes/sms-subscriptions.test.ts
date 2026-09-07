@@ -38,6 +38,7 @@ const testPhones = [
 ];
 const originalEndpoint = process.env.AIMD_SMS_SUBSCRIBE_URL;
 const originalToken = process.env.AIMD_SMS_SUBSCRIBE_TOKEN;
+const originalSessionSecret = process.env.SESSION_SECRET;
 const originalWebhookSecret = process.env.AIMD_SMS_WEBHOOK_SECRET;
 const originalStatusWebhookUrl = process.env.AIMD_SMS_STATUS_WEBHOOK_URL;
 
@@ -87,6 +88,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   process.env.AIMD_SMS_SUBSCRIBE_URL = "https://sms-adapter.example.test/subscribe";
   process.env.AIMD_SMS_SUBSCRIBE_TOKEN = "test-adapter-token";
+  process.env.SESSION_SECRET = "test-session-secret-used-only-by-server";
   process.env.AIMD_SMS_STATUS_WEBHOOK_URL =
     "https://artismydrug.com/api/webhooks/aimd-sms";
   delete process.env.AIMD_SMS_WEBHOOK_SECRET;
@@ -112,6 +114,11 @@ afterAll(async () => {
     delete process.env.AIMD_SMS_SUBSCRIBE_TOKEN;
   } else {
     process.env.AIMD_SMS_SUBSCRIBE_TOKEN = originalToken;
+  }
+  if (originalSessionSecret === undefined) {
+    delete process.env.SESSION_SECRET;
+  } else {
+    process.env.SESSION_SECRET = originalSessionSecret;
   }
   if (originalWebhookSecret === undefined) {
     delete process.env.AIMD_SMS_WEBHOOK_SECRET;
@@ -215,7 +222,10 @@ describe("SMS subscription consent guardrails", () => {
   it("keeps consent pending, preserves metadata, and rate-limits a repeated pending attempt", async () => {
     const first = await request(app())
       .post("/api/sms/subscriptions")
-      .send(validBody("(202) 555-0104"));
+      .send({
+        ...validBody("(202) 555-0104"),
+        requesterKey: "browser-controlled-value-must-be-ignored",
+      });
 
     expect(first.status).toBe(202);
     expect(first.body.status).toBe("pending");
@@ -223,11 +233,14 @@ describe("SMS subscription consent guardrails", () => {
 
     const [endpoint, options] = vi.mocked(fetch).mock.calls[0];
     expect(endpoint).toBe(process.env.AIMD_SMS_SUBSCRIBE_URL);
-    expect(options?.headers).toMatchObject({
-      "content-type": "application/json",
-      authorization: "Bearer test-adapter-token",
-    });
-    expect(JSON.parse(String(options?.body))).toMatchObject({
+    const headers = new Headers(options?.headers);
+    const requesterKey = headers.get("x-aimd-requester-key");
+    expect(headers.get("content-type")).toBe("application/json");
+    expect(headers.get("authorization")).toBe("Bearer test-adapter-token");
+    expect(requesterKey).toMatch(/^[A-Za-z0-9_-]{32,128}$/);
+    expect(requesterKey).not.toBe("browser-controlled-value-must-be-ignored");
+    const adapterBody = JSON.parse(String(options?.body));
+    expect(adapterBody).toMatchObject({
       firstName: "Ada",
       phone: phones.pending,
       consentStatus: "pending",
@@ -241,6 +254,8 @@ describe("SMS subscription consent guardrails", () => {
       statusWebhookUrl:
         "https://artismydrug.com/api/webhooks/aimd-sms",
     });
+    expect(adapterBody).not.toHaveProperty("requesterKey");
+    expect(adapterBody).not.toHaveProperty("token");
 
     const { rows } = await pool.query<{
       consent_status: string;
@@ -320,6 +335,11 @@ describe("SMS subscription consent guardrails", () => {
 
     expect(afterExpiry.status).toBe(202);
     expect(fetch).toHaveBeenCalledTimes(2);
+    const firstHeaders = new Headers(vi.mocked(fetch).mock.calls[0][1]?.headers);
+    const secondHeaders = new Headers(vi.mocked(fetch).mock.calls[1][1]?.headers);
+    expect(secondHeaders.get("x-aimd-requester-key")).toBe(
+      firstHeaders.get("x-aimd-requester-key"),
+    );
   });
 
   it("blocks one requester from submitting a different phone number", async () => {
@@ -379,6 +399,20 @@ describe("SMS subscription consent guardrails", () => {
     expect(rows[0].confirmation_error).toContain("HTTP 503");
   });
 
+  it("passes an HQ rate limit to the form without retrying", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(null, { status: 429 }),
+    );
+
+    const response = await request(app())
+      .post("/api/sms/subscriptions")
+      .send(validBody("(202) 555-0105"));
+
+    expect(response.status).toBe(429);
+    expect(response.body.error).toMatch(/too many.*wait/i);
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
   it("returns an error rather than success when the adapter is not configured", async () => {
     delete process.env.AIMD_SMS_SUBSCRIBE_URL;
 
@@ -400,6 +434,18 @@ describe("SMS subscription consent guardrails", () => {
 
   it("requires the provider token before storing or contacting the adapter", async () => {
     delete process.env.AIMD_SMS_SUBSCRIBE_TOKEN;
+
+    const response = await request(app())
+      .post("/api/sms/subscriptions")
+      .send(validBody("+1 (202) 555-0101"));
+
+    expect(response.status).toBe(503);
+    expect(response.body.error).toMatch(/temporarily unavailable/i);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("requires the server session secret before generating a requester key", async () => {
+    delete process.env.SESSION_SECRET;
 
     const response = await request(app())
       .post("/api/sms/subscriptions")
