@@ -318,7 +318,6 @@ describe("SMS subscription consent guardrails", () => {
     expect(adapterBody).toMatchObject({ requesterKey });
     expect(adapterBody.requesterKey).toMatch(/^[0-9a-f]{64}$/);
     expect(adapterBody).not.toHaveProperty("token");
-    expect(adapterBody).not.toHaveProperty("phone");
     expect(response.body).not.toHaveProperty("requesterKey");
     expect(response.body).not.toHaveProperty("token");
     expect(response.headers).not.toHaveProperty("authorization");

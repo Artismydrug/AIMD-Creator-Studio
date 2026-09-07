@@ -13,8 +13,8 @@ Pair-specific cooldowns are not enough on public messaging forms: also cap the n
 
 **How to apply:** Use a random 64-character lowercase hexadecimal identifier stored in a Secure, HttpOnly, SameSite=Lax cookie and the normalized destination as shared keys. Let the database atomically accept or reject both pair-specific and requester-wide claims, and test separate server instances, expiry, and destination rotation.
 
-When Operations HQ needs the same requester identity, forward the current server-created browser cookie value in a dedicated server-to-server header. Never accept that value from form input, local storage, deployment identity, network metadata, hostname, phone number, or a global constant.
+When Operations HQ needs the same requester identity, forward the current server-created browser cookie value in both the dedicated server-to-server header and the authenticated JSON fallback field. Both locations must contain the exact same value. Never accept that value from form input, local storage, deployment identity, network metadata, hostname, phone number, or a global constant.
 
 **Why:** IP- and user-agent-derived identifiers can unintentionally group unrelated submissions behind shared infrastructure, while browser-controlled form or local-storage values are exposed to JavaScript and easier to manipulate.
 
-**How to apply:** Generate 32 random bytes on the server when the cookie is absent or invalid, retain it for 24 hours, enforce the exact hexadecimal contract, and verify same-cookie stability, cross-cookie separation, HttpOnly protection, and ignored spoofed form fields.
+**How to apply:** Generate 32 random bytes on the server when the cookie is absent or invalid, retain it for 24 hours, enforce the exact hexadecimal contract, and verify same-cookie stability, cross-cookie separation, HttpOnly protection, identical header/body forwarding, and ignored spoofed form fields. The JSON fallback exists because infrastructure may remove the custom header in transit.
