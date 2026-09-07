@@ -38,9 +38,10 @@ const testPhones = [
 ];
 const originalEndpoint = process.env.AIMD_SMS_SUBSCRIBE_URL;
 const originalToken = process.env.AIMD_SMS_SUBSCRIBE_TOKEN;
-const originalSessionSecret = process.env.SESSION_SECRET;
 const originalWebhookSecret = process.env.AIMD_SMS_WEBHOOK_SECRET;
 const originalStatusWebhookUrl = process.env.AIMD_SMS_STATUS_WEBHOOK_URL;
+const requesterCookieA = `aimd_requester_id=${"a".repeat(64)}`;
+const requesterCookieB = `aimd_requester_id=${"b".repeat(64)}`;
 
 function app(): Express {
   const instance = express();
@@ -89,7 +90,6 @@ beforeEach(async () => {
   process.env.AIMD_SMS_SUBSCRIBE_URL =
     "https://sms-adapter.example.test/api/sms/subscribe";
   process.env.AIMD_SMS_SUBSCRIBE_TOKEN = "test-adapter-token";
-  process.env.SESSION_SECRET = "test-session-secret-used-only-by-server";
   process.env.AIMD_SMS_STATUS_WEBHOOK_URL =
     "https://artismydrug.com/api/webhooks/aimd-sms";
   delete process.env.AIMD_SMS_WEBHOOK_SECRET;
@@ -115,11 +115,6 @@ afterAll(async () => {
     delete process.env.AIMD_SMS_SUBSCRIBE_TOKEN;
   } else {
     process.env.AIMD_SMS_SUBSCRIBE_TOKEN = originalToken;
-  }
-  if (originalSessionSecret === undefined) {
-    delete process.env.SESSION_SECRET;
-  } else {
-    process.env.SESSION_SECRET = originalSessionSecret;
   }
   if (originalWebhookSecret === undefined) {
     delete process.env.AIMD_SMS_WEBHOOK_SECRET;
@@ -238,7 +233,7 @@ describe("SMS subscription consent guardrails", () => {
     const requesterKey = headers.get("x-aimd-requester-key");
     expect(headers.get("content-type")).toBe("application/json");
     expect(headers.get("authorization")).toBe("Bearer test-adapter-token");
-    expect(requesterKey).toMatch(/^[A-Za-z0-9_-]{32,128}$/);
+    expect(requesterKey).toMatch(/^[0-9a-f]{64}$/);
     expect(requesterKey).not.toBe("browser-controlled-value-must-be-ignored");
     const adapterBody = JSON.parse(String(options?.body));
     expect(adapterBody).toMatchObject({
@@ -289,11 +284,101 @@ describe("SMS subscription consent guardrails", () => {
 
     const repeated = await request(app())
       .post("/api/sms/subscriptions")
+      .set("Cookie", `aimd_requester_id=${requesterKey}`)
       .send(validBody("+1 202 555 0104"));
 
     expect(repeated.status).toBe(429);
     expect(repeated.body.error).toMatch(/wait.*another confirmation text/i);
     expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it("creates a secure HttpOnly requester cookie without exposing server credentials to browser JavaScript", async () => {
+    const phone = "+12025550160";
+    testPhones.push(phone);
+
+    const response = await request(app())
+      .post("/api/sms/subscriptions")
+      .send(validBody(phone));
+
+    expect(response.status).toBe(202);
+    const setCookie = response.headers["set-cookie"]?.[0];
+    expect(setCookie).toMatch(/^aimd_requester_id=[0-9a-f]{64};/);
+    expect(setCookie).toContain("Max-Age=86400");
+    expect(setCookie).toContain("Path=/");
+    expect(setCookie).toContain("HttpOnly");
+    expect(setCookie).toContain("Secure");
+    expect(setCookie).toContain("SameSite=Lax");
+
+    const forwardedHeaders = new Headers(vi.mocked(fetch).mock.calls[0][1]?.headers);
+    const requesterKey = forwardedHeaders.get("x-aimd-requester-key");
+    expect(requesterKey).toMatch(/^[0-9a-f]{64}$/);
+    expect(setCookie).toContain(`aimd_requester_id=${requesterKey}`);
+    expect(response.body).not.toHaveProperty("requesterKey");
+    expect(response.body).not.toHaveProperty("token");
+    expect(response.headers).not.toHaveProperty("authorization");
+    expect(response.headers).not.toHaveProperty("x-aimd-requester-key");
+    expect(response.text).not.toContain(String(requesterKey));
+    expect(response.text).not.toContain("test-adapter-token");
+  });
+
+  it("uses the same requester key for two requests from the same browser cookie", async () => {
+    const phone = "+12025550161";
+    testPhones.push(phone);
+
+    const first = await request(app())
+      .post("/api/sms/subscriptions")
+      .send(validBody(phone));
+    const setCookie = first.headers["set-cookie"]?.[0];
+    const cookiePair = setCookie?.split(";")[0];
+    expect(cookiePair).toMatch(/^aimd_requester_id=[0-9a-f]{64}$/);
+
+    await pool.query(
+      `UPDATE sms_confirmation_attempts
+          SET last_attempt_at = NOW() - INTERVAL '61 seconds'
+        WHERE phone_e164 = $1`,
+      [phone],
+    );
+
+    const second = await request(app())
+      .post("/api/sms/subscriptions")
+      .set("Cookie", cookiePair!)
+      .send(validBody(phone));
+
+    expect(first.status).toBe(202);
+    expect(second.status).toBe(202);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    const firstHeaders = new Headers(vi.mocked(fetch).mock.calls[0][1]?.headers);
+    const secondHeaders = new Headers(vi.mocked(fetch).mock.calls[1][1]?.headers);
+    expect(firstHeaders.get("x-aimd-requester-key")).toMatch(/^[0-9a-f]{64}$/);
+    expect(secondHeaders.get("x-aimd-requester-key")).toBe(
+      firstHeaders.get("x-aimd-requester-key"),
+    );
+    expect(second.headers["set-cookie"]).toBeUndefined();
+  });
+
+  it("uses different requester keys for requests with different browser cookies", async () => {
+    const phone = "+12025550162";
+    testPhones.push(phone);
+
+    const first = await request(app())
+      .post("/api/sms/subscriptions")
+      .set("Cookie", requesterCookieA)
+      .send(validBody(phone));
+    const second = await request(app())
+      .post("/api/sms/subscriptions")
+      .set("Cookie", requesterCookieB)
+      .send(validBody(phone));
+
+    expect(first.status).toBe(202);
+    expect(second.status).toBe(202);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    const firstHeaders = new Headers(vi.mocked(fetch).mock.calls[0][1]?.headers);
+    const secondHeaders = new Headers(vi.mocked(fetch).mock.calls[1][1]?.headers);
+    expect(firstHeaders.get("x-aimd-requester-key")).toBe("a".repeat(64));
+    expect(secondHeaders.get("x-aimd-requester-key")).toBe("b".repeat(64));
+    expect(firstHeaders.get("x-aimd-requester-key")).not.toBe(
+      secondHeaders.get("x-aimd-requester-key"),
+    );
   });
 
   it("shares the pending cooldown across separate app instances", async () => {
@@ -304,9 +389,11 @@ describe("SMS subscription consent guardrails", () => {
 
     const first = await request(firstServer)
       .post("/api/sms/subscriptions")
+      .set("Cookie", requesterCookieA)
       .send(validBody("(202) 555-0110"));
     const repeated = await request(secondServer)
       .post("/api/sms/subscriptions")
+      .set("Cookie", requesterCookieA)
       .send(validBody("(202) 555-0110"));
 
     expect(first.status).toBe(202);
@@ -326,6 +413,7 @@ describe("SMS subscription consent guardrails", () => {
 
     const first = await request(app())
       .post("/api/sms/subscriptions")
+      .set("Cookie", requesterCookieA)
       .send(validBody("(202) 555-0111"));
     expect(first.status).toBe(202);
 
@@ -338,6 +426,7 @@ describe("SMS subscription consent guardrails", () => {
 
     const afterExpiry = await request(app())
       .post("/api/sms/subscriptions")
+      .set("Cookie", requesterCookieA)
       .send(validBody("(202) 555-0111"));
 
     expect(afterExpiry.status).toBe(202);
@@ -364,6 +453,7 @@ describe("SMS subscription consent guardrails", () => {
       responses.push(
         await request(instance)
           .post("/api/sms/subscriptions")
+          .set("Cookie", requesterCookieA)
           .send(validBody(phone)),
       );
     }
@@ -441,18 +531,6 @@ describe("SMS subscription consent guardrails", () => {
 
   it("requires the provider token before storing or contacting the adapter", async () => {
     delete process.env.AIMD_SMS_SUBSCRIBE_TOKEN;
-
-    const response = await request(app())
-      .post("/api/sms/subscriptions")
-      .send(validBody("+1 (202) 555-0101"));
-
-    expect(response.status).toBe(503);
-    expect(response.body.error).toMatch(/temporarily unavailable/i);
-    expect(fetch).not.toHaveBeenCalled();
-  });
-
-  it("requires the server session secret before generating a requester key", async () => {
-    delete process.env.SESSION_SECRET;
 
     const response = await request(app())
       .post("/api/sms/subscriptions")

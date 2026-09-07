@@ -1,4 +1,4 @@
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { and, eq, lte } from "drizzle-orm";
 import { db, pool, smsSubscriptionsTable } from "@workspace/db";
@@ -11,7 +11,9 @@ const router: IRouter = Router();
 const CONFIRMATION_COOLDOWN_SECONDS = 60;
 const REQUESTER_WINDOW_SECONDS = 60 * 60;
 const MAX_DISTINCT_PHONES_PER_REQUESTER = 1;
-const REQUESTER_KEY_PATTERN = /^[A-Za-z0-9_-]{32,128}$/;
+const REQUESTER_COOKIE_NAME = "aimd_requester_id";
+const REQUESTER_COOKIE_MAX_AGE_SECONDS = 86_400;
+const REQUESTER_KEY_PATTERN = /^[0-9a-f]{64}$/;
 const AIMD_PUBLIC_PAGE_URL = "https://artismydrug.com";
 
 type SmsReplyAction = "yes" | "stop" | "help";
@@ -31,16 +33,34 @@ function requestKey(requester: string, phone: string): string {
     .digest("hex");
 }
 
-function generateRequesterKey(
-  secret: string,
-  req: { ip?: string; get(name: string): string | undefined },
-): string {
-  const key = createHash("sha256")
-    .update(`${secret}|${req.ip || "unknown"}|${req.get("user-agent") || "unknown"}`)
-    .digest("hex");
-  if (!REQUESTER_KEY_PATTERN.test(key)) {
-    throw new Error("Generated AIMD requester key does not match the required format");
+function requesterCookieValue(req: Request): string | null {
+  const cookieHeader = req.get("cookie");
+  if (!cookieHeader) return null;
+
+  for (const cookie of cookieHeader.split(";")) {
+    const separator = cookie.indexOf("=");
+    if (separator === -1) continue;
+    const name = cookie.slice(0, separator).trim();
+    if (name !== REQUESTER_COOKIE_NAME) continue;
+    const value = cookie.slice(separator + 1).trim();
+    return REQUESTER_KEY_PATTERN.test(value) ? value : null;
   }
+
+  return null;
+}
+
+function requesterKeyForBrowser(req: Request, res: Response): string {
+  const existing = requesterCookieValue(req);
+  if (existing) return existing;
+
+  const key = randomBytes(32).toString("hex");
+  res.cookie(REQUESTER_COOKIE_NAME, key, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: REQUESTER_COOKIE_MAX_AGE_SECONDS * 1_000,
+  });
   return key;
 }
 
@@ -362,6 +382,7 @@ async function handleProviderWebhook(req: Request, res: Response): Promise<void>
 }
 
 router.post("/sms/subscriptions", async (req, res): Promise<void> => {
+  const requester = requesterKeyForBrowser(req, res);
   const parsed = CreateSmsSubscriptionBody.safeParse(req.body);
   if (!parsed.success || parsed.data.consentAccepted !== true) {
     res.status(400).json({ error: "A valid name, mobile number, and consent are required." });
@@ -376,13 +397,11 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
 
   const endpoint = providerSubscribeUrl();
   const token = process.env.AIMD_SMS_SUBSCRIBE_TOKEN?.trim();
-  const sessionSecret = process.env.SESSION_SECRET?.trim();
-  if (!endpoint || !token || !sessionSecret) {
+  if (!endpoint || !token) {
     req.log.error(
       {
         hasValidSubscribeUrl: Boolean(endpoint),
         hasSubscribeToken: Boolean(token),
-        hasSessionSecret: Boolean(sessionSecret),
       },
       "AIMD SMS provider is not configured",
     );
@@ -400,7 +419,6 @@ router.post("/sms/subscriptions", async (req, res): Promise<void> => {
     return;
   }
 
-  const requester = generateRequesterKey(sessionSecret, req);
   const key = requestKey(requester, phoneE164);
   const attempt = await claimConfirmationAttempt(
     key,
