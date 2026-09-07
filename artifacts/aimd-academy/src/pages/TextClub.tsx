@@ -96,8 +96,26 @@ export function TextClubSignup() {
                   <input id="text-first-name" autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-13 w-full border border-[#2c2623]/25 bg-white px-4 text-base outline-none focus-visible:ring-2 focus-visible:ring-[#c85a32]" />
                 </div>
                 <div>
-                  <label htmlFor="text-phone" className="mb-2 block font-mono text-[11px] font-bold uppercase tracking-[0.14em]">Mobile phone number</label>
-                  <input id="text-phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="(555) 555-5555" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-13 w-full border border-[#2c2623]/25 bg-white px-4 text-base outline-none focus-visible:ring-2 focus-visible:ring-[#c85a32]" />
+                  <label htmlFor="text-phone" className="mb-2 block font-mono text-[11px] font-bold uppercase tracking-[0.14em]">US mobile phone number</label>
+                  <div className="flex h-13 w-full border border-[#2c2623]/25 bg-white focus-within:ring-2 focus-within:ring-[#c85a32]">
+                    <span className="flex items-center border-r border-[#2c2623]/15 bg-[#f3ecdf] px-4 font-semibold text-[#5d554e]" aria-hidden="true">
+                      +1
+                    </span>
+                    <input
+                      id="text-phone"
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel-national"
+                      placeholder="(310) 555-1234"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      aria-describedby="text-phone-help"
+                      className="min-w-0 flex-1 bg-white px-4 text-base outline-none"
+                    />
+                  </div>
+                  <p id="text-phone-help" className="mt-2 text-xs text-[#6d625a]">
+                    The United States country code (+1) is added automatically.
+                  </p>
                 </div>
                 <label className="flex cursor-pointer items-start gap-3 text-sm leading-6 text-[#5d554e]">
                   <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1 h-5 w-5 shrink-0 accent-[#c85a32]" />
