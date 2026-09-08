@@ -64,7 +64,7 @@ export function TextClubSignup() {
   };
 
   return (
-    <section id="text-club" aria-labelledby="text-club-title" className="border-b border-border bg-[#171514] px-6 py-20 text-[#f5eee2]">
+    <section id="aimd-text-list" aria-labelledby="text-club-title" className="scroll-mt-24 border-b border-border bg-[#171514] px-6 py-20 text-[#f5eee2]">
       <div className="container mx-auto grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
         <div>
           <p className="mb-5 font-mono text-[11px] uppercase tracking-[0.25em] text-[#e9a319]">Direct from AIMD</p>
