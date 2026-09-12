@@ -3,84 +3,96 @@
     "id": "launch-cover",
     "position": 1,
     "title": "Creator Studio by AIMD — Launch Rollout",
-    "kind": "tsx",
+    "description": "The internal launch brief for the first public release",
+    "kind": "jsx",
     "filepath": "src/pages/slides/Slide01.tsx"
   },
   {
     "id": "mission-vision",
     "position": 2,
     "title": "Mission + vision",
-    "kind": "tsx",
+    "description": "The north star for a creative habit network",
+    "kind": "jsx",
     "filepath": "src/pages/slides/Slide02.tsx"
   },
   {
     "id": "creative-habit-thesis",
     "position": 3,
     "title": "Why building a creative habit matters",
-    "kind": "tsx",
+    "description": "The launch thesis behind Creator Studio",
+    "kind": "jsx",
     "filepath": "src/pages/slides/Slide03.tsx"
   },
   {
     "id": "public-launch-proof",
     "position": 4,
     "title": "What public launch needs to prove",
-    "kind": "tsx",
+    "description": "The evidence needed before expanding the offer",
+    "kind": "jsx",
     "filepath": "src/pages/slides/Slide04.tsx"
   },
   {
     "id": "three-phase-roadmap",
     "position": 5,
     "title": "The full product arc",
-    "kind": "tsx",
+    "description": "The three-phase path from habit to opportunity",
+    "kind": "jsx",
     "filepath": "src/pages/slides/Slide05.tsx"
   },
   {
     "id": "rollout-model",
     "position": 6,
     "title": "Rollout model",
-    "kind": "tsx",
+    "description": "The behavior loops that earn the next phase",
+    "kind": "jsx",
     "filepath": "src/pages/slides/Slide06.tsx"
   },
   {
     "id": "launch-timeline",
     "position": 7,
     "title": "Launch timeline",
-    "kind": "tsx",
+    "description": "The runway from final preparation to launch party",
+    "kind": "jsx",
     "filepath": "src/pages/slides/Slide07.tsx"
   },
   {
     "id": "content-campaign",
     "position": 8,
     "title": "Content campaign",
-    "kind": "tsx",
+    "description": "The message and formats that make the habit feel possible",
+    "kind": "jsx",
     "filepath": "src/pages/slides/Slide08.tsx"
   },
   {
     "id": "anthony-workshops",
     "position": 9,
     "title": "Anthony + workshop pipeline",
-    "kind": "tsx",
+    "description": "The creative leadership and instructor pipeline",
+    "kind": "jsx",
     "filepath": "src/pages/slides/Slide09.tsx"
   },
   {
     "id": "launch-party",
     "position": 10,
     "title": "Launch-party experience",
-    "kind": "tsx",
+    "description": "The first-habit activation experience in the room",
+    "kind": "jsx",
     "filepath": "src/pages/slides/Slide10.tsx"
   },
   {
     "id": "goals-measures",
     "position": 11,
     "title": "Goals + success measures",
-    "kind": "tsx",
+    "description": "Behavior, paid membership, and partnership milestones",
+    "kind": "jsx",
     "filepath": "src/pages/slides/Slide11.tsx"
   },
   {
     "id": "operating-rules",
     "position": 12,
     "title": "Operating rules + next decision",
-    "kind": "tsx",
+    "description": "The guardrails and decisions needed to move forward",
+    "kind": "jsx",
     "filepath": "src/pages/slides/Slide12.tsx"
   }
 ]

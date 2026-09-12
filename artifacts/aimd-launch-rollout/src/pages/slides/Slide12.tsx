@@ -15,6 +15,7 @@ export default function Slide12() {
             <p>Launch free-first. Keep private testing active. Avoid major feature additions during the final week.</p>
             <p className="mt-[1.3vw]">Do not move to paid membership until filmed lessons and career pathways are ready.</p>
             <p className="mt-[1.3vw]">Do not promise Tier 3 opportunities until instructors and partners have committed.</p>
+            <p className="mt-[1.3vw]">Treat 100, 300, and 25 as planning targets; revisit them after the first launch data.</p>
           </div>
         </div>
         <div className="mt-[5.2vw] grid grid-cols-[1fr_1fr] gap-[1.1vw]">

@@ -20,10 +20,10 @@ export default function Slide05() {
             Launch free-first. Prove that prompts, posting, workshops, and shared wins create repeat behavior and a living network.
           </PhaseCard>
           <PhaseCard number="02" label="NEXT / PAID" title="Structured membership">
-            Move toward paid subscriptions once filmed lessons, strong pathways, and clear recurring value are ready to support the offer.
+            Move toward paid subscriptions once filmed lessons, strong pathways, and clear recurring value are ready. Planning goal: 100 paid subscribers in the first 90 days, 300 in year one.
           </PhaseCard>
           <PhaseCard number="03" label="LATER / OPPORTUNITY" title="Access + partnerships" dark>
-            Add one-on-one consultations, events, and partnerships for Tier 3 subscribers: discounts, booth access, or workspace opportunities.
+            Add one-on-one consultations, events, and partnerships for Tier 3 subscribers: discounts, booth access, or workspace opportunities. Planning goal: 25 founding members.
           </PhaseCard>
         </div>
         <div className="mt-[2.4vw] grid grid-cols-3 gap-[1.1vw] text-[1vw] font-bold uppercase tracking-[0.12em] text-[#6B645D]">
