@@ -59,7 +59,7 @@
     "id": "content-campaign",
     "position": 8,
     "title": "Content campaign",
-    "description": "The message and formats that make the habit feel possible",
+    "description": "The first campaign message and rollout content capture plan",
     "kind": "jsx",
     "filepath": "src/pages/slides/Slide08.tsx"
   },

@@ -24,13 +24,13 @@ export default function Slide10() {
         </div>
         <div className="bg-[#F8F5EE] p-[1.7vw] text-[#191715]">
           <div className="eyebrow text-[0.85vw] text-[#FF4D00]">03</div>
-          <h3 className="mt-[1vw] text-[1.55vw] font-extrabold leading-[1]">Share</h3>
-          <p className="mt-[0.8vw] text-[1.05vw] leading-[1.18] text-[#5D5752]">Celebrate first posts, workshop signups, and the people who brought friends.</p>
+          <h3 className="mt-[1vw] text-[1.55vw] font-extrabold leading-[1]">Capture</h3>
+          <p className="mt-[0.8vw] text-[1.05vw] leading-[1.18] text-[#5D5752]">Film creator reasons, first-habit moments, instructor guidance, and honest reactions.</p>
         </div>
         <div className="bg-[#F8F5EE] p-[1.7vw] text-[#191715]">
           <div className="eyebrow text-[0.85vw] text-[#FF4D00]">04</div>
           <h3 className="mt-[1vw] text-[1.55vw] font-extrabold leading-[1]">Return</h3>
-          <p className="mt-[0.8vw] text-[1.05vw] leading-[1.18] text-[#5D5752]">Leave with a clear next prompt, next workshop, or next reason to open AIMD.</p>
+          <p className="mt-[0.8vw] text-[1.05vw] leading-[1.18] text-[#5D5752]">Celebrate first posts and leave with a clear next prompt, workshop, or reason to return.</p>
         </div>
       </div>
     </SlideShell>
