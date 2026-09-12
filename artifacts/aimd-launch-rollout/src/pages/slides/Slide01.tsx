@@ -1,4 +1,4 @@
-import { CornerMark, Eyebrow, PageNo, SlideShell } from './slide-kit';
+import { CornerMark, Eyebrow, PageNo, SlideShell } from '../../components/slide-kit';
 
 export default function Slide01() {
   return (

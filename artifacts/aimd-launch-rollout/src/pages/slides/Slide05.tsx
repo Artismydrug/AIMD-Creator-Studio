@@ -1,4 +1,4 @@
-import { Eyebrow, PageNo, PhaseCard, SlideShell } from './slide-kit';
+import { Eyebrow, PageNo, PhaseCard, SlideShell } from '../../components/slide-kit';
 
 export default function Slide05() {
   return (

@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "sj3WqgOPuSmWUhXsrXsO0"
+uri = "file://.local/outputs/Creator-Studio-by-AIMD---Instructor-Pitch.pdf"
+type = "pdf"
+title = "Creator Studio by AIMD — Launch Rollout"
+description = "Final 12-slide internal rollout deck with the three-phase product roadmap and paid subscriber goals."
+logical_id = "3ac0aa4b-f57d-4ceb-98d0-2e88fc0159a3"
+content_hash = "sha256:cc0ca44c8ee6af75d2b21d8e91ef84150c79d41b877e504dcbf952309a15da46"
+size = 490214
+mtime_ms = 1789238663428
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/3ac0aa4b-f57d-4ceb-98d0-2e88fc0159a3/e1ef11e7-9033-4568-8977-ac4dda0d6f42"
+storage_version_token = "1789238663856249"
+content_type = "application/pdf"

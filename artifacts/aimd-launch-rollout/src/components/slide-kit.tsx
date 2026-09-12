@@ -11,7 +11,7 @@ export function SlideShell({
 }) {
   return (
     <div
-      className={`slide-shell relative h-full w-full overflow-hidden ${
+      className={`slide-shell relative h-screen w-full overflow-hidden ${
         dark ? 'bg-[#191715] text-[#F8F5EE]' : 'bg-[#F8F5EE] text-[#191715]'
       } ${className}`}
     >

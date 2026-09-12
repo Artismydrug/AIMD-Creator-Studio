@@ -1,4 +1,4 @@
-import { ArrowMark, Eyebrow, PageNo, SlideShell } from './slide-kit';
+import { ArrowMark, Eyebrow, PageNo, SlideShell } from '../../components/slide-kit';
 
 export default function Slide09() {
   return (

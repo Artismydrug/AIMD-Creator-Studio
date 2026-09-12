@@ -1,4 +1,4 @@
-import { Eyebrow, PageNo, SlideShell } from './slide-kit';
+import { Eyebrow, PageNo, SlideShell } from '../../components/slide-kit';
 
 export default function Slide11() {
   return (

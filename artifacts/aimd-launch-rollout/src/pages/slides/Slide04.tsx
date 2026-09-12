@@ -1,4 +1,4 @@
-import { Eyebrow, NumberedPoint, PageNo, SlideShell } from './slide-kit';
+import { Eyebrow, NumberedPoint, PageNo, SlideShell } from '../../components/slide-kit';
 
 export default function Slide04() {
   return (
