@@ -1,0 +1,28 @@
+kind = "slides"
+previewPath = "/aimd-launch-rollout/"
+title = "Creator Studio by AIMD — Launch Rollout"
+description = "An internal rollout plan for the Creator Studio by AIMD public launch, covering mission, creative-habit campaign, instructor workshop production, private testing, launch-party execution, timeline, roles, and success measures."
+version = "1.0.0"
+id = "artifacts/aimd-launch-rollout"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/aimd-launch-rollout/" ]
+localPort = 25947
+
+[services.development]
+run = "pnpm --filter @workspace/aimd-launch-rollout run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aimd-launch-rollout", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/aimd-launch-rollout/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25947"
+BASE_PATH = "/aimd-launch-rollout/"
