@@ -26,7 +26,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { MediaUpload, type MediaType } from '@/components/MediaUpload';
 import EmojiPicker from '@/components/EmojiPicker';
-import { useGetRewards } from '@workspace/api-client-react';
+import { getGetRewardsQueryKey, useGetRewards } from '@workspace/api-client-react';
 
 // ─── Tab type ─────────────────────────────────────────────────────────────────
 
@@ -42,8 +42,11 @@ async function fetchCurrentChallenge() {
       week: string;
       theme: string;
       prompt: string;
+      startsAt: string;
       deadline: string;
       prize: string;
+      submissionPoints: number;
+      status: 'upcoming' | 'active' | 'closed';
       challengeWeek: string;
       totalSubmissions: number;
     };
@@ -171,7 +174,7 @@ function RewardTiers() {
       </div>
 
       <p className="font-mono text-[10px] text-muted-foreground mt-4">
-        Earn {data.challengeWinnerPoints} pts by winning the weekly challenge. Rewards are claimed in person with the AIMD team.
+        Every original featured-challenge submission earns 20 points. Rewards are claimed in person with the AIMD team.
       </p>
     </div>
   );
@@ -183,6 +186,7 @@ export function WeeklyChallenge() {
   const [submitOpen, setSubmitOpen] = useState(false);
   const [caption, setCaption] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [challengeMediaType, setChallengeMediaType] = useState<MediaType>('image');
   const [tagsStr, setTagsStr] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -199,15 +203,17 @@ export function WeeklyChallenge() {
         imageUrl,
         tagsStr.split(',').map((t) => t.trim()).filter(Boolean),
       ),
-    onSuccess: () => {
+    onSuccess: (result: { pointsAwarded: number; newBalance: number }) => {
       setSubmitOpen(false);
       setCaption('');
       setImageUrl('');
+      setChallengeMediaType('image');
       setTagsStr('');
       queryClient.invalidateQueries({ queryKey: ['challenges', 'current'] });
+      queryClient.invalidateQueries({ queryKey: getGetRewardsQueryKey() });
       toast({
-        title: 'Submission received!',
-        description: `Your entry is in the queue.`,
+        title: `+${result.pointsAwarded} AIMD points`,
+        description: `Your original response was submitted. New balance: ${result.newBalance} points.`,
       });
     },
     onError: (err: Error) => {
@@ -239,9 +245,11 @@ export function WeeklyChallenge() {
   // useCountdown must be called unconditionally before any early returns so
   // the hook count stays stable across renders (Rules of Hooks).
   // We fall back to the server-side deadline constant when data is not yet loaded.
-  const FALLBACK_DEADLINE = new Date('2026-09-26T06:59:00.000Z');
-  const deadline = data ? new Date(data.challenge.deadline) : FALLBACK_DEADLINE;
-  const cd = useCountdown(deadline);
+  const FALLBACK_TARGET = new Date('2026-10-24T07:00:00.000Z');
+  const countdownTarget = data
+    ? new Date(data.challenge.status === 'upcoming' ? data.challenge.startsAt : data.challenge.deadline)
+    : FALLBACK_TARGET;
+  const cd = useCountdown(countdownTarget);
 
   if (isLoading) {
     return (
@@ -272,7 +280,9 @@ export function WeeklyChallenge() {
 
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
           <div>
-            <span className="font-mono text-[10px] text-primary uppercase tracking-widest">{challenge.week} · Active</span>
+            <span className="font-mono text-[10px] text-primary uppercase tracking-widest">
+              {challenge.week} · {challenge.status}
+            </span>
             <h2 className="font-display font-black text-2xl uppercase tracking-tight text-foreground mt-1">
               {challenge.theme}
             </h2>
@@ -281,7 +291,8 @@ export function WeeklyChallenge() {
           <div className="flex items-center gap-2 flex-shrink-0">
             <Clock className="w-4 h-4 text-muted-foreground" />
             <span className="font-mono text-sm text-muted-foreground">
-              {cd.days}d {cd.hours}h {cd.minutes}m left
+              {challenge.status === 'upcoming' ? 'Opens in ' : challenge.status === 'active' ? '' : 'Ended · '}
+              {cd.days}d {cd.hours}h {cd.minutes}m
             </span>
           </div>
         </div>
@@ -299,7 +310,7 @@ export function WeeklyChallenge() {
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 border border-primary/40 text-primary font-mono text-xs uppercase">
                 <Zap className="w-3 h-3" /> Submitted
               </div>
-            ) : (
+            ) : challenge.status === 'active' ? (
               <Dialog open={submitOpen} onOpenChange={setSubmitOpen}>
                 <DialogTrigger asChild>
                   <Button className="rounded-none bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs uppercase tracking-wider h-8 px-4">
@@ -315,8 +326,12 @@ export function WeeklyChallenge() {
                        <label className="font-mono text-xs uppercase text-muted-foreground">Artwork / Challenge Proof (Required)</label>
                        <MediaUpload
                          url={imageUrl}
-                         mediaType="image"
-                         onChange={(u) => setImageUrl(u)}
+                          mediaType={challengeMediaType}
+                          onChange={(u, nextMediaType) => {
+                            setImageUrl(u);
+                            setChallengeMediaType(nextMediaType);
+                          }}
+                          allowVideo
                          purpose="challenge_final"
                        />
                     </div>
@@ -324,7 +339,7 @@ export function WeeklyChallenge() {
                       <label className="font-mono text-xs uppercase text-muted-foreground">Caption / Artist Notes</label>
                       <Textarea
                         className="rounded-none border-border bg-background min-h-[100px] resize-none"
-                        placeholder="Describe your piece, process, or intent..."
+                        placeholder="Tell us about your original response..."
                         value={caption}
                         onChange={(e) => setCaption(e.target.value)}
                       />
@@ -333,7 +348,7 @@ export function WeeklyChallenge() {
                       <label className="font-mono text-xs uppercase text-muted-foreground">Tags (comma separated)</label>
                       <Input
                         className="rounded-none border-border bg-background"
-                        placeholder="flash, watercolor, maritime"
+                        placeholder="movement, poetry, photography"
                         value={tagsStr}
                         onChange={(e) => setTagsStr(e.target.value)}
                       />
@@ -353,6 +368,12 @@ export function WeeklyChallenge() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
+            ) : (
+              <span className="border border-border px-3 py-1.5 font-mono text-xs uppercase text-muted-foreground">
+                {challenge.status === 'upcoming'
+                  ? `Opens ${new Date(challenge.startsAt).toLocaleDateString()}`
+                  : 'Challenge closed'}
+              </span>
             )}
           </div>
         </div>

@@ -20,3 +20,4 @@
 - [SMS signup placement](sms-signup-placement.md) — keep text-list signup only on the public homepage, without a standalone route or navigation entry.
 - [Durable public rate limits](durable-public-rate-limits.md) — compliance-sensitive throttles must use atomic shared storage, never process-local memory.
 - [Multi-deck PDF export](multi-deck-pdf-export.md) — exportSlides may select the wrong slides artifact when several decks exist; verify title and page count before delivery.
+- [Featured challenge policy](featured-challenge-policy.md) — use inclusive themes on a flexible cadence; every original response earns the same 20 points.

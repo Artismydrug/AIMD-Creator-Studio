@@ -5,13 +5,17 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+import type { WeeklyChallengeBriefStatus } from './weeklyChallengeBriefStatus';
 
 export interface WeeklyChallengeBrief {
   week: string;
   theme: string;
   prompt: string;
+  startsAt: Date;
   deadline: Date;
   prize: string;
+  submissionPoints: number;
+  status: WeeklyChallengeBriefStatus;
   challengeWeek: string;
   totalSubmissions: number;
 }

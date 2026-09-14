@@ -1243,7 +1243,6 @@ export const UpdateCurrentUserResponse = zod.object({
  */
 export const GetRewardsResponse = zod.object({
   "points": zod.int(),
-  "challengeWinnerPoints": zod.int(),
   "tiers": zod.array(zod.object({
   "points": zod.int(),
   "reward": zod.string(),
@@ -1284,21 +1283,6 @@ export const AwardPointsAdminBody = zod.object({
 })
 
 export const AwardPointsAdminResponse = zod.object({
-  "userId": zod.int(),
-  "username": zod.string().optional(),
-  "amount": zod.int(),
-  "points": zod.int()
-})
-
-
-/**
- * @summary (Admin) Award the weekly-challenge prize to a submission's creator
- */
-export const AwardChallengeWinnerParams = zod.object({
-  "submissionId": zod.coerce.number().int()
-})
-
-export const AwardChallengeWinnerResponse = zod.object({
   "userId": zod.int(),
   "username": zod.string().optional(),
   "amount": zod.int(),
@@ -1767,15 +1751,18 @@ export const SpinDailyRewardResponse = zod.object({
 
 
 /**
- * @summary Get the current weekly challenge with submissions and vote counts
+ * @summary Get the current or upcoming featured challenge with submissions and vote counts
  */
 export const GetCurrentChallengeResponse = zod.object({
   "challenge": zod.object({
   "week": zod.string(),
   "theme": zod.string(),
   "prompt": zod.string(),
+  "startsAt": zod.coerce.date(),
   "deadline": zod.coerce.date(),
   "prize": zod.string(),
+  "submissionPoints": zod.int(),
+  "status": zod.enum(['upcoming', 'active', 'closed']),
   "challengeWeek": zod.string(),
   "totalSubmissions": zod.int()
 }),
@@ -1811,8 +1798,8 @@ export const GetCurrentChallengeResponse = zod.object({
 
 
 /**
- * One entry per creator per challenge week. Returns 409 if already submitted.
- * @summary Submit an entry to the current weekly challenge
+ * One entry per creator per challenge. A successful original response awards 20 AIMD points exactly once.
+ * @summary Submit an entry to the active featured challenge
  */
 export const submitChallengeEntryBodyCaptionMax = 500;
 
@@ -1837,7 +1824,9 @@ export const SubmitChallengeEntryBody = zod.object({
 
 export const SubmitChallengeEntryResponse = zod.object({
   "submissionId": zod.int(),
-  "verificationStatus": zod.enum(['pending_review', 'verified_authentic', 'instructor_approved'])
+  "verificationStatus": zod.enum(['pending_review', 'verified_authentic', 'instructor_approved']),
+  "pointsAwarded": zod.int(),
+  "newBalance": zod.int()
 })
 
 

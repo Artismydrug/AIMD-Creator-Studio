@@ -49,7 +49,7 @@ const SLIDES = [
     iconColor: 'text-yellow-500',
     accent: '#EAB308',
     title: 'Practice with purpose.',
-    body: 'Use habits for the daily work. Jump into weekly challenges when you want a creative push.',
+    body: 'Use habits for the daily work. Jump into featured challenges when you want a creative push.',
   },
   {
     badge: 'LEARN YOUR WAY',

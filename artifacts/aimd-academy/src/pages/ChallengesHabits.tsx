@@ -6,7 +6,7 @@ import Habits from '@/pages/Habits';
 type View = 'challenges' | 'habits';
 
 const VIEWS: Array<{ id: View; label: string; description: string; icon: typeof Flame }> = [
-  { id: 'challenges', label: 'Challenges', description: 'Take on the weekly brief, share your work, and vote for creators.', icon: Flame },
+  { id: 'challenges', label: 'Challenges', description: 'Respond to a featured theme in your own medium, share your work, and discover other creators.', icon: Flame },
   { id: 'habits', label: 'Habits', description: 'Log your daily practice, run a session timer, and keep your streak alive.', icon: Timer },
 ];
 

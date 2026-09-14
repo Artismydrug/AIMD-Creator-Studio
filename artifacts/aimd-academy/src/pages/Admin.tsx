@@ -4,7 +4,6 @@ import {
   getListAdminTattooBookingsQueryKey,
   useGetCurrentUser,
   useCreateEvent,
-  useAwardChallengeWinner,
   useListAdminUsers,
   useListAdminTattooBookings,
   useUpdateAdminTattooBooking,
@@ -19,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { MediaUpload } from '@/components/MediaUpload';
-import { AlertTriangle, Calendar, ClipboardList, Crown, Image as ImageIcon, Mail, Phone, Search, ShieldCheck, ThumbsUp, Trophy, Users } from 'lucide-react';
+import { AlertTriangle, Calendar, ClipboardList, Crown, Image as ImageIcon, Mail, Phone, Search, ShieldCheck, Users } from 'lucide-react';
 
 // ─── Challenge data (same shape the Studio Log uses) ─────────────────────────
 
@@ -173,85 +172,6 @@ function CreateEventCard() {
           {createEvent.isPending ? 'Posting…' : 'Post Event'}
         </Button>
       </div>
-    </section>
-  );
-}
-
-// ─── Weekly challenge winner ──────────────────────────────────────────────────
-
-function ChallengeWinnerCard() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const awardWinner = useAwardChallengeWinner();
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['challenges', 'current'],
-    queryFn: fetchCurrentChallenge,
-  });
-
-  const award = (submissionId: number, username: string) => {
-    awardWinner.mutate(
-      { submissionId },
-      {
-        onSuccess: (res) => {
-          toast({
-            title: 'Winner awarded!',
-            description: `${username} received ${res.amount} AIMD Points (new balance: ${res.points}).`,
-          });
-          queryClient.invalidateQueries({ queryKey: ['challenges', 'current'] });
-        },
-        onError: (err: any) => {
-          toast({ title: 'Could not award', description: String(err?.message ?? err), variant: 'destructive' });
-        },
-      }
-    );
-  };
-
-  return (
-    <section className="border border-border bg-card p-6 md:p-8">
-      <h2 className="font-display font-bold text-xl uppercase flex items-center gap-2 mb-1">
-        <Trophy className="w-5 h-5 text-amber-400" /> Weekly Challenge Winner
-      </h2>
-      <p className="text-sm text-muted-foreground mb-6">
-        Pick this week's winner — they get 250 AIMD Points toward reward tiers. Each week can only be awarded once per creator.
-      </p>
-
-      {isLoading ? (
-        <p className="font-mono text-sm text-muted-foreground animate-pulse">Loading submissions…</p>
-      ) : !data || data.submissions.length === 0 ? (
-        <div className="py-10 text-center border border-dashed border-border">
-          <p className="font-mono text-sm text-muted-foreground">
-            No submissions yet for {data?.challenge.week ?? 'this week'}.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {data.submissions.map((sub) => (
-            <div key={sub.id} className="flex items-center gap-4 p-4 border border-border bg-background">
-              {sub.imageUrl ? (
-                <img src={sub.imageUrl} alt="" className="w-14 h-14 object-cover border border-border flex-shrink-0" />
-              ) : (
-                <div className="w-14 h-14 bg-muted border border-border flex-shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-sm truncate">#{sub.rank} · {sub.username}</p>
-                <p className="text-xs text-muted-foreground truncate">{sub.caption}</p>
-                <p className="font-mono text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
-                  <ThumbsUp className="w-3 h-3" /> {sub.votes} votes
-                </p>
-              </div>
-              <Button
-                size="sm"
-                className="rounded-none bg-amber-500 hover:bg-amber-400 text-secondary-foreground font-bold text-xs uppercase flex-shrink-0"
-                onClick={() => award(sub.id, sub.username)}
-                disabled={awardWinner.isPending}
-              >
-                Award 250 pts
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
     </section>
   );
 }
@@ -764,7 +684,6 @@ export default function Admin() {
           <TattooBookingsCard />
           <MembersCard />
           <CreateEventCard />
-          <ChallengeWinnerCard />
         </div>
       </div>
     </div>

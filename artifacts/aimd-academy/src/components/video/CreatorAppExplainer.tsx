@@ -27,7 +27,7 @@ export function CreatorAppExplainer() {
           </div>
           <div className="bg-white/5 border border-white/10 p-5 rounded-xl">
             <h3 className="font-bold text-lg mb-2 text-[#ff00ff]">Compete. Win Rewards.</h3>
-            <p className="text-sm text-white/70">Weekly Challenges push your craft. Spin the Reward Wheel daily to turn consistency into perks.</p>
+            <p className="text-sm text-white/70">Featured Challenges invite every creative medium. Submit an original response to earn points.</p>
           </div>
           <div className="bg-white/5 border border-white/10 p-5 rounded-xl">
             <h3 className="font-bold text-lg mb-2 text-[#00ffff]">Publish & Be Seen.</h3>
@@ -67,7 +67,7 @@ export function CreatorAppExplainer() {
         <h2>Creator App Explainer Video</h2>
         <p>The Creator App. A Digital Studio Where Practice Becomes Progress.</p>
         <p>Feature 1: Show Up. Every Day. Daily check-in streaks build discipline. Collectible badges make the grind visible. Your effort, recognized.</p>
-        <p>Feature 2: Compete. Win Rewards. Weekly Challenges: Themed sprints that push your craft. Climb the leaderboards. Reward Wheel: Spin daily. Turn consistency into perks and surprises.</p>
+        <p>Feature 2: Respond. Share. Earn. Featured Challenges: Open themes that welcome every creative medium. Submit an original response to earn points. Reward Wheel: Spin daily. Turn consistency into perks and surprises.</p>
         <p>Feature 3: Publish & Be Seen. Curate your public portfolio. Get featured in the AIMD gallery. Let your best work speak for itself.</p>
         <p>Three Phases. One Journey. Phase 1: Discovering. Phase 2: Dedicated. Phase 3: Professional.</p>
         <p>The Path is Clear. Interest leads to Discipline, which leads to Opportunity. Start Creating.</p>
@@ -287,7 +287,7 @@ function Scene2() {
           className="flex-1 p-2 md:p-6 rounded-lg md:rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md text-left"
         >
           <Trophy className="w-4 h-4 md:w-8 md:h-8 text-[#ff00ff] mb-1 md:mb-3" />
-          <h3 className="font-display font-bold text-[clamp(0.7rem,1.5cqw,1.5rem)] uppercase mb-0.5 md:mb-2 leading-tight">Weekly Challenges</h3>
+          <h3 className="font-display font-bold text-[clamp(0.7rem,1.5cqw,1.5rem)] uppercase mb-0.5 md:mb-2 leading-tight">Featured Challenges</h3>
           <p className="text-white/60 text-[clamp(0.55rem,1.2cqw,1rem)] leading-snug md:leading-relaxed">Themed sprints that push your craft. Climb the leaderboards.</p>
         </motion.div>
         

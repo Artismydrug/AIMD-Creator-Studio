@@ -9,6 +9,5 @@ import type { RewardTier } from './rewardTier';
 
 export interface RewardsInfo {
   points: number;
-  challengeWinnerPoints: number;
   tiers: RewardTier[];
 }

@@ -4243,77 +4243,6 @@ export const useAwardPointsAdmin = <TError = ErrorType<void>,
       return useMutation(getAwardPointsAdminMutationOptions(options));
     }
 
-export const getAwardChallengeWinnerUrl = (submissionId: number,) => {
-
-
-
-
-  return `/api/admin/challenges/${submissionId}/award-winner`
-}
-
-/**
- * @summary (Admin) Award the weekly-challenge prize to a submission's creator
- */
-export const awardChallengeWinner = async (submissionId: number, options?: Parameters<typeof customFetch>[1]): Promise<PointAwardResult> => {
-
-  return customFetch<PointAwardResult>(getAwardChallengeWinnerUrl(submissionId),
-  {
-    ...options,
-    method: 'POST'
-
-
-  }
-);}
-
-
-
-
-
-export const getAwardChallengeWinnerMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof awardChallengeWinner>>, TError,{submissionId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof awardChallengeWinner>>, TError,{submissionId: number}, TContext> => {
-
-const mutationKey = ['awardChallengeWinner'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof awardChallengeWinner>>, {submissionId: number}> = (props) => {
-          const {submissionId} = props ?? {};
-
-          return  awardChallengeWinner(submissionId,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AwardChallengeWinnerMutationResult = NonNullable<Awaited<ReturnType<typeof awardChallengeWinner>>>
-
-    export type AwardChallengeWinnerMutationError = ErrorType<void>
-
-    /**
- * @summary (Admin) Award the weekly-challenge prize to a submission's creator
- */
-export const useAwardChallengeWinner = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof awardChallengeWinner>>, TError,{submissionId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof awardChallengeWinner>>,
-        TError,
-        {submissionId: number},
-        TContext
-      > => {
-      return useMutation(getAwardChallengeWinnerMutationOptions(options));
-    }
-
 export const getListDirectoryUrl = () => {
 
 
@@ -5676,7 +5605,7 @@ export const getGetCurrentChallengeUrl = () => {
 }
 
 /**
- * @summary Get the current weekly challenge with submissions and vote counts
+ * @summary Get the current or upcoming featured challenge with submissions and vote counts
  */
 export const getCurrentChallenge = async ( options?: Parameters<typeof customFetch>[1]): Promise<WeeklyChallengeResult> => {
 
@@ -5723,7 +5652,7 @@ export type GetCurrentChallengeQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Get the current weekly challenge with submissions and vote counts
+ * @summary Get the current or upcoming featured challenge with submissions and vote counts
  */
 
 export function useGetCurrentChallenge<TData = Awaited<ReturnType<typeof getCurrentChallenge>>, TError = ErrorType<unknown>>(
@@ -5753,8 +5682,8 @@ export const getSubmitChallengeEntryUrl = () => {
 }
 
 /**
- * One entry per creator per challenge week. Returns 409 if already submitted.
- * @summary Submit an entry to the current weekly challenge
+ * One entry per creator per challenge. A successful original response awards 20 AIMD points exactly once.
+ * @summary Submit an entry to the active featured challenge
  */
 export const submitChallengeEntry = async (challengeSubmissionInput: ChallengeSubmissionInput, options?: Parameters<typeof customFetch>[1]): Promise<ChallengeSubmissionCreated> => {
 
@@ -5803,7 +5732,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SubmitChallengeEntryMutationError = ErrorType<void>
 
     /**
- * @summary Submit an entry to the current weekly challenge
+ * @summary Submit an entry to the active featured challenge
  */
 export const useSubmitChallengeEntry = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitChallengeEntry>>, TError,{data: BodyType<ChallengeSubmissionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}

@@ -1089,12 +1089,12 @@ export default function ProgressScreen() {
           {challengeIsError && !challengeData && (
             <View style={s.challengeBlock}>
               <Feather name="cloud-off" size={28} color={colors.mutedForeground} />
-              <Text style={s.centeredTitle}>Could not load the weekly challenge</Text>
+              <Text style={s.centeredTitle}>Could not load the featured challenge</Text>
               <TouchableOpacity
                 style={s.retryBtn}
                 onPress={() => refetchChallenge()}
                 accessibilityRole="button"
-                accessibilityLabel="Retry weekly challenge"
+                accessibilityLabel="Retry featured challenge"
               >
                 <Text style={s.retryBtnText}>Retry Challenge</Text>
               </TouchableOpacity>
@@ -1104,7 +1104,7 @@ export default function ProgressScreen() {
           {challengeData && challengeData.challenge && (
             <View style={s.challengeBlock}>
               <View style={s.challengeHeader}>
-                <Text style={s.challengeTitle}>Weekly Challenge</Text>
+                <Text style={s.challengeTitle}>Featured Challenge</Text>
                 <Feather name="star" size={18} color={colors.primary} />
               </View>
               <Text style={s.challengeTheme}>{challengeData.challenge.theme}</Text>
@@ -1120,17 +1120,17 @@ export default function ProgressScreen() {
                 </Text>
               </View>
 
-              {challengeData.hasSubmitted ? (
+               {challengeData.hasSubmitted ? (
                 <View style={s.challengeSubmitted}>
                   <Feather name="check-circle" size={16} color={colors.primary} />
                   <Text style={s.challengeSubmittedText}>Entry Submitted</Text>
                 </View>
-              ) : (
+               ) : challengeData.challenge.status === 'active' ? (
                 <TouchableOpacity
                   style={[s.actionBtn, { borderColor: colors.primary }]}
                   testID="challenge-submit-button"
                   accessibilityRole="button"
-                  accessibilityLabel="Submit a weekly challenge entry"
+                  accessibilityLabel="Submit a featured challenge entry"
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     setComposing(true);
@@ -1139,7 +1139,16 @@ export default function ProgressScreen() {
                   <Feather name="upload" size={18} color={colors.primary} />
                   <Text style={[s.actionBtnText, { color: colors.primary }]}>Submit Entry</Text>
                 </TouchableOpacity>
-              )}
+               ) : (
+                 <View style={s.challengeSubmitted}>
+                   <Feather name="calendar" size={16} color={colors.primary} />
+                   <Text style={s.challengeSubmittedText}>
+                     {challengeData.challenge.status === 'upcoming'
+                       ? `Opens ${new Date(challengeData.challenge.startsAt).toLocaleDateString()}`
+                       : 'Challenge closed'}
+                   </Text>
+                 </View>
+               )}
 
               {challengeData.submissions.length > 0 && (
                 <View style={s.submissionsSection}>

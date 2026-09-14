@@ -3,13 +3,12 @@
  *
  * GET  /rewards                                        — reward tiers + current user's points
  * POST /admin/points-awards                            — (admin) award points to any user
- * POST /admin/challenges/:submissionId/award-winner    — (admin) award weekly-challenge prize
  */
 
 import { Router, type IRouter } from "express";
 import { pool } from "@workspace/db";
 import { requireAdmin } from "../middlewares/requireAdmin";
-import { REWARD_TIERS, CHALLENGE_WINNER_POINTS, awardPoints } from "../lib/rewards";
+import { REWARD_TIERS, awardPoints } from "../lib/rewards";
 
 const router: IRouter = Router();
 
@@ -25,7 +24,6 @@ router.get("/rewards", async (req, res): Promise<void> => {
   }
   res.json({
     points,
-    challengeWinnerPoints: CHALLENGE_WINNER_POINTS,
     tiers: REWARD_TIERS.map((t) => ({ ...t, unlocked: points >= t.points })),
   });
 });
@@ -57,65 +55,6 @@ router.post("/admin/points-awards", requireAdmin, async (req, res): Promise<void
     res.status(500).json({ error: String(err) });
   }
 });
-
-// ─── POST /admin/challenges/:submissionId/award-winner ────────────────────────
-router.post(
-  "/admin/challenges/:submissionId/award-winner",
-  requireAdmin,
-  async (req, res): Promise<void> => {
-    const submissionId = parseInt(String(req.params.submissionId), 10);
-    if (isNaN(submissionId)) {
-      res.status(400).json({ error: "Invalid submission id" });
-      return;
-    }
-
-    try {
-      const { rows } = await pool.query<{
-        user_id: number;
-        challenge_week: string;
-        username: string;
-      }>(
-        `SELECT cs.user_id, cs.challenge_week, u.username
-         FROM challenge_submissions cs JOIN users u ON u.id = cs.user_id
-         WHERE cs.id = $1`,
-        [submissionId]
-      );
-      if (rows.length === 0) {
-        res.status(404).json({ error: "Submission not found" });
-        return;
-      }
-      const sub = rows[0];
-      const reason = `Weekly Challenge winner (${sub.challenge_week})`;
-
-      // Duplicate wins are prevented by a partial unique index on
-      // point_awards (user_id, reason) for challenge-win reasons; a
-      // concurrent or repeated award surfaces as a 23505 conflict below.
-      let newBalance: number;
-      try {
-        newBalance = await awardPoints({
-          userId: sub.user_id,
-          amount: CHALLENGE_WINNER_POINTS,
-          reason,
-          awardedBy: (req.dbUser as any).id,
-        });
-      } catch (err: any) {
-        if (err?.code === "23505") {
-          res.status(409).json({ error: "This creator was already awarded for that week" });
-          return;
-        }
-        throw err;
-      }
-      res.status(201).json({
-        userId: sub.user_id,
-        username: sub.username,
-        amount: CHALLENGE_WINNER_POINTS,
-        points: newBalance,
-      });
-    } catch (err) {
-      res.status(500).json({ error: String(err) });
-    }
-  }
-);
 
 // ─── GET /admin/users ─────────────────────────────────────────────────────────
 router.get("/admin/users", requireAdmin, async (_req, res): Promise<void> => {

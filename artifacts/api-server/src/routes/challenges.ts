@@ -1,8 +1,8 @@
 /**
  * Challenge API routes
  *
- * GET  /challenges/current           — current week's brief + submissions with live vote counts
- * POST /challenges/submit            — submit an entry (one per creator per week)
+ * GET  /challenges/current           — current scheduled brief + submissions with live vote counts
+ * POST /challenges/submit            — submit an entry (one per creator per challenge)
  * POST /challenges/:id/vote          — toggle vote on a submission (no double-voting)
  */
 
@@ -15,26 +15,27 @@ import {
   UpdateChallengeVerificationBody,
   UpdateChallengeVerificationResponse,
 } from "@workspace/api-zod";
+import {
+  CHALLENGE_SUBMISSION_POINTS,
+  getDisplayedChallenge,
+} from "../lib/challengeSchedule";
 
 const router: IRouter = Router();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Returns the ISO year-week string for a given date, e.g. "2026-W32". */
-function isoWeek(date: Date): string {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const day = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - day);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-  return `${d.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
-}
-
 export function isChallengeSubmissionOpen(
   receivedAt: Date,
-  deadline: Date,
+  startsAtOrDeadline: Date,
+  deadline?: Date,
 ): boolean {
-  return receivedAt.getTime() <= deadline.getTime();
+  if (!deadline) {
+    return receivedAt.getTime() <= startsAtOrDeadline.getTime();
+  }
+  return (
+    receivedAt.getTime() >= startsAtOrDeadline.getTime() &&
+    receivedAt.getTime() <= deadline.getTime()
+  );
 }
 
 type StoredChallengeMedia = {
@@ -47,22 +48,11 @@ type StoredChallengeMedia = {
   consumed_at: Date | null;
 };
 
-// Hard-coded current challenge brief — in a future iteration this can be
-// stored in the DB so admins can manage it from a dashboard.
-const CURRENT_CHALLENGE = {
-  week: "Week 39",
-  theme: "Ocean & Maritime",
-  prompt:
-    "Create a flash sheet with 3+ designs inspired by the ocean — nautical, sea creatures, waves, or maritime heritage. Any medium. Show process if you can.",
-  deadline: "2026-09-26T06:59:00.000Z", // Friday Sep 25, 11:59 PM Pacific
-  prize: "250 AIMD Points + Studio Ready fast-track entry",
-};
-const CURRENT_CHALLENGE_START = new Date("2026-08-27T00:00:00.000Z");
-
 // ─── GET /challenges/current ──────────────────────────────────────────────────
 
 router.get("/challenges/current", async (req, res): Promise<void> => {
-  const challengeWeek = isoWeek(new Date(CURRENT_CHALLENGE.deadline));
+  const { challenge, status } = getDisplayedChallenge(new Date());
+  const challengeWeek = challenge.id;
 
   try {
     // Fetch all submissions for the current week with vote counts
@@ -170,7 +160,14 @@ router.get("/challenges/current", async (req, res): Promise<void> => {
 
     res.json(GetCurrentChallengeResponse.parse({
       challenge: {
-        ...CURRENT_CHALLENGE,
+        week: challenge.label,
+        theme: challenge.theme,
+        prompt: challenge.prompt,
+        startsAt: challenge.startsAt,
+        deadline: challenge.deadline,
+        prize: `${CHALLENGE_SUBMISSION_POINTS} AIMD points for an original response`,
+        submissionPoints: CHALLENGE_SUBMISSION_POINTS,
+        status,
         challengeWeek,
         totalSubmissions: submissions.length,
       },
@@ -199,14 +196,25 @@ router.post("/challenges/submit", async (req, res): Promise<void> => {
   }
 
   const { caption, finalMedia, processMedia, tags } = parsed.data;
-  const challengeWeek = isoWeek(new Date(CURRENT_CHALLENGE.deadline));
+  const now = new Date();
+  const { challenge, status } = getDisplayedChallenge(now);
+  const challengeWeek = challenge.id;
   const tagsArr: string[] = Array.isArray(tags) ? tags.map(String) : [];
-  const deadline = new Date(CURRENT_CHALLENGE.deadline);
-  if (!isChallengeSubmissionOpen(new Date(), deadline)) {
-    res.status(410).json({ error: "This weekly challenge is closed" });
+  const startsAt = new Date(challenge.startsAt);
+  const deadline = new Date(challenge.deadline);
+  if (
+    status !== "active" ||
+    !isChallengeSubmissionOpen(now, startsAt, deadline)
+  ) {
+    res.status(410).json({
+      error:
+        status === "upcoming"
+          ? "This challenge has not opened yet"
+          : "This challenge is closed",
+    });
     return;
   }
-    const weekStart = CURRENT_CHALLENGE_START;
+  const challengeStart = startsAt;
   const client = await pool.connect();
 
   try {
@@ -242,7 +250,7 @@ router.post("/challenges/submit", async (req, res): Promise<void> => {
     }
 
     const capturedAt = finalUpload.captured_at ? new Date(finalUpload.captured_at) : null;
-    if (capturedAt && (capturedAt < weekStart || capturedAt > deadline)) {
+    if (capturedAt && (capturedAt < challengeStart || capturedAt > deadline)) {
       await client.query("ROLLBACK");
       res.status(400).json({
         error: "Final media must be captured during the active challenge window",
@@ -280,7 +288,7 @@ router.post("/challenges/submit", async (req, res): Promise<void> => {
 
     if (rows.length === 0) {
       await client.query("ROLLBACK");
-      res.status(409).json({ error: "You have already submitted an entry for this week" });
+      res.status(409).json({ error: "You have already submitted an entry for this challenge" });
       return;
     }
 
@@ -290,12 +298,28 @@ router.post("/challenges/submit", async (req, res): Promise<void> => {
        WHERE id = ANY($1::int[])`,
       [[finalUpload.id, ...(processUpload ? [processUpload.id] : [])]],
     );
+
+    const pointReason = `Challenge submission (${challengeWeek})`;
+    await client.query(
+      `INSERT INTO point_awards (user_id, amount, reason, awarded_by)
+       VALUES ($1, $2, $3, NULL)`,
+      [req.dbUser.id, CHALLENGE_SUBMISSION_POINTS, pointReason],
+    );
+    const { rows: balances } = await client.query<{ points: number }>(
+      `UPDATE users
+       SET points = points + $2
+       WHERE id = $1
+       RETURNING points`,
+      [req.dbUser.id, CHALLENGE_SUBMISSION_POINTS],
+    );
     await client.query("COMMIT");
 
     res.status(201).json(
       SubmitChallengeEntryResponse.parse({
         submissionId: rows[0].id,
         verificationStatus: "pending_review",
+        pointsAwarded: CHALLENGE_SUBMISSION_POINTS,
+        newBalance: balances[0].points,
       }),
     );
   } catch (err) {

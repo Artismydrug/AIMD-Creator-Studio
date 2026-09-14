@@ -10,4 +10,6 @@ import type { ChallengeVerificationStatus } from './challengeVerificationStatus'
 export interface ChallengeSubmissionCreated {
   submissionId: number;
   verificationStatus: ChallengeVerificationStatus;
+  pointsAwarded: number;
+  newBalance: number;
 }

@@ -1116,29 +1116,6 @@ paths:
         "403":
           description: Admin access required
 
-  /admin/challenges/{submissionId}/award-winner:
-    post:
-      operationId: awardChallengeWinner
-      tags: [users]
-      summary: (Admin) Award the weekly-challenge prize to a submission's creator
-      parameters:
-        - name: submissionId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "201":
-          description: Prize awarded
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PointAwardResult"
-        "403":
-          description: Admin access required
-        "409":
-          description: Already awarded for that week
-
   /directory:
     get:
       operationId: listDirectory
@@ -1524,12 +1501,12 @@ paths:
         "401":
           description: Authentication required
 
-  # ── Weekly Challenges ─────────────────────────────────────────────────────
+  # ── Featured Challenges ───────────────────────────────────────────────────
   /challenges/current:
     get:
       operationId: getCurrentChallenge
       tags: [challenges]
-      summary: Get the current weekly challenge with submissions and vote counts
+      summary: Get the current or upcoming featured challenge with submissions and vote counts
       responses:
         "200":
           description: Current weekly challenge with ranked submissions
@@ -1542,8 +1519,8 @@ paths:
     post:
       operationId: submitChallengeEntry
       tags: [challenges]
-      summary: Submit an entry to the current weekly challenge
-      description: One entry per creator per challenge week. Returns 409 if already submitted.
+      summary: Submit an entry to the active featured challenge
+      description: One entry per creator per challenge. A successful original response awards 20 AIMD points exactly once.
       requestBody:
         required: true
         content:
@@ -1562,7 +1539,7 @@ paths:
         "409":
           description: Already submitted for this week
         "410":
-          description: The current weekly challenge has closed
+          description: The featured challenge is upcoming or closed
 
   /challenges/{id}/verification:
     patch:
@@ -2176,11 +2153,9 @@ components:
 
     RewardsInfo:
       type: object
-      required: [points, challengeWinnerPoints, tiers]
+      required: [points, tiers]
       properties:
         points:
-          type: integer
-        challengeWinnerPoints:
           type: integer
         tiers:
           type: array
@@ -3886,12 +3861,16 @@ components:
 
     ChallengeSubmissionCreated:
       type: object
-      required: [submissionId, verificationStatus]
+      required: [submissionId, verificationStatus, pointsAwarded, newBalance]
       properties:
         submissionId:
           type: integer
         verificationStatus:
           $ref: "#/components/schemas/ChallengeVerificationStatus"
+        pointsAwarded:
+          type: integer
+        newBalance:
+          type: integer
 
     ChallengeSubmission:
       type: object
@@ -3955,7 +3934,7 @@ components:
 
     WeeklyChallengeBrief:
       type: object
-      required: [week, theme, prompt, deadline, prize, challengeWeek, totalSubmissions]
+      required: [week, theme, prompt, startsAt, deadline, prize, submissionPoints, status, challengeWeek, totalSubmissions]
       properties:
         week:
           type: string
@@ -3963,11 +3942,19 @@ components:
           type: string
         prompt:
           type: string
+        startsAt:
+          type: string
+          format: date-time
         deadline:
           type: string
           format: date-time
         prize:
           type: string
+        submissionPoints:
+          type: integer
+        status:
+          type: string
+          enum: ["upcoming", "active", "closed"]
         challengeWeek:
           type: string
         totalSubmissions:

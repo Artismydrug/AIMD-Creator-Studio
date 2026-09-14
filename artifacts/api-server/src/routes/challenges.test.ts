@@ -39,7 +39,7 @@ async function createProofUpload(
   {
     purpose = "challenge_final",
     captureSource = "native_camera",
-    capturedAt = "2026-09-21T18:00:00.000Z",
+    capturedAt = "2026-10-25T18:00:00.000Z",
   }: {
     purpose?: "challenge_final" | "challenge_process";
     captureSource?: "native_camera" | "media_library";
@@ -74,7 +74,7 @@ beforeAll(async () => {
   // Keep proof validation tests inside the configured challenge window.
   // The route must still reject real submissions after its deadline.
   vi.useFakeTimers();
-  vi.setSystemTime(new Date("2026-08-23T12:00:00.000Z"));
+  vi.setSystemTime(new Date("2026-10-25T12:00:00.000Z"));
 
   const { rows } = await pool.query<TestUser>(
     `INSERT INTO users (email, username, is_admin)
@@ -150,6 +150,14 @@ describe("challenge proof-of-work submissions", () => {
 
     expect(res.status).toBe(201);
     expect(res.body.verificationStatus).toBe("pending_review");
+    expect(res.body.pointsAwarded).toBe(20);
+    expect(res.body.newBalance).toBe(20);
+
+    const { rows } = await pool.query<{ points: number }>(
+      `SELECT points FROM users WHERE id = $1`,
+      [libraryCreator.id],
+    );
+    expect(rows[0].points).toBe(20);
   });
 
   it("does not allow a creator to submit another creator's upload", async () => {

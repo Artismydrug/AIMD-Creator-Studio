@@ -22,6 +22,7 @@ import HabitCard from '@/components/HabitCard';
 import { safeImpact } from '@/lib/haptics';
 import {
   getGetCurrentChallengeQueryKey,
+  getGetDashboardSummaryQueryKey,
   useGetCurrentChallenge,
   useListHabits,
   useGetDashboardSummary,
@@ -58,13 +59,18 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
 
   const submitMutation = useSubmitChallengeEntry({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (result) => {
         setUploading(false);
         setSubmitVisible(false);
         setCaption('');
         setProof(null);
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         void queryClient.invalidateQueries({ queryKey: getGetCurrentChallengeQueryKey() });
+        void queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+        Alert.alert(
+          `+${result.pointsAwarded} AIMD points`,
+          `Your original response was submitted. Your new balance is ${result.newBalance} points.`,
+        );
       },
       onError: () => {
         setUploading(false);
@@ -156,7 +162,7 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
       >
         {!embedded && (
           <View style={s.header}>
-            <Text style={s.eyebrow}>Weekly practice</Text>
+            <Text style={s.eyebrow}>Featured challenge</Text>
             <Text style={s.title}>Challenges & Habits</Text>
             <Text style={s.intro}>Make the work visible. Capture your challenge proof live, then keep your daily practice moving.</Text>
           </View>
@@ -168,21 +174,26 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
           <View style={[s.empty, { marginHorizontal: 20 }]}>
             <Feather name="calendar" size={28} color={colors.primary} />
             <Text style={s.emptyTitle}>No active challenge right now</Text>
-            <Text style={s.emptyBody}>Your habit practice is still here. Check back when the next weekly brief unlocks.</Text>
+            <Text style={s.emptyBody}>Your habit practice is still here. Check back when the next featured challenge unlocks.</Text>
           </View>
         ) : (
           <View style={s.challengeCard}>
             <View style={s.challengeTop}>
-              <Text style={s.challengeLabel}>Active challenge</Text>
+                <Text style={s.challengeLabel}>
+                  {challenge.status === 'upcoming' ? 'Coming next' : challenge.status === 'active' ? 'Active challenge' : 'Challenge closed'}
+                </Text>
               <View style={s.challengeStatus}>
                 <Feather name="zap" size={13} color={colors.cyan} />
-                <Text style={s.challengeStatusText}>+100 XP</Text>
+                <Text style={s.challengeStatusText}>+{challenge.submissionPoints} points</Text>
               </View>
             </View>
             <Text style={s.challengeTitle}>{challenge.theme}</Text>
             <Text style={s.challengePrompt}>{challenge.prompt}</Text>
             <View style={s.challengeMeta}>
-              <Text style={s.meta}>Due {new Date(challenge.deadline).toLocaleDateString()}</Text>
+              <Text style={s.meta}>
+                {challenge.status === 'upcoming' ? 'Opens' : 'Due'}{' '}
+                {new Date(challenge.status === 'upcoming' ? challenge.startsAt : challenge.deadline).toLocaleDateString()}
+              </Text>
               <Text style={s.meta}>{challenge.totalSubmissions} submissions</Text>
             </View>
             {challengeData.hasSubmitted ? (
@@ -190,11 +201,20 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
                 <Feather name="check-circle" size={17} color={colors.cyan} />
                 <Text style={s.submittedText}>Entry submitted for review</Text>
               </View>
-            ) : (
+            ) : challenge.status === 'active' ? (
               <TouchableOpacity style={s.primaryButton} onPress={openSubmission} testID="challenges-submit-entry">
                 <Feather name="camera" size={17} color={colors.primaryForeground} />
                 <Text style={s.primaryButtonText}>Capture proof & submit</Text>
               </TouchableOpacity>
+            ) : (
+              <View style={s.submitted}>
+                <Feather name="calendar" size={17} color={colors.cyan} />
+                <Text style={s.submittedText}>
+                  {challenge.status === 'upcoming'
+                    ? `Opens ${new Date(challenge.startsAt).toLocaleDateString()}`
+                    : 'Submissions closed'}
+                </Text>
+              </View>
             )}
           </View>
         )}

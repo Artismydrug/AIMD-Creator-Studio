@@ -50,7 +50,6 @@ export interface RewardTier {
 
 export interface RewardsInfo {
   points: number;
-  challengeWinnerPoints: number;
   tiers: RewardTier[];
 }
 
@@ -1368,6 +1367,8 @@ export interface ChallengeSubmissionInput {
 export interface ChallengeSubmissionCreated {
   submissionId: number;
   verificationStatus: ChallengeVerificationStatus;
+  pointsAwarded: number;
+  newBalance: number;
 }
 
 export interface ChallengeSubmission {
@@ -1403,12 +1404,24 @@ export interface ChallengeVerificationResult {
   verificationReviewedAt?: string | null;
 }
 
+export type WeeklyChallengeBriefStatus = typeof WeeklyChallengeBriefStatus[keyof typeof WeeklyChallengeBriefStatus];
+
+
+export const WeeklyChallengeBriefStatus = {
+  upcoming: 'upcoming',
+  active: 'active',
+  closed: 'closed',
+} as const;
+
 export interface WeeklyChallengeBrief {
   week: string;
   theme: string;
   prompt: string;
+  startsAt: string;
   deadline: string;
   prize: string;
+  submissionPoints: number;
+  status: WeeklyChallengeBriefStatus;
   challengeWeek: string;
   totalSubmissions: number;
 }

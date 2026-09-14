@@ -24,9 +24,6 @@ export const REWARD_TIERS = [
   },
 ] as const;
 
-/** Points awarded to the weekly challenge winner. */
-export const CHALLENGE_WINNER_POINTS = 250;
-
 /**
  * Award points to a user: writes a ledger row and increments the balance
  * atomically in one transaction. Returns the user's new balance.

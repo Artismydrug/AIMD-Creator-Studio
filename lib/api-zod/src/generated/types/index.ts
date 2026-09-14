@@ -167,6 +167,7 @@ export * from './user';
 export * from './userTier';
 export * from './userUpdate';
 export * from './weeklyChallengeBrief';
+export * from './weeklyChallengeBriefStatus';
 export * from './weeklyChallengeResult';
 export * from './workshop';
 export * from './workshopDetail';
