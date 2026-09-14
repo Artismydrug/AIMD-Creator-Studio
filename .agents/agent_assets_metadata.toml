@@ -42,3 +42,17 @@ mtime_ms = 1789359296099
 storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/fc53dd00-e8a9-4662-a1ce-02cab92a0c72/1aa4b15e-42ab-4420-97e9-c6e818477e5c"
 storage_version_token = "1789359316069401"
 content_type = "application/pdf"
+
+[[outputs]]
+id = "t1iILtH3xoPknBgvf3BIU"
+uri = "file://deliverables/aimd-launch-content-quick-plan.pdf"
+type = "pdf"
+title = "Creator Studio by AIMD — Launch Content Quick Plan"
+description = "A simplified one-page plan for Anthony covering the 8–12 short creative-habit clips, five starter lesson modules, and immediate recording and publishing actions."
+logical_id = "689f2b50-178e-4650-9068-6f0c4cd763e2"
+content_hash = "sha256:7f1e238d747a54c81af150a00119279cdc20b55cab98e5e3d455dd7c5d78d239"
+size = 45187
+mtime_ms = 1789419871368
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/689f2b50-178e-4650-9068-6f0c4cd763e2/f7511749-b7cb-4d9d-b3ca-e889ae9b6912"
+storage_version_token = "1789419881779113"
+content_type = "application/pdf"
