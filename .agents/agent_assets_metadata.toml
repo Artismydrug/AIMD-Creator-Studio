@@ -14,3 +14,17 @@ mtime_ms = 1789238663428
 storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/3ac0aa4b-f57d-4ceb-98d0-2e88fc0159a3/e1ef11e7-9033-4568-8977-ac4dda0d6f42"
 storage_version_token = "1789238663856249"
 content_type = "application/pdf"
+
+[[outputs]]
+id = "MCbTFthyQGXvygzH31nhO"
+uri = "file://deliverables/aimd-rollout-checklist.pdf"
+type = "pdf"
+title = "Creator Studio by AIMD — Public Launch Rollout Checklist"
+description = "A one-page printable checklist covering testing, launch content, workshops, the final iOS build, App Review, challenge rules, and the October 24 public launch."
+logical_id = "68919970-c6cc-4968-8d91-b835cfeea77e"
+content_hash = "sha256:3c201e0c0d328c60d3e63a736450ca1cfd8a9ce862228cad5485fb35aa08b929"
+size = 77775
+mtime_ms = 1789355346441
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/68919970-c6cc-4968-8d91-b835cfeea77e/dc5a4a83-5ea1-4c5c-9d78-a2b1e9a2ee2f"
+storage_version_token = "1789355351604208"
+content_type = "application/pdf"

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Creator Studio by AIMD — Public Launch Rollout Checklist</title>
+  <style>
+    @page { size: Letter portrait; margin: 0.38in; }
+    :root {
+      --ink: #211d1a;
+      --muted: #706761;
+      --orange: #c85a32;
+      --orange-soft: #f6e4dc;
+      --paper: #fffdf9;
+      --line: #d9d0c8;
+      --panel: #f7f3ee;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--paper); color: var(--ink); }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 9.2pt;
+      line-height: 1.25;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page { width: 100%; }
+    .topline { height: 7px; background: var(--orange); margin-bottom: 12px; }
+    header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-end; border-bottom: 1.5px solid var(--ink); padding-bottom: 9px; }
+    .kicker { color: var(--orange); font-size: 8pt; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { font-size: 24pt; line-height: .95; letter-spacing: -.055em; margin: 4px 0 0; }
+    .date { text-align: right; font-size: 8.5pt; line-height: 1.35; color: var(--muted); white-space: nowrap; }
+    .date strong { display: block; color: var(--ink); font-size: 11pt; }
+    .intro { margin: 9px 0 10px; font-size: 9.2pt; color: var(--muted); }
+    .timeline { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 10px; }
+    .phase { border-top: 3px solid var(--orange); padding: 5px 5px 0; min-height: 47px; background: var(--panel); }
+    .phase .when { color: var(--orange); font-size: 7.2pt; font-weight: 800; letter-spacing: .04em; }
+    .phase b { display: block; margin-top: 3px; font-size: 8.2pt; }
+    .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; align-items: start; }
+    .card { border: 1px solid var(--line); padding: 8px 9px 7px; break-inside: avoid; }
+    .card h2 { margin: 0 0 5px; font-size: 12pt; letter-spacing: -.02em; }
+    .card h2 span { color: var(--orange); font-size: 8pt; letter-spacing: .08em; margin-right: 5px; vertical-align: 1px; }
+    .card p { margin: -1px 0 5px; color: var(--muted); font-size: 8.3pt; }
+    ul { list-style: none; padding: 0; margin: 0; }
+    li { display: flex; gap: 6px; margin: 4px 0; }
+    li::before { content: "□"; font-size: 12pt; line-height: .9; color: var(--orange); flex: 0 0 auto; }
+    .full { grid-column: 1 / -1; }
+    .rules { display: grid; grid-template-columns: 1.15fr .85fr; gap: 9px; margin-top: 9px; }
+    .rule { border: 1px solid var(--line); padding: 7px 9px; }
+    .rule h3 { margin: 0 0 4px; font-size: 9pt; text-transform: uppercase; letter-spacing: .1em; color: var(--orange); }
+    .rule p { margin: 0; font-size: 8.2pt; }
+    footer { border-top: 1px solid var(--ink); margin-top: 9px; padding-top: 6px; display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 7.6pt; }
+    footer strong { color: var(--ink); }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topline"></div>
+    <header>
+      <div>
+        <div class="kicker">AIMD · owner checklist</div>
+        <h1>Public launch rollout</h1>
+      </div>
+      <div class="date">
+        <strong>October 24, 2026</strong>
+        Public launch target<br>
+        iOS release target: October 22
+      </div>
+    </header>
+
+    <p class="intro"><strong>Use this sheet weekly.</strong> Finish launch-critical work, record blockers, and avoid adding major new features after the final build is created.</p>
+
+    <section class="timeline" aria-label="Rollout phases">
+      <div class="phase"><div class="when">SEP 14 → 27</div><b>Test + improve</b></div>
+      <div class="phase"><div class="when">SEP 28 → OCT 10</div><b>Finalize</b></div>
+      <div class="phase"><div class="when">OCT 11 → 21</div><b>Submit + warm up</b></div>
+      <div class="phase"><div class="when">OCT 22</div><b>Release</b></div>
+      <div class="phase"><div class="when">OCT 24</div><b>Gather</b></div>
+    </section>
+
+    <section class="check-grid">
+      <div class="card">
+        <h2><span>01</span>Test + improve</h2>
+        <p>Keep build 10 in TestFlight and turn feedback into fixes.</p>
+        <ul>
+          <li>Test sign-up, sign-in, onboarding, dashboard, and profile.</li>
+          <li>Test habits, studio log, workshops, messages, and notifications.</li>
+          <li>Test challenge timing, photo/video upload, one submission, and 20-point award.</li>
+          <li>Fix crashes, broken uploads, confusing states, and launch blockers.</li>
+          <li>Review progress weekly in Creator Studio HQ + Admin Dashboard.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2><span>02</span>Finalize</h2>
+        <p>Lock the public launch experience.</p>
+        <ul>
+          <li>Remove placeholder, fake, and unavailable content.</li>
+          <li>Finalize the first two or three workshops, instructors, dates, and signups.</li>
+          <li>Prepare creator stories and “Why building a creative habit matters” content.</li>
+          <li>Freeze launch scope and create the next iOS/iPadOS build.</li>
+          <li>Run final QA on web, iPhone, and iPad.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2><span>03</span>Submit + warm up</h2>
+        <p>Test the final build and prepare the public moment.</p>
+        <ul>
+          <li>Upload the final build to TestFlight and complete the last tester pass.</li>
+          <li>Confirm App Store metadata, screenshots, privacy details, and release notes.</li>
+          <li>Submit the final native build to Apple App Review.</li>
+          <li>Confirm owner access to Creator Studio HQ and Admin Dashboard.</li>
+          <li>Prepare launch announcements, event details, support coverage, and content posts.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2><span>04</span>Release + launch</h2>
+        <p>Release only after the final native build is approved.</p>
+        <ul>
+          <li>Release the approved iOS/iPadOS version manually around October 22.</li>
+          <li>Confirm web and API production behavior before public promotion.</li>
+          <li>Confirm Challenge 1 is upcoming until October 24 and awards 20 points.</li>
+          <li>Run the launch event, first-habit activation, workshop signups, and live support.</li>
+          <li>Review errors, signups, submissions, and feedback after launch.</li>
+        </ul>
+      </div>
+
+      <div class="card full">
+        <h2><span>05</span>Challenge launch rules</h2>
+        <ul>
+          <li><strong>Challenge 1: Where I’m From</strong> — opens October 24 and runs for two weeks.</li>
+          <li>Every original response earns <strong>20 AIMD points once</strong>, regardless of medium.</li>
+          <li>Welcome drawings, poems, paintings, songs, dances, photos, outfits, recipes, sculptures, videos, workouts, movement pieces, and other original formats.</li>
+          <li>No extra points for captions, process stories, feedback, votes, popularity, or winning.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="rules">
+      <div class="rule">
+        <h3>Launch blockers</h3>
+        <p>Crashes · sign-in failures · broken uploads · incorrect points · missing workshop details · placeholder content · unavailable launch surfaces · failed final iOS/iPadOS build.</p>
+      </div>
+      <div class="rule">
+        <h3>Can wait</h3>
+        <p>Audio proof · admin-managed challenge scheduling · sponsor tools · large analytics dashboard · longer challenge seasons.</p>
+      </div>
+    </section>
+
+    <footer>
+      <span><strong>Weekly owner check:</strong> feedback → blockers → workshops → content → build status</span>
+      <span>Creator Studio by AIMD</span>
+    </footer>
+  </main>
+</body>
+</html>
