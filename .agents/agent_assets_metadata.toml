@@ -28,3 +28,17 @@ mtime_ms = 1789355346441
 storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/68919970-c6cc-4968-8d91-b835cfeea77e/dc5a4a83-5ea1-4c5c-9d78-a2b1e9a2ee2f"
 storage_version_token = "1789355351604208"
 content_type = "application/pdf"
+
+[[outputs]]
+id = "CMVXYCVO8pplVjY3DCrKn"
+uri = "file://deliverables/aimd-marketing-content-checklist.pdf"
+type = "pdf"
+title = "Creator Studio by AIMD — Marketing + Content Checklist"
+description = "A one-page printable landscape checklist led by Anthony, covering the creative-habit campaign, interviews, app previews, workshop content, anticipation marketing, event capture, approvals, and publishing."
+logical_id = "fc53dd00-e8a9-4662-a1ce-02cab92a0c72"
+content_hash = "sha256:afe40202b8764ddbb75bb53a097931d74138470c6737bd71719d8fe3d1c9c8aa"
+size = 57555
+mtime_ms = 1789359296099
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/fc53dd00-e8a9-4662-a1ce-02cab92a0c72/1aa4b15e-42ab-4420-97e9-c6e818477e5c"
+storage_version_token = "1789359316069401"
+content_type = "application/pdf"
