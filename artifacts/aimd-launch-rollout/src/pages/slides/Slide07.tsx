@@ -14,12 +14,12 @@ export default function Slide07() {
           <div className="border-t border-[#F8F5EE]/35 pt-[1.25vw]">
             <div className="text-[0.82vw] font-bold uppercase tracking-[0.1em] text-[#FF7B45]">SEP 14 → 27</div>
             <h3 className="mt-[0.85vw] text-[1.5vw] font-bold">Test + improve</h3>
-            <p className="mt-[0.7vw] text-[0.98vw] leading-[1.2] text-[#F8F5EE]/65">Keep build 10 in TestFlight, collect feedback, fix launch blockers, and improve the app.</p>
+            <p className="mt-[0.7vw] text-[0.98vw] leading-[1.2] text-[#F8F5EE]/65">Keep build 10 in TestFlight, collect feedback, and fix launch blockers. Review progress weekly in Creator Studio HQ + Admin Dashboard.</p>
           </div>
           <div className="border-t border-[#F8F5EE]/35 pt-[1.25vw]">
             <div className="text-[0.82vw] font-bold uppercase tracking-[0.1em] text-[#FF7B45]">SEP 28 → OCT 10</div>
             <h3 className="mt-[0.85vw] text-[1.5vw] font-bold">Finalize</h3>
-            <p className="mt-[0.7vw] text-[0.98vw] leading-[1.2] text-[#F8F5EE]/65">Lock launch scope, finish workshops and content, create the next iOS build, and run final QA.</p>
+            <p className="mt-[0.7vw] text-[0.98vw] leading-[1.2] text-[#F8F5EE]/65">Lock launch scope, finish workshops and content, create the next iOS build, and track readiness in HQ.</p>
           </div>
           <div className="border-t border-[#F8F5EE]/35 pt-[1.25vw]">
             <div className="text-[0.82vw] font-bold uppercase tracking-[0.1em] text-[#FF7B45]">OCT 11 → 21</div>
