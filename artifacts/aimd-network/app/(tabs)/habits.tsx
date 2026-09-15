@@ -306,7 +306,7 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
           data={habits}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
-            <HabitCard habit={item} onLogged={refetch} />
+             <HabitCard habit={item} onLogged={refetch} onDeleted={refetch} />
           )}
           contentContainerStyle={s.listContent}
           showsVerticalScrollIndicator={false}

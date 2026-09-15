@@ -3,16 +3,17 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { customFetch, useLogHabitSession } from '@workspace/api-client-react';
+import { customFetch, useDeleteHabit, useLogHabitSession } from '@workspace/api-client-react';
 import type { Habit } from '@workspace/api-client-react';
 import * as ImagePicker from 'expo-image-picker';
 
 interface HabitCardProps {
   habit: Habit;
   onLogged?: () => void;
+  onDeleted?: () => void;
 }
 
-export default function HabitCard({ habit, onLogged }: HabitCardProps) {
+export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps) {
   const colors = useColors();
   const categoryColors: Record<string, string> = {
     drawing: colors.cyan,
@@ -33,6 +34,17 @@ export default function HabitCard({ habit, onLogged }: HabitCardProps) {
         setLocalDone(true);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         onLogged?.();
+      },
+    },
+  });
+  const deleteMutation = useDeleteHabit({
+    mutation: {
+      onSuccess: () => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        onDeleted?.();
+      },
+      onError: () => {
+        Alert.alert('Could not delete habit', 'Please try again.');
       },
     },
   });
@@ -80,6 +92,25 @@ export default function HabitCard({ habit, onLogged }: HabitCardProps) {
       id: habit.id,
       data: { minutesSpent: habit.targetMinutes, proofUrl: proof.url, proofMediaType: proof.mediaType },
     });
+  };
+
+  const handleDelete = () => {
+    if (deleteMutation.isPending) return;
+    Alert.alert(
+      'Delete habit?',
+      `This will remove "${habit.name}" and its practice history.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            deleteMutation.mutate({ id: habit.id });
+          },
+        },
+      ],
+    );
   };
 
   const s = useMemo(() => StyleSheet.create({
@@ -142,6 +173,19 @@ export default function HabitCard({ habit, onLogged }: HabitCardProps) {
       borderWidth: 2,
       borderRadius: 12,
     },
+    actionColumn: {
+      alignItems: 'center',
+      gap: 8,
+    },
+    deleteBtn: {
+      width: 40,
+      height: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+    },
     proofButton: {
       alignSelf: 'flex-start',
       flexDirection: 'row',
@@ -192,21 +236,32 @@ export default function HabitCard({ habit, onLogged }: HabitCardProps) {
         )}
         </View>
 
-        <TouchableOpacity
-          style={[s.checkBtn, {
-            borderColor: localDone ? colors.primary : colors.border,
-            backgroundColor: localDone ? colors.primary : 'transparent',
-          }]}
-          onPress={handleLog}
-          disabled={localDone || logMutation.isPending}
-          testID={`log-habit-${habit.id}`}
-        >
-          <Feather
-            name="check"
-            size={18}
-            color={localDone ? colors.primaryForeground : colors.mutedForeground}
-          />
-        </TouchableOpacity>
+        <View style={s.actionColumn}>
+          <TouchableOpacity
+            style={[s.deleteBtn, { opacity: deleteMutation.isPending ? 0.5 : 1 }]}
+            onPress={handleDelete}
+            disabled={deleteMutation.isPending}
+            accessibilityLabel={`Delete ${habit.name}`}
+            testID={`delete-habit-${habit.id}`}
+          >
+            <Feather name="trash-2" size={16} color={colors.destructive} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[s.checkBtn, {
+              borderColor: localDone ? colors.primary : colors.border,
+              backgroundColor: localDone ? colors.primary : 'transparent',
+            }]}
+            onPress={handleLog}
+            disabled={localDone || logMutation.isPending}
+            testID={`log-habit-${habit.id}`}
+          >
+            <Feather
+              name="check"
+              size={18}
+              color={localDone ? colors.primaryForeground : colors.mutedForeground}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
