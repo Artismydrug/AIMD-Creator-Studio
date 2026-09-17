@@ -1291,7 +1291,7 @@ export const AwardPointsAdminResponse = zod.object({
 
 
 /**
- * @summary List creator directory (studio-ready creators)
+ * @summary List community members
  */
 export const ListDirectoryResponseItem = zod.object({
   "id": zod.int(),

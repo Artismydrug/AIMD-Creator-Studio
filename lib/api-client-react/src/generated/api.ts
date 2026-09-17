@@ -4252,7 +4252,7 @@ export const getListDirectoryUrl = () => {
 }
 
 /**
- * @summary List creator directory (studio-ready creators)
+ * @summary List community members
  */
 export const listDirectory = async ( options?: Parameters<typeof customFetch>[1]): Promise<DirectoryCreator[]> => {
 
@@ -4299,7 +4299,7 @@ export type ListDirectoryQueryError = ErrorType<unknown>
 
 
 /**
- * @summary List creator directory (studio-ready creators)
+ * @summary List community members
  */
 
 export function useListDirectory<TData = Awaited<ReturnType<typeof listDirectory>>, TError = ErrorType<unknown>>(
