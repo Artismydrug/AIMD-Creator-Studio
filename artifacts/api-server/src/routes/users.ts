@@ -203,7 +203,7 @@ router.patch("/users/me", async (req, res): Promise<void> => {
   res.json(UpdateCurrentUserResponse.parse(user));
 });
 
-// Creator directory — studio-ready creators
+// Community directory — all registered members, using public profile fields only
 router.get("/directory", async (req, res): Promise<void> => {
   const rows = await db.execute(sql`
     SELECT
@@ -221,7 +221,6 @@ router.get("/directory", async (req, res): Promise<void> => {
     FROM users u
     LEFT JOIN studio_posts p ON p.user_id = u.id
     LEFT JOIN badges b       ON b.user_id = u.id
-    WHERE u.studio_ready_badge = true
     GROUP BY u.id
     ORDER BY u.created_at DESC
   `);

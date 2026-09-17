@@ -148,10 +148,10 @@ export default function DirectoryScreen({ embedded = false }: { embedded?: boole
     <View style={s.container}>
       <View style={s.header}>
         <View style={s.titleRow}>
-          <Text style={s.headerTitle}>Creators</Text>
+              <Text style={s.headerTitle}>Members</Text>
           {creators && (
             <View style={s.badge}>
-              <Text style={s.badgeText}>{creators.length} studio-ready</Text>
+                  <Text style={s.badgeText}>{creators.length} members</Text>
             </View>
           )}
         </View>
@@ -216,8 +216,8 @@ export default function DirectoryScreen({ embedded = false }: { embedded?: boole
             ) : (
               <View style={s.centered}>
                 <Feather name="users" size={48} color={colors.muted} />
-                <Text style={s.emptyTitle}>No creators yet</Text>
-                <Text style={s.emptyText}>Earn your Studio Ready badge to appear here</Text>
+                 <Text style={s.emptyTitle}>No members yet</Text>
+                 <Text style={s.emptyText}>Complete your profile to help people find you</Text>
               </View>
             )
           }

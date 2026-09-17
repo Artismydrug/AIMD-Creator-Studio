@@ -1120,10 +1120,10 @@ paths:
     get:
       operationId: listDirectory
       tags: [users]
-      summary: List creator directory (studio-ready creators)
+      summary: List community members
       responses:
         "200":
-          description: Creator directory
+          description: Public community member directory
           content:
             application/json:
               schema:
