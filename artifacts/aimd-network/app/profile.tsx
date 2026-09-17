@@ -36,6 +36,29 @@ import { useColors } from '@/hooks/useColors';
 import StudioVideo from '@/components/StudioVideo';
 
 type LocalImage = { uri: string; contentType: string } | null;
+const HANDLE_PATTERN = /^[a-zA-Z0-9_]{3,28}$/;
+
+function normalizeHandle(value: string): string {
+  return value
+    .replace(/[^a-zA-Z0-9_]+/g, '_')
+    .replace(/_+/g, '_')
+    .slice(0, 28);
+}
+
+function getProfileSaveError(error: unknown): string {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'data' in error &&
+    error.data &&
+    typeof error.data === 'object' &&
+    'error' in error.data &&
+    typeof error.data.error === 'string'
+  ) {
+    return error.data.error;
+  }
+  return 'Please try again.';
+}
 
 function resolveImageUrl(url: string | null | undefined): string | null {
   if (!url) return null;
@@ -104,6 +127,7 @@ function ProfileEditor({
   const [discipline, setDiscipline] = useState(initialDiscipline ?? '');
   const [location, setLocation] = useState(initialLocation ?? '');
   const [selectedAvatar, setSelectedAvatar] = useState<LocalImage>(null);
+  const [saving, setSaving] = useState(false);
   const updateProfile = useUpdateCurrentUser();
   const avatarPreview = selectedAvatar?.uri ?? resolveImageUrl(initialAvatarUrl);
 
@@ -143,13 +167,25 @@ function ProfileEditor({
   };
 
   const save = async () => {
+    if (saving) return;
+    const handle = normalizeHandle(username.trim()).replace(/^_+|_+$/g, '');
+    setUsername(handle);
+    if (!HANDLE_PATTERN.test(handle)) {
+      Alert.alert(
+        'Update your handle',
+        'Use 3–28 letters, numbers, or underscores. Spaces and punctuation become underscores.',
+      );
+      return;
+    }
+
+    setSaving(true);
     try {
       const avatarUrl = selectedAvatar
         ? await uploadAvatar(selectedAvatar.uri, selectedAvatar.contentType)
         : undefined;
       await updateProfile.mutateAsync({
         data: {
-          username: username.trim(),
+          username: handle,
           bio: bio.trim() || null,
           discipline: discipline.trim() || null,
           location: location.trim() || null,
@@ -158,8 +194,10 @@ function ProfileEditor({
       });
       Alert.alert('Profile saved', 'Your creator profile is up to date.');
       onSaved();
-    } catch {
-      Alert.alert('Could not save profile', 'Check your connection and try again.');
+    } catch (error) {
+      Alert.alert('Could not save profile', getProfileSaveError(error));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -186,10 +224,13 @@ function ProfileEditor({
         accessibilityLabel="Creator handle"
         autoCapitalize="none"
         maxLength={28}
-        onChangeText={setUsername}
+        onChangeText={(value) => setUsername(normalizeHandle(value))}
         style={[styles.input, { color: colors.foreground, backgroundColor: colors.input, borderColor: colors.border }]}
         value={username}
       />
+      <Text style={[styles.inputHint, { color: colors.mutedForeground }]}>
+        3–28 letters, numbers, or underscores. Spaces and punctuation become underscores.
+      </Text>
 
       <Text style={[styles.inputLabel, { color: colors.mutedForeground }]}>Bio</Text>
       <TextInput
@@ -231,12 +272,12 @@ function ProfileEditor({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Save creator profile"
-        disabled={updateProfile.isPending}
+        disabled={saving}
         onPress={save}
-        style={[styles.saveButton, { backgroundColor: colors.primary, opacity: updateProfile.isPending ? 0.55 : 1 }]}
+        style={[styles.saveButton, { backgroundColor: colors.primary, opacity: saving ? 0.55 : 1 }]}
         testID="save-profile"
       >
-        {updateProfile.isPending ? (
+        {saving ? (
           <ActivityIndicator color={colors.primaryForeground} />
         ) : (
           <>
@@ -598,6 +639,7 @@ const styles = StyleSheet.create({
   avatarPicker: { position: 'relative' },
   avatarEdit: { alignItems: 'center', borderRadius: 14, bottom: -2, height: 28, justifyContent: 'center', position: 'absolute', right: -2, width: 28 },
   inputLabel: { fontFamily: 'DMSans_500Medium', fontSize: 12, marginTop: 2 },
+  inputHint: { fontFamily: 'DMSans_400Regular', fontSize: 11, lineHeight: 16, marginTop: -4 },
   input: { borderRadius: 10, borderWidth: 1, fontFamily: 'DMSans_400Regular', fontSize: 14, minHeight: 44, paddingHorizontal: 12, paddingVertical: 9 },
   bioInput: { minHeight: 82, textAlignVertical: 'top' },
   twoColumns: { flexDirection: 'row', gap: 10 },
