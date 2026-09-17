@@ -16,7 +16,7 @@ import { useListDirectory, useCreateConversation } from '@workspace/api-client-r
 import CreatorCard from '@/components/CreatorCard';
 import { useRouter } from 'expo-router';
 
-export default function DirectoryScreen() {
+export default function DirectoryScreen({ embedded = false }: { embedded?: boolean }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -65,7 +65,7 @@ export default function DirectoryScreen() {
     );
   }, [messagingId, createConversation, router]);
 
-  const topPad = Platform.OS === 'web' ? 67 : insets.top + 8;
+  const topPad = embedded ? 8 : Platform.OS === 'web' ? 67 : insets.top + 8;
 
   const s = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },

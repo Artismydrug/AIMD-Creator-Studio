@@ -6,8 +6,9 @@ import { useColors } from '@/hooks/useColors';
 import { safeImpact } from '@/lib/haptics';
 import FeedScreen from '../feed';
 import EventsScreen from './events';
+import DirectoryScreen from './directory';
 
-type CommunitySection = 'feed' | 'events';
+type CommunitySection = 'feed' | 'creators' | 'events';
 
 export default function CommunityScreen() {
   const colors = useColors();
@@ -71,7 +72,7 @@ export default function CommunityScreen() {
         </View>
         <View style={s.studioRule} />
          <View style={s.switcher} accessibilityRole="tablist">
-          {(['feed', 'events'] as const).map((item) => {
+           {(['feed', 'creators', 'events'] as const).map((item) => {
             const active = section === item;
             return (
               <TouchableOpacity
@@ -82,9 +83,13 @@ export default function CommunityScreen() {
                 accessibilityState={{ selected: active }}
                 testID={`community-${item}-tab`}
               >
-                <Feather name={item === 'feed' ? 'image' : 'calendar'} size={15} color={active ? colors.primary : colors.mutedForeground} />
+                 <Feather
+                   name={item === 'feed' ? 'image' : item === 'creators' ? 'users' : 'calendar'}
+                   size={15}
+                   color={active ? colors.primary : colors.mutedForeground}
+                 />
                 <Text style={[s.switchText, active && s.activeSwitchText]}>
-                  {item === 'feed' ? 'Feed' : 'Events'}
+                   {item === 'feed' ? 'Feed' : item === 'creators' ? 'Creators' : 'Events'}
                 </Text>
               </TouchableOpacity>
             );
@@ -92,7 +97,13 @@ export default function CommunityScreen() {
         </View>
       </View>
       <View style={s.content}>
-        {section === 'feed' ? <FeedScreen embedded /> : <EventsScreen embedded />}
+         {section === 'feed' ? (
+           <FeedScreen embedded />
+         ) : section === 'creators' ? (
+           <DirectoryScreen embedded />
+         ) : (
+           <EventsScreen embedded />
+         )}
       </View>
     </View>
   );
