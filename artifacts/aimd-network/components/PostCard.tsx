@@ -552,7 +552,7 @@ export default function PostCard({
               <Image
                 source={{ uri: resolveImageUrl(post.imageUrl)! }}
                 style={s.immersiveImage}
-                resizeMode="cover"
+                resizeMode="contain"
               />
             ) : (
               <View style={s.immersiveFallback}>
@@ -729,7 +729,7 @@ export default function PostCard({
                 <Image
                   source={{ uri: resolveImageUrl(post.imageUrl)! }}
                   style={s.postImage}
-                  resizeMode="cover"
+                  resizeMode="contain"
                 />
               )}
               <View style={s.imageStamp}>

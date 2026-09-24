@@ -236,7 +236,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      allowsEditing: true,
+      allowsEditing: false,
       quality: 0.85,
     });
 

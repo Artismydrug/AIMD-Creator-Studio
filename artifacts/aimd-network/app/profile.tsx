@@ -570,7 +570,7 @@ export default function ProfileScreen() {
                    <Image
                      source={{ uri: resolveImageUrl(post.imageUrl) ?? post.imageUrl }}
                      style={s.portfolioImage}
-                     resizeMode="cover"
+                      resizeMode="contain"
                    />
                  ) : null}
                  {post.caption ? <Text style={s.portfolioCaption}>{post.caption}</Text> : null}

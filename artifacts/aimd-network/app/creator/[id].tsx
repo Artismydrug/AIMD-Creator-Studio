@@ -668,7 +668,7 @@ export default function CreatorProfileScreen() {
                    <Image
                      source={{ uri: resolveImageUrl(post.imageUrl) ?? post.imageUrl }}
                      style={s.postImage}
-                     resizeMode="cover"
+                      resizeMode="contain"
                    />
                  ) : null}
                   {post.caption ? (

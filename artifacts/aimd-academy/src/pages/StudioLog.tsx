@@ -603,7 +603,7 @@ function PostCard({ post }: { post: any }) {
           </div>
         ) : (
           <div className="aspect-square bg-muted relative">
-            <img src={post.imageUrl} alt="Artwork" className="absolute inset-0 w-full h-full object-cover" />
+            <img src={post.imageUrl} alt="Artwork" className="absolute inset-0 w-full h-full object-contain" />
           </div>
         )
       )}
