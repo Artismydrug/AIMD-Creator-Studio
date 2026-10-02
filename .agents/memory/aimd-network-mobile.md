@@ -5,7 +5,6 @@ description: Key facts about the AIMD Network Expo app, its API server integrati
 
 ## Mobile app (artifacts/aimd-network)
 - Font: DM Sans (DMSans_400Regular/500Medium/600SemiBold/700Bold via @expo-google-fonts/dm-sans)
-- Dark-first design token system in hooks/useColors.ts
 - Camera pinning: expo-camera with CameraView component
 - CORS needs the API Server workflow running (artifacts/api-server)
 - Auth: server-side OIDC transaction (see below); token stored as `auth_session_token` in expo-secure-store

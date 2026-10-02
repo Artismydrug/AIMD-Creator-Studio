@@ -30,7 +30,30 @@ const warmCanvas = {
 
 const colors = {
   light: warmCanvas,
-  dark: warmCanvas,
+  dark: {
+    ...warmCanvas,
+    text: '#FAF8F4',
+    tint: '#FF1A8C',
+    background: '#151C23',
+    foreground: '#FAF8F4',
+    card: '#1D252F',
+    cardForeground: '#FAF8F4',
+    primary: '#FF1A8C',
+    secondary: '#F9A51F',
+    secondaryForeground: '#151C23',
+    muted: '#2A333C',
+    mutedForeground: '#A9B2BC',
+    destructive: '#FF7777',
+    border: '#36404A',
+    input: '#2A333C',
+    electricMagenta: '#FF1A8C',
+    sunsetCoral: '#FF934D',
+    gold: '#F9B84A',
+    coralWash: '#382B25',
+    magentaWash: '#352236',
+    cyanWash: '#1E333D',
+    goldWash: '#342F24',
+  },
   radius: 12,
 };
 

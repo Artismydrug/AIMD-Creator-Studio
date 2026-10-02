@@ -100,7 +100,7 @@ export default function WorkshopLessonPlayer({
         video: { width: '100%', height: '100%' },
         mediaEmpty: { alignItems: 'center', gap: 10, paddingHorizontal: 30 },
         mediaTitle: {
-          color: colors.background,
+          color: colors.primaryForeground,
           fontFamily: 'DMSans_700Bold',
           fontSize: 16,
           textAlign: 'center',

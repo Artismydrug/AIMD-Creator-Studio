@@ -34,6 +34,7 @@ import {
 } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import StudioVideo from '@/components/StudioVideo';
+import AppearanceSettings from '@/components/AppearanceSettings';
 
 type LocalImage = { uri: string; contentType: string } | null;
 const HANDLE_PATTERN = /^[a-zA-Z0-9_]{3,28}$/;
@@ -528,7 +529,19 @@ export default function ProfileScreen() {
         </Pressable>
 
         <View>
-          <Text style={[styles.sectionTitle, { color: colors.foreground, marginBottom: 10 }]}>Unlocked badges</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="View all past accomplishments"
+            onPress={() => router.push('/accomplishments')}
+            style={[s.portfolioHeader, { marginBottom: 10, minHeight: 44 }]}
+            testID="profile-accomplishments"
+          >
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Accomplishments</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Text style={[s.badgeText, { color: colors.foreground }]}>View all</Text>
+              <Feather name="chevron-right" size={18} color={colors.primary} />
+            </View>
+          </Pressable>
           {badgesError ? (
             <Text style={[s.statusText, { color: colors.destructive }]}>Badges couldn’t load right now.</Text>
           ) : (badges ?? []).length === 0 ? (
@@ -544,6 +557,8 @@ export default function ProfileScreen() {
             </View>
           )}
         </View>
+
+        <AppearanceSettings />
 
          <View style={s.portfolio}>
            <View style={s.portfolioHeader}>

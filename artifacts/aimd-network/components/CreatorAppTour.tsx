@@ -198,7 +198,7 @@ export default function CreatorAppTour() {
       fontFamily: 'DMSans_700Bold',
       fontSize: 9,
       letterSpacing: 1.2,
-      color: colors.background,
+      color: colors.primaryForeground,
       textTransform: 'uppercase',
     },
     title: {
@@ -207,7 +207,7 @@ export default function CreatorAppTour() {
       fontSize: 27,
       lineHeight: 30,
       letterSpacing: -0.7,
-      color: colors.background,
+      color: colors.primaryForeground,
     },
     body: {
       maxWidth: '94%',
@@ -232,7 +232,7 @@ export default function CreatorAppTour() {
     tagText: {
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 10,
-      color: colors.background,
+      color: colors.primaryForeground,
     },
     controls: {
       minHeight: 58,
@@ -313,7 +313,7 @@ export default function CreatorAppTour() {
                   <View style={[styles.artGlowSmall, { backgroundColor: accent }]} />
                   <View style={styles.artGrid}>
                     <View style={[styles.artTile, styles.artTileTall, { borderColor: `${accent}99` }]}>
-                      <Feather name={slide.icon} size={22} color={colors.background} />
+                      <Feather name={slide.icon} size={22} color={colors.primaryForeground} />
                     </View>
                     <View style={[styles.artTile, { backgroundColor: `${accent}36` }]}>
                       <Feather
@@ -360,7 +360,7 @@ export default function CreatorAppTour() {
           accessibilityLabel="Previous Creator Studio tour slide"
           testID="creator-tour-previous"
         >
-          <Feather name="chevron-left" size={19} color={colors.background} />
+          <Feather name="chevron-left" size={19} color={colors.primaryForeground} />
         </TouchableOpacity>
         <View style={styles.dots} accessibilityRole="tablist" accessibilityLabel="Creator Studio tour slides">
           {SLIDES.map((slide, index) => (
@@ -382,7 +382,7 @@ export default function CreatorAppTour() {
           accessibilityLabel="Next Creator Studio tour slide"
           testID="creator-tour-next"
         >
-          <Feather name="chevron-right" size={19} color={colors.background} />
+          <Feather name="chevron-right" size={19} color={colors.primaryForeground} />
         </TouchableOpacity>
         <Text style={styles.counter}>{activeIndex + 1}/{SLIDES.length}</Text>
       </View>

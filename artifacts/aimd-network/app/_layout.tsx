@@ -23,6 +23,9 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { setAuthTokenGetter, setBaseUrl } from '@workspace/api-client-react';
 import { StatusBar } from 'expo-status-bar';
+import * as SystemUI from 'expo-system-ui';
+import { AppearanceProvider, useAppearance } from '@/lib/appearance';
+import { useColors } from '@/hooks/useColors';
 import { ClerkLoaded, ClerkLoading, ClerkProvider, useAuth } from '@clerk/expo';
 import { tokenCache } from '@clerk/expo/token-cache';
 import {
@@ -338,13 +341,15 @@ const sessionStyles = StyleSheet.create({
 });
 
 function RootLayoutNav() {
+  const colors = useColors();
   return (
-    <Stack>
+    <Stack screenOptions={{ contentStyle: { backgroundColor: colors.background } }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
       <Stack.Screen name="feed" options={{ headerShown: false }} />
        <Stack.Screen name="profile" options={{ headerShown: false }} />
+       <Stack.Screen name="accomplishments" options={{ headerShown: false }} />
       <Stack.Screen name="membership" options={{ headerShown: false }} />
        <Stack.Screen
          name="notifications"
@@ -357,8 +362,8 @@ function RootLayoutNav() {
         name="conversation/[id]"
         options={{
           headerShown: true,
-          headerStyle: { backgroundColor: '#0a0a0a' },
-          headerTintColor: '#f2f2f2',
+          headerStyle: { backgroundColor: colors.card },
+          headerTintColor: colors.foreground,
           headerTitleStyle: { fontFamily: 'DMSans_600SemiBold' },
           headerBackTitle: '',
           headerShadowVisible: false,
@@ -369,6 +374,24 @@ function RootLayoutNav() {
         options={{ headerShown: false }}
       />
     </Stack>
+  );
+}
+
+function ThemedApp() {
+  const colors = useColors();
+  const { scheme } = useAppearance();
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(colors.background).catch((error) => {
+      console.warn('Could not update system background', error);
+    });
+  }, [colors.background]);
+  return (
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
+      <KeyboardProvider>
+        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+        <RootLayoutNav />
+      </KeyboardProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -400,18 +423,15 @@ export default function RootLayout() {
       <ClerkLoaded>
         <AuthSessionBridge>
           <SafeAreaProvider>
-            <ErrorBoundary>
-              <QueryClientProvider client={queryClient}>
+            <QueryClientProvider client={queryClient}>
+              <AppearanceProvider>
+                <ErrorBoundary>
                 <SubscriptionProvider>
-                  <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#FAF8F5' }}>
-                    <KeyboardProvider>
-                      <StatusBar style="dark" />
-                      <RootLayoutNav />
-                    </KeyboardProvider>
-                  </GestureHandlerRootView>
+                  <ThemedApp />
                 </SubscriptionProvider>
-              </QueryClientProvider>
-            </ErrorBoundary>
+                </ErrorBoundary>
+              </AppearanceProvider>
+            </QueryClientProvider>
           </SafeAreaProvider>
         </AuthSessionBridge>
       </ClerkLoaded>

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
+import { useAppearance } from '@/lib/appearance';
 import { safeImpact } from '@/lib/haptics';
 
 // Only these four routes render as bottom tabs; everything else is hidden.
@@ -44,6 +45,7 @@ export default function FrostedTabBar({
   navigation,
 }: FrostedTabBarProps) {
   const colors = useColors();
+  const { scheme } = useAppearance();
   const insets = useSafeAreaInsets();
   const bottom = Platform.OS === 'web' ? 34 : Math.max(insets.bottom, 8);
 
@@ -55,7 +57,7 @@ export default function FrostedTabBar({
           paddingBottom: bottom,
           borderTopColor: colors.border,
           backgroundColor:
-            Platform.OS === 'android' ? 'rgba(250,248,245,0.96)' : 'transparent',
+            Platform.OS === 'ios' ? 'transparent' : colors.card,
         },
       ]}
     >
@@ -96,7 +98,7 @@ export default function FrostedTabBar({
             >
               {focused && (
                 <View style={[styles.activeLabel, { backgroundColor: colors.ink }]}>
-                  <Text style={[styles.activeLabelText, { color: colors.background }]}>
+                  <Text style={[styles.activeLabelText, { color: colors.primaryForeground }]}>
                     {label}
                   </Text>
                 </View>
@@ -116,7 +118,7 @@ export default function FrostedTabBar({
 
   if (Platform.OS === 'web') return content;
   return (
-    <BlurView intensity={82} tint="light" style={styles.blur}>
+    <BlurView intensity={82} tint={scheme} style={styles.blur}>
       {content}
     </BlurView>
   );

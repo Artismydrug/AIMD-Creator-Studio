@@ -21,3 +21,5 @@
 - [Durable public rate limits](durable-public-rate-limits.md) — compliance-sensitive throttles must use atomic shared storage, never process-local memory.
 - [Multi-deck PDF export](multi-deck-pdf-export.md) — exportSlides may select the wrong slides artifact when several decks exist; verify title and page count before delivery.
 - [Featured challenge policy](featured-challenge-policy.md) — use inclusive themes on a flexible cadence; every original response earns the same 20 points.
+- [Appearance and accomplishments](appearance-and-accomplishments.md) — device-local appearance choice; retain full earned milestone history beyond recent previews.
+- [Expo preview testing origins](expo-preview-testing-origins.md) — sibling-web test login does not imply an authenticated Expo session; verify the intended origin.

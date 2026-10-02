@@ -36,6 +36,7 @@ import {
 import {
   useGetProgress,
   getGetProgressQueryKey,
+  getListBadgesQueryKey,
   useCheckInProgress,
   useSpinDailyReward,
   useGetCurrentChallenge,
@@ -130,6 +131,7 @@ export default function ProgressScreen() {
       onSuccess: () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         queryClient.invalidateQueries({ queryKey: getGetProgressQueryKey({ timezone }) });
+        queryClient.invalidateQueries({ queryKey: getListBadgesQueryKey() });
       },
       onError: () => {
         Alert.alert('Check-In Failed', 'We could not record your check-in right now. Please try again.');
@@ -1042,6 +1044,15 @@ export default function ProgressScreen() {
                   <View style={s.blockTitleRow}>
                     <Feather name="award" size={17} color={colors.primary} />
                     <Text style={s.blockTitle}>Milestones</Text>
+                     <TouchableOpacity
+                       accessibilityRole="button"
+                       accessibilityLabel="View all past accomplishments"
+                       testID="dashboard-accomplishments"
+                       onPress={() => router.push('/accomplishments')}
+                       style={{ marginLeft: 'auto', padding: 8 }}
+                     >
+                       <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 12, color: colors.foreground }}>View all</Text>
+                     </TouchableOpacity>
                   </View>
 
                   {progress.nextBadge && (

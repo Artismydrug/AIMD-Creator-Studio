@@ -147,14 +147,14 @@ export default function MembershipScreen() {
       fontSize: 31,
       lineHeight: 34,
       letterSpacing: -0.9,
-      color: colors.background,
+      color: colors.primaryForeground,
     },
     heroBody: {
       maxWidth: 440,
       fontFamily: 'DMSans_400Regular',
       fontSize: 14,
       lineHeight: 21,
-      color: colors.background,
+      color: colors.primaryForeground,
       opacity: 0.78,
     },
     status: {
@@ -304,7 +304,7 @@ export default function MembershipScreen() {
     chooseText: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 14,
-      color: colors.background,
+      color: colors.primaryForeground,
     },
     centerCard: {
       padding: 24,
