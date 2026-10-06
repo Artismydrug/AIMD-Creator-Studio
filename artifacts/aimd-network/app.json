@@ -43,8 +43,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Creator Studio by AIMD to attach optional creator media.",
-          "cameraPermission": "Allow Creator Studio by AIMD to capture live proof for challenge submissions.",
+          "photosPermission": "Allow Creator Studio by AIMD to choose photos or videos for posts, profile images, and habit practice proof.",
+          "cameraPermission": "Allow Creator Studio by AIMD to take habit practice photos and capture live challenge proof.",
           "microphonePermission": "Allow Creator Studio by AIMD to record sound with creator videos."
         }
       ]

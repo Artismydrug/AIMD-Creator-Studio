@@ -1,11 +1,20 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Linking,
+  Platform,
+} from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { customFetch, useDeleteHabit, useLogHabitSession } from '@workspace/api-client-react';
 import type { Habit } from '@workspace/api-client-react';
 import * as ImagePicker from 'expo-image-picker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface HabitCardProps {
   habit: Habit;
@@ -15,6 +24,7 @@ interface HabitCardProps {
 
 export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const categoryColors: Record<string, string> = {
     drawing: colors.cyan,
     painting: colors.primary,
@@ -49,18 +59,7 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
     },
   });
 
-  const chooseProof = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Proof access needed', 'Choose a photo or video of this practice session before you log it.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images', 'videos'],
-      quality: 0.8,
-    });
-    if (result.canceled || !result.assets[0]) return;
-    const asset = result.assets[0];
+  const uploadProof = async (asset: ImagePicker.ImagePickerAsset) => {
     const mediaType = asset.type === 'video' ? 'video' : 'image';
     const contentType = asset.mimeType ?? (mediaType === 'video' ? 'video/mp4' : 'image/jpeg');
     try {
@@ -81,10 +80,68 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
     }
   };
 
+  const showPermissionHelp = (
+    permission: ImagePicker.MediaLibraryPermissionResponse | ImagePicker.CameraPermissionResponse,
+    kind: 'camera' | 'photos',
+  ) => {
+    const name = kind === 'camera' ? 'Camera' : 'Photo library';
+    const actions = permission.canAskAgain === false && Platform.OS !== 'web'
+      ? [
+          { text: 'Not now', style: 'cancel' as const },
+          { text: 'Open Settings', onPress: () => { void Linking.openSettings().catch(() => undefined); } },
+        ]
+      : undefined;
+    Alert.alert(
+      `${name} access needed`,
+      kind === 'camera'
+        ? 'Allow camera access to take a habit practice photo. You can choose from Photos instead.'
+        : 'Allow photo access to attach a habit practice photo or video.',
+      actions,
+    );
+  };
+
+  const takeProofPhoto = async () => {
+    try {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        showPermissionHelp(permission, 'camera');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        quality: 0.8,
+      });
+      if (result.canceled || !result.assets[0]) return;
+      await uploadProof(result.assets[0]);
+    } catch {
+      Alert.alert('Could not open the camera', 'Try again, or choose an existing photo from your library.');
+    }
+  };
+
+  const chooseProofFromLibrary = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        showPermissionHelp(permission, 'photos');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images', 'videos'],
+        quality: 0.8,
+      });
+      if (result.canceled || !result.assets[0]) return;
+      await uploadProof(result.assets[0]);
+    } catch {
+      Alert.alert('Could not open Photos', 'Try again, or take a new habit practice photo.');
+    }
+  };
+
   const handleLog = () => {
     if (localDone) return;
     if (!proof) {
-      chooseProof();
+      void chooseProofFromLibrary();
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -187,20 +244,25 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
       borderRadius: 10,
     },
     proofButton: {
-      alignSelf: 'flex-start',
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'center',
       gap: 6,
       paddingVertical: 8,
-      paddingHorizontal: 10,
+      paddingHorizontal: 6,
       borderWidth: 1,
       borderColor: colors.border,
-      marginTop: 12,
       borderRadius: 8,
+    },
+    proofActions: {
+      flexDirection: 'row',
+      gap: 8,
+      marginTop: 10,
     },
     proofText: {
       fontFamily: 'DMSans_500Medium',
-      fontSize: 12,
+      fontSize: 11,
       color: colors.mutedForeground,
     },
   }), [colors]);
@@ -222,17 +284,39 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
             <Text style={s.target}>{habit.targetMinutes}min</Text>
           </View>
         {!localDone && (
-          <TouchableOpacity
-            style={[s.proofButton, proof && { borderColor: colors.primary }]}
-            onPress={chooseProof}
-            disabled={uploadingProof}
-            accessibilityLabel="Attach proof photo or video"
-          >
-            <Feather name={proof ? 'check-circle' : 'camera'} size={14} color={proof ? colors.primary : colors.mutedForeground} />
-            <Text style={[s.proofText, proof && { color: colors.primary }]}>
-              {uploadingProof ? 'Uploading proof…' : proof ? `${proof.mediaType === 'video' ? 'Video' : 'Photo'} proof ready` : 'Attach photo or video proof'}
-            </Text>
-          </TouchableOpacity>
+          <View>
+            {uploadingProof || proof ? (
+              <Text style={[s.proofText, proof && { color: colors.primary }]} accessibilityLiveRegion="polite">
+                {uploadingProof
+                  ? 'Uploading proof…'
+                  : `${proof?.mediaType === 'video' ? 'Video' : 'Photo'} proof ready`}
+              </Text>
+            ) : null}
+            <View style={s.proofActions}>
+              <TouchableOpacity
+                style={s.proofButton}
+                onPress={() => { void takeProofPhoto(); }}
+                disabled={uploadingProof}
+                accessibilityRole="button"
+                accessibilityLabel="Take a habit proof photo"
+                testID={`habit-proof-camera-${habit.id}`}
+              >
+                <Feather name="camera" size={14} color={colors.mutedForeground} />
+                <Text style={s.proofText}>Camera</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={s.proofButton}
+                onPress={() => { void chooseProofFromLibrary(); }}
+                disabled={uploadingProof}
+                accessibilityRole="button"
+                accessibilityLabel="Choose habit proof from Photos"
+                testID={`habit-proof-library-${habit.id}`}
+              >
+                <Feather name="image" size={14} color={colors.mutedForeground} />
+                <Text style={s.proofText}>Photos</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         )}
         </View>
 
