@@ -45,32 +45,61 @@ export default function SignUpScreen() {
   const [code, setCode] = useState('');
   const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
   const [oauthError, setOauthError] = useState('');
+  const [actionError, setActionError] = useState('');
 
   const handleSignUp = async () => {
-    const { error } = await signUp.password({ emailAddress: email, password });
-    if (error) return;
-    await signUp.verifications.sendEmailCode();
+    setActionError('');
+    try {
+      const { error } = await signUp.password({ emailAddress: email.trim(), password });
+      if (error) {
+        setActionError(error.longMessage ?? error.message ?? 'Could not create your account. Please try again.');
+        return;
+      }
+      await handleResendVerification();
+    } catch {
+      setActionError('Could not create your account. Check your connection and try again.');
+    }
   };
 
   const handleVerify = async () => {
-    await signUp.verifications.verifyEmailCode({ code });
-    if (signUp.status === 'complete') {
-      await signUp.finalize({
-        navigate: ({ decorateUrl }) => {
-          const url = decorateUrl('/');
-          if (url.startsWith('http')) {
-            // handled by Clerk
-          } else {
-            // Route new email sign-ups through the username onboarding step
-            router.replace('/onboarding' as Href);
-          }
-        },
-      });
+    setActionError('');
+    try {
+      const { error } = await signUp.verifications.verifyEmailCode({ code: code.trim() });
+      if (error) {
+        setActionError(error.longMessage ?? error.message ?? 'Could not verify your email. Please try again.');
+        return;
+      }
+      if (signUp.status === 'complete') {
+        await signUp.finalize({
+          navigate: ({ decorateUrl }) => {
+            const url = decorateUrl('/');
+            if (!url.startsWith('http')) {
+              // Route new email sign-ups through the username onboarding step
+              router.replace('/onboarding' as Href);
+            }
+          },
+        });
+      }
+    } catch {
+      setActionError('Could not verify your email. Check your connection and try again.');
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setActionError('');
+    try {
+      const { error } = await signUp.verifications.sendEmailCode();
+      if (error) {
+        setActionError(error.longMessage ?? error.message ?? 'Could not send your code. Please try again.');
+      }
+    } catch {
+      setActionError('Could not send your code. Check your connection and try again.');
     }
   };
 
   const handleOAuth = useCallback(async (provider: 'oauth_google' | 'oauth_apple') => {
     const key = provider === 'oauth_google' ? 'google' : 'apple';
+    const providerName = key === 'google' ? 'Google' : 'Apple';
     try {
       setOauthLoading(key);
       setOauthError('');
@@ -89,13 +118,13 @@ export default function SignUpScreen() {
           },
         });
       } else if (oauthSignUp?.status === 'missing_requirements') {
-        setOauthError('Apple sign-up needs one more step before your account can open. Please try again.');
+        setOauthError(`${providerName} sign-up needs one more step before your account can open. Please try again.`);
       } else {
-        setOauthError('Apple sign-up did not finish. Please try again.');
+        setOauthError(`${providerName} sign-up did not finish. Please try again.`);
       }
     } catch (err) {
       console.error('OAuth error:', JSON.stringify(err, null, 2));
-      setOauthError('Apple sign-in is temporarily unavailable. Please try again.');
+      setOauthError(`${providerName} sign-up is temporarily unavailable. Please try again.`);
     } finally {
       setOauthLoading(null);
     }
@@ -127,6 +156,7 @@ export default function SignUpScreen() {
           autoFocus
         />
         {errors.fields.code && <Text style={s.error}>{errors.fields.code.message}</Text>}
+        {!!actionError && <Text style={s.error} accessibilityRole="alert" testID="sign-up-action-error">{actionError}</Text>}
 
         <Pressable
           style={({ pressed }) => [s.btn, (fetchStatus === 'fetching' || !code) && s.btnDisabled, pressed && s.btnPressed]}
@@ -138,7 +168,7 @@ export default function SignUpScreen() {
             : <Text style={s.btnText}>Verify Email</Text>}
         </Pressable>
 
-        <Pressable onPress={() => signUp.verifications.sendEmailCode()} style={s.secondary}>
+        <Pressable onPress={handleResendVerification} style={s.secondary} disabled={fetchStatus === 'fetching'}>
           <Text style={s.secondaryText}>Resend code</Text>
         </Pressable>
 
@@ -226,6 +256,7 @@ export default function SignUpScreen() {
           secureTextEntry
         />
         {errors.fields.password && <Text style={s.error}>{errors.fields.password.message}</Text>}
+        {!!actionError && <Text style={s.error} accessibilityRole="alert" testID="sign-up-action-error">{actionError}</Text>}
 
         <Pressable
           style={({ pressed }) => [

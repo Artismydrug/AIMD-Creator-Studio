@@ -46,6 +46,7 @@ export default function SignInScreen() {
   const [code, setCode] = useState('');
   const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
   const [oauthError, setOauthError] = useState('');
+  const [actionError, setActionError] = useState('');
 
   // Forgot-password flow
   const [step, setStep] = useState<Step>('sign_in');
@@ -57,43 +58,65 @@ export default function SignInScreen() {
   const [resetDone, setResetDone] = useState(false);
 
   const handleSignIn = async () => {
-    const { error } = await signIn.password({ emailAddress: email, password });
-    if (error) return;
+    setActionError('');
+    try {
+      const { error } = await signIn.password({ emailAddress: email.trim(), password });
+      if (error) {
+        setActionError(error.longMessage ?? error.message ?? 'Could not sign you in. Please try again.');
+        return;
+      }
 
-    if (signIn.status === 'complete') {
-      await signIn.finalize({
-        navigate: ({ decorateUrl }) => {
-          const url = decorateUrl('/');
-          if (url.startsWith('http')) {
-            // handled by Clerk
-          } else {
-            router.replace(url as Href);
-          }
-        },
-      });
-    } else if (signIn.status === 'needs_client_trust') {
-      await signIn.mfa.sendEmailCode();
+      if (signIn.status === 'complete') {
+        await signIn.finalize({
+          navigate: ({ decorateUrl }) => {
+            const url = decorateUrl('/');
+            if (!url.startsWith('http')) router.replace(url as Href);
+          },
+        });
+      } else if (signIn.status === 'needs_client_trust') {
+        await handleResendVerification();
+      }
+    } catch {
+      setActionError('Could not sign you in. Check your connection and try again.');
     }
   };
 
   const handleVerify = async () => {
-    await signIn.mfa.verifyEmailCode({ code });
-    if (signIn.status === 'complete') {
-      await signIn.finalize({
-        navigate: ({ decorateUrl }) => {
-          const url = decorateUrl('/');
-          if (url.startsWith('http')) {
-            // handled by Clerk
-          } else {
-            router.replace(url as Href);
-          }
-        },
-      });
+    setActionError('');
+    try {
+      const { error } = await signIn.mfa.verifyEmailCode({ code: code.trim() });
+      if (error) {
+        setActionError(error.longMessage ?? error.message ?? 'Could not verify your code. Please try again.');
+        return;
+      }
+      if (signIn.status === 'complete') {
+        await signIn.finalize({
+          navigate: ({ decorateUrl }) => {
+            const url = decorateUrl('/');
+            if (!url.startsWith('http')) router.replace(url as Href);
+          },
+        });
+      }
+    } catch {
+      setActionError('Could not verify your code. Check your connection and try again.');
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setActionError('');
+    try {
+      const { error } = await signIn.mfa.sendEmailCode();
+      if (error) {
+        setActionError(error.longMessage ?? error.message ?? 'Could not send your code. Please try again.');
+      }
+    } catch {
+      setActionError('Could not send your code. Check your connection and try again.');
     }
   };
 
   const handleOAuth = useCallback(async (provider: 'oauth_google' | 'oauth_apple') => {
     const key = provider === 'oauth_google' ? 'google' : 'apple';
+    const providerName = key === 'google' ? 'Google' : 'Apple';
     try {
       setOauthLoading(key);
       setOauthError('');
@@ -112,13 +135,13 @@ export default function SignInScreen() {
           },
         });
       } else if (oauthSignUp?.status === 'missing_requirements') {
-        setOauthError('Apple sign-in needs one more step before your account can open. Please try again.');
+        setOauthError(`${providerName} sign-in needs one more step before your account can open. Please try again.`);
       } else {
-        setOauthError('Apple sign-in did not finish. Please try again.');
+        setOauthError(`${providerName} sign-in did not finish. Please try again.`);
       }
     } catch (err) {
       console.error('OAuth error:', JSON.stringify(err, null, 2));
-      setOauthError('Apple sign-in is temporarily unavailable. Please try again.');
+      setOauthError(`${providerName} sign-in is temporarily unavailable. Please try again.`);
     } finally {
       setOauthLoading(null);
     }
@@ -130,7 +153,7 @@ export default function SignInScreen() {
     setResetLoading(true);
     try {
       // Initialize sign-in with the user's identifier
-      const { error: createError } = await signIn.create({ identifier: resetEmail });
+      const { error: createError } = await signIn.create({ identifier: resetEmail.trim() });
       if (createError) {
         setResetError(createError.longMessage ?? createError.message ?? 'Something went wrong. Please try again.');
         return;
@@ -142,6 +165,8 @@ export default function SignInScreen() {
         return;
       }
       setStep('forgot_code');
+    } catch {
+      setResetError('Could not send your reset code. Check your connection and try again.');
     } finally {
       setResetLoading(false);
     }
@@ -156,6 +181,8 @@ export default function SignInScreen() {
       if (error) {
         setResetError(error.longMessage ?? error.message ?? 'Could not resend code. Please try again.');
       }
+    } catch {
+      setResetError('Could not resend your reset code. Check your connection and try again.');
     } finally {
       setResetLoading(false);
     }
@@ -167,7 +194,7 @@ export default function SignInScreen() {
     setResetLoading(true);
     try {
       // Verify the code — on success status becomes 'needs_new_password'
-      const { error: verifyError } = await signIn.resetPasswordEmailCode.verifyCode({ code: resetCode });
+      const { error: verifyError } = await signIn.resetPasswordEmailCode.verifyCode({ code: resetCode.trim() });
       if (verifyError) {
         setResetError(verifyError.longMessage ?? verifyError.message ?? 'Invalid code. Please try again.');
         return;
@@ -180,7 +207,6 @@ export default function SignInScreen() {
       }
       // Finalize the session so the user is signed in immediately
       if (signIn.status === 'complete') {
-        setResetDone(true);
         await signIn.finalize({
           navigate: ({ decorateUrl }) => {
             const url = decorateUrl('/');
@@ -191,7 +217,10 @@ export default function SignInScreen() {
             }
           },
         });
+        setResetDone(true);
       }
+    } catch {
+      setResetError('Could not finish resetting your password. Check your connection and try again.');
     } finally {
       setResetLoading(false);
     }
@@ -205,6 +234,7 @@ export default function SignInScreen() {
     setNewPassword('');
     setResetError('');
     setResetDone(false);
+    setActionError('');
   };
 
   if (isSignedIn) return <Redirect href="/(tabs)" />;
@@ -352,6 +382,7 @@ export default function SignInScreen() {
           autoFocus
         />
         {errors.fields.code && <Text style={s.error}>{errors.fields.code.message}</Text>}
+        {!!actionError && <Text style={s.error} accessibilityRole="alert" testID="sign-in-action-error">{actionError}</Text>}
 
         <Pressable
           style={({ pressed }) => [s.btn, (fetchStatus === 'fetching' || !code) && s.btnDisabled, pressed && s.btnPressed]}
@@ -363,10 +394,10 @@ export default function SignInScreen() {
             : <Text style={s.btnText}>Verify</Text>}
         </Pressable>
 
-        <Pressable onPress={() => signIn.mfa.sendEmailCode()} style={s.secondary}>
+        <Pressable onPress={handleResendVerification} style={s.secondary} disabled={fetchStatus === 'fetching'}>
           <Text style={s.secondaryText}>Resend code</Text>
         </Pressable>
-        <Pressable onPress={() => signIn.reset()} style={s.secondary}>
+        <Pressable onPress={() => { setActionError(''); void signIn.reset(); }} style={s.secondary}>
           <Text style={s.secondaryText}>Start over</Text>
         </Pressable>
       </View>
@@ -452,6 +483,7 @@ export default function SignInScreen() {
           secureTextEntry
         />
         {errors.fields.password && <Text style={s.error}>{errors.fields.password.message}</Text>}
+        {!!actionError && <Text style={s.error} accessibilityRole="alert" testID="sign-in-action-error">{actionError}</Text>}
 
         {/* Forgot password link */}
         <Pressable onPress={() => { setResetEmail(email); setStep('forgot_email'); }} style={s.forgotRow}>
