@@ -48,6 +48,8 @@ let shortVideo: Buffer;
 let sixtySecondVideo: Buffer;
 let sixtyOneSecondVideo: Buffer;
 let audioOnlyMp4: Buffer;
+let longAudio: Buffer;
+let audioWithArtwork: Buffer;
 let testMediaDir: string;
 
 function appFor(user: TestUser): Express {
@@ -91,7 +93,7 @@ async function createVideoFixture(
   return readFile(outputPath);
 }
 
-async function createAudioOnlyMp4(outputPath: string): Promise<Buffer> {
+async function createAudioOnlyMp4(outputPath: string, seconds = 1): Promise<Buffer> {
   await execFileAsync("ffmpeg", [
     "-y",
     "-f",
@@ -99,7 +101,7 @@ async function createAudioOnlyMp4(outputPath: string): Promise<Buffer> {
     "-i",
     "sine=frequency=440:sample_rate=8000",
     "-t",
-    "1",
+    String(seconds),
     "-vn",
     "-c:a",
     "aac",
@@ -119,12 +121,12 @@ async function uploadStudioVideo(
     .send(media);
 }
 
-async function createStudioPost(user: TestUser, imageUrl: string) {
+async function createStudioPost(user: TestUser, imageUrl: string, mediaType: "video" | "audio" = "video") {
   return request(appFor(user))
     .post("/api/studio-posts")
     .send({
       imageUrl,
-      mediaType: "video",
+      mediaType,
       caption: `Studio API regression ${suffix}`,
       tags: [],
     });
@@ -157,6 +159,90 @@ beforeAll(async () => {
   audioOnlyMp4 = await createAudioOnlyMp4(
     join(testMediaDir, "audio-only.mp4"),
   );
+  longAudio = await createAudioOnlyMp4(join(testMediaDir, "long-audio.m4a"), 601);
+  const artworkPath = join(testMediaDir, "audio-with-art.mp3");
+  await execFileAsync("ffmpeg", [
+    "-y", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=8000",
+    "-f", "lavfi", "-i", "color=c=red:s=16x16:r=1",
+    "-t", "1", "-map", "0:a", "-map", "1:v", "-frames:v", "1",
+    "-c:a", "libmp3lame", "-c:v", "mjpeg", "-disposition:v", "attached_pic",
+    "-id3v2_version", "3", artworkPath,
+  ]);
+  audioWithArtwork = await readFile(artworkPath);
+}, 60_000);
+
+async function uploadStudioAudio(user: TestUser, media = audioOnlyMp4, contentType = "audio/mp4") {
+  return request(appFor(user))
+    .post("/api/storage/uploads")
+    .set("Content-Type", contentType)
+    .set("X-AIMD-Upload-Purpose", "studio_post")
+    .send(media);
+}
+
+describe("Studio audio posts", () => {
+  it("uploads, publishes, and returns an audio post after reload", async () => {
+    const upload = await uploadStudioAudio(creator);
+    expect(upload.status).toBe(200);
+    expect(upload.body.mediaType).toBe("audio");
+    expect(upload.body.measuredDurationSeconds).toBeGreaterThan(0);
+    const url = `/api/storage${upload.body.objectPath}`;
+    const post = await createStudioPost(creator, url, "audio");
+    expect(post.status).toBe(201);
+    expect(post.body).toMatchObject({ imageUrl: url, mediaType: "audio" });
+    const detail = await request(appFor(creator)).get(`/api/studio-posts/${post.body.id}`);
+    expect(detail.status).toBe(200);
+    expect(detail.body.mediaType).toBe("audio");
+    const feed = await request(appFor(otherCreator)).get(`/api/studio-posts?userId=${creator.id}`);
+    expect(feed.status).toBe(200);
+    expect(feed.body.some((item: { id: number; mediaType: string }) =>
+      item.id === post.body.id && item.mediaType === "audio")).toBe(true);
+    const reuse = await createStudioPost(creator, url, "audio");
+    expect(reuse.status).toBe(400);
+  });
+
+  it("accepts an MP3 with embedded album artwork", async () => {
+    const upload = await uploadStudioAudio(creator, audioWithArtwork, "audio/mpeg");
+    expect(upload.status).toBe(200);
+    expect(upload.body.mediaType).toBe("audio");
+  });
+
+  it("does not let a different creator claim an audio upload", async () => {
+    const upload = await uploadStudioAudio(creator);
+    expect(upload.status).toBe(200);
+    const post = await createStudioPost(otherCreator, `/api/storage${upload.body.objectPath}`, "audio");
+    expect(post.status).toBe(400);
+    expect(post.body.error).toContain("belongs to another creator");
+  });
+
+  it("requires a validated audio upload rather than an external URL", async () => {
+    const post = await createStudioPost(creator, "https://example.test/track.mp3", "audio");
+    expect(post.status).toBe(400);
+    const missing = await request(appFor(creator)).post("/api/studio-posts")
+      .send({ mediaType: "audio", caption: "No attachment" });
+    expect(missing.status).toBe(400);
+  });
+
+  it("rejects audio longer than ten minutes", async () => {
+    const upload = await uploadStudioAudio(creator, longAudio);
+    expect(upload.status).toBe(422);
+    expect(upload.body.maxAllowed).toBe(600);
+  });
+
+  it("rejects audio over 25 MB before storing it", async () => {
+    const upload = await uploadStudioAudio(creator, Buffer.alloc(25 * 1024 * 1024 + 1));
+    expect(upload.status).toBe(413);
+  });
+
+  it("rejects a corrupt audio file even when its signature looks like MP3", async () => {
+    const upload = await uploadStudioAudio(creator, Buffer.from("ID3not-real-audio"), "audio/mpeg");
+    expect(upload.status).toBe(422);
+  });
+
+  it("rejects a video masquerading as an audio track", async () => {
+    const upload = await uploadStudioAudio(creator, shortVideo);
+    expect(upload.status).toBe(422);
+    expect(upload.body.reason).toBe("no_audio_stream");
+  });
 });
 
 afterAll(async () => {

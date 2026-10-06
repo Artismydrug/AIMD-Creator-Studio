@@ -18,13 +18,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import {
+  getListHabitLogsQueryKey,
   useListHabits,
+  useListHabitLogs,
   useCreateHabit,
   useGetDashboardSummary,
 } from '@workspace/api-client-react';
+import { useQueryClient } from '@tanstack/react-query';
 import HabitCard from '@/components/HabitCard';
 
 const CATEGORIES = ['Drawing', 'Painting', 'Sculpture', 'Photography', 'Music', 'Writing', 'Other'];
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
 export default function HabitsScreen({ embedded = false }: { embedded?: boolean }) {
   const colors = useColors();
@@ -34,10 +38,45 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
   const [category, setCategory] = useState('Drawing');
   const [targetMinutes, setTargetMinutes] = useState('30');
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedHabitId, setSelectedHabitId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: habitsResponse, isLoading, isError, refetch } = useListHabits();
-  const { data: summary } = useGetDashboardSummary();
+  const { data: summary, refetch: refetchSummary } = useGetDashboardSummary();
   const habits = habitsResponse?.habits ?? [];
+  const selectedHabit = habits.find((habit) => habit.id === selectedHabitId) ?? habits[0];
+  const historyParams = { habitId: selectedHabit?.id ?? 0, days: 27 };
+  const {
+    data: historyLogs,
+    isLoading: historyLoading,
+    isError: historyError,
+    refetch: refetchHistory,
+  } = useListHabitLogs(
+    historyParams,
+    { query: { enabled: Boolean(selectedHabit), queryKey: getListHabitLogsQueryKey(historyParams) } },
+  );
+  const weeklyPractice = useMemo(() => {
+    const now = new Date();
+    const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+    const completedDates = (historyLogs ?? [])
+      .filter((log) => log.completed)
+      .map((log) => log.date.slice(0, 10));
+
+    return Array.from({ length: 4 }, (_, weeksAgo) => {
+      const end = new Date(todayUtc - weeksAgo * SEVEN_DAYS_MS);
+      const start = new Date(todayUtc - (weeksAgo * 7 + 6) * 24 * 60 * 60 * 1000);
+      const startDate = start.toISOString().slice(0, 10);
+      const endDate = end.toISOString().slice(0, 10);
+      const daysCompleted = new Set(
+        completedDates.filter((date) => date >= startDate && date <= endDate),
+      ).size;
+
+      return {
+        label: ['Past 7 days', 'Previous 7 days', '2 weeks ago', '3 weeks ago'][weeksAgo],
+        daysCompleted,
+      };
+    });
+  }, [historyLogs]);
 
   const createMutation = useCreateHabit({
     mutation: {
@@ -54,9 +93,15 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refetch();
+    await Promise.all([refetch(), refetchHistory(), refetchSummary()]);
     setRefreshing(false);
-  }, [refetch]);
+  }, [refetch, refetchHistory, refetchSummary]);
+
+  const handleHabitLogged = useCallback(() => {
+    void refetch();
+    void refetchSummary();
+    void queryClient.invalidateQueries({ queryKey: getListHabitLogsQueryKey() });
+  }, [queryClient, refetch, refetchSummary]);
 
   const handleCreate = () => {
     if (!habitName.trim()) return;
@@ -133,6 +178,88 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
       color: colors.mutedForeground,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
+    },
+    progressPanel: {
+      marginHorizontal: 16,
+      marginBottom: 4,
+      padding: 14,
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: colors.radius,
+      gap: 10,
+    },
+    progressHeading: {
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 16,
+      color: colors.foreground,
+    },
+    progressSubtitle: {
+      fontFamily: 'DMSans_400Regular',
+      fontSize: 12,
+      color: colors.mutedForeground,
+      lineHeight: 17,
+    },
+    habitSelector: { flexGrow: 0, marginHorizontal: -4 },
+    habitSelectorContent: { paddingHorizontal: 4, gap: 7, alignItems: 'center' },
+    habitChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderRadius: colors.radius,
+      backgroundColor: colors.muted,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    habitChipText: {
+      fontFamily: 'DMSans_500Medium',
+      fontSize: 12,
+      color: colors.mutedForeground,
+      maxWidth: 150,
+    },
+    chart: {
+      height: 128,
+      flexDirection: 'row',
+      alignItems: 'stretch',
+      justifyContent: 'space-around',
+      gap: 8,
+      paddingTop: 8,
+    },
+    chartColumn: { flex: 1, minWidth: 0, alignItems: 'center', justifyContent: 'flex-end', gap: 5 },
+    chartValue: {
+      fontFamily: 'DMSans_600SemiBold',
+      fontSize: 12,
+      color: colors.foreground,
+    },
+    chartBarTrack: {
+      height: 78,
+      width: '100%',
+      maxWidth: 38,
+      justifyContent: 'flex-end',
+      overflow: 'hidden',
+      borderRadius: 7,
+      backgroundColor: colors.muted,
+    },
+    chartBar: { width: '100%', borderRadius: 7, minHeight: 2 },
+    chartLabel: {
+      fontFamily: 'DMSans_400Regular',
+      fontSize: 9,
+      lineHeight: 11,
+      textAlign: 'center',
+      color: colors.mutedForeground,
+    },
+    comparisonRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    comparisonText: {
+      flex: 1,
+      fontFamily: 'DMSans_500Medium',
+      fontSize: 12,
+      lineHeight: 17,
+      color: colors.mutedForeground,
+    },
+    historyEmptyText: {
+      fontFamily: 'DMSans_400Regular',
+      fontSize: 12,
+      lineHeight: 17,
+      color: colors.mutedForeground,
     },
     listContent: {
       paddingTop: 12,
@@ -254,6 +381,7 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
 
   const todayCount = habits?.filter((h) => h.completedToday).length ?? 0;
   const totalCount = habits?.length ?? 0;
+  const weeklyChange = weeklyPractice[0].daysCompleted - weeklyPractice[1].daysCompleted;
 
   return (
     <View style={s.container}>
@@ -306,7 +434,7 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
           data={habits}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
-             <HabitCard habit={item} onLogged={refetch} onDeleted={refetch} />
+              <HabitCard habit={item} onLogged={handleHabitLogged} onDeleted={refetch} />
           )}
           contentContainerStyle={s.listContent}
           showsVerticalScrollIndicator={false}
@@ -319,8 +447,109 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
           }
           ListHeaderComponent={
             habits && habits.length > 0 ? (
-              <View style={s.sectionHeader}>
-                <Text style={s.sectionTitle}>Today's Practice</Text>
+              <View>
+                <View style={s.progressPanel} testID="habit-weekly-progress">
+                  <View>
+                    <Text style={s.progressHeading}>Practice over time</Text>
+      <Text style={s.progressSubtitle}>Completed practice days for this habit across four rolling weeks.</Text>
+                  </View>
+
+                  {habits.length > 1 && (
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      style={s.habitSelector}
+                      contentContainerStyle={s.habitSelectorContent}
+                      accessibilityRole="tablist"
+                    >
+                      {habits.map((habit) => {
+                        const isSelected = selectedHabit?.id === habit.id;
+                        return (
+                          <TouchableOpacity
+                            key={habit.id}
+                            onPress={() => setSelectedHabitId(habit.id)}
+                            style={[
+                              s.habitChip,
+                              isSelected && { backgroundColor: colors.primary, borderColor: colors.primary },
+                            ]}
+                            accessibilityRole="tab"
+                            accessibilityState={{ selected: isSelected }}
+                            accessibilityLabel={`${habit.name} practice history`}
+                            testID={`habit-trend-${habit.id}`}
+                          >
+                            <Text
+                              numberOfLines={1}
+                              style={[s.habitChipText, isSelected && { color: colors.primaryForeground }]}
+                            >
+                              {habit.name}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  )}
+
+                  {historyLoading ? (
+                    <ActivityIndicator color={colors.primary} accessibilityLabel="Loading practice history" />
+                  ) : historyError ? (
+                    <TouchableOpacity onPress={() => { void refetchHistory(); }} accessibilityRole="button">
+                      <Text style={s.historyEmptyText}>Couldn’t load history. Tap to retry.</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <>
+                      <View style={s.chart} testID="habit-weekly-chart">
+                        {weeklyPractice.map((week, index) => {
+                          const barHeight = week.daysCompleted === 0 ? 0 : Math.max(6, (week.daysCompleted / 7) * 78);
+                          return (
+                            <View
+                              key={week.label}
+                              style={s.chartColumn}
+                              accessible
+                              accessibilityRole="progressbar"
+                            accessibilityLabel={`${week.label}: ${week.daysCompleted} completed practice days`}
+                              accessibilityValue={{ min: 0, max: 7, now: week.daysCompleted }}
+                            >
+                              <Text style={s.chartValue}>{week.daysCompleted}</Text>
+                              <View style={s.chartBarTrack}>
+                                <View
+                                  style={[
+                                    s.chartBar,
+                                    {
+                                      height: barHeight,
+                                      backgroundColor: index === 0 ? colors.primary : colors.cyan,
+                                    },
+                                  ]}
+                                />
+                              </View>
+                              <Text style={s.chartLabel}>{week.label}</Text>
+                            </View>
+                          );
+                        })}
+                      </View>
+                      {historyLogs?.some((log) => log.completed) ? (
+                        <View style={s.comparisonRow} accessibilityLiveRegion="polite">
+                          <Feather
+                            name={weeklyChange > 0 ? 'trending-up' : weeklyChange < 0 ? 'trending-down' : 'minus'}
+                            size={15}
+                            color={weeklyChange > 0 ? colors.primary : colors.mutedForeground}
+                          />
+                          <Text style={s.comparisonText}>
+                            {weeklyChange === 0
+                              ? 'Same number of target days as the previous 7 days.'
+                              : `${Math.abs(weeklyChange)} ${Math.abs(weeklyChange) === 1 ? 'day' : 'days'} ${weeklyChange > 0 ? 'more' : 'fewer'} than the previous 7 days.`}
+                          </Text>
+                        </View>
+                      ) : (
+                        <Text style={s.historyEmptyText}>
+                        No days marked complete in this four-week view yet.
+                        </Text>
+                      )}
+                    </>
+                  )}
+                </View>
+                <View style={s.sectionHeader}>
+                  <Text style={s.sectionTitle}>Today's Practice</Text>
+                </View>
               </View>
             ) : null
           }

@@ -260,7 +260,7 @@ export const ListStudioPostsResponseItem = zod.object({
   "followingCount": zod.int(),
   "followedByMe": zod.boolean(),
   "imageUrl": zod.string().nullish(),
-  "mediaType": zod.enum(['image', 'video']).default(listStudioPostsResponseMediaTypeDefault).describe('Rendering type for imageUrl. Video media is limited to 60 seconds and 50 MB at upload.'),
+  "mediaType": zod.enum(['image', 'video', 'audio']).default(listStudioPostsResponseMediaTypeDefault).describe('Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB.'),
   "caption": zod.string(),
   "tags": zod.array(zod.string()).optional(),
   "likes": zod.int(),
@@ -278,7 +278,7 @@ export const createStudioPostBodyMediaTypeDefault = `image`;
 
 export const CreateStudioPostBody = zod.object({
   "imageUrl": zod.string().nullish(),
-  "mediaType": zod.enum(['image', 'video']).default(createStudioPostBodyMediaTypeDefault),
+  "mediaType": zod.enum(['image', 'video', 'audio']).default(createStudioPostBodyMediaTypeDefault),
   "caption": zod.string().min(1),
   "tags": zod.array(zod.string()).optional()
 })
@@ -294,7 +294,7 @@ export const CreateStudioPostResponse = zod.object({
   "followingCount": zod.int(),
   "followedByMe": zod.boolean(),
   "imageUrl": zod.string().nullish(),
-  "mediaType": zod.enum(['image', 'video']).default(createStudioPostResponseMediaTypeDefault).describe('Rendering type for imageUrl. Video media is limited to 60 seconds and 50 MB at upload.'),
+  "mediaType": zod.enum(['image', 'video', 'audio']).default(createStudioPostResponseMediaTypeDefault).describe('Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB.'),
   "caption": zod.string(),
   "tags": zod.array(zod.string()).optional(),
   "likes": zod.int(),
@@ -321,7 +321,7 @@ export const GetStudioPostResponse = zod.object({
   "followingCount": zod.int(),
   "followedByMe": zod.boolean(),
   "imageUrl": zod.string().nullish(),
-  "mediaType": zod.enum(['image', 'video']).default(getStudioPostResponseMediaTypeDefault).describe('Rendering type for imageUrl. Video media is limited to 60 seconds and 50 MB at upload.'),
+  "mediaType": zod.enum(['image', 'video', 'audio']).default(getStudioPostResponseMediaTypeDefault).describe('Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB.'),
   "caption": zod.string(),
   "tags": zod.array(zod.string()).optional(),
   "likes": zod.int(),
@@ -358,7 +358,7 @@ export const LikeStudioPostResponse = zod.object({
   "followingCount": zod.int(),
   "followedByMe": zod.boolean(),
   "imageUrl": zod.string().nullish(),
-  "mediaType": zod.enum(['image', 'video']).default(likeStudioPostResponseMediaTypeDefault).describe('Rendering type for imageUrl. Video media is limited to 60 seconds and 50 MB at upload.'),
+  "mediaType": zod.enum(['image', 'video', 'audio']).default(likeStudioPostResponseMediaTypeDefault).describe('Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB.'),
   "caption": zod.string(),
   "tags": zod.array(zod.string()).optional(),
   "likes": zod.int(),

@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { Readable } from 'stream';
 import { File, Storage } from '@google-cloud/storage';
+import { parseMediaRange } from './mediaRange';
 
 import {
   canAccessObject,
@@ -91,24 +92,35 @@ export class ObjectStorageService {
   async downloadObject(
     file: File,
     cacheTtlSec: number = 3600,
+    rangeHeader?: string,
   ): Promise<Response> {
     const [metadata] = await file.getMetadata();
     const aclPolicy = await getObjectAclPolicy(file);
     const isPublic = aclPolicy?.visibility === 'public';
 
-    const nodeStream = file.createReadStream();
-    const webStream = Readable.toWeb(nodeStream) as ReadableStream;
-
     const headers: Record<string, string> = {
       'Content-Type':
         (metadata.contentType as string) || 'application/octet-stream',
       'Cache-Control': `${isPublic ? 'public' : 'private'}, max-age=${cacheTtlSec}`,
+      'Accept-Ranges': 'bytes',
     };
     if (metadata.size) {
       headers['Content-Length'] = String(metadata.size);
     }
-
-    return new Response(webStream, { headers });
+    const size = Number(metadata.size);
+    const range = rangeHeader ? parseMediaRange(rangeHeader, size) : null;
+    if (rangeHeader && !range) {
+      headers['Content-Range'] = `bytes */${size}`;
+      headers['Content-Length'] = '0';
+      return new Response(null, { status: 416, headers });
+    }
+    if (range) {
+      headers['Content-Range'] = `bytes ${range.start}-${range.end}/${size}`;
+      headers['Content-Length'] = String(range.end - range.start + 1);
+    }
+    const nodeStream = file.createReadStream(range ?? {});
+    const webStream = Readable.toWeb(nodeStream) as ReadableStream;
+    return new Response(webStream, { status: range ? 206 : 200, headers });
   }
 
   /**

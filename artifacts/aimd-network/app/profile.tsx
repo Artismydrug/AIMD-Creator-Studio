@@ -34,6 +34,7 @@ import {
 } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import StudioVideo from '@/components/StudioVideo';
+import AudioTrackPlayer from '@/components/AudioTrackPlayer';
 import AppearanceSettings from '@/components/AppearanceSettings';
 
 type LocalImage = { uri: string; contentType: string } | null;
@@ -572,7 +573,9 @@ export default function ProfileScreen() {
            ) : (
              (posts ?? []).map((post) => (
                <View key={post.id} style={s.portfolioPost}>
-                 {post.imageUrl && post.mediaType === 'video' ? (
+                 {post.imageUrl && post.mediaType === 'audio' ? (
+                   <AudioTrackPlayer uri={resolveImageUrl(post.imageUrl) ?? post.imageUrl} />
+                 ) : post.imageUrl && post.mediaType === 'video' ? (
                    <StudioVideo
                      uri={resolveImageUrl(post.imageUrl) ?? post.imageUrl}
                      active={false}

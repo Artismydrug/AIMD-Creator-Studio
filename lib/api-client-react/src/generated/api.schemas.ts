@@ -225,7 +225,7 @@ export interface HeatmapDay {
 }
 
 /**
- * Rendering type for imageUrl. Video media is limited to 60 seconds and 50 MB at upload.
+ * Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB.
  */
 export type StudioPostMediaType = typeof StudioPostMediaType[keyof typeof StudioPostMediaType];
 
@@ -233,6 +233,7 @@ export type StudioPostMediaType = typeof StudioPostMediaType[keyof typeof Studio
 export const StudioPostMediaType = {
   image: 'image',
   video: 'video',
+  audio: 'audio',
 } as const;
 
 export interface StudioPost {
@@ -246,7 +247,7 @@ export interface StudioPost {
   followedByMe: boolean;
   /** @nullable */
   imageUrl?: string | null;
-  /** Rendering type for imageUrl. Video media is limited to 60 seconds and 50 MB at upload. */
+  /** Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB. */
   mediaType: StudioPostMediaType;
   caption: string;
   tags?: string[];
@@ -261,6 +262,7 @@ export type StudioPostInputMediaType = typeof StudioPostInputMediaType[keyof typ
 export const StudioPostInputMediaType = {
   image: 'image',
   video: 'video',
+  audio: 'audio',
 } as const;
 
 export interface StudioPostInput {

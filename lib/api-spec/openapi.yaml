@@ -2418,9 +2418,9 @@ components:
           type: ["string", "null"]
         mediaType:
           type: string
-          enum: ["image", "video"]
+          enum: ["image", "video", "audio"]
           default: "image"
-          description: Rendering type for imageUrl. Video media is limited to 60 seconds and 50 MB at upload.
+          description: Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB.
         caption:
           type: string
         tags:
@@ -2443,7 +2443,7 @@ components:
           type: ["string", "null"]
         mediaType:
           type: string
-          enum: ["image", "video"]
+          enum: ["image", "video", "audio"]
           default: "image"
         caption:
           type: string

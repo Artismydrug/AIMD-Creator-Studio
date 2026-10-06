@@ -12,4 +12,5 @@ export type StudioPostInputMediaType = typeof StudioPostInputMediaType[keyof typ
 export const StudioPostInputMediaType = {
   image: 'image',
   video: 'video',
+  audio: 'audio',
 } as const;

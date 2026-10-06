@@ -22,7 +22,7 @@ import { createNotification, removeActiveNotification } from "../lib/notificatio
 
 const router: IRouter = Router();
 
-class UnverifiedStudioVideoError extends Error {}
+class UnverifiedStudioMediaError extends Error {}
 
 function buildPostSelect(viewerUserId: number) {
   return {
@@ -141,16 +141,18 @@ router.post("/studio-posts", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  if (parsed.data.mediaType === "video" && !parsed.data.imageUrl) {
-    res.status(400).json({ error: "Video posts require an uploaded video" });
+  const requiresVerifiedMedia = parsed.data.mediaType === "video" || parsed.data.mediaType === "audio";
+  const mediaLabel = parsed.data.mediaType === "audio" ? "Audio" : "Video";
+  if (requiresVerifiedMedia && !parsed.data.imageUrl) {
+    res.status(400).json({ error: `${mediaLabel} posts require an uploaded ${parsed.data.mediaType}` });
     return;
   }
-  const videoObjectPath =
-    parsed.data.mediaType === "video" && parsed.data.imageUrl?.startsWith("/api/storage/objects/")
+  const mediaObjectPath =
+    requiresVerifiedMedia && parsed.data.imageUrl?.startsWith("/api/storage/objects/")
       ? parsed.data.imageUrl.slice("/api/storage".length)
       : null;
-  if (parsed.data.mediaType === "video" && !videoObjectPath) {
-    res.status(400).json({ error: "Video posts require a validated Studio upload" });
+  if (requiresVerifiedMedia && !mediaObjectPath) {
+    res.status(400).json({ error: `${mediaLabel} posts require a validated Studio upload` });
     return;
   }
 
@@ -162,27 +164,27 @@ router.post("/studio-posts", async (req, res): Promise<void> => {
         .values({ ...parsed.data, userId, tags: parsed.data.tags ?? [] })
         .returning();
 
-      if (videoObjectPath) {
+      if (mediaObjectPath) {
         const [claimedUpload] = await tx
           .update(studioPostMediaUploadsTable)
           .set({ postId: created.id, consumedAt: new Date() })
           .where(
             and(
               eq(studioPostMediaUploadsTable.userId, userId),
-              eq(studioPostMediaUploadsTable.objectPath, videoObjectPath),
-              eq(studioPostMediaUploadsTable.mediaType, "video"),
+              eq(studioPostMediaUploadsTable.objectPath, mediaObjectPath),
+              eq(studioPostMediaUploadsTable.mediaType, parsed.data.mediaType as "video" | "audio"),
               isNull(studioPostMediaUploadsTable.postId),
               isNull(studioPostMediaUploadsTable.consumedAt),
             ),
           )
           .returning();
-        if (!claimedUpload) throw new UnverifiedStudioVideoError();
+        if (!claimedUpload) throw new UnverifiedStudioMediaError();
       }
       return created;
     });
   } catch (error) {
-    if (error instanceof UnverifiedStudioVideoError) {
-      res.status(400).json({ error: "Video upload is missing, already used, or belongs to another creator" });
+    if (error instanceof UnverifiedStudioMediaError) {
+      res.status(400).json({ error: `${mediaLabel} upload is missing, already used, or belongs to another creator` });
       return;
     }
     throw error;

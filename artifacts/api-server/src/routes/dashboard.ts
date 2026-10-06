@@ -132,7 +132,7 @@ router.get("/dashboard/activity-feed", async (req, res): Promise<void> => {
       id: post.id + 10000,
       type: "studio_post",
       description: `Posted to Studio Log: "${post.caption.slice(0, 60)}${post.caption.length > 60 ? "..." : ""}"`,
-      imageUrl: post.imageUrl,
+      imageUrl: post.mediaType === 'audio' ? null : post.imageUrl,
       createdAt: post.createdAt,
     });
   }

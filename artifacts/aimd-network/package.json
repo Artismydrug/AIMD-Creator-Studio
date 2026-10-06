@@ -65,7 +65,9 @@
   },
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.4.2",
+    "expo-audio": "~1.1.1",
     "expo-camera": "^17.0.10",
+    "expo-document-picker": "~14.0.8",
     "expo-video": "~3.0.16",
     "react-native-purchases": "^10.7.2"
   }

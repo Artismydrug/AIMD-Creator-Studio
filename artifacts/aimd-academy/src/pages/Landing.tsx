@@ -147,7 +147,7 @@ async function fetchShowcasePosts(): Promise<ShowcasePost[]> {
   const r = await fetch('/api/studio-posts?limit=16');
   if (!r.ok) return [];
   const posts = (await r.json()) as ShowcasePost[];
-  return posts.filter((p) => p.imageUrl && p.mediaType !== 'video').slice(0, 8);
+  return posts.filter((p) => p.imageUrl && (!p.mediaType || p.mediaType === 'image')).slice(0, 8);
 }
 
 function ArtShowcase() {

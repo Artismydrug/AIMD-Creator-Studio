@@ -597,7 +597,11 @@ function PostCard({ post }: { post: any }) {
       </div>
 
       {post.imageUrl && (
-        post.mediaType === 'video' ? (
+        post.mediaType === 'audio' ? (
+          <div className="p-5 bg-muted">
+            <audio src={post.imageUrl} controls preload="metadata" className="w-full" aria-label="Audio track" />
+          </div>
+        ) : post.mediaType === 'video' ? (
           <div className="bg-black">
             <video src={post.imageUrl} controls playsInline preload="metadata" className="w-full max-h-[80vh]" />
           </div>

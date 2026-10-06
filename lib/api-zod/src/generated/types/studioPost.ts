@@ -18,7 +18,7 @@ export interface StudioPost {
   followedByMe: boolean;
   /** @nullable */
   imageUrl?: string | null;
-  /** Rendering type for imageUrl. Video media is limited to 60 seconds and 50 MB at upload. */
+  /** Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB. */
   mediaType: StudioPostMediaType;
   caption: string;
   tags?: string[];

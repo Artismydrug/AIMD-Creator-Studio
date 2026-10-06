@@ -2,7 +2,7 @@ import express, { Router, type IRouter, type Request, type Response } from 'expr
 import { Readable } from 'stream';
 import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
-import { writeFile, unlink, mkdtemp } from 'node:fs/promises';
+import { writeFile, rm, mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pool } from '@workspace/db';
@@ -36,7 +36,7 @@ const ALLOWED_VIDEO_TYPES = new Set([
 
 /**
  * Allowed MIME types for instructor audio feedback.
- * Only used for instructor_feedback purpose — not accepted for general uploads.
+ * Accepted for instructor feedback; Studio posts use the cross-platform subset below.
  */
 const ALLOWED_AUDIO_TYPES = new Set([
   'audio/mpeg',     // MP3
@@ -46,6 +46,9 @@ const ALLOWED_AUDIO_TYPES = new Set([
   'audio/webm',     // WebM audio
   'audio/wav',      // PCM WAV
   'audio/x-wav',    // alternate WAV MIME
+]);
+const ALLOWED_STUDIO_AUDIO_TYPES = new Set([
+  'audio/mpeg', 'audio/mp4', 'audio/aac', 'audio/wav', 'audio/x-wav',
 ]);
 
 /** 20 MB hard cap for images. */
@@ -106,6 +109,8 @@ const ASSIGNMENT_MAX_DURATION_SECONDS = 30;
 const STUDIO_POST_MAX_DURATION_SECONDS = 60;
 /** Studio videos are capped below the route-wide video ceiling. */
 const STUDIO_POST_MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+/** Full songs and practice takes, without unbounded public storage use. */
+const STUDIO_POST_MAX_AUDIO_DURATION_SECONDS = 10 * 60;
 
 /**
  * Discriminated result from ffprobe measurement.
@@ -114,7 +119,7 @@ const STUDIO_POST_MAX_VIDEO_BYTES = 50 * 1024 * 1024;
  */
 type DurationResult =
   | { ok: true; seconds: number }
-  | { ok: false; reason: 'ffprobe_unavailable' | 'no_video_stream' | 'unreadable' };
+  | { ok: false; reason: 'ffprobe_unavailable' | 'no_video_stream' | 'no_audio_stream' | 'unexpected_video_stream' | 'unreadable' };
 
 /**
  * Use ffprobe to measure the actual duration of a video buffer.
@@ -123,8 +128,9 @@ type DurationResult =
  * FAIL CLOSED: returns { ok: false } when ffprobe is unavailable, the file is
  * unreadable, or no video stream is present — callers must reject the upload.
  */
-async function measureVideoDurationSeconds(
+async function measureMediaDurationSeconds(
   videoBuffer: Buffer,
+  mediaKind: 'video' | 'audio' = 'video',
 ): Promise<DurationResult> {
   let tmpDir: string | null = null;
   let tmpPath: string | null = null;
@@ -138,8 +144,7 @@ async function measureVideoDurationSeconds(
         'ffprobe',
         [
           '-v', 'error',
-          '-select_streams', 'v:0',
-          '-show_entries', 'stream=index:format=duration',
+          '-show_entries', 'stream=index,codec_type:stream_disposition=attached_pic:format=duration',
           '-of', 'json',
           tmpPath!,
         ],
@@ -154,11 +159,17 @@ async function measureVideoDurationSeconds(
           }
           try {
             const probe = JSON.parse(stdout) as {
-              streams?: Array<{ index?: number }>;
+              streams?: Array<{ index?: number; codec_type?: string; disposition?: { attached_pic?: number } }>;
               format?: { duration?: string };
             };
-            if (!probe.streams?.length) {
-              resolve({ ok: false, reason: 'no_video_stream' });
+            if (!probe.streams?.some((stream) => stream.codec_type === mediaKind)) {
+              resolve({ ok: false, reason: mediaKind === 'audio' ? 'no_audio_stream' : 'no_video_stream' });
+              return;
+            }
+            // Embedded album artwork is valid audio metadata, not a music video.
+            if (mediaKind === 'audio' && probe.streams.some((stream) =>
+              stream.codec_type === 'video' && stream.disposition?.attached_pic !== 1)) {
+              resolve({ ok: false, reason: 'unexpected_video_stream' });
               return;
             }
             const parsed = Number(probe.format?.duration);
@@ -176,7 +187,7 @@ async function measureVideoDurationSeconds(
   } catch {
     return { ok: false, reason: 'unreadable' };
   } finally {
-    if (tmpPath) await unlink(tmpPath).catch(() => undefined);
+    if (tmpDir) await rm(tmpDir, { recursive: true, force: true }).catch(() => undefined);
   }
 }
 
@@ -297,8 +308,12 @@ router.post(
       res.status(400).json({ error: 'Invalid upload purpose' });
       return;
     }
-    if (isStudioPost && !isImage && !isVideo) {
-      res.status(400).json({ error: 'Studio posts must use an image or video' });
+    if (isStudioPost && isAudio && !ALLOWED_STUDIO_AUDIO_TYPES.has(contentType)) {
+      res.status(400).json({ error: 'Studio audio must be MP3, M4A, AAC, or WAV' });
+      return;
+    }
+    if (isStudioPost && isAudio && magic !== (contentType === 'audio/x-wav' ? 'audio/wav' : contentType)) {
+      res.status(400).json({ error: 'Audio file content does not match its declared format' });
       return;
     }
     if (isVideo && !purpose) {
@@ -321,9 +336,8 @@ router.post(
       res.status(400).json({ error: 'Instructor feedback media must be video or audio' });
       return;
     }
-    if (!isInstructorFeedback && isAudio) {
-      // Audio is only permitted for instructor_feedback
-      res.status(400).json({ error: 'Audio uploads are only allowed for instructor feedback' });
+    if (!isInstructorFeedback && !isStudioPost && isAudio) {
+      res.status(400).json({ error: 'Audio uploads require a Studio post or instructor feedback purpose' });
       return;
     }
 
@@ -331,19 +345,24 @@ router.post(
     // FAIL CLOSED: if ffprobe cannot determine duration, we reject the upload.
     // This prevents bypass via corrupt containers or missing video streams.
     let measuredDurationSeconds: number | null = null;
-    if (isAssignmentFootage || (isStudioPost && isVideo)) {
-      const durationResult = await measureVideoDurationSeconds(req.body);
+    if (isAssignmentFootage || (isStudioPost && (isVideo || isAudio))) {
+      const mediaKind = isAudio ? 'audio' : 'video';
+      const durationResult = await measureMediaDurationSeconds(req.body, mediaKind);
       if (!durationResult.ok) {
         const detail =
           durationResult.reason === 'ffprobe_unavailable'
             ? 'Duration measurement service unavailable'
             : durationResult.reason === 'no_video_stream'
               ? 'No video stream found in uploaded file'
-              : 'Uploaded file is unreadable or corrupt';
+              : durationResult.reason === 'no_audio_stream'
+                ? 'No audio stream found in uploaded file'
+                : durationResult.reason === 'unexpected_video_stream'
+                  ? 'Audio uploads must not include video'
+                  : 'Uploaded file is unreadable or corrupt';
         res.status(422).json({
           error: `${
             isAssignmentFootage ? 'Assignment' : 'Studio'
-          } video could not be validated: ${detail}`,
+          } ${mediaKind} could not be validated: ${detail}`,
           reason: durationResult.reason,
         });
         return;
@@ -351,12 +370,12 @@ router.post(
       measuredDurationSeconds = durationResult.seconds;
       const maxAllowed = isAssignmentFootage
         ? ASSIGNMENT_MAX_DURATION_SECONDS
-        : STUDIO_POST_MAX_DURATION_SECONDS;
+        : isAudio ? STUDIO_POST_MAX_AUDIO_DURATION_SECONDS : STUDIO_POST_MAX_DURATION_SECONDS;
       if (measuredDurationSeconds > maxAllowed) {
         res.status(422).json({
           error: `${
             isAssignmentFootage ? 'Assignment' : 'Studio'
-          } video exceeds the ${maxAllowed}-second limit`,
+          } ${mediaKind} exceeds the ${maxAllowed}-second limit`,
           measuredDurationSeconds,
           maxAllowed,
         });
@@ -437,14 +456,15 @@ router.post(
         );
       }
 
-      if (isStudioPost && isVideo && measuredDurationSeconds !== null) {
+      if (isStudioPost && (isVideo || isAudio) && measuredDurationSeconds !== null) {
         await pool.query(
           `INSERT INTO studio_post_media_uploads
              (user_id, object_path, media_type, measured_duration_seconds, file_size_bytes)
-           VALUES ($1, $2, 'video', $3, $4)`,
+            VALUES ($1, $2, $3, $4, $5)`,
           [
             Number(ownerId),
             objectPath,
+             mediaType,
             Math.ceil(measuredDurationSeconds),
             storedMedia.buffer.length,
           ],
@@ -481,7 +501,7 @@ router.post(
         measuredDurationSeconds:
           isAssignmentFootage
             ? recordedDurationSeconds
-            : isStudioPost && isVideo && measuredDurationSeconds !== null
+            : isStudioPost && (isVideo || isAudio) && measuredDurationSeconds !== null
               ? Math.ceil(measuredDurationSeconds)
               : undefined,
       });
@@ -510,7 +530,7 @@ router.get(
         return;
       }
 
-      const response = await objectStorageService.downloadObject(file);
+      const response = await objectStorageService.downloadObject(file, 3600, req.headers.range);
 
       res.status(response.status);
       response.headers.forEach((value, key) => res.setHeader(key, value));
@@ -559,7 +579,7 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
       return;
     }
 
-    const response = await objectStorageService.downloadObject(objectFile);
+    const response = await objectStorageService.downloadObject(objectFile, 3600, req.headers.range);
 
     // Validate stored content type is an allowed media type before serving.
     const contentType = response.headers.get('content-type') ?? '';
@@ -658,6 +678,8 @@ function validateAudioMagicBytes(buf: Buffer): string | null {
   // MP3: ID3 tag (49 44 33) or MPEG sync frame (FF FB / FF F3 / FF F2)
   if (buf[0] === 0x49 && buf[1] === 0x44 && buf[2] === 0x33) return 'audio/mpeg'; // ID3
   if (buf[0] === 0xff && (buf[1] === 0xfb || buf[1] === 0xf3 || buf[1] === 0xf2)) return 'audio/mpeg'; // MPEG frame
+  // Raw AAC with an ADTS header.
+  if (buf[0] === 0xff && (buf[1] === 0xf1 || buf[1] === 0xf9)) return 'audio/aac';
 
   // M4A / AAC in MP4 container: ISO BMFF ftyp (same as MP4 video, MIME differs)
   if (

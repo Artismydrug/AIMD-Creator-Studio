@@ -1,6 +1,7 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
+  ScrollView,
   Text,
   FlatList,
   StyleSheet,
@@ -21,6 +22,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
@@ -33,9 +35,11 @@ import {
   type StudioPost,
 } from '@workspace/api-client-react';
 import PostCard from '@/components/PostCard';
+import AudioTrackPlayer from '@/components/AudioTrackPlayer';
 
 const MAX_STUDIO_VIDEO_BYTES = 50 * 1024 * 1024;
 const MAX_STUDIO_VIDEO_DURATION_MS = 60 * 1000;
+const MAX_STUDIO_AUDIO_BYTES = 25 * 1024 * 1024;
 const FEED_MUTED_PREFERENCE_KEY = 'aimd:feed-videos-muted';
 
 type SelectedMedia = {
@@ -44,14 +48,14 @@ type SelectedMedia = {
   fileName: string;
   fileSize?: number;
   duration?: number | null;
-  mediaType: 'image' | 'video';
+  mediaType: 'image' | 'video' | 'audio';
 };
 
 /** Upload creator media directly to the API server. Returns the objectPath. */
 async function uploadMediaToServer(
   uri: string,
   contentType: string,
-  mediaType: 'image' | 'video',
+  mediaType: 'image' | 'video' | 'audio',
   onProgress: (progress: number) => void,
 ): Promise<string> {
   onProgress(0.1);
@@ -60,6 +64,9 @@ async function uploadMediaToServer(
 
   if (mediaType === 'video' && arrayBuffer.byteLength > MAX_STUDIO_VIDEO_BYTES) {
     throw new Error('Video must be 50 MB or smaller.');
+  }
+  if (mediaType === 'audio' && arrayBuffer.byteLength > MAX_STUDIO_AUDIO_BYTES) {
+    throw new Error('Audio must be 25 MB or smaller.');
   }
 
   onProgress(0.35);
@@ -81,6 +88,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
   const router = useRouter();
   const { compose } = useLocalSearchParams<{ compose?: string }>();
   const queryClient = useQueryClient();
+  const feedRef = useRef<FlatList<StudioPost>>(null);
   const [composing, setComposing] = useState(false);
   const [caption, setCaption] = useState('');
   const [tags, setTags] = useState('');
@@ -151,6 +159,8 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
           },
         );
         setFeedMode('all');
+        setActiveIndex(0);
+        requestAnimationFrame(() => feedRef.current?.scrollToOffset({ offset: 0, animated: false }));
         queryClient.invalidateQueries({
           queryKey: ['/api/studio-posts'],
           refetchType: 'inactive',
@@ -278,6 +288,37 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
       videoQuality: ImagePicker.UIImagePickerControllerQualityType.Medium,
     });
     if (!result.canceled && result.assets[0]) usePickedMedia(result.assets[0]);
+  };
+
+  const handlePickAudio = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'audio/*',
+        multiple: false,
+        copyToCacheDirectory: true,
+      });
+      if (result.canceled || !result.assets[0]) return;
+      const asset = result.assets[0];
+      const extension = asset.name.split('.').pop()?.toLowerCase() ?? '';
+      const formats: Record<string, string> = {
+        mp3: 'audio/mpeg', m4a: 'audio/mp4', aac: 'audio/aac', wav: 'audio/wav',
+      };
+      const contentType = formats[extension];
+      if (!contentType) {
+        Alert.alert('Unsupported audio format', 'Choose an MP3, M4A, AAC, or WAV file.');
+        return;
+      }
+      if (asset.size != null && asset.size > MAX_STUDIO_AUDIO_BYTES) {
+        Alert.alert('Audio is too large', 'Choose an audio track that is 25 MB or smaller.');
+        return;
+      }
+      setSelectedMedia({
+        uri: asset.uri, fileName: asset.name, fileSize: asset.size,
+        contentType, mediaType: 'audio',
+      });
+    } catch {
+      Alert.alert('Could not open audio files', 'Try again and choose a track saved in Files on your device.');
+    }
   };
 
   const handleSubmit = async () => {
@@ -468,6 +509,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
         },
         sheet: {
           backgroundColor: colors.card,
+          maxHeight: '92%',
           paddingTop: 16,
           paddingHorizontal: 16,
           paddingBottom: Platform.OS === 'web' ? 40 : insets.bottom + 20,
@@ -684,6 +726,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
           }}
         >
           <FlatList
+            ref={feedRef}
             key={feedMode}
             data={posts ?? []}
             keyExtractor={(item) => String(item.id)}
@@ -704,7 +747,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
                   onFollowChanged={refetch}
                   onRefresh={refetch}
                   immersive
-                  active={index === activeIndex}
+                  active={!composing && index === activeIndex}
                   reducedMotion={reduceMotion}
                   muted={videosMuted}
                   onMutedChange={handleMutedChange}
@@ -758,7 +801,8 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
         </View>
       )}
 
-      <Modal visible={composing} animationType="slide" transparent>
+      <Modal visible={composing} animationType="slide" transparent
+        onRequestClose={() => { if (!isPending) setComposing(false); }}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={s.modalOverlay}
@@ -767,6 +811,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
             <View style={s.sheetHandle} />
             <View style={s.sheetHeader}>
               <TouchableOpacity
+                disabled={isPending}
                 onPress={() => {
                   setComposing(false);
                   setSelectedMedia(null);
@@ -791,6 +836,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
               </TouchableOpacity>
             </View>
 
+            <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={{ flexShrink: 1 }}>
             <TextInput
               style={s.captionInput}
               value={caption}
@@ -800,25 +846,35 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
               multiline
               maxLength={500}
               autoFocus
+              editable={!isPending}
             />
 
             <View style={s.mediaActions}>
-              <TouchableOpacity style={s.imagePickerBtn} onPress={handlePickImage}>
+              <TouchableOpacity style={s.imagePickerBtn} onPress={handlePickImage} disabled={isPending}>
                 <Feather name="image" size={16} color={colors.mutedForeground} />
                 <Text style={s.imagePickerText}>Photo</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={s.imagePickerBtn} onPress={handlePickVideo}>
+              <TouchableOpacity style={s.imagePickerBtn} onPress={handlePickVideo} disabled={isPending}>
                 <Feather name="film" size={16} color={colors.mutedForeground} />
                 <Text style={s.imagePickerText}>Choose video</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={s.imagePickerBtn} onPress={handleRecordVideo}>
+              <TouchableOpacity style={s.imagePickerBtn} onPress={handleRecordVideo} disabled={isPending}>
                 <Feather name="video" size={16} color={colors.mutedForeground} />
                 <Text style={s.imagePickerText}>Record</Text>
               </TouchableOpacity>
+              <TouchableOpacity style={s.imagePickerBtn} onPress={handlePickAudio} disabled={isPending}
+                accessibilityRole="button" accessibilityLabel="Choose an audio track from Files" testID="compose-pick-audio">
+                <Feather name="music" size={16} color={colors.mutedForeground} />
+                <Text style={s.imagePickerText}>Audio</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={s.mediaHint}>Videos can be up to 60 seconds and 50 MB.</Text>
+            <Text style={s.mediaHint}>Video: 60 sec / 50 MB. Audio: MP3, M4A, AAC, WAV · 10 min / 25 MB.</Text>
 
             {selectedMedia ? (
+              <>
+              {selectedMedia.mediaType === 'audio' && (
+                <AudioTrackPlayer uri={selectedMedia.uri} title={selectedMedia.fileName} active={composing && !isPending} />
+              )}
               <View style={s.imageRow}>
                 {selectedMedia.mediaType === 'image' ? (
                   <Image
@@ -826,7 +882,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
                     style={s.previewThumb}
                     resizeMode="cover"
                   />
-                ) : (
+                ) : selectedMedia.mediaType === 'video' ? (
                   <View style={s.videoPreview}>
                     <Feather name="play-circle" size={24} color="#FFFFFF" />
                     <Text style={s.videoPreviewText}>
@@ -835,17 +891,21 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
                         : 'Video ready'}
                     </Text>
                   </View>
-                )}
+                ) : <Feather name="music" size={22} color={colors.primary} />}
                 <Text style={s.selectedMediaName} numberOfLines={1}>
                   {selectedMedia.fileName}
                 </Text>
                 <TouchableOpacity
                   style={s.removeImgBtn}
+                  disabled={isPending}
+                  accessibilityRole="button"
+                  accessibilityLabel="Remove attached media"
                   onPress={() => setSelectedMedia(null)}
                 >
                   <Feather name="x-circle" size={18} color={colors.mutedForeground} />
                 </TouchableOpacity>
               </View>
+              </>
             ) : null}
 
             {uploading ? (
@@ -868,10 +928,12 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
               style={s.tagsInput}
               value={tags}
               onChangeText={setTags}
+              editable={!isPending}
               placeholder="Tags: painting, figure, composition"
               placeholderTextColor={colors.mutedForeground}
               returnKeyType="done"
             />
+            </ScrollView>
           </View>
         </KeyboardAvoidingView>
       </Modal>

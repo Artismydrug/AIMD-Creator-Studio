@@ -30,6 +30,7 @@ import type { StudioPost } from '@workspace/api-client-react';
 import { useRouter } from 'expo-router';
 import SafetyActions from '@/components/SafetyActions';
 import StudioVideo from '@/components/StudioVideo';
+import AudioTrackPlayer from '@/components/AudioTrackPlayer';
 import EmojiPicker from '@/components/EmojiPicker';
 
 /** Resolve a relative imageUrl (e.g. /api/storage/objects/…) to an absolute URL for React Native. */
@@ -212,6 +213,14 @@ export default function PostCard({
       justifyContent: 'center',
       padding: 32,
       backgroundColor: colors.ink,
+    },
+    audioSurface: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingLeft: 20,
+      paddingRight: 80,
+      paddingBottom: 140,
+      gap: 18,
     },
     fallbackMark: {
       width: 76,
@@ -539,7 +548,12 @@ export default function PostCard({
       {immersive ? (
         <View style={s.immersiveCard}>
           <View style={s.mediaSurface}>
-            {resolveImageUrl(post.imageUrl) && post.mediaType === 'video' ? (
+            {resolveImageUrl(post.imageUrl) && post.mediaType === 'audio' ? (
+              <View style={s.audioSurface}>
+                <Feather name="music" size={50} color={colors.cyan} />
+                <AudioTrackPlayer uri={resolveImageUrl(post.imageUrl)!} active={active} />
+              </View>
+            ) : resolveImageUrl(post.imageUrl) && post.mediaType === 'video' ? (
               <StudioVideo
                 uri={resolveImageUrl(post.imageUrl)!}
                 active={active}
@@ -714,7 +728,9 @@ export default function PostCard({
 
           <Text style={s.caption}>{post.caption}</Text>
 
-          {resolveImageUrl(post.imageUrl) ? (
+          {resolveImageUrl(post.imageUrl) && post.mediaType === 'audio' ? (
+            <AudioTrackPlayer uri={resolveImageUrl(post.imageUrl)!} />
+          ) : resolveImageUrl(post.imageUrl) ? (
             <View style={[s.imageFrame, { borderColor: frameColor }]}>
               {post.mediaType === 'video' ? (
                 <StudioVideo

@@ -27,6 +27,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import SafetyActions from '@/components/SafetyActions';
 import StudioVideo from '@/components/StudioVideo';
+import AudioTrackPlayer from '@/components/AudioTrackPlayer';
 
 const TIER_COLORS: Record<string, string> = {
   pro: '#a855f7',
@@ -655,7 +656,9 @@ export default function CreatorProfileScreen() {
             ) : (
               (posts ?? []).map((post) => (
                 <View key={post.id} style={s.postCard}>
-                 {post.imageUrl && post.mediaType === 'video' ? (
+                 {post.imageUrl && post.mediaType === 'audio' ? (
+                   <AudioTrackPlayer uri={resolveImageUrl(post.imageUrl) ?? post.imageUrl} />
+                 ) : post.imageUrl && post.mediaType === 'video' ? (
                    <StudioVideo
                      uri={resolveImageUrl(post.imageUrl) ?? post.imageUrl}
                      active={false}
