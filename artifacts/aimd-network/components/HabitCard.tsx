@@ -14,7 +14,6 @@ import * as Haptics from 'expo-haptics';
 import { customFetch, useDeleteHabit, useLogHabitSession } from '@workspace/api-client-react';
 import type { Habit } from '@workspace/api-client-react';
 import * as ImagePicker from 'expo-image-picker';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface HabitCardProps {
   habit: Habit;
@@ -24,7 +23,6 @@ interface HabitCardProps {
 
 export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps) {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
   const categoryColors: Record<string, string> = {
     drawing: colors.cyan,
     painting: colors.primary,
@@ -88,7 +86,14 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
     const actions = permission.canAskAgain === false && Platform.OS !== 'web'
       ? [
           { text: 'Not now', style: 'cancel' as const },
-          { text: 'Open Settings', onPress: () => { void Linking.openSettings().catch(() => undefined); } },
+          {
+            text: 'Open Settings',
+            onPress: () => {
+              void Linking.openSettings().catch(() => {
+                Alert.alert('Could not open Settings', 'Open your device Settings and allow access for Creator Studio by AIMD.');
+              });
+            },
+          },
         ]
       : undefined;
     Alert.alert(
