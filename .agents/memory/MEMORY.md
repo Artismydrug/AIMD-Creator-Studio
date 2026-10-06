@@ -24,5 +24,6 @@
 - [Appearance and accomplishments](appearance-and-accomplishments.md) — device-local appearance choice; retain full earned milestone history beyond recent previews.
 - [Expo preview testing origins](expo-preview-testing-origins.md) — sibling-web test login does not imply an authenticated Expo session; verify the intended origin.
 - [Workspace package targeting](workspace-package-targeting.md) — use a targeted pnpm filter if the package helper rejects artifact-scoped installation at the workspace root.
+- [PNPM override precedence](pnpm-override-precedence.md) — add security pins to the existing workspace override map; package.json overrides replace it rather than merge.
 - [Music creator scope](music-creator-scope.md) — music artistry and vocal practice belong in the ordinary creative feed, not only private feedback.
 - [Creator tester feedback](creator-tester-feedback.md) — early testers value intuitive navigation and want to compare creative practice over time.

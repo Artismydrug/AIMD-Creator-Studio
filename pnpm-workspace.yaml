@@ -159,3 +159,4 @@ overrides:
   "@esbuild-kit/esm-loader": "npm:tsx@^4.21.0"
   esbuild: "0.27.3"
   proxy-addr: "2.0.8"
+  shell-quote: "1.12.0"
