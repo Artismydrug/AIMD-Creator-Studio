@@ -21,6 +21,9 @@ interface HabitCardProps {
   onDeleted?: () => void;
 }
 
+export const HABIT_ACTION_HELP =
+  'Tap Camera or Photos to add practice proof, then ✓ to log. Delete removes the habit and its history. Habit tracking and proof are free on every plan.';
+
 export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps) {
   const colors = useColors();
   const categoryColors: Record<string, string> = {
@@ -240,16 +243,24 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
       gap: 8,
     },
     deleteBtn: {
-      width: 40,
-      height: 32,
+      width: 64,
+      height: 44,
+      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
+      gap: 4,
       borderWidth: 1,
       borderColor: colors.border,
       borderRadius: 10,
     },
+    deleteText: {
+      fontFamily: 'DMSans_600SemiBold',
+      fontSize: 10,
+      color: colors.destructive,
+    },
     proofButton: {
       flex: 1,
+      minHeight: 44,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
@@ -330,10 +341,12 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
             style={[s.deleteBtn, { opacity: deleteMutation.isPending ? 0.5 : 1 }]}
             onPress={handleDelete}
             disabled={deleteMutation.isPending}
+            accessibilityRole="button"
             accessibilityLabel={`Delete ${habit.name}`}
             testID={`delete-habit-${habit.id}`}
           >
             <Feather name="trash-2" size={16} color={colors.destructive} />
+            <Text style={s.deleteText}>Delete</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[s.checkBtn, {
@@ -342,6 +355,8 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
             }]}
             onPress={handleLog}
             disabled={localDone || logMutation.isPending}
+            accessibilityRole="button"
+            accessibilityLabel={localDone ? `${habit.name} practice completed today` : `Log today's practice for ${habit.name}`}
             testID={`log-habit-${habit.id}`}
           >
             <Feather

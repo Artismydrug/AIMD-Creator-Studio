@@ -5,6 +5,7 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+import type { WorkshopDetailAccessStatus } from './workshopDetailAccessStatus';
 import type { WorkshopDetailTier } from './workshopDetailTier';
 import type { WorkshopModule } from './workshopModule';
 
@@ -22,6 +23,12 @@ export interface WorkshopDetail {
   durationMinutes?: number;
   enrolledCount?: number;
   isEnrolled?: boolean;
+  /** @nullable */
+  previewVideoUrl?: string | null;
+  isPublished?: boolean;
+  hasFullAccess?: boolean;
+  isStaff?: boolean;
+  accessStatus?: WorkshopDetailAccessStatus;
   modules: WorkshopModule[];
   createdAt: Date;
 }

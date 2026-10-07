@@ -14,6 +14,8 @@ export interface WorkshopModuleDetail {
   description?: string | null;
   /** @nullable */
   videoUrl?: string | null;
+  /** @nullable */
+  previewVideoUrl?: string | null;
   order: number;
   durationMinutes: number;
   createdAt: Date;

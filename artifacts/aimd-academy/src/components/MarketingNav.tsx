@@ -8,6 +8,7 @@ import aimdLogo from '@assets/AIMD_Logo_Original-White_1787712004194.png';
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
+  { href: '/learn', label: 'Learn' },
   { href: '/tattoo', label: 'Tattoo Studio' },
   { href: '/gallery', label: 'Gallery' },
 ];

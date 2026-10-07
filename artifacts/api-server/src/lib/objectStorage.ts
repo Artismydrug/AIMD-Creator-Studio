@@ -42,6 +42,35 @@ export class ObjectNotFoundError extends Error {
 export class ObjectStorageService {
   constructor() {}
 
+  async requestWorkshopVideoUpload(): Promise<{ uploadURL: string; objectPath: string }> {
+    const relativePath = `uploads/pending/workshop/${randomUUID()}`;
+    const { bucketName, objectName } = parseObjectPath(`${this.getPrivateObjectDir().replace(/\/$/, '')}/${relativePath}`);
+    return {
+      objectPath: `/objects/${relativePath}`,
+      uploadURL: await signObjectURL({ bucketName, objectName, method: 'PUT', ttlSec: 900 }),
+    };
+  }
+
+  // Copy validated staging bytes to an immutable destination. A still-valid
+  // presigned PUT can only replace staging bytes, never the published media.
+  async finalizeWorkshopVideo(
+    stagedFile: File,
+    ownerId: string,
+    visibility: 'public' | 'private',
+  ): Promise<string> {
+    const relativePath = `uploads/${randomUUID()}`;
+    const { bucketName, objectName } = parseObjectPath(`${this.getPrivateObjectDir().replace(/\/$/, '')}/${relativePath}`);
+    const destination = objectStorageClient.bucket(bucketName).file(objectName);
+    await stagedFile.copy(destination);
+    await setObjectAclPolicy(destination, { owner: ownerId, visibility });
+    return `/objects/${relativePath}`;
+  }
+
+  async getWorkshopVideoPlaybackURL(objectPath: string, ttlSec = 900): Promise<string> {
+    const file = await this.getObjectEntityFile(objectPath);
+    return signObjectURL({ bucketName: file.bucket.name, objectName: file.name, method: 'GET', ttlSec });
+  }
+
   getPublicObjectSearchPaths(): Array<string> {
     const pathsStr = process.env.PUBLIC_OBJECT_SEARCH_PATHS || '';
     const paths = Array.from(

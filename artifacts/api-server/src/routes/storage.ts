@@ -12,6 +12,7 @@ import {
 } from '../lib/objectStorage';
 import { ObjectPermission } from '../lib/objectAcl';
 import { sanitizeChallengeMedia } from '../lib/sanitizeChallengeMedia';
+import { getWorkshopLessonAccess } from '../lib/workshopLessonAccess';
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -563,9 +564,32 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
     const objectPath = `/objects/${wildcardPath}`;
     const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
 
+    // Legacy lesson objects may carry a public ACL. Lesson ownership takes
+    // precedence over that ACL so a raw file URL cannot bypass the paywall.
+    const lessonReferences = await pool.query<{ workshop_id: number; is_published: boolean }>(
+      `SELECT m.workshop_id, w.is_published FROM workshop_modules m
+       JOIN workshops w ON w.id = m.workshop_id
+       WHERE m.video_url = $1 OR m.video_url = $2`,
+      [objectPath, `/api/storage${objectPath}`],
+    );
+    let protectedLesson = false;
+    for (const reference of lessonReferences.rows) {
+      protectedLesson = true;
+      const access = await getWorkshopLessonAccess(req.dbUser?.id, reference.workshop_id);
+      if (access.accessStatus === "unavailable") {
+        res.status(503).json({ error: "membership_check_unavailable" }); return;
+      }
+      if (!access.hasFullAccess) {
+        res.status(req.dbUser ? 403 : 401).json({ error: "lesson_access_required" }); return;
+      }
+      if (!reference.is_published && !access.isStaff && !access.hasParticipantAccess) {
+        res.status(404).json({ error: "Lesson not found" }); return;
+      }
+    }
+
     // Enforce ACL: only objects with an explicit public-read policy are served.
     // Objects without an ACL (unrelated private uploads) are rejected.
-    let canAccess = (req.dbUser as any)?.isAdmin === true || await objectStorageService.canAccessObjectEntity({
+    let canAccess = protectedLesson || (req.dbUser as any)?.isAdmin === true || await objectStorageService.canAccessObjectEntity({
       userId: req.dbUser ? String(req.dbUser.id) : undefined,
       objectFile,
       requestedPermission: ObjectPermission.READ,
@@ -579,7 +603,7 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
       return;
     }
 
-    const response = await objectStorageService.downloadObject(objectFile, 3600, req.headers.range);
+    const response = await objectStorageService.downloadObject(objectFile, protectedLesson ? 0 : 3600, req.headers.range);
 
     // Validate stored content type is an allowed media type before serving.
     const contentType = response.headers.get('content-type') ?? '';
@@ -591,6 +615,7 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
 
     res.status(response.status);
     response.headers.forEach((value, key) => res.setHeader(key, value));
+    if (protectedLesson) res.setHeader('Cache-Control', 'private, no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Disposition', 'inline');
     res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self'; media-src 'self'");

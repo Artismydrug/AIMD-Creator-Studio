@@ -458,6 +458,181 @@ paths:
               schema:
                 $ref: "#/components/schemas/Enrollment"
 
+  /workshops/{id}/modules/{moduleId}/playback:
+    post:
+      operationId: createWorkshopLessonPlayback
+      tags: [workshops]
+      summary: Verify active subscription or participant enrollment and issue expiring private lesson playback
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: moduleId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Private playback session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkshopLessonPlayback"
+        "403":
+          description: Active Dedicated Artist membership or workshop participant enrollment required
+
+  /instructor/workshops/{workshopId}/videos/request-upload:
+    post:
+      operationId: requestWorkshopVideoUpload
+      tags: [workshops]
+      summary: Request a direct-to-storage video upload for an assigned workshop
+      parameters:
+        - name: workshopId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkshopVideoUploadInput"
+      responses:
+        "200":
+          description: Presigned upload destination
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkshopVideoUploadDestination"
+
+  /instructor/workshops/{workshopId}/videos/finalize:
+    post:
+      operationId: finalizeWorkshopVideoUpload
+      tags: [workshops]
+      summary: Validate a workshop video upload and set private lesson or public preview access
+      parameters:
+        - name: workshopId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkshopVideoFinalizeInput"
+      responses:
+        "200":
+          description: Validated media reference
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkshopVideoMedia"
+
+  /instructor/workshops/{workshopId}:
+    patch:
+      operationId: updateInstructorWorkshop
+      tags: [workshops]
+      summary: Set workshop teaser and publication status
+      parameters:
+        - name: workshopId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstructorWorkshopUpdateInput"
+      responses:
+        "200":
+          description: Updated workshop
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workshop"
+
+  /instructor/workshops/{workshopId}/modules/{moduleId}:
+    patch:
+      operationId: updateWorkshopModule
+      tags: [workshops]
+      summary: Edit an assigned workshop module and its separate teaser and full lesson files
+      parameters:
+        - name: workshopId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: moduleId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkshopModuleUpdateInput"
+      responses:
+        "200":
+          description: Updated module
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkshopModuleDetail"
+
+  /instructor/workshops/{workshopId}/participants:
+    get:
+      operationId: listWorkshopParticipants
+      tags: [workshops]
+      summary: List staff-granted participants in an assigned workshop
+      parameters:
+        - name: workshopId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Workshop participant roster
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkshopParticipant"
+    post:
+      operationId: enrollWorkshopParticipant
+      tags: [workshops]
+      summary: Grant or pause workshop-specific participant access as assigned staff
+      parameters:
+        - name: workshopId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkshopParticipantInput"
+      responses:
+        "200":
+          description: Participant enrollment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Enrollment"
+
   /workshops/{id}/modules/{moduleId}/complete:
     post:
       operationId: completeWorkshopModule
@@ -2468,6 +2643,10 @@ components:
           type: ["string", "null"]
         thumbnailUrl:
           type: ["string", "null"]
+        previewVideoUrl:
+          type: ["string", "null"]
+        isPublished:
+          type: boolean
         tier:
           type: string
           enum: ["free", "workshop", "pro"]
@@ -2499,6 +2678,13 @@ components:
           type: ["string", "null"]
         videoUrl:
           type: ["string", "null"]
+          description: Stored full lesson reference, returned only to assigned staff. Learners use the protected playback endpoint.
+        previewVideoUrl:
+          type: ["string", "null"]
+        hasVideo:
+          type: boolean
+        isLocked:
+          type: boolean
         order:
           type: integer
         durationMinutes:
@@ -2538,6 +2724,17 @@ components:
           type: integer
         isEnrolled:
           type: boolean
+        previewVideoUrl:
+          type: ["string", "null"]
+        isPublished:
+          type: boolean
+        hasFullAccess:
+          type: boolean
+        isStaff:
+          type: boolean
+        accessStatus:
+          type: string
+          enum: [granted, locked, unavailable]
         modules:
           type: array
           items:
@@ -2555,6 +2752,9 @@ components:
           type: integer
         userId:
           type: integer
+        accessSource:
+          type: string
+          enum: [subscription, participant]
         workshopId:
           type: integer
         workshopTitle:
@@ -4062,6 +4262,8 @@ components:
           type: ["string", "null"]
         videoUrl:
           type: ["string", "null"]
+        previewVideoUrl:
+          type: ["string", "null"]
         order:
           type: integer
           minimum: 0
@@ -4083,6 +4285,8 @@ components:
           type: ["string", "null"]
         videoUrl:
           type: ["string", "null"]
+        previewVideoUrl:
+          type: ["string", "null"]
         order:
           type: integer
         durationMinutes:
@@ -4090,6 +4294,107 @@ components:
         createdAt:
           type: string
           format: date-time
+
+    WorkshopLessonPlayback:
+      type: object
+      required: [playbackUrl, expiresAt]
+      properties:
+        playbackUrl:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+
+    WorkshopVideoUploadInput:
+      type: object
+      required: [kind, contentType, size]
+      properties:
+        kind:
+          type: string
+          enum: [preview, lesson]
+        contentType:
+          type: string
+          enum: [video/mp4, video/quicktime, video/webm]
+        size:
+          type: integer
+          minimum: 1
+          maximum: 262144000
+
+    WorkshopVideoUploadDestination:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+        objectPath:
+          type: string
+
+    WorkshopVideoFinalizeInput:
+      type: object
+      required: [objectPath]
+      properties:
+        objectPath:
+          type: string
+
+    WorkshopVideoMedia:
+      type: object
+      required: [objectPath, mediaUrl]
+      properties:
+        objectPath:
+          type: string
+        mediaUrl:
+          type: string
+
+    InstructorWorkshopUpdateInput:
+      type: object
+      properties:
+        previewVideoUrl:
+          type: ["string", "null"]
+        isPublished:
+          type: boolean
+
+    WorkshopModuleUpdateInput:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: ["string", "null"]
+        videoUrl:
+          type: ["string", "null"]
+        previewVideoUrl:
+          type: ["string", "null"]
+        order:
+          type: integer
+          minimum: 0
+        durationMinutes:
+          type: integer
+          minimum: 0
+
+    WorkshopParticipantInput:
+      type: object
+      required: [username, status]
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 100
+        status:
+          type: string
+          enum: [active, paused]
+
+    WorkshopParticipant:
+      type: object
+      required: [userId, username, status]
+      properties:
+        userId:
+          type: integer
+        username:
+          type: string
+        status:
+          type: string
+          enum: [active, paused, completed]
 
     DrillPromptInput:
       type: object

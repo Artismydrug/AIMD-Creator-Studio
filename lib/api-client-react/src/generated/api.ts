@@ -72,6 +72,7 @@ import type {
   InstructorProfileUpdate,
   InstructorWorkshopAssignment,
   InstructorWorkshopSummary,
+  InstructorWorkshopUpdateInput,
   JobApplication,
   JobApplicationInput,
   JobListing,
@@ -120,8 +121,16 @@ import type {
   WeeklyChallengeResult,
   Workshop,
   WorkshopDetail,
+  WorkshopLessonPlayback,
   WorkshopModuleDetail,
-  WorkshopModuleInput
+  WorkshopModuleInput,
+  WorkshopModuleUpdateInput,
+  WorkshopParticipant,
+  WorkshopParticipantInput,
+  WorkshopVideoFinalizeInput,
+  WorkshopVideoMedia,
+  WorkshopVideoUploadDestination,
+  WorkshopVideoUploadInput
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -1672,6 +1681,518 @@ export const useEnrollInWorkshop = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getEnrollInWorkshopMutationOptions(options));
+    }
+
+export const getCreateWorkshopLessonPlaybackUrl = (id: number,
+    moduleId: number,) => {
+
+
+
+
+  return `/api/workshops/${id}/modules/${moduleId}/playback`
+}
+
+/**
+ * @summary Verify active subscription or participant enrollment and issue expiring private lesson playback
+ */
+export const createWorkshopLessonPlayback = async (id: number,
+    moduleId: number, options?: Parameters<typeof customFetch>[1]): Promise<WorkshopLessonPlayback> => {
+
+  return customFetch<WorkshopLessonPlayback>(getCreateWorkshopLessonPlaybackUrl(id,moduleId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateWorkshopLessonPlaybackMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWorkshopLessonPlayback>>, TError,{id: number;moduleId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createWorkshopLessonPlayback>>, TError,{id: number;moduleId: number}, TContext> => {
+
+const mutationKey = ['createWorkshopLessonPlayback'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createWorkshopLessonPlayback>>, {id: number;moduleId: number}> = (props) => {
+          const {id,moduleId} = props ?? {};
+
+          return  createWorkshopLessonPlayback(id,moduleId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateWorkshopLessonPlaybackMutationResult = NonNullable<Awaited<ReturnType<typeof createWorkshopLessonPlayback>>>
+
+    export type CreateWorkshopLessonPlaybackMutationError = ErrorType<void>
+
+    /**
+ * @summary Verify active subscription or participant enrollment and issue expiring private lesson playback
+ */
+export const useCreateWorkshopLessonPlayback = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWorkshopLessonPlayback>>, TError,{id: number;moduleId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createWorkshopLessonPlayback>>,
+        TError,
+        {id: number;moduleId: number},
+        TContext
+      > => {
+      return useMutation(getCreateWorkshopLessonPlaybackMutationOptions(options));
+    }
+
+export const getRequestWorkshopVideoUploadUrl = (workshopId: number,) => {
+
+
+
+
+  return `/api/instructor/workshops/${workshopId}/videos/request-upload`
+}
+
+/**
+ * @summary Request a direct-to-storage video upload for an assigned workshop
+ */
+export const requestWorkshopVideoUpload = async (workshopId: number,
+    workshopVideoUploadInput: WorkshopVideoUploadInput, options?: Parameters<typeof customFetch>[1]): Promise<WorkshopVideoUploadDestination> => {
+
+  return customFetch<WorkshopVideoUploadDestination>(getRequestWorkshopVideoUploadUrl(workshopId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(workshopVideoUploadInput)
+  }
+);}
+
+
+
+
+
+export const getRequestWorkshopVideoUploadMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestWorkshopVideoUpload>>, TError,{workshopId: number;data: BodyType<WorkshopVideoUploadInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof requestWorkshopVideoUpload>>, TError,{workshopId: number;data: BodyType<WorkshopVideoUploadInput>}, TContext> => {
+
+const mutationKey = ['requestWorkshopVideoUpload'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof requestWorkshopVideoUpload>>, {workshopId: number;data: BodyType<WorkshopVideoUploadInput>}> = (props) => {
+          const {workshopId,data} = props ?? {};
+
+          return  requestWorkshopVideoUpload(workshopId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RequestWorkshopVideoUploadMutationResult = NonNullable<Awaited<ReturnType<typeof requestWorkshopVideoUpload>>>
+    export type RequestWorkshopVideoUploadMutationBody = BodyType<WorkshopVideoUploadInput>
+    export type RequestWorkshopVideoUploadMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Request a direct-to-storage video upload for an assigned workshop
+ */
+export const useRequestWorkshopVideoUpload = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestWorkshopVideoUpload>>, TError,{workshopId: number;data: BodyType<WorkshopVideoUploadInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof requestWorkshopVideoUpload>>,
+        TError,
+        {workshopId: number;data: BodyType<WorkshopVideoUploadInput>},
+        TContext
+      > => {
+      return useMutation(getRequestWorkshopVideoUploadMutationOptions(options));
+    }
+
+export const getFinalizeWorkshopVideoUploadUrl = (workshopId: number,) => {
+
+
+
+
+  return `/api/instructor/workshops/${workshopId}/videos/finalize`
+}
+
+/**
+ * @summary Validate a workshop video upload and set private lesson or public preview access
+ */
+export const finalizeWorkshopVideoUpload = async (workshopId: number,
+    workshopVideoFinalizeInput: WorkshopVideoFinalizeInput, options?: Parameters<typeof customFetch>[1]): Promise<WorkshopVideoMedia> => {
+
+  return customFetch<WorkshopVideoMedia>(getFinalizeWorkshopVideoUploadUrl(workshopId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(workshopVideoFinalizeInput)
+  }
+);}
+
+
+
+
+
+export const getFinalizeWorkshopVideoUploadMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof finalizeWorkshopVideoUpload>>, TError,{workshopId: number;data: BodyType<WorkshopVideoFinalizeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof finalizeWorkshopVideoUpload>>, TError,{workshopId: number;data: BodyType<WorkshopVideoFinalizeInput>}, TContext> => {
+
+const mutationKey = ['finalizeWorkshopVideoUpload'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof finalizeWorkshopVideoUpload>>, {workshopId: number;data: BodyType<WorkshopVideoFinalizeInput>}> = (props) => {
+          const {workshopId,data} = props ?? {};
+
+          return  finalizeWorkshopVideoUpload(workshopId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FinalizeWorkshopVideoUploadMutationResult = NonNullable<Awaited<ReturnType<typeof finalizeWorkshopVideoUpload>>>
+    export type FinalizeWorkshopVideoUploadMutationBody = BodyType<WorkshopVideoFinalizeInput>
+    export type FinalizeWorkshopVideoUploadMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Validate a workshop video upload and set private lesson or public preview access
+ */
+export const useFinalizeWorkshopVideoUpload = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof finalizeWorkshopVideoUpload>>, TError,{workshopId: number;data: BodyType<WorkshopVideoFinalizeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof finalizeWorkshopVideoUpload>>,
+        TError,
+        {workshopId: number;data: BodyType<WorkshopVideoFinalizeInput>},
+        TContext
+      > => {
+      return useMutation(getFinalizeWorkshopVideoUploadMutationOptions(options));
+    }
+
+export const getUpdateInstructorWorkshopUrl = (workshopId: number,) => {
+
+
+
+
+  return `/api/instructor/workshops/${workshopId}`
+}
+
+/**
+ * @summary Set workshop teaser and publication status
+ */
+export const updateInstructorWorkshop = async (workshopId: number,
+    instructorWorkshopUpdateInput: InstructorWorkshopUpdateInput, options?: Parameters<typeof customFetch>[1]): Promise<Workshop> => {
+
+  return customFetch<Workshop>(getUpdateInstructorWorkshopUrl(workshopId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(instructorWorkshopUpdateInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateInstructorWorkshopMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateInstructorWorkshop>>, TError,{workshopId: number;data: BodyType<InstructorWorkshopUpdateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateInstructorWorkshop>>, TError,{workshopId: number;data: BodyType<InstructorWorkshopUpdateInput>}, TContext> => {
+
+const mutationKey = ['updateInstructorWorkshop'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateInstructorWorkshop>>, {workshopId: number;data: BodyType<InstructorWorkshopUpdateInput>}> = (props) => {
+          const {workshopId,data} = props ?? {};
+
+          return  updateInstructorWorkshop(workshopId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateInstructorWorkshopMutationResult = NonNullable<Awaited<ReturnType<typeof updateInstructorWorkshop>>>
+    export type UpdateInstructorWorkshopMutationBody = BodyType<InstructorWorkshopUpdateInput>
+    export type UpdateInstructorWorkshopMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Set workshop teaser and publication status
+ */
+export const useUpdateInstructorWorkshop = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateInstructorWorkshop>>, TError,{workshopId: number;data: BodyType<InstructorWorkshopUpdateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateInstructorWorkshop>>,
+        TError,
+        {workshopId: number;data: BodyType<InstructorWorkshopUpdateInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateInstructorWorkshopMutationOptions(options));
+    }
+
+export const getUpdateWorkshopModuleUrl = (workshopId: number,
+    moduleId: number,) => {
+
+
+
+
+  return `/api/instructor/workshops/${workshopId}/modules/${moduleId}`
+}
+
+/**
+ * @summary Edit an assigned workshop module and its separate teaser and full lesson files
+ */
+export const updateWorkshopModule = async (workshopId: number,
+    moduleId: number,
+    workshopModuleUpdateInput: WorkshopModuleUpdateInput, options?: Parameters<typeof customFetch>[1]): Promise<WorkshopModuleDetail> => {
+
+  return customFetch<WorkshopModuleDetail>(getUpdateWorkshopModuleUrl(workshopId,moduleId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(workshopModuleUpdateInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateWorkshopModuleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWorkshopModule>>, TError,{workshopId: number;moduleId: number;data: BodyType<WorkshopModuleUpdateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateWorkshopModule>>, TError,{workshopId: number;moduleId: number;data: BodyType<WorkshopModuleUpdateInput>}, TContext> => {
+
+const mutationKey = ['updateWorkshopModule'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateWorkshopModule>>, {workshopId: number;moduleId: number;data: BodyType<WorkshopModuleUpdateInput>}> = (props) => {
+          const {workshopId,moduleId,data} = props ?? {};
+
+          return  updateWorkshopModule(workshopId,moduleId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateWorkshopModuleMutationResult = NonNullable<Awaited<ReturnType<typeof updateWorkshopModule>>>
+    export type UpdateWorkshopModuleMutationBody = BodyType<WorkshopModuleUpdateInput>
+    export type UpdateWorkshopModuleMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Edit an assigned workshop module and its separate teaser and full lesson files
+ */
+export const useUpdateWorkshopModule = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWorkshopModule>>, TError,{workshopId: number;moduleId: number;data: BodyType<WorkshopModuleUpdateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateWorkshopModule>>,
+        TError,
+        {workshopId: number;moduleId: number;data: BodyType<WorkshopModuleUpdateInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateWorkshopModuleMutationOptions(options));
+    }
+
+export const getListWorkshopParticipantsUrl = (workshopId: number,) => {
+
+
+
+
+  return `/api/instructor/workshops/${workshopId}/participants`
+}
+
+/**
+ * @summary List staff-granted participants in an assigned workshop
+ */
+export const listWorkshopParticipants = async (workshopId: number, options?: Parameters<typeof customFetch>[1]): Promise<WorkshopParticipant[]> => {
+
+  return customFetch<WorkshopParticipant[]>(getListWorkshopParticipantsUrl(workshopId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListWorkshopParticipantsQueryKey = (workshopId: number,) => {
+    return [
+    `/api/instructor/workshops/${workshopId}/participants`
+    ] as const;
+    }
+
+
+export const getListWorkshopParticipantsQueryOptions = <TData = Awaited<ReturnType<typeof listWorkshopParticipants>>, TError = ErrorType<unknown>>(workshopId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWorkshopParticipants>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListWorkshopParticipantsQueryKey(workshopId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWorkshopParticipants>>> = ({ signal }) => listWorkshopParticipants(workshopId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: workshopId !== null && workshopId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWorkshopParticipants>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListWorkshopParticipantsQueryResult = NonNullable<Awaited<ReturnType<typeof listWorkshopParticipants>>>
+export type ListWorkshopParticipantsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List staff-granted participants in an assigned workshop
+ */
+
+export function useListWorkshopParticipants<TData = Awaited<ReturnType<typeof listWorkshopParticipants>>, TError = ErrorType<unknown>>(
+ workshopId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWorkshopParticipants>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListWorkshopParticipantsQueryOptions(workshopId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getEnrollWorkshopParticipantUrl = (workshopId: number,) => {
+
+
+
+
+  return `/api/instructor/workshops/${workshopId}/participants`
+}
+
+/**
+ * @summary Grant or pause workshop-specific participant access as assigned staff
+ */
+export const enrollWorkshopParticipant = async (workshopId: number,
+    workshopParticipantInput: WorkshopParticipantInput, options?: Parameters<typeof customFetch>[1]): Promise<Enrollment> => {
+
+  return customFetch<Enrollment>(getEnrollWorkshopParticipantUrl(workshopId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(workshopParticipantInput)
+  }
+);}
+
+
+
+
+
+export const getEnrollWorkshopParticipantMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enrollWorkshopParticipant>>, TError,{workshopId: number;data: BodyType<WorkshopParticipantInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof enrollWorkshopParticipant>>, TError,{workshopId: number;data: BodyType<WorkshopParticipantInput>}, TContext> => {
+
+const mutationKey = ['enrollWorkshopParticipant'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof enrollWorkshopParticipant>>, {workshopId: number;data: BodyType<WorkshopParticipantInput>}> = (props) => {
+          const {workshopId,data} = props ?? {};
+
+          return  enrollWorkshopParticipant(workshopId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EnrollWorkshopParticipantMutationResult = NonNullable<Awaited<ReturnType<typeof enrollWorkshopParticipant>>>
+    export type EnrollWorkshopParticipantMutationBody = BodyType<WorkshopParticipantInput>
+    export type EnrollWorkshopParticipantMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Grant or pause workshop-specific participant access as assigned staff
+ */
+export const useEnrollWorkshopParticipant = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enrollWorkshopParticipant>>, TError,{workshopId: number;data: BodyType<WorkshopParticipantInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof enrollWorkshopParticipant>>,
+        TError,
+        {workshopId: number;data: BodyType<WorkshopParticipantInput>},
+        TContext
+      > => {
+      return useMutation(getEnrollWorkshopParticipantMutationOptions(options));
     }
 
 export const getCompleteWorkshopModuleUrl = (id: number,

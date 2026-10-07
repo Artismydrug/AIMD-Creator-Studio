@@ -26,6 +26,32 @@ export async function ensureCreatorStudioSchema(
   database: SqlExecutor = pool,
 ): Promise<void> {
   await database.query(`
+    ALTER TABLE workshops
+      ADD COLUMN IF NOT EXISTS preview_video_url text,
+      ADD COLUMN IF NOT EXISTS is_published boolean NOT NULL DEFAULT false
+  `);
+  await database.query(`
+    ALTER TABLE workshop_modules ADD COLUMN IF NOT EXISTS preview_video_url text
+  `);
+  await database.query(`
+    ALTER TABLE enrollments
+      ADD COLUMN IF NOT EXISTS access_source text NOT NULL DEFAULT 'subscription'
+  `);
+  await database.query(`
+    CREATE TABLE IF NOT EXISTS workshop_video_uploads (
+      id serial PRIMARY KEY,
+      workshop_id integer NOT NULL REFERENCES workshops(id) ON DELETE CASCADE,
+      user_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      object_path text NOT NULL UNIQUE,
+      media_path text UNIQUE,
+      kind text NOT NULL CHECK (kind IN ('preview', 'lesson')),
+      content_type text NOT NULL,
+      expected_size integer NOT NULL,
+      ready_at timestamptz,
+      created_at timestamptz NOT NULL DEFAULT now()
+    )
+  `);
+  await database.query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id text
   `);
   await database.query(`

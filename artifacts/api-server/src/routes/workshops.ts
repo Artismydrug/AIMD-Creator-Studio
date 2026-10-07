@@ -9,6 +9,7 @@ import {
   drillPromptsTable,
   workshopInstructorsTable,
   instructorProfilesTable,
+  userRolesTable,
 } from "@workspace/db";
 import {
   ListWorkshopsQueryParams,
@@ -20,18 +21,9 @@ import {
   CompleteWorkshopModuleParams,
   CompleteWorkshopModuleResponse,
 } from "@workspace/api-zod";
-import { getCurrentTier, hasRequiredTier, type Tier } from "../middleware/requireTier";
+import { getWorkshopLessonAccess } from "../lib/workshopLessonAccess";
 
 const router: IRouter = Router();
-
-function minimumTierForWorkshop(tier: string): Tier {
-  if (tier === "pro") return "pro";
-  // Paid non-pro workshops are stored under both legacy vocabularies:
-  // "workshop" (legacy Warehouse era) and "academy" (Creator Studio seeds).
-  // Both require the Dedicated Artist (academy) membership.
-  if (tier === "workshop" || tier === "academy") return "academy";
-  return "free";
-}
 
 /**
  * The public API's workshop tier vocabulary is "free" | "workshop" | "pro".
@@ -48,53 +40,38 @@ function normalizeWorkshopTier<T extends { tier: string }>(workshop: T): T {
  * require paying for it. Write access is still governed by the instructor
  * routes' own assignment checks.
  */
-async function canReadWorkshopAsStaff(req: Request, workshopId: number): Promise<boolean> {
-  if (!req.dbUser) return false;
-  if (req.dbUser.isAdmin) return true;
-  const [assigned] = await db
-    .select({ id: workshopInstructorsTable.id })
-    .from(workshopInstructorsTable)
-    .innerJoin(
-      instructorProfilesTable,
-      eq(instructorProfilesTable.id, workshopInstructorsTable.instructorId),
-    )
-    .where(
-      and(
-        eq(workshopInstructorsTable.workshopId, workshopId),
-        eq(instructorProfilesTable.userId, req.dbUser.id),
-      ),
-    )
-    .limit(1);
-  return !!assigned;
-}
-
 async function ensureWorkshopAccess(
   req: Request,
   res: Response,
-  workshopTier: string,
+  workshopId: number,
 ): Promise<boolean> {
-  const requiredTier = minimumTierForWorkshop(workshopTier);
-  if (requiredTier === "free") return true;
   if (!req.dbUser) {
     res.status(401).json({ error: "Unauthorized" });
     return false;
   }
 
-  try {
-    const currentTier = await getCurrentTier(req.dbUser.id, requiredTier);
-    if (!hasRequiredTier(currentTier, requiredTier)) {
-      res.status(403).json({ error: "tier_required", requiredTier });
-      return false;
-    }
-    return true;
-  } catch (error) {
-    console.error("RevenueCat workshop access check failed", error);
+  const access = await getWorkshopLessonAccess(req.dbUser.id, workshopId);
+  if (access.accessStatus === "unavailable") {
     res.status(503).json({
       error: "membership_check_unavailable",
       message: "Membership access could not be verified. Please try again.",
     });
     return false;
   }
+  if (!access.hasFullAccess) {
+    res.status(403).json({
+      error: "lesson_access_required", requiredTier: "academy",
+      message: "An active $39 Dedicated Artist subscription or enrollment as a participant in this workshop is required.",
+    });
+    return false;
+  }
+  const [workshop] = await db.select({ isPublished: workshopsTable.isPublished })
+    .from(workshopsTable).where(eq(workshopsTable.id, workshopId));
+  if (!workshop?.isPublished && !access.isStaff && !access.hasParticipantAccess) {
+    res.status(404).json({ error: "Workshop not found" });
+    return false;
+  }
+  return true;
 }
 
 router.get("/workshops", async (req, res): Promise<void> => {
@@ -107,7 +84,8 @@ router.get("/workshops", async (req, res): Promise<void> => {
   let workshops = await db.select().from(workshopsTable).orderBy(desc(workshopsTable.createdAt));
 
   if (parsed.data.tier) {
-    workshops = workshops.filter((w) => w.tier === parsed.data.tier);
+    const requestedTier = parsed.data.tier === "academy" ? "workshop" : parsed.data.tier;
+    workshops = workshops.filter((w) => normalizeWorkshopTier(w).tier === requestedTier);
   }
   if (parsed.data.category) {
     workshops = workshops.filter((w) =>
@@ -116,15 +94,29 @@ router.get("/workshops", async (req, res): Promise<void> => {
   }
 
   const enrolledSet = new Set<number>();
+  const privateAccessSet = new Set<number>();
   if (!!req.dbUser) {
     const enrollments = await db
       .select()
       .from(enrollmentsTable)
       .where(eq(enrollmentsTable.userId, req.dbUser!.id));
-    enrollments.forEach((e) => enrolledSet.add(e.workshopId));
+    enrollments.forEach((e) => {
+      if (e.status === "active" || e.status === "completed") {
+        enrolledSet.add(e.workshopId);
+        if (e.accessSource === "participant") privateAccessSet.add(e.workshopId);
+      }
+    });
+    const assigned = await db.select({ workshopId: workshopInstructorsTable.workshopId })
+      .from(workshopInstructorsTable)
+      .innerJoin(instructorProfilesTable, eq(instructorProfilesTable.id, workshopInstructorsTable.instructorId))
+      .innerJoin(userRolesTable, eq(userRolesTable.userId, instructorProfilesTable.userId))
+      .where(and(eq(instructorProfilesTable.userId, req.dbUser.id), inArray(userRolesTable.role, ["instructor", "admin"])));
+    assigned.forEach((row) => privateAccessSet.add(row.workshopId));
   }
 
-  const result = workshops.map((w) => normalizeWorkshopTier({ ...w, isEnrolled: enrolledSet.has(w.id) }));
+  const result = workshops
+    .filter((w) => w.isPublished || req.dbUser?.isAdmin || privateAccessSet.has(w.id))
+    .map((w) => normalizeWorkshopTier({ ...w, isEnrolled: enrolledSet.has(w.id) }));
   res.json(ListWorkshopsResponse.parse(result));
 });
 
@@ -140,24 +132,10 @@ router.get("/workshops/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Workshop not found" });
     return;
   }
-  let hasFullAccess = await canReadWorkshopAsStaff(req, workshop.id);
-  const requiredTier = minimumTierForWorkshop(workshop.tier);
-  if (!hasFullAccess && requiredTier !== "free") {
-    if (!req.dbUser) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
-    try {
-      const currentTier = await getCurrentTier(req.dbUser.id, requiredTier);
-      hasFullAccess = hasRequiredTier(currentTier, requiredTier);
-    } catch (error) {
-      console.error("RevenueCat workshop access check failed", error);
-      res.status(503).json({
-        error: "membership_check_unavailable",
-        message: "Membership access could not be verified. Please try again.",
-      });
-      return;
-    }
+  const access = await getWorkshopLessonAccess(req.dbUser?.id, workshop.id);
+  if (!workshop.isPublished && !access.isStaff && !access.hasParticipantAccess) {
+    res.status(404).json({ error: "Workshop not found" });
+    return;
   }
 
   const modules = await db
@@ -182,12 +160,8 @@ router.get("/workshops/:id", async (req, res): Promise<void> => {
     completedSet = new Set(completed.map((c) => c.moduleId));
   }
 
-  // A signed-in creator without the required membership can inspect the first
-  // module only. This is deliberately shaped as a partial curriculum response:
-  // the client never receives later module metadata or media URLs to unlock
-  // through a UI-only check.
-  const readableModules = hasFullAccess || requiredTier === "free" ? modules : modules.slice(0, 1);
-  const drills = readableModules.length > 0
+  const readableModules = modules;
+  const drills = access.hasFullAccess && readableModules.length > 0
     ? await db
         .select()
         .from(drillPromptsTable)
@@ -201,6 +175,10 @@ router.get("/workshops/:id", async (req, res): Promise<void> => {
   }
   const modulesWithStatus = readableModules.map((m) => ({
     ...m,
+    description: access.hasFullAccess ? m.description : null,
+    videoUrl: access.isStaff ? m.videoUrl : null,
+    hasVideo: !!m.videoUrl,
+    isLocked: !access.hasFullAccess,
     isCompleted: completedSet.has(m.id),
     drills: drillsByModule.get(m.id) ?? [],
   }));
@@ -210,7 +188,10 @@ router.get("/workshops/:id", async (req, res): Promise<void> => {
       normalizeWorkshopTier({
         ...workshop,
         modules: modulesWithStatus,
-        isEnrolled: !!enrollment,
+        isEnrolled: !!enrollment && enrollment.status !== "paused",
+        hasFullAccess: access.hasFullAccess,
+        isStaff: access.isStaff,
+        accessStatus: access.accessStatus,
       })
     )
   );
@@ -231,7 +212,7 @@ router.post("/workshops/:id/enroll", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Workshop not found" });
     return;
   }
-  if (!(await ensureWorkshopAccess(req, res, workshop.tier))) return;
+  if (!(await ensureWorkshopAccess(req, res, workshop.id))) return;
 
   const [existing] = await db
     .select()
@@ -253,7 +234,7 @@ router.post("/workshops/:id/enroll", async (req, res): Promise<void> => {
 
   const [enrollment] = await db
     .insert(enrollmentsTable)
-    .values({ userId, workshopId: params.data.id, completedModules: 0, status: "active" })
+    .values({ userId, workshopId: params.data.id, completedModules: 0, status: "active", accessSource: "subscription" })
     .returning();
 
   // bump enrolled count
@@ -288,7 +269,7 @@ router.post("/workshops/:id/modules/:moduleId/complete", async (req, res): Promi
     res.status(404).json({ error: "Workshop not found" });
     return;
   }
-  if (!(await ensureWorkshopAccess(req, res, workshop.tier))) return;
+  if (!(await ensureWorkshopAccess(req, res, workshop.id))) return;
 
   const [module] = await db
     .select({ id: workshopModulesTable.id })
@@ -308,6 +289,10 @@ router.post("/workshops/:id/modules/:moduleId/complete", async (req, res): Promi
     .where(and(eq(enrollmentsTable.workshopId, params.data.id), eq(enrollmentsTable.userId, userId)));
   if (!enrollment) {
     res.status(404).json({ error: "Enrollment not found — enroll first" });
+    return;
+  }
+  if (enrollment.status === "paused") {
+    res.status(403).json({ error: "Enrollment is paused. Contact your instructor." });
     return;
   }
 

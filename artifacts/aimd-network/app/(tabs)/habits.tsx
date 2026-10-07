@@ -25,7 +25,7 @@ import {
   useGetDashboardSummary,
 } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
-import HabitCard from '@/components/HabitCard';
+import HabitCard, { HABIT_ACTION_HELP } from '@/components/HabitCard';
 
 const CATEGORIES = ['Drawing', 'Painting', 'Sculpture', 'Photography', 'Music', 'Writing', 'Other'];
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
@@ -152,6 +152,13 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
       letterSpacing: 2,
       textTransform: 'uppercase',
       marginBottom: 10,
+    },
+    actionHelp: {
+      fontFamily: 'DMSans_400Regular',
+      fontSize: 12,
+      lineHeight: 17,
+      color: colors.mutedForeground,
+      marginBottom: 12,
     },
     statsRow: {
       flexDirection: 'row',
@@ -401,6 +408,7 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
           </TouchableOpacity>
         </View>
         <Text style={s.tagline}>Discipline Eats Talent</Text>
+        <Text style={s.actionHelp} testID="habit-actions-help">{HABIT_ACTION_HELP}</Text>
         <View style={s.statsRow}>
           <View style={s.statBox} testID="habits-streak-stat">
             <Text style={s.statNumber}>{summary?.currentStreakDays ?? 0}</Text>

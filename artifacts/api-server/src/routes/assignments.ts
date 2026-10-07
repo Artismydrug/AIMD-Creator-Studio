@@ -16,7 +16,7 @@ import {
   GetAssignmentParams,
   GetAssignmentResponse,
 } from "@workspace/api-zod";
-import { requireTier } from "../middleware/requireTier";
+import { getWorkshopLessonAccess } from "../lib/workshopLessonAccess";
 
 const router: IRouter = Router();
 
@@ -56,8 +56,8 @@ router.get("/assignments", async (req, res): Promise<void> => {
   res.json(ListAssignmentsResponse.parse(result));
 });
 
-// Assignment submission requires the Dedicated Artist plan or above
-router.post("/assignments", requireTier("academy"), async (req, res): Promise<void> => {
+// Assignments use the same verified subscription/participant gate as lessons.
+router.post("/assignments", async (req, res): Promise<void> => {
   if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
   const userId = req.dbUser!.id;
 
@@ -79,6 +79,14 @@ router.post("/assignments", requireTier("academy"), async (req, res): Promise<vo
     res.status(404).json({ error: "Workshop not found" });
     return;
   }
+  const access = await getWorkshopLessonAccess(userId, workshop.id);
+  if (!access.hasFullAccess) {
+    res.status(access.accessStatus === "unavailable" ? 503 : 403).json({
+      error: access.accessStatus === "unavailable" ? "membership_check_unavailable" : "lesson_access_required",
+      message: "An active $39 subscription or enrollment in this workshop is required.",
+    });
+    return;
+  }
   const [module] = await db
     .select({ id: workshopModulesTable.id })
     .from(workshopModulesTable)
@@ -91,7 +99,7 @@ router.post("/assignments", requireTier("academy"), async (req, res): Promise<vo
     return;
   }
   const [enrollment] = await db
-    .select({ id: enrollmentsTable.id })
+    .select({ id: enrollmentsTable.id, status: enrollmentsTable.status })
     .from(enrollmentsTable)
     .where(and(
       eq(enrollmentsTable.userId, userId),
@@ -99,6 +107,10 @@ router.post("/assignments", requireTier("academy"), async (req, res): Promise<vo
     ));
   if (!enrollment) {
     res.status(403).json({ error: "Enroll in this workshop before submitting an assignment" });
+    return;
+  }
+  if (enrollment.status === "paused") {
+    res.status(403).json({ error: "This workshop enrollment is paused" });
     return;
   }
 

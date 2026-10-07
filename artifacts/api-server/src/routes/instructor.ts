@@ -39,6 +39,7 @@ import {
   AssignInstructorToWorkshopResponse,
 } from "@workspace/api-zod";
 import { requireInstructor } from "../middlewares/requireInstructor";
+import { isValidWorkshopMediaReference } from "../lib/workshopVideoMedia";
 import { requireAdmin } from "../middlewares/requireAdmin";
 
 const router: IRouter = Router();
@@ -188,6 +189,11 @@ router.post(
       res.status(400).json({ error: body.error.message });
       return;
     }
+    if (!(await isValidWorkshopMediaReference(body.data.videoUrl, workshopId, "lesson")) ||
+        !(await isValidWorkshopMediaReference(body.data.previewVideoUrl, workshopId, "preview"))) {
+      res.status(400).json({ error: "Upload separate preview and full lesson files for this workshop using the video uploader" });
+      return;
+    }
 
     const [created] = await db
       .insert(workshopModulesTable)
@@ -196,6 +202,7 @@ router.post(
         title: body.data.title,
         description: body.data.description ?? null,
         videoUrl: body.data.videoUrl ?? null,
+        previewVideoUrl: body.data.previewVideoUrl ?? null,
         order: body.data.order,
         durationMinutes: body.data.durationMinutes ?? 0,
       })

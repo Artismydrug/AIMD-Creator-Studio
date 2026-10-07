@@ -1,0 +1,28 @@
+kind = "slides"
+previewPath = "/aimd-overview-pitch/"
+title = "Creator Studio by AIMD — Overview Pitch"
+description = "A six-slide, partner-facing overview of Creator Studio by AIMD for schools, creators, teaching artists, and creative community partners."
+version = "1.0.0"
+id = "artifacts/aimd-overview-pitch"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/aimd-overview-pitch/" ]
+localPort = 21875
+
+[services.development]
+run = "pnpm --filter @workspace/aimd-overview-pitch run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aimd-overview-pitch", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/aimd-overview-pitch/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21875"
+BASE_PATH = "/aimd-overview-pitch/"

@@ -381,6 +381,8 @@ export const ListWorkshopsResponseItem = zod.object({
   "description": zod.string(),
   "instructorName": zod.string().nullish(),
   "thumbnailUrl": zod.string().nullish(),
+  "previewVideoUrl": zod.string().nullish(),
+  "isPublished": zod.boolean().optional(),
   "tier": zod.enum(['free', 'workshop', 'pro']),
   "category": zod.string(),
   "totalModules": zod.int(),
@@ -411,12 +413,20 @@ export const GetWorkshopResponse = zod.object({
   "durationMinutes": zod.int().optional(),
   "enrolledCount": zod.int().optional(),
   "isEnrolled": zod.boolean().optional(),
+  "previewVideoUrl": zod.string().nullish(),
+  "isPublished": zod.boolean().optional(),
+  "hasFullAccess": zod.boolean().optional(),
+  "isStaff": zod.boolean().optional(),
+  "accessStatus": zod.enum(['granted', 'locked', 'unavailable']).optional(),
   "modules": zod.array(zod.object({
   "id": zod.int(),
   "workshopId": zod.int(),
   "title": zod.string(),
   "description": zod.string().nullish(),
-  "videoUrl": zod.string().nullish(),
+  "videoUrl": zod.string().nullish().describe('Stored full lesson reference, returned only to assigned staff. Learners use the protected playback endpoint.'),
+  "previewVideoUrl": zod.string().nullish(),
+  "hasVideo": zod.boolean().optional(),
+  "isLocked": zod.boolean().optional(),
   "order": zod.int(),
   "durationMinutes": zod.int(),
   "isCompleted": zod.boolean().optional(),
@@ -442,6 +452,174 @@ export const EnrollInWorkshopParams = zod.object({
 export const EnrollInWorkshopResponse = zod.object({
   "id": zod.int(),
   "userId": zod.int(),
+  "accessSource": zod.enum(['subscription', 'participant']).optional(),
+  "workshopId": zod.int(),
+  "workshopTitle": zod.string().optional(),
+  "workshopThumbnailUrl": zod.string().nullish(),
+  "completedModules": zod.int(),
+  "totalModules": zod.int(),
+  "progressPercent": zod.number().optional(),
+  "status": zod.enum(['active', 'completed', 'paused']),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Verify active subscription or participant enrollment and issue expiring private lesson playback
+ */
+export const CreateWorkshopLessonPlaybackParams = zod.object({
+  "id": zod.coerce.number().int(),
+  "moduleId": zod.coerce.number().int()
+})
+
+export const CreateWorkshopLessonPlaybackResponse = zod.object({
+  "playbackUrl": zod.string(),
+  "expiresAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Request a direct-to-storage video upload for an assigned workshop
+ */
+export const RequestWorkshopVideoUploadParams = zod.object({
+  "workshopId": zod.coerce.number().int()
+})
+
+export const requestWorkshopVideoUploadBodySizeMax = 262144000;
+
+
+
+export const RequestWorkshopVideoUploadBody = zod.object({
+  "kind": zod.enum(['preview', 'lesson']),
+  "contentType": zod.enum(['video/mp4', 'video/quicktime', 'video/webm']),
+  "size": zod.int().min(1).max(requestWorkshopVideoUploadBodySizeMax)
+})
+
+export const RequestWorkshopVideoUploadResponse = zod.object({
+  "uploadURL": zod.string(),
+  "objectPath": zod.string()
+})
+
+
+/**
+ * @summary Validate a workshop video upload and set private lesson or public preview access
+ */
+export const FinalizeWorkshopVideoUploadParams = zod.object({
+  "workshopId": zod.coerce.number().int()
+})
+
+export const FinalizeWorkshopVideoUploadBody = zod.object({
+  "objectPath": zod.string()
+})
+
+export const FinalizeWorkshopVideoUploadResponse = zod.object({
+  "objectPath": zod.string(),
+  "mediaUrl": zod.string()
+})
+
+
+/**
+ * @summary Set workshop teaser and publication status
+ */
+export const UpdateInstructorWorkshopParams = zod.object({
+  "workshopId": zod.coerce.number().int()
+})
+
+export const UpdateInstructorWorkshopBody = zod.object({
+  "previewVideoUrl": zod.string().nullish(),
+  "isPublished": zod.boolean().optional()
+})
+
+export const UpdateInstructorWorkshopResponse = zod.object({
+  "id": zod.int(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "instructorName": zod.string().nullish(),
+  "thumbnailUrl": zod.string().nullish(),
+  "previewVideoUrl": zod.string().nullish(),
+  "isPublished": zod.boolean().optional(),
+  "tier": zod.enum(['free', 'workshop', 'pro']),
+  "category": zod.string(),
+  "totalModules": zod.int(),
+  "durationMinutes": zod.int().optional(),
+  "enrolledCount": zod.int().optional(),
+  "isEnrolled": zod.boolean().optional(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Edit an assigned workshop module and its separate teaser and full lesson files
+ */
+export const UpdateWorkshopModuleParams = zod.object({
+  "workshopId": zod.coerce.number().int(),
+  "moduleId": zod.coerce.number().int()
+})
+
+
+export const updateWorkshopModuleBodyOrderMin = 0;
+
+export const updateWorkshopModuleBodyDurationMinutesMin = 0;
+
+
+
+export const UpdateWorkshopModuleBody = zod.object({
+  "title": zod.string().min(1).optional(),
+  "description": zod.string().nullish(),
+  "videoUrl": zod.string().nullish(),
+  "previewVideoUrl": zod.string().nullish(),
+  "order": zod.int().min(updateWorkshopModuleBodyOrderMin).optional(),
+  "durationMinutes": zod.int().min(updateWorkshopModuleBodyDurationMinutesMin).optional()
+})
+
+export const UpdateWorkshopModuleResponse = zod.object({
+  "id": zod.int(),
+  "workshopId": zod.int(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "videoUrl": zod.string().nullish(),
+  "previewVideoUrl": zod.string().nullish(),
+  "order": zod.int(),
+  "durationMinutes": zod.int(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List staff-granted participants in an assigned workshop
+ */
+export const ListWorkshopParticipantsParams = zod.object({
+  "workshopId": zod.coerce.number().int()
+})
+
+export const ListWorkshopParticipantsResponseItem = zod.object({
+  "userId": zod.int(),
+  "username": zod.string(),
+  "status": zod.enum(['active', 'paused', 'completed'])
+})
+export const ListWorkshopParticipantsResponse = zod.array(ListWorkshopParticipantsResponseItem)
+
+
+/**
+ * @summary Grant or pause workshop-specific participant access as assigned staff
+ */
+export const EnrollWorkshopParticipantParams = zod.object({
+  "workshopId": zod.coerce.number().int()
+})
+
+export const enrollWorkshopParticipantBodyUsernameMax = 100;
+
+
+
+export const EnrollWorkshopParticipantBody = zod.object({
+  "username": zod.string().min(1).max(enrollWorkshopParticipantBodyUsernameMax),
+  "status": zod.enum(['active', 'paused'])
+})
+
+export const EnrollWorkshopParticipantResponse = zod.object({
+  "id": zod.int(),
+  "userId": zod.int(),
+  "accessSource": zod.enum(['subscription', 'participant']).optional(),
   "workshopId": zod.int(),
   "workshopTitle": zod.string().optional(),
   "workshopThumbnailUrl": zod.string().nullish(),
@@ -464,6 +642,7 @@ export const CompleteWorkshopModuleParams = zod.object({
 export const CompleteWorkshopModuleResponse = zod.object({
   "id": zod.int(),
   "userId": zod.int(),
+  "accessSource": zod.enum(['subscription', 'participant']).optional(),
   "workshopId": zod.int(),
   "workshopTitle": zod.string().optional(),
   "workshopThumbnailUrl": zod.string().nullish(),
@@ -481,6 +660,7 @@ export const CompleteWorkshopModuleResponse = zod.object({
 export const ListEnrollmentsResponseItem = zod.object({
   "id": zod.int(),
   "userId": zod.int(),
+  "accessSource": zod.enum(['subscription', 'participant']).optional(),
   "workshopId": zod.int(),
   "workshopTitle": zod.string().optional(),
   "workshopThumbnailUrl": zod.string().nullish(),
@@ -2114,6 +2294,7 @@ export const CreateWorkshopModuleBody = zod.object({
   "title": zod.string().min(1),
   "description": zod.string().nullish(),
   "videoUrl": zod.string().nullish(),
+  "previewVideoUrl": zod.string().nullish(),
   "order": zod.int().min(createWorkshopModuleBodyOrderMin),
   "durationMinutes": zod.int().min(createWorkshopModuleBodyDurationMinutesMin).optional()
 })
@@ -2124,6 +2305,7 @@ export const CreateWorkshopModuleResponse = zod.object({
   "title": zod.string(),
   "description": zod.string().nullish(),
   "videoUrl": zod.string().nullish(),
+  "previewVideoUrl": zod.string().nullish(),
   "order": zod.int(),
   "durationMinutes": zod.int(),
   "createdAt": zod.coerce.date()

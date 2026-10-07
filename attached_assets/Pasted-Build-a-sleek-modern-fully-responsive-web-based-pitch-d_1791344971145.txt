@@ -1,0 +1,46 @@
+Build a sleek, modern, fully responsive web-based pitch deck application for "The Creator Studio by AIMD" using React, Tailwind CSS, and Lucide icons. The app should function as an interactive presentation deck with slide navigation (Next/Prev buttons, keyboard arrow navigation, and a slide jump menu), featuring a dark art-house aesthetic (deep charcoal/black backgrounds, crisp white typography, and subtle accent lines).
+
+Here is the exact slide structure and content to implement:
+
+### Slide 1: Title Slide & Vision
+- Title: The Creator Studio by AIMD
+- Subtitle: Building an authentic, global ecosystem where artists learn, connect, and scale.
+- Founder Badge: Edward "Poncho the Artist" Davila (Chief Executive Officer & Creative Director).
+- Tagline: "A passion project built over 10 years, designed as a legacy for the global artist community."
+
+### Slide 2: Mission & The 10-Year Legacy
+- The Core Problem: Traditional art education and commercial pathways leave creators isolated, lacking business mentorship, and disconnected from sustainable global opportunities.
+- The AIMD Foundation: Built upon a decade of fine art, tattooing, leather craftsmanship, and community building in Downtown Los Angeles.
+- The Purpose: Creating a true, authentic digital and physical space for artists worldwide to learn not just the craft, but the mindset, business, and networking required to thrive.
+
+### Slide 3: The Ecosystem & Artist Pipeline
+- Discovery to Professional Pipeline: Bridging emerging talent with seasoned masters.
+- Comprehensive Learning Modules: Moving beyond basic techniques to cover mental fortitude, artistic difficulty, professional networking, and the business side of art.
+- Mentorship & Global Reach: Connecting artists worldwide to work modules, one-on-one consultations, and physical studio/resort pipelines.
+
+### Slide 4: Phased Roadmap & End-of-Year Goals
+- November (Soft Launch): Focus on free app version, community habits, and onboarding our first 100 founding members within the first 3 months.
+- January (Official Launch Event): Official launch party, showcase of workshop modules featuring expert instructors (targeting at least 4 core instructor module series produced between now and December).
+- Subscription Rollout ($39.99/mo): Full access to workshop modules and community features.
+- Professional Tier Rollout ($99.00/mo): 6-month rollout providing advanced resources, artist resort living, guest spots, studio access, and 1-on-1 consultations.
+- Subscriber Milestone: Target of 250 to 500 total subscribers spanning the $39.99 and $99.00 tiers.
+
+### Slide 5: Core Leadership & Team Structure
+- Edward "Poncho" Davila (Founder & Creative Director): Overall vision, master instruction, and creative leadership.
+- Anthony Davila (Director of Media & Marketing): 10-year media director background leading marketing strategy, brand direction, and workshop video production.
+- Nay (Executive Assistant & HQ Operations): Right-hand operations manager handling daily schedules, executive coordination, and administrative pipelines.
+- Bri (Artist Relations Manager): Spearheading community growth, artist onboarding, and hitting user acquisition targets.
+- Ashley Ray (Core Creative Group Lead): Directing the creative sessions, bringing in pipeline artists, managing monthly creative sessions (2/month), and quarterly art shows leading to the Jan 9th event.
+- Dwayne (School & Teacher Relations): Assistant principal leveraging educational expertise to build bridges with schools, support educators, connect with students, and expand youth art resources.
+- Timo (Pop-ups, Merch & Events): Bringing brand attributes to life through physical activations, Saturday flea market pop-ups, and merchandise.
+- Nancy (Production & Marketing Advisor): Nike producer providing high-level marketing resources, production insights, and strategic industry connections.
+
+### Slide 6: Financial Model & Projections
+- Revenue Streams: Community Subscription ($39.99/mo) & Professional Artist Tier ($99.00/mo).
+- Target Capitalization: Reaching an operating budget of $30,000 to $50,000 through subscription revenue and active nonprofit grant channels.
+- Lean Cost Structure & Allocation:
+  - Software Development: Minimal ongoing baseline maintenance.
+  - Production: $500 to $1,000 per instructional video module.
+  - Staff & Outreach: Dedicated allocation for community awareness, marketing, and team compensation scaling.
+
+Design requirements: Include smooth transitions between slides, a progress bar at the bottom, clean card containers for team members and roadmap milestones, and a professional aesthetic fitting a high-end creative agency and tech platform.

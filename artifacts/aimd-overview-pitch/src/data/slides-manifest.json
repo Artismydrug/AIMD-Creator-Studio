@@ -1,0 +1,8 @@
+[
+  { "id": "d61d0a88-79d3-4f06-86b2-99bdc9f1a001", "position": 1, "filepath": "src/pages/slides/Cover.tsx", "title": "The Creator Studio by AIMD", "description": "A creative home to learn, practice, share, and grow.", "speakerNotes": "" },
+  { "id": "d61d0a88-79d3-4f06-86b2-99bdc9f1a002", "position": 2, "filepath": "src/pages/slides/Roots.tsx", "title": "An Artist-Led Foundation", "description": "Fine art, tattooing, leather craft, and community.", "speakerNotes": "" },
+  { "id": "d61d0a88-79d3-4f06-86b2-99bdc9f1a003", "position": 3, "filepath": "src/pages/slides/Platform.tsx", "title": "One Creative Ecosystem", "description": "Creator posts, portfolios, messages, and events.", "speakerNotes": "" },
+  { "id": "d61d0a88-79d3-4f06-86b2-99bdc9f1a004", "position": 4, "filepath": "src/pages/slides/Practice.tsx", "title": "Practice With Purpose", "description": "Creative habits, challenges, and progress.", "speakerNotes": "" },
+  { "id": "d61d0a88-79d3-4f06-86b2-99bdc9f1a005", "position": 5, "filepath": "src/pages/slides/Learning.tsx", "title": "Learning Across Disciplines", "description": "Instructor-led workshops and pathways into deeper lessons.", "speakerNotes": "" },
+  { "id": "d61d0a88-79d3-4f06-86b2-99bdc9f1a006", "position": 6, "filepath": "src/pages/slides/Partnerships.tsx", "title": "A Shared Studio for Creative Communities", "description": "A starting point for schools, teaching artists, creators, and local partners.", "speakerNotes": "" }
+]

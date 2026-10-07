@@ -13,8 +13,15 @@ export interface WorkshopModule {
   title: string;
   /** @nullable */
   description?: string | null;
-  /** @nullable */
+  /**
+     * Stored full lesson reference, returned only to assigned staff. Learners use the protected playback endpoint.
+     * @nullable
+     */
   videoUrl?: string | null;
+  /** @nullable */
+  previewVideoUrl?: string | null;
+  hasVideo?: boolean;
+  isLocked?: boolean;
   order: number;
   durationMinutes: number;
   isCompleted?: boolean;

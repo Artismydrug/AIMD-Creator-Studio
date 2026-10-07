@@ -52,6 +52,8 @@ import Admin from '@/pages/Admin';
 import Onboarding from '@/pages/Onboarding';
 import Tattoo from '@/pages/Tattoo';
 import Gallery from '@/pages/Gallery';
+import Learn from '@/pages/Learn';
+import LearnDetail from '@/pages/LearnDetail';
 import Instructor from '@/pages/Instructor';
 import HQ from '@/pages/HQ';
 import Privacy from '@/pages/Privacy';
@@ -273,6 +275,8 @@ function Router() {
       {/* Public marketing pages — the AIMD hub */}
       <Route path="/" component={Landing} />
       <Route path="/about" component={About} />
+      <Route path="/learn" component={Learn} />
+      <Route path="/learn/:id" component={LearnDetail} />
       {/* Retired public concept page; keep its source for a future relaunch. */}
       <Route path="/artist-resort" component={NotFound} />
       <Route path="/tattoo" component={Tattoo} />

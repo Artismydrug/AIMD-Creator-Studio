@@ -15,6 +15,9 @@ export interface Workshop {
   instructorName?: string | null;
   /** @nullable */
   thumbnailUrl?: string | null;
+  /** @nullable */
+  previewVideoUrl?: string | null;
+  isPublished?: boolean;
   tier: WorkshopTier;
   category: string;
   totalModules: number;

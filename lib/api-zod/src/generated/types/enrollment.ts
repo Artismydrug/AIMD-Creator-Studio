@@ -5,11 +5,13 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+import type { EnrollmentAccessSource } from './enrollmentAccessSource';
 import type { EnrollmentStatus } from './enrollmentStatus';
 
 export interface Enrollment {
   id: number;
   userId: number;
+  accessSource?: EnrollmentAccessSource;
   workshopId: number;
   workshopTitle?: string;
   /** @nullable */

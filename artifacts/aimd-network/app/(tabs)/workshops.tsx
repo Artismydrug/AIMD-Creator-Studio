@@ -18,58 +18,19 @@ import {
   customFetch,
   getGetWorkshopQueryKey,
   getListAssignmentsQueryKey,
-  useGetCurrentUser,
   useGetWorkshop,
   useListAssignments,
   useListWorkshops,
   useCompleteWorkshopModule,
+  useEnrollInWorkshop,
+  getListEnrollmentsQueryKey,
   useSubmitAssignment,
 } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useColors } from '@/hooks/useColors';
 import { safeImpact } from '@/lib/haptics';
 import { useRouter } from 'expo-router';
-import { useSubscription } from '@/lib/revenuecat';
-import WorkshopLessonPlayer, { type WorkshopLesson } from '@/components/WorkshopLessonPlayer';
-
-const workshopPreviews = [
-  {
-    icon: 'scissors' as const,
-    title: 'Fashion Workshop',
-    eyebrow: '01 / Fashion',
-    description: 'Design, sketching, garment construction',
-    chips: ['8 focused modules', '30-min drills', 'Artist feedback'],
-    accent: 'gold' as const,
-    tier: 'FASHION DESIGN',
-  },
-  {
-    icon: 'headphones' as const,
-    title: 'Music Workshop',
-    eyebrow: '02 / Music',
-    description: 'Audio production, beat-making, mixing',
-    chips: ['10 focused modules', '30-min drills', 'Artist feedback'],
-    accent: 'cyan' as const,
-    tier: 'MUSIC PRODUCTION',
-  },
-  {
-    icon: 'activity' as const,
-    title: 'Basketball Workshop',
-    eyebrow: '03 / Basketball',
-    description: 'Skills, IQ, physical fitness',
-    chips: ['12 focused modules', '30-min drills', 'Artist feedback'],
-    accent: 'coral' as const,
-    tier: 'BASKETBALL',
-  },
-  {
-    icon: 'feather' as const,
-    title: 'Visual Arts Workshop',
-    eyebrow: '04 / Visual Arts',
-    description: 'Painting, illustration, mixed media',
-    chips: ['10 focused modules', '30-min drills', 'Artist feedback'],
-    accent: 'magenta' as const,
-    tier: 'VISUAL ARTS',
-  },
-];
+import WorkshopLessonPlayer, { TeaserVideo, type WorkshopLesson } from '@/components/WorkshopLessonPlayer';
 
 type CapturedVideo = {
   uri: string;
@@ -78,11 +39,11 @@ type CapturedVideo = {
   durationSecs: number;
 };
 
+
 export default function WorkshopsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { hasAcademyAccess, isLoading: membershipLoading } = useSubscription();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedWorkshopId, setSelectedWorkshopId] = useState<number | null>(null);
@@ -93,27 +54,12 @@ export default function WorkshopsScreen() {
   const [submissionNote, setSubmissionNote] = useState('');
   const [uploading, setUploading] = useState(false);
 
-  const { data: user, isLoading: userLoading, refetch: refetchUser } = useGetCurrentUser();
-  const hasLocalPhaseTwo =
-    user?.tier === 'workshop' ||
-    user?.tier === 'academy' ||
-    user?.tier === 'pro';
-  const hasPhaseTwo = hasLocalPhaseTwo || hasAcademyAccess;
   const {
     data: workshops,
     isLoading: workshopsLoading,
     isError: workshopsError,
     refetch: refetchWorkshops,
-  } = useListWorkshops(
-    { tier: 'workshop' },
-  );
-  const previewWorkshops = useMemo(
-    () => (workshops ?? []).filter((workshop) => {
-      const searchable = `${workshop.title} ${workshop.instructorName ?? ''}`.toLowerCase();
-      return searchable.includes('poncho') || searchable.includes('tattoo') || searchable.includes('fine art');
-    }).slice(0, 1),
-    [workshops],
-  );
+  } = useListWorkshops({});
   const workshopQueryId = selectedWorkshopId ?? 0;
   const {
     data: workshopDetail,
@@ -121,9 +67,23 @@ export default function WorkshopsScreen() {
     refetch: refetchWorkshopDetail,
   } = useGetWorkshop(workshopQueryId, {
     query: {
-      // Signed-in free members receive the server-enforced Module 1 preview.
       enabled: selectedWorkshopId !== null,
       queryKey: getGetWorkshopQueryKey(workshopQueryId),
+    },
+  });
+  // Server-authoritative access only; never local tier or RevenueCat flags.
+  const accessUnavailable = workshopDetail?.accessStatus === 'unavailable';
+  const hasFullAccess = !!workshopDetail?.hasFullAccess && !accessUnavailable;
+  const isEnrolled = !!workshopDetail?.isEnrolled;
+  const enroll = useEnrollInWorkshop({
+    mutation: {
+      onSuccess: (en) => {
+        queryClient.invalidateQueries({ queryKey: getGetWorkshopQueryKey(workshopQueryId) });
+        queryClient.invalidateQueries({ queryKey: getListEnrollmentsQueryKey() });
+        if (en?.status === 'paused') Alert.alert('Enrollment paused', 'Your enrollment is paused, so progress and assignments are unavailable until it is resumed.');
+        else void safeImpact();
+      },
+      onError: () => Alert.alert('Could not start workshop', 'Please check your connection and try again.'),
     },
   });
   const {
@@ -141,10 +101,10 @@ export default function WorkshopsScreen() {
   });
 
   useEffect(() => {
-    if (selectedWorkshopId === null && previewWorkshops[0]) {
-      setSelectedWorkshopId(previewWorkshops[0].id);
+    if (selectedWorkshopId === null && workshops?.[0]) {
+      setSelectedWorkshopId(workshops[0].id);
     }
-  }, [selectedWorkshopId, previewWorkshops]);
+  }, [selectedWorkshopId, workshops]);
 
   useEffect(() => {
     const firstModule = workshopDetail?.modules?.[0];
@@ -206,7 +166,7 @@ export default function WorkshopsScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      await Promise.all([refetchUser(), refetchWorkshops(), refetchAssignments()]);
+      await Promise.all([refetchWorkshops(), refetchAssignments()]);
     } finally {
       setRefreshing(false);
     }
@@ -220,6 +180,7 @@ export default function WorkshopsScreen() {
 
   const completeLesson = (moduleId: number) => {
     if (!selectedWorkshopId) return;
+    if (!isEnrolled) { Alert.alert('Start the workshop first', 'Close the lesson and tap Start workshop to save progress.'); return; }
     completeModule.mutate({ id: selectedWorkshopId, moduleId }, {
       onSuccess: () => {
         setSelectedLesson((current) => current?.id === moduleId ? { ...current, isCompleted: true } : current);
@@ -283,11 +244,11 @@ export default function WorkshopsScreen() {
     upgrade: { minHeight: 46, marginTop: 4, paddingHorizontal: 18, borderRadius: 10, backgroundColor: colors.electricMagenta, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
     upgradeText: { fontFamily: 'DMSans_700Bold', color: colors.primaryForeground, fontSize: 14 },
     previewActions: { gap: 8, marginBottom: 8 },
+    ...{},
   }), [colors, insets]);
 
-  if (userLoading || (!hasLocalPhaseTwo && membershipLoading)) {
-    return <View style={[s.container, { alignItems: 'center', justifyContent: 'center' }]}><ActivityIndicator color={colors.primary} /></View>;
-  }
+  const upgrade = () => { void safeImpact(); router.push('/membership'); };
+  const selectedWorkshop = workshops?.find((w) => w.id === selectedWorkshopId);
 
   return (
     <View style={s.container} testID="workshops-screen">
@@ -296,126 +257,105 @@ export default function WorkshopsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
         <View style={s.header}>
-          <Text style={s.eyebrow}>AIMD Workshop Preview</Text>
+          <Text style={s.eyebrow}>AIMD Workshops</Text>
           <Text style={s.title}>One craft. One apprenticeship.</Text>
-          <Text style={s.intro}>Choose your lane. Build the work.</Text>
+          <Text style={s.intro}>Watch the teasers free. Full lessons need membership or instructor enrollment.</Text>
         </View>
 
-        <View style={s.previewGrid} testID="workshop-preview-grid">
-          {workshopPreviews.map((preview) => {
-            const accent = preview.accent === 'magenta'
-              ? colors.electricMagenta
-              : preview.accent === 'cyan'
-                ? colors.cyan
-                : preview.accent === 'gold'
-                  ? colors.gold
-                  : colors.sunsetCoral;
-            return (
-              <View key={preview.title} style={[s.previewCard, { borderColor: `${accent}66` }]}>
-                <View style={s.previewTop}>
-                  <View style={[s.previewBadge, { borderColor: `${accent}88`, backgroundColor: `${accent}22` }]}>
-                    <Text style={s.previewBadgeText}>COMING SOON</Text>
-                  </View>
-                  <View style={[s.previewIcon, { backgroundColor: `${accent}26` }]}>
-                    <Feather name={preview.icon} size={17} color={accent} />
-                  </View>
-                </View>
-                <Text style={[s.previewEyebrow, { color: accent }]}>{preview.eyebrow}</Text>
-                <Text style={s.previewTitle}>{preview.title}</Text>
-                <Text style={s.previewBody}>{preview.description}</Text>
-                <View style={s.previewChips}>
-                  {preview.chips.map((chip) => (
-                    <Text key={chip} style={s.previewChip}>· {chip}</Text>
-                  ))}
-                </View>
-                <View style={s.previewFooter}>
-                  <Text style={s.previewTier}>{preview.tier} · DEDICATED</Text>
-                  <Text style={s.previewPrice}>Access begins at $39/month when it opens.</Text>
-                </View>
+        <View style={{ paddingHorizontal: 20, gap: 10 }}>
+          {workshopsLoading ? (
+            <ActivityIndicator color={colors.primary} />
+          ) : workshopsError ? (
+            <View style={{ alignItems: 'center', paddingVertical: 16, gap: 10 }}>
+              <Feather name="cloud-off" size={28} color={colors.mutedForeground} />
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.mutedForeground, textAlign: 'center' }}>Could not load workshops.</Text>
+              <TouchableOpacity onPress={() => void refetchWorkshops()} style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border }} testID="workshops-retry">
+                <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 13, color: colors.foreground }}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : !workshops?.length ? (
+            <View style={{ alignItems: 'center', paddingVertical: 16, gap: 8 }} testID="workshops-empty">
+              <Feather name="play-circle" size={28} color={colors.mutedForeground} />
+              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.mutedForeground, textAlign: 'center' }}>No workshops are published yet.</Text>
+            </View>
+          ) : workshops.map((workshop) => (
+            <TouchableOpacity
+              key={workshop.id}
+              style={[s.card, selectedWorkshopId === workshop.id && s.selectedCard]}
+              onPress={() => { setSelectedWorkshopId(workshop.id); setSelectedModuleId(null); }}
+              testID={`workshop-card-${workshop.id}`}
+            >
+              <Text style={s.category}>{workshop.category}</Text>
+              <Text style={s.cardTitle}>{workshop.title}</Text>
+              <Text style={s.cardBody} numberOfLines={3}>{workshop.description}</Text>
+              <View style={s.metaRow}>
+                <Text style={s.meta}>{workshop.totalModules} modules</Text>
+                {!!workshop.instructorName && <Text style={s.meta}>{workshop.instructorName}</Text>}
               </View>
-            );
-          })}
+            </TouchableOpacity>
+          ))}
         </View>
 
-        <View style={s.locked}>
-          <Feather name="play-circle" size={28} color={colors.gold} />
-          <Text style={s.lockedTitle}>
-            {hasPhaseTwo ? 'Keep your practice moving' : 'Start with a real Module 1 preview'}
-          </Text>
-          <Text style={s.lockedBody}>
-            {hasPhaseTwo
-              ? 'Pick a module and make something.'
-              : 'One focused lesson to get you moving. Unlock the full curriculum when it opens.'}
-          </Text>
-          <View style={{ alignSelf: 'stretch', gap: 8 }}>
-            {workshopsLoading ? (
+        {selectedWorkshop && (
+          <View style={s.locked} testID="workshop-detail-panel">
+            {workshopDetail?.previewVideoUrl && (
+              <View style={{ alignSelf: 'stretch', height: 200, backgroundColor: '#171311', borderRadius: 10, overflow: 'hidden' }}>
+                <TeaserVideo uri={workshopDetail.previewVideoUrl} />
+              </View>
+            )}
+            <Text style={s.lockedTitle}>{selectedWorkshop.title}</Text>
+            {workshopDetailError ? (
+              <TouchableOpacity onPress={() => void refetchWorkshopDetail()} style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border }}>
+                <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 13, color: colors.foreground }}>Could not load modules. Retry</Text>
+              </TouchableOpacity>
+            ) : !workshopDetail ? (
               <ActivityIndicator color={colors.primary} />
-            ) : workshopsError ? (
-              <View style={{ alignItems: 'center', paddingVertical: 16, gap: 10 }}>
-                <Feather name="cloud-off" size={28} color={colors.mutedForeground} />
-                <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.mutedForeground, textAlign: 'center' }}>
-                  Could not load the preview.
-                </Text>
-                <TouchableOpacity onPress={() => void refetchWorkshops()} style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border }}>
-                  <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 13, color: colors.foreground }}>Retry</Text>
-                </TouchableOpacity>
-              </View>
-            ) : !previewWorkshops.length ? (
-              <View style={{ alignItems: 'center', paddingVertical: 16, gap: 8 }}>
-                <Feather name="play-circle" size={28} color={colors.mutedForeground} />
-                <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.mutedForeground, textAlign: 'center' }}>
-                  The preview is coming soon.
-                </Text>
-              </View>
-            ) : previewWorkshops.map((workshop) => {
-              const isSelected = selectedWorkshopId === workshop.id;
-              return (
-                <View key={workshop.id} style={{ gap: 8 }}>
-                  <TouchableOpacity
-                    style={[s.card, isSelected && s.selectedCard]}
-                    onPress={() => {
-                      setSelectedWorkshopId(workshop.id);
-                      setSelectedModuleId(null);
-                    }}
-                    testID={`workshop-preview-${workshop.id}`}
-                  >
-                    <Text style={s.cardTitle}>{workshop.title}</Text>
-                    <Text style={s.cardBody}>Module 1 preview · {workshop.instructorName ?? 'AIMD Faculty'}</Text>
+            ) : (
+              <View style={{ alignSelf: 'stretch', gap: 8 }}>
+                {accessUnavailable && (
+                  <TouchableOpacity style={s.detailRetry} onPress={() => void refetchWorkshopDetail()} testID="access-retry">
+                    <Feather name="refresh-cw" size={15} color={colors.primaryForeground} />
+                    <Text style={s.detailRetryText}>Unable to verify your access. Retry</Text>
                   </TouchableOpacity>
-                  {isSelected && workshopDetail?.modules[0] && (
-                    <View style={s.previewActions}>
-                      <TouchableOpacity
-                        style={s.upgrade}
-                        onPress={() => openLesson(workshopDetail.modules[0])}
-                        testID="workshop-preview-open"
-                      >
-                        <Feather name="play" size={17} color={colors.primaryForeground} />
-                        <Text style={s.upgradeText}>Open Module 1 preview</Text>
-                      </TouchableOpacity>
-                      {!hasPhaseTwo && (
-                        <TouchableOpacity
-                          style={[s.upgrade, { backgroundColor: colors.foreground }]}
-                          testID="mastery-upgrade"
-                          accessibilityRole="button"
-                          accessibilityLabel="View AIMD membership options"
-                          onPress={() => {
-                            void safeImpact();
-                            router.push('/membership');
-                          }}
-                        >
-                          <Feather name="arrow-up-right" size={17} color={colors.primaryForeground} />
-                          <Text style={s.upgradeText}>View membership options</Text>
-                        </TouchableOpacity>
-                      )}
+                )}
+                {!hasFullAccess && !accessUnavailable && (
+                  <Text style={s.lockedBody}>
+                    {workshopDetail.accessStatus === 'unavailable' ? 'This workshop is not available right now.' : 'Teasers are open. Full lessons need an active Dedicated Artist subscription ($39/month) or enrollment in this workshop.'}
+                  </Text>
+                )}
+                {workshopDetail.modules.length === 0 && <Text style={s.lockedBody}>No modules have been added yet.</Text>}
+                {workshopDetail.modules.map((module) => (
+                  <TouchableOpacity key={module.id} style={s.card} onPress={() => openLesson(module)} testID={`module-row-${module.id}`}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <Feather name={module.isLocked || !hasFullAccess ? 'lock' : 'play-circle'} size={18} color={colors.gold} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={s.cardTitle}>{module.order}. {module.title}</Text>
+                        <Text style={s.meta}>{module.durationMinutes} min{module.previewVideoUrl ? ' · teaser' : ''}</Text>
+                      </View>
                     </View>
-                  )}
-                </View>
-              );
-            })}
+                  </TouchableOpacity>
+                ))}
+                {!hasFullAccess && !accessUnavailable && (
+                  <TouchableOpacity style={[s.upgrade, { backgroundColor: colors.foreground }]} testID="mastery-upgrade" accessibilityRole="button" accessibilityLabel="View AIMD membership options" onPress={upgrade}>
+                    <Feather name="arrow-up-right" size={17} color={colors.primaryForeground} />
+                    <Text style={s.upgradeText}>View membership options</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
           </View>
-        </View>
+        )}
 
-        {hasPhaseTwo && (
+        {hasFullAccess && !isEnrolled && workshopDetail && (
+          <View style={s.submissionHub} testID="start-workshop">
+            <Text style={s.submissionHubTitle}>Start this workshop</Text>
+            <Text style={s.submissionHubBody}>Start the workshop to save progress and submit assignments.</Text>
+            <TouchableOpacity style={s.submit} disabled={enroll.isPending} onPress={() => enroll.mutate({ id: workshopQueryId })} testID="start-workshop-btn">
+              {enroll.isPending ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={s.submitText}>Start workshop</Text>}
+            </TouchableOpacity>
+          </View>
+        )}
+        {hasFullAccess && isEnrolled && (
           <View style={s.submissionHub} testID="assignment-hub">
               <Text style={s.submissionHubEyebrow}>Assignment Submission</Text>
               <Text style={s.submissionHubTitle}>Send a practice drill</Text>
@@ -523,6 +463,10 @@ export default function WorkshopsScreen() {
       <WorkshopLessonPlayer
         visible={selectedLesson !== null}
         lesson={selectedLesson}
+        workshopId={selectedWorkshopId}
+        hasFullAccess={hasFullAccess}
+        onRefreshAccess={() => void refetchWorkshopDetail()}
+        onUpgrade={() => { setSelectedLesson(null); upgrade(); }}
         workshopTitle={workshopDetail?.title}
         completing={completeModule.isPending}
         onClose={() => setSelectedLesson(null)}

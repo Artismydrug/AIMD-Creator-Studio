@@ -13,6 +13,8 @@ export interface WorkshopModuleInput {
   description?: string | null;
   /** @nullable */
   videoUrl?: string | null;
+  /** @nullable */
+  previewVideoUrl?: string | null;
   /** @minimum 0 */
   order: number;
   /** @minimum 0 */

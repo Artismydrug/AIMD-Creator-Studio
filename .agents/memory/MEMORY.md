@@ -26,4 +26,6 @@
 - [Workspace package targeting](workspace-package-targeting.md) — use a targeted pnpm filter if the package helper rejects artifact-scoped installation at the workspace root.
 - [PNPM override precedence](pnpm-override-precedence.md) — add security pins to the existing workspace override map; package.json overrides replace it rather than merge.
 - [Music creator scope](music-creator-scope.md) — music artistry and vocal practice belong in the ordinary creative feed, not only private feedback.
-- [Creator tester feedback](creator-tester-feedback.md) — early testers value intuitive navigation and want to compare creative practice over time.
+- [Creator tester feedback](creator-tester-feedback.md) — testers value clear navigation/history and need visible photo-proof and habit-delete guidance.
+- [Workshop video access](workshop-video-access.md) — free public teasers; full lessons require active $39 membership or staff-granted workshop participation.
+- [Browser testing limits](browser-testing-limits.md) — test Chromium may lack H.264; use WebM fixtures and standard-domain Clerk test emails.

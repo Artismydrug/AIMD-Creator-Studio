@@ -104,7 +104,8 @@ beforeAll(async () => {
 
   // Enroll both creators so enrollment isn't the failing gate.
   await pool.query(
-    `INSERT INTO enrollments (user_id, workshop_id) VALUES ($1, $3), ($2, $3)`,
+    `INSERT INTO enrollments (user_id, workshop_id, access_source)
+     VALUES ($1, $3, 'participant'), ($2, $3, 'participant')`,
     [creator.id, otherCreator.id, workshopId],
   );
 });

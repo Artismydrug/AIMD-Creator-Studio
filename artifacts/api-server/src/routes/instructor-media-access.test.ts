@@ -257,9 +257,8 @@ describe("assigned instructors can read curriculum regardless of membership tier
     expect(res.body.modules.length).toBeGreaterThan(0);
   });
 
-  it("free-tier UNASSIGNED instructor receives only the public Module 1 preview", async () => {
+  it("an unassigned instructor cannot read an unpublished workshop", async () => {
     const res = await request(appFor(unassignedInstructor)).get(`/api/workshops/${otherWorkshopId}`);
-    expect(res.status).toBe(200);
-    expect(res.body.modules).toHaveLength(1);
+    expect(res.status).toBe(404);
   });
 });

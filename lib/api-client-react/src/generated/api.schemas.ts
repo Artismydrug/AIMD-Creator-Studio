@@ -291,6 +291,9 @@ export interface Workshop {
   instructorName?: string | null;
   /** @nullable */
   thumbnailUrl?: string | null;
+  /** @nullable */
+  previewVideoUrl?: string | null;
+  isPublished?: boolean;
   tier: WorkshopTier;
   category: string;
   totalModules: number;
@@ -314,8 +317,15 @@ export interface WorkshopModule {
   title: string;
   /** @nullable */
   description?: string | null;
-  /** @nullable */
+  /**
+     * Stored full lesson reference, returned only to assigned staff. Learners use the protected playback endpoint.
+     * @nullable
+     */
   videoUrl?: string | null;
+  /** @nullable */
+  previewVideoUrl?: string | null;
+  hasVideo?: boolean;
+  isLocked?: boolean;
   order: number;
   durationMinutes: number;
   isCompleted?: boolean;
@@ -332,6 +342,15 @@ export const WorkshopDetailTier = {
   pro: 'pro',
 } as const;
 
+export type WorkshopDetailAccessStatus = typeof WorkshopDetailAccessStatus[keyof typeof WorkshopDetailAccessStatus];
+
+
+export const WorkshopDetailAccessStatus = {
+  granted: 'granted',
+  locked: 'locked',
+  unavailable: 'unavailable',
+} as const;
+
 export interface WorkshopDetail {
   id: number;
   title: string;
@@ -346,9 +365,23 @@ export interface WorkshopDetail {
   durationMinutes?: number;
   enrolledCount?: number;
   isEnrolled?: boolean;
+  /** @nullable */
+  previewVideoUrl?: string | null;
+  isPublished?: boolean;
+  hasFullAccess?: boolean;
+  isStaff?: boolean;
+  accessStatus?: WorkshopDetailAccessStatus;
   modules: WorkshopModule[];
   createdAt: string;
 }
+
+export type EnrollmentAccessSource = typeof EnrollmentAccessSource[keyof typeof EnrollmentAccessSource];
+
+
+export const EnrollmentAccessSource = {
+  subscription: 'subscription',
+  participant: 'participant',
+} as const;
 
 export type EnrollmentStatus = typeof EnrollmentStatus[keyof typeof EnrollmentStatus];
 
@@ -362,6 +395,7 @@ export const EnrollmentStatus = {
 export interface Enrollment {
   id: number;
   userId: number;
+  accessSource?: EnrollmentAccessSource;
   workshopId: number;
   workshopTitle?: string;
   /** @nullable */
@@ -1501,6 +1535,8 @@ export interface WorkshopModuleInput {
   description?: string | null;
   /** @nullable */
   videoUrl?: string | null;
+  /** @nullable */
+  previewVideoUrl?: string | null;
   /** @minimum 0 */
   order: number;
   /** @minimum 0 */
@@ -1515,9 +1551,110 @@ export interface WorkshopModuleDetail {
   description?: string | null;
   /** @nullable */
   videoUrl?: string | null;
+  /** @nullable */
+  previewVideoUrl?: string | null;
   order: number;
   durationMinutes: number;
   createdAt: string;
+}
+
+export interface WorkshopLessonPlayback {
+  playbackUrl: string;
+  expiresAt: string;
+}
+
+export type WorkshopVideoUploadInputKind = typeof WorkshopVideoUploadInputKind[keyof typeof WorkshopVideoUploadInputKind];
+
+
+export const WorkshopVideoUploadInputKind = {
+  preview: 'preview',
+  lesson: 'lesson',
+} as const;
+
+export type WorkshopVideoUploadInputContentType = typeof WorkshopVideoUploadInputContentType[keyof typeof WorkshopVideoUploadInputContentType];
+
+
+export const WorkshopVideoUploadInputContentType = {
+  'video/mp4': 'video/mp4',
+  'video/quicktime': 'video/quicktime',
+  'video/webm': 'video/webm',
+} as const;
+
+export interface WorkshopVideoUploadInput {
+  kind: WorkshopVideoUploadInputKind;
+  contentType: WorkshopVideoUploadInputContentType;
+  /**
+     * @minimum 1
+     * @maximum 262144000
+     */
+  size: number;
+}
+
+export interface WorkshopVideoUploadDestination {
+  uploadURL: string;
+  objectPath: string;
+}
+
+export interface WorkshopVideoFinalizeInput {
+  objectPath: string;
+}
+
+export interface WorkshopVideoMedia {
+  objectPath: string;
+  mediaUrl: string;
+}
+
+export interface InstructorWorkshopUpdateInput {
+  /** @nullable */
+  previewVideoUrl?: string | null;
+  isPublished?: boolean;
+}
+
+export interface WorkshopModuleUpdateInput {
+  /** @minLength 1 */
+  title?: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  videoUrl?: string | null;
+  /** @nullable */
+  previewVideoUrl?: string | null;
+  /** @minimum 0 */
+  order?: number;
+  /** @minimum 0 */
+  durationMinutes?: number;
+}
+
+export type WorkshopParticipantInputStatus = typeof WorkshopParticipantInputStatus[keyof typeof WorkshopParticipantInputStatus];
+
+
+export const WorkshopParticipantInputStatus = {
+  active: 'active',
+  paused: 'paused',
+} as const;
+
+export interface WorkshopParticipantInput {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  username: string;
+  status: WorkshopParticipantInputStatus;
+}
+
+export type WorkshopParticipantStatus = typeof WorkshopParticipantStatus[keyof typeof WorkshopParticipantStatus];
+
+
+export const WorkshopParticipantStatus = {
+  active: 'active',
+  paused: 'paused',
+  completed: 'completed',
+} as const;
+
+export interface WorkshopParticipant {
+  userId: number;
+  username: string;
+  status: WorkshopParticipantStatus;
 }
 
 export interface DrillPromptInput {

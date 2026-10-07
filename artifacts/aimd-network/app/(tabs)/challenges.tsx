@@ -18,7 +18,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { useColors } from '@/hooks/useColors';
 import ChallengeCameraCapture from '@/components/ChallengeCameraCapture';
-import HabitCard from '@/components/HabitCard';
+import HabitCard, { HABIT_ACTION_HELP } from '@/components/HabitCard';
 import { safeImpact } from '@/lib/haptics';
 import {
   getGetCurrentChallengeQueryKey,
@@ -135,6 +135,7 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
     section: { paddingHorizontal: 20, paddingTop: 25, gap: 12 },
     sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     sectionTitle: { fontFamily: 'DMSans_700Bold', fontSize: 19, color: colors.foreground },
+    sectionHint: { fontFamily: 'DMSans_400Regular', fontSize: 12, lineHeight: 17, color: colors.mutedForeground },
     sectionLink: { fontFamily: 'DMSans_600SemiBold', fontSize: 12, color: colors.primary },
     stats: { flexDirection: 'row', gap: 10 },
     stat: { flex: 1, padding: 13, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: colors.radius, overflow: 'hidden' },
@@ -226,13 +227,14 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
               <Text style={s.sectionLink}>Open full tracker</Text>
             </TouchableOpacity>
           </View>
+          <Text style={s.sectionHint} testID="habit-actions-help">{HABIT_ACTION_HELP}</Text>
           <View style={s.stats}>
             <View style={s.stat}><Text style={s.statValue}>{summary?.currentStreakDays ?? 0}</Text><Text style={s.statLabel}>Day streak</Text></View>
             <View style={s.stat}><Text style={s.statValue}>{habits.filter((habit) => habit.completedToday).length}</Text><Text style={s.statLabel}>Done today</Text></View>
             <View style={s.stat}><Text style={s.statValue}>{Math.round(summary?.completionRate ?? 0)}%</Text><Text style={s.statLabel}>Practice rate</Text></View>
           </View>
           {habits.length > 0 ? habits.slice(0, 3).map((habit) => (
-            <HabitCard key={habit.id} habit={habit} onLogged={refetchHabits} />
+            <HabitCard key={habit.id} habit={habit} onLogged={refetchHabits} onDeleted={refetchHabits} />
           )) : (
             <View style={s.empty}>
               <Feather name="activity" size={25} color={colors.primary} />
