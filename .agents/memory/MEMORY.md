@@ -29,3 +29,4 @@
 - [Creator tester feedback](creator-tester-feedback.md) — testers value clear navigation/history and need visible photo-proof and habit-delete guidance.
 - [Workshop video access](workshop-video-access.md) — free public teasers; full lessons require active $39 membership or staff-granted workshop participation.
 - [Browser testing limits](browser-testing-limits.md) — test Chromium may lack H.264; use WebM fixtures and standard-domain Clerk test emails.
+- [Overview pitch positioning](overview-pitch-positioning.md) — broad school/creator/partner pitch centers product and mission; speculative business numbers belong in the business plan.

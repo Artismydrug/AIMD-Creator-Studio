@@ -1,8 +1,6 @@
-import { Camera, Music2, Users, CalendarDays } from 'lucide-react';
-
 export default function Platform() {
   return (
-    <div className="slide w-screen h-screen overflow-hidden relative bg-bg text-text">
+    <div className="deck-slide w-screen h-screen overflow-hidden relative bg-bg text-text">
       <div className="absolute right-0 top-0 h-full w-[32vw] bg-surface" />
       <div className="relative flex h-full flex-col justify-between px-[7vw] py-[6vh]">
         <header className="flex items-center justify-between border-b border-rule pb-[1.6vh]">
@@ -14,24 +12,24 @@ export default function Platform() {
           <p className="mt-[1.7vh] max-w-[62vw] font-body text-[2vw] leading-[1.4] text-muted">Tools for sharing the work, finding community, and bringing artists together.</p>
           <div className="mt-[5vh] grid grid-cols-4 gap-[1.5vw]">
             <article className="min-h-[28vh] border-t-[0.3vw] border-accent bg-surface/80 p-[1.7vw]">
-              <Camera aria-hidden="true" className="h-[2.8vw] w-[2.8vw] text-accent" />
+              <div aria-hidden="true" className="h-[0.3vw] w-[3vw] bg-accent" />
               <h3 className="mt-[3vh] font-display text-[2.7vw] font-bold uppercase text-primary">Share</h3>
-              <p className="mt-[1vh] font-body text-[1.8vw] leading-[1.35] text-muted">Photo and video posts</p>
+              <p className="mt-[1vh] font-body text-[2vw] leading-[1.35] text-muted">Photo and video posts</p>
             </article>
             <article className="min-h-[28vh] border-t-[0.3vw] border-accent bg-surface/80 p-[1.7vw]">
-              <Music2 aria-hidden="true" className="h-[2.8vw] w-[2.8vw] text-accent" />
+              <div aria-hidden="true" className="h-[0.3vw] w-[3vw] bg-accent" />
               <h3 className="mt-[3vh] font-display text-[2.7vw] font-bold uppercase text-primary">Make sound</h3>
-              <p className="mt-[1vh] font-body text-[1.8vw] leading-[1.35] text-muted">Audio tracks in the studio feed</p>
+              <p className="mt-[1vh] font-body text-[2vw] leading-[1.35] text-muted">Audio tracks in the studio feed</p>
             </article>
             <article className="min-h-[28vh] border-t-[0.3vw] border-accent bg-surface/80 p-[1.7vw]">
-              <Users aria-hidden="true" className="h-[2.8vw] w-[2.8vw] text-accent" />
+              <div aria-hidden="true" className="h-[0.3vw] w-[3vw] bg-accent" />
               <h3 className="mt-[3vh] font-display text-[2.7vw] font-bold uppercase text-primary">Find artists</h3>
-              <p className="mt-[1vh] font-body text-[1.8vw] leading-[1.35] text-muted">Profiles, portfolios, and a creator directory</p>
+              <p className="mt-[1vh] font-body text-[2vw] leading-[1.35] text-muted">Profiles, portfolios, and a creator directory</p>
             </article>
             <article className="min-h-[28vh] border-t-[0.3vw] border-accent bg-surface/80 p-[1.7vw]">
-              <CalendarDays aria-hidden="true" className="h-[2.8vw] w-[2.8vw] text-accent" />
+              <div aria-hidden="true" className="h-[0.3vw] w-[3vw] bg-accent" />
               <h3 className="mt-[3vh] font-display text-[2.7vw] font-bold uppercase text-primary">Connect</h3>
-              <p className="mt-[1vh] font-body text-[1.8vw] leading-[1.35] text-muted">Direct messages, groups, and events</p>
+              <p className="mt-[1vh] font-body text-[2vw] leading-[1.35] text-muted">Direct messages, groups, and events</p>
             </article>
           </div>
         </div>

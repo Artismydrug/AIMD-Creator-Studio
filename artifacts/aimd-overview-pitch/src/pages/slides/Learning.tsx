@@ -15,7 +15,7 @@ export default function Learning() {
               <span aria-hidden="true" className="h-[3vw] w-[0.3vw] shrink-0 bg-accent" />
               <div>
                 <h3 className="font-display text-[2.6vw] font-bold uppercase text-primary">Workshop modules</h3>
-                <p className="mt-[0.6vh] font-body text-[2vw] leading-[1.35] text-muted">Structured lessons and instructor-led practice.</p>
+                <p className="mt-[0.6vh] font-body text-[2vw] leading-[1.35] text-muted">Lessons and guided practice.</p>
               </div>
             </article>
             <article className="flex min-h-[18vh] items-center gap-[1.7vw] border-y border-rule px-[1.8vw] py-[2vh]">
@@ -36,11 +36,11 @@ export default function Learning() {
               <span aria-hidden="true" className="h-[3vw] w-[0.3vw] shrink-0 bg-accent" />
               <div>
                 <h3 className="font-display text-[2.6vw] font-bold uppercase text-primary">Music and voice</h3>
-                <p className="mt-[0.6vh] font-body text-[2vw] leading-[1.35] text-muted">Vocal practice, artistry, and audio sharing.</p>
+                <p className="mt-[0.6vh] font-body text-[2vw] leading-[1.35] text-muted">Vocal practice and audio sharing.</p>
               </div>
             </article>
           </div>
-          <p className="mt-[2.6vh] text-right font-body text-[2vw] tracking-[0.02em] text-muted">Full lessons are for active members and enrolled workshop participants.</p>
+          <p className="mt-[2.6vh] text-right font-body text-[2vw] tracking-[0.02em] text-muted">Full lessons require an eligible active subscription or workshop enrollment.</p>
         </div>
         <footer className="flex items-center justify-between border-t border-rule pt-[1.6vh] font-body text-[1.5vw] uppercase tracking-[0.2em] text-muted">
           <span>Creator Studio by AIMD</span><span>Learn the craft</span>
