@@ -56,3 +56,17 @@ mtime_ms = 1789419871368
 storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/689f2b50-178e-4650-9068-6f0c4cd763e2/f7511749-b7cb-4d9d-b3ca-e889ae9b6912"
 storage_version_token = "1789419881779113"
 content_type = "application/pdf"
+
+[[outputs]]
+id = "tpJrLXy7cfZ-NHgfUiwFr"
+uri = "file://artifacts/aimd-network/assets/images/icon.png"
+type = "image"
+title = "Creator Studio — AIMD App Icon"
+description = "1024 × 1024 black-and-white app icon adapted from your supplied AIMD logo."
+logical_id = "fa4049b0-e969-4e9c-b2c4-1a01499eff11"
+content_hash = "sha256:2bcf16239252b62ba38eb9e1b7ca966b1c3a8c7f10ca7fb4a5ae5c4b7654551d"
+size = 22088
+mtime_ms = 1791464551606
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/fa4049b0-e969-4e9c-b2c4-1a01499eff11/1307db7d-bd5f-49a0-815a-28de132b702d"
+storage_version_token = "1791464588479493"
+content_type = "image/png"

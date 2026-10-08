@@ -30,3 +30,4 @@
 - [Workshop video access](workshop-video-access.md) — free public teasers; full lessons require active $39 membership or staff-granted workshop participation.
 - [Browser testing limits](browser-testing-limits.md) — test Chromium may lack H.264; use WebM fixtures and standard-domain Clerk test emails.
 - [Overview pitch positioning](overview-pitch-positioning.md) — broad school/creator/partner pitch centers product and mission; speculative business numbers belong in the business plan.
+- [Logo image preparation](logo-image-preparation.md) — raster logo backgrounds and faint edge pixels can survive automatic trimming; inspect the isolated mark before icon compositing.

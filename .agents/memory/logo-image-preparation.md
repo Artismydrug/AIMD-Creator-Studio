@@ -1,0 +1,10 @@
+---
+name: Logo image preparation
+description: Avoid subtle panel borders when adapting supplied raster logos for app icons.
+---
+
+When adapting a supplied raster logo, preserve its actual letter shapes but isolate the mark from the image's background panel before placing it on a new icon canvas. Automatic trimming is not proof that all outer-border pixels are gone.
+
+**Why:** The supplied AIMD JPEG had a near-black panel and a faint bright edge. Both survived initial automatic trimming and became visible as a rectangular seam or stray line in the icon.
+
+**How to apply:** Inspect the isolated mark and the final composite at full and small sizes. Check opaque output for iOS and appropriate mask-safe spacing for Android; avoid AI redrawing of an existing brand mark.
