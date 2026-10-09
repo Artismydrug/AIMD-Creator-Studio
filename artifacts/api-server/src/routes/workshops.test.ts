@@ -146,6 +146,32 @@ afterAll(async () => {
 });
 
 describe("public previews and verified lesson access", () => {
+  it("uses the first module teaser when a workshop has no standalone preview", async () => {
+    const moduleTeaserUrl = `/api/storage/objects/uploads/${randomUUID()}`;
+    const { rows } = await pool.query<{ id: number }>(
+      `INSERT INTO workshops (title, description, tier, category, total_modules, is_published)
+       VALUES ($1, 'module teaser fallback', 'free', 'art', 1, true)
+       RETURNING id`,
+      [`WS Module Teaser ${suffix}`],
+    );
+    const workshopId = rows[0].id;
+
+    try {
+      await pool.query(
+        `INSERT INTO workshop_modules (workshop_id, title, "order", preview_video_url)
+         VALUES ($1, 'First teaser', 1, $2), ($1, 'Second teaser', 2, $3)`,
+        [workshopId, moduleTeaserUrl, `/api/storage/objects/uploads/${randomUUID()}`],
+      );
+
+      const list = await request(appFor(null)).get("/api/workshops");
+      expect(list.status).toBe(200);
+      expect(list.body.find((workshop: { id: number }) => workshop.id === workshopId))
+        .toMatchObject({ previewVideoUrl: moduleTeaserUrl });
+    } finally {
+      await pool.query("DELETE FROM workshops WHERE id = $1", [workshopId]);
+    }
+  });
+
   it("anonymous visitors see distinct teasers without receiving full URLs or teaching notes", async () => {
     const res = await request(appFor(null)).get(`/api/workshops/${academyWorkshopId}`);
     expect(res.status).toBe(200);

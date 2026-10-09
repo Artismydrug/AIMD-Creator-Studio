@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import { eq, and, asc, desc, inArray, isNotNull } from "drizzle-orm";
 import {
   db,
   workshopsTable,
@@ -95,6 +95,21 @@ router.get("/workshops", async (req, res): Promise<void> => {
 
   const enrolledSet = new Set<number>();
   const privateAccessSet = new Set<number>();
+  const moduleTeasers = await db
+    .select({
+      workshopId: workshopModulesTable.workshopId,
+      previewVideoUrl: workshopModulesTable.previewVideoUrl,
+    })
+    .from(workshopModulesTable)
+    .where(isNotNull(workshopModulesTable.previewVideoUrl))
+    .orderBy(asc(workshopModulesTable.order));
+  const firstModuleTeaserByWorkshop = new Map<number, string>();
+  for (const module of moduleTeasers) {
+    if (module.previewVideoUrl && !firstModuleTeaserByWorkshop.has(module.workshopId)) {
+      firstModuleTeaserByWorkshop.set(module.workshopId, module.previewVideoUrl);
+    }
+  }
+
   if (!!req.dbUser) {
     const enrollments = await db
       .select()
@@ -116,7 +131,14 @@ router.get("/workshops", async (req, res): Promise<void> => {
 
   const result = workshops
     .filter((w) => w.isPublished || req.dbUser?.isAdmin || privateAccessSet.has(w.id))
-    .map((w) => normalizeWorkshopTier({ ...w, isEnrolled: enrolledSet.has(w.id) }));
+    .map((w) => {
+      const normalized = normalizeWorkshopTier({ ...w, isEnrolled: enrolledSet.has(w.id) });
+      return {
+        ...normalized,
+        previewVideoUrl:
+          normalized.previewVideoUrl ?? firstModuleTeaserByWorkshop.get(w.id) ?? null,
+      };
+    });
   res.json(ListWorkshopsResponse.parse(result));
 });
 

@@ -244,6 +244,15 @@ export default function WorkshopsScreen() {
     upgrade: { minHeight: 46, marginTop: 4, paddingHorizontal: 18, borderRadius: 10, backgroundColor: colors.electricMagenta, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
     upgradeText: { fontFamily: 'DMSans_700Bold', color: colors.primaryForeground, fontSize: 14 },
     previewActions: { gap: 8, marginBottom: 8 },
+    workshopCard: { borderRadius: colors.radius, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
+    workshopPreview: { width: '100%', aspectRatio: 16 / 9, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
+    workshopPreviewBadge: { position: 'absolute', top: 10, left: 10, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 99, backgroundColor: 'rgba(16,19,23,0.82)' },
+    workshopPreviewBadgeText: { fontFamily: 'DMSans_700Bold', fontSize: 9, color: '#FFFFFF', letterSpacing: 0.8 },
+    workshopPreviewMissing: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+    workshopPreviewMissingText: { fontFamily: 'DMSans_600SemiBold', fontSize: 12, color: colors.primaryForeground },
+    workshopCardInfo: { padding: 16, gap: 8 },
+    workshopOpenHint: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 9, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
+    workshopOpenHintText: { fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.primary },
     ...{},
   }), [colors, insets]);
 
@@ -279,20 +288,47 @@ export default function WorkshopsScreen() {
               <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.mutedForeground, textAlign: 'center' }}>No workshops are published yet.</Text>
             </View>
           ) : workshops.map((workshop) => (
-            <TouchableOpacity
+            <View
               key={workshop.id}
-              style={[s.card, selectedWorkshopId === workshop.id && s.selectedCard]}
-              onPress={() => { setSelectedWorkshopId(workshop.id); setSelectedModuleId(null); }}
-              testID={`workshop-card-${workshop.id}`}
+              style={[s.workshopCard, selectedWorkshopId === workshop.id && s.selectedCard]}
+              testID={`workshop-card-container-${workshop.id}`}
             >
-              <Text style={s.category}>{workshop.category}</Text>
-              <Text style={s.cardTitle}>{workshop.title}</Text>
-              <Text style={s.cardBody} numberOfLines={3}>{workshop.description}</Text>
-              <View style={s.metaRow}>
-                <Text style={s.meta}>{workshop.totalModules} modules</Text>
-                {!!workshop.instructorName && <Text style={s.meta}>{workshop.instructorName}</Text>}
+              <View style={s.workshopPreview}>
+                {workshop.previewVideoUrl ? (
+                  <TeaserVideo uri={workshop.previewVideoUrl} />
+                ) : (
+                  <View style={s.workshopPreviewMissing}>
+                    <Feather name="play-circle" size={18} color={colors.primaryForeground} />
+                    <Text style={s.workshopPreviewMissingText}>Preview video coming soon</Text>
+                  </View>
+                )}
+                {!!workshop.previewVideoUrl && (
+                  <View pointerEvents="none" style={s.workshopPreviewBadge}>
+                    <Text style={s.workshopPreviewBadgeText}>FREE PREVIEW</Text>
+                  </View>
+                )}
               </View>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={s.workshopCardInfo}
+                onPress={() => { setSelectedWorkshopId(workshop.id); setSelectedModuleId(null); }}
+                accessibilityRole="button"
+                accessibilityLabel={`Open ${workshop.title}`}
+                accessibilityHint="Opens workshop details and the lesson list."
+                testID={`workshop-card-${workshop.id}`}
+              >
+                <Text style={s.category}>{workshop.category}</Text>
+                <Text style={s.cardTitle}>{workshop.title}</Text>
+                <Text style={s.cardBody} numberOfLines={3}>{workshop.description}</Text>
+                <View style={s.metaRow}>
+                  <Text style={s.meta}>{workshop.totalModules} modules</Text>
+                  {!!workshop.instructorName && <Text style={s.meta}>{workshop.instructorName}</Text>}
+                </View>
+                <View style={s.workshopOpenHint}>
+                  <Text style={s.workshopOpenHintText}>View workshop</Text>
+                  <Feather name="arrow-right" size={15} color={colors.primary} />
+                </View>
+              </TouchableOpacity>
+            </View>
           ))}
         </View>
 
