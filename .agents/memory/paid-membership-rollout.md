@@ -9,8 +9,8 @@ Paid Dedicated Artist and Professional Artist memberships must remain visibly ma
 
 **How to apply:** Keep the paid membership UI and server-side checkout guard aligned. Existing members retain their access. Re-enable new paid checkout only as part of the filmed-lesson and career-pipeline launch decision.
 
-A future $99 subscription tier may include instructor/mentor access and live sessions; this is a roadmap idea, not current pricing or an available plan.
+Native live streaming is deferred for later. Instructor/mentor access with live sessions in a possible future $99 subscription tier is only a roadmap idea, not current pricing or an available plan.
 
 **Why:** The creator wants to reserve the higher-cost, relationship-based live experience for a later tier once the audience and instructional offering are ready.
 
-**How to apply:** Do not build native broadcasting or advertise a $99 plan as available until the creator confirms readiness. Validate instructor and member demand with a hosted pilot first.
+**How to apply:** Do not build native broadcasting or advertise a $99 plan as available until the creator confirms readiness. Revisit live streaming when subscription readiness, instructor availability, and member demand are clearer.

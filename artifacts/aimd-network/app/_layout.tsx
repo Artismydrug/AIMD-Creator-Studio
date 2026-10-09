@@ -303,7 +303,7 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
 const sessionStyles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    backgroundColor: '#FAF8F5',
+    backgroundColor: '#F1E7DA',
     flex: 1,
     gap: 14,
     justifyContent: 'center',
