@@ -8,3 +8,7 @@ When adapting a supplied raster logo, preserve its actual letter shapes but isol
 **Why:** The supplied AIMD JPEG had a near-black panel and a faint bright edge. Both survived initial automatic trimming and became visible as a rectangular seam or stray line in the icon.
 
 **How to apply:** Inspect the isolated mark and the final composite at full and small sizes. Check opaque output for iOS and appropriate mask-safe spacing for Android; avoid AI redrawing of an existing brand mark.
+
+Transparent cutout versions of the AIMD logo can appear as faint outlines in a dark image preview. Composite against a light backing to interpret the intended white-on-black wordmark before adapting it; do not mistake the preview for an outline redesign.
+
+**Why:** The supplied original PNG used transparent letter cutouts in the black panel. A dark preview hid the letters even though the intended mark matched the original branding.
