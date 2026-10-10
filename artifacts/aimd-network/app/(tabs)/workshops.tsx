@@ -217,9 +217,9 @@ export default function WorkshopsScreen() {
     metaRow: { flexDirection: 'row', gap: 14 },
     meta: { fontFamily: 'DMSans_500Medium', fontSize: 11, color: colors.mutedForeground },
     submissionHub: { marginHorizontal: 20, marginTop: 4, padding: 18, borderRadius: colors.radius, backgroundColor: colors.foreground, gap: 14 },
-    submissionHubEyebrow: { fontFamily: 'DMSans_700Bold', color: colors.cyan, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.5 },
-    submissionHubTitle: { fontFamily: 'DMSans_700Bold', color: colors.primaryForeground, fontSize: 24 },
-    submissionHubBody: { fontFamily: 'DMSans_400Regular', color: colors.primaryForeground, opacity: 0.78, fontSize: 13, lineHeight: 19 },
+     submissionHubEyebrow: { fontFamily: 'DMSans_700Bold', color: colors.cyan, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.5 },
+     submissionHubTitle: { fontFamily: 'DMSans_700Bold', color: colors.primaryForeground, fontSize: 24 },
+     submissionHubBody: { fontFamily: 'DMSans_400Regular', color: colors.primaryForeground, opacity: 0.78, fontSize: 13, lineHeight: 19 },
     selector: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
     chip: { paddingVertical: 7, paddingHorizontal: 10, borderRadius: 99, borderWidth: 1, borderColor: 'rgba(250,248,245,0.25)' },
     chipActive: { backgroundColor: colors.cyan, borderColor: colors.cyan },
@@ -238,6 +238,7 @@ export default function WorkshopsScreen() {
     assignmentCopy: { flex: 1 },
     assignmentTitle: { fontFamily: 'DMSans_600SemiBold', color: colors.primaryForeground, fontSize: 13 },
     assignmentMeta: { fontFamily: 'DMSans_400Regular', color: colors.primaryForeground, opacity: 0.65, fontSize: 11 },
+     assignmentReflection: { fontFamily: 'DMSans_400Regular', color: colors.primaryForeground, opacity: 0.78, fontSize: 11, lineHeight: 16, marginTop: 4 },
     locked: { margin: 20, padding: 22, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, alignItems: 'center', gap: 10 },
     lockedTitle: { fontFamily: 'DMSans_700Bold', color: colors.foreground, fontSize: 21, textAlign: 'center' },
     lockedBody: { fontFamily: 'DMSans_400Regular', color: colors.mutedForeground, fontSize: 14, lineHeight: 21, textAlign: 'center' },
@@ -393,9 +394,11 @@ export default function WorkshopsScreen() {
         )}
         {hasFullAccess && isEnrolled && (
           <View style={s.submissionHub} testID="assignment-hub">
-              <Text style={s.submissionHubEyebrow}>Assignment Submission</Text>
-              <Text style={s.submissionHubTitle}>Send a practice drill</Text>
-              <Text style={s.submissionHubBody}>Record one focused drill for your instructor.</Text>
+              <Text style={s.submissionHubEyebrow}>Private Workshop Portfolio</Text>
+              <Text style={s.submissionHubTitle}>Share your practice & reflection</Text>
+              <Text style={s.submissionHubBody}>
+                Record a focused practice drill and reflect on the lesson. Your work is saved here and sent to the instructor reviewing this workshop; it is not posted to your public profile.
+              </Text>
               {workshopDetailError ? (
                 <View style={{ alignItems: 'center', gap: 8 }}>
                   <Text style={[s.submissionHubBody, { textAlign: 'center' }]}>
@@ -453,10 +456,12 @@ export default function WorkshopsScreen() {
                 style={s.note}
                 value={submissionNote}
                 onChangeText={setSubmissionNote}
-                placeholder="Add context for your instructor (optional)"
+                placeholder="Reflection (optional): What did you try from this lesson, and what will you practice next?"
                 placeholderTextColor="rgba(250,248,245,0.4)"
                 multiline
                 maxLength={500}
+                accessibilityLabel="Optional lesson reflection for your workshop portfolio"
+                testID="workshop-reflection-input"
               />
               <TouchableOpacity
                 style={[s.submit, { opacity: capturedVideo && selectedModuleId ? 1 : 0.4 }]}
@@ -471,13 +476,18 @@ export default function WorkshopsScreen() {
 
               {(assignments?.length ?? 0) > 0 && (
                 <>
-                  <Text style={s.submissionHubEyebrow}>Recent submissions</Text>
+                  <Text style={s.submissionHubEyebrow}>Recent portfolio work</Text>
                   {assignments?.slice(0, 3).map((assignment) => (
                     <View key={assignment.id} style={s.assignment} testID={`assignment-item-${assignment.id}`}>
                       <Feather name={assignment.status === 'reviewed' ? 'check-circle' : 'clock'} size={18} color={assignment.status === 'reviewed' ? colors.cyan : colors.gold} />
                       <View style={s.assignmentCopy}>
-                        <Text style={s.assignmentTitle}>{assignment.workshopTitle ?? 'Workshop assignment'}</Text>
+                        <Text style={s.assignmentTitle}>{assignment.workshopTitle ?? 'Workshop project'} · Lesson {assignment.moduleId}</Text>
                         <Text style={s.assignmentMeta}>{assignment.status === 'reviewed' ? 'Instructor feedback ready' : 'Pending instructor review'}</Text>
+                        {!!assignment.submissionNote && (
+                          <Text style={s.assignmentReflection} numberOfLines={2}>
+                            Reflection: {assignment.submissionNote}
+                          </Text>
+                        )}
                       </View>
                     </View>
                   ))}

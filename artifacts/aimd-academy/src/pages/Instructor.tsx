@@ -134,8 +134,8 @@ function ReviewAssignmentDialog({ assignment }: { assignment: any }) {
               <div className="flex-1 flex items-center justify-center text-muted-foreground font-mono text-sm">No video submitted</div>
             )}
             <div className="p-4 bg-background border-t border-border">
-              <h4 className="font-bold uppercase font-mono text-sm mb-1 text-primary">Student Note</h4>
-              <p className="text-sm text-foreground/80">{assignment.submissionNote || 'No notes attached.'}</p>
+              <h4 className="font-bold uppercase font-mono text-sm mb-1 text-primary">Student Reflection / Note</h4>
+              <p className="text-sm text-foreground/80">{assignment.submissionNote || 'No reflection or note was shared with this submission.'}</p>
             </div>
           </div>
           
@@ -349,7 +349,7 @@ export default function Instructor() {
                       <p className="text-sm text-muted-foreground truncate font-mono">Module {assignment.moduleId} · Submitted {new Date(assignment.submittedAt).toLocaleDateString()}</p>
                       {assignment.submissionNote && (
                         <p className="text-xs text-foreground/70 mt-1 line-clamp-1 border-l-2 border-primary/50 pl-2">
-                          "{assignment.submissionNote}"
+                          Reflection: "{assignment.submissionNote}"
                         </p>
                       )}
                     </div>
