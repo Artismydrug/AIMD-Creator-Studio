@@ -104,3 +104,9 @@ id = "2k_o7RsgCIRKprYq7-uWp"
 uri = "file://.local/outputs/Creator-Studio-by-AIMD---Schools---Community-Presentation.pdf"
 type = "pdf"
 title = "Creator Studio by AIMD — Schools & Community Presentation.pdf"
+
+[[outputs]]
+id = "Ci9I7YnIOzATIV2c5zHyf"
+uri = "file://.local/outputs/Creator-Studio-by-AIMD---Investor-Presentation.pdf"
+type = "pdf"
+title = "Creator Studio by AIMD — Investor Presentation.pdf"

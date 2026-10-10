@@ -47,7 +47,7 @@ const SLIDES: TourSlide[] = [
   },
   {
     icon: 'star',
-    eyebrow: 'Challenges & Habits',
+    eyebrow: 'Habits & Challenges',
     title: 'Practice with purpose.',
     body: 'Use habits for the daily work. Jump into featured challenges when you want a creative push.',
     accent: 'gold',

@@ -12,7 +12,7 @@ type Section = 'challenges' | 'habits';
 export default function ChallengeHabitsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const [section, setSection] = useState<Section>('challenges');
+  const [section, setSection] = useState<Section>('habits');
   const topPad = Platform.OS === 'web' ? 67 : insets.top + 8;
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
@@ -29,8 +29,8 @@ export default function ChallengeHabitsScreen() {
   }), [colors, topPad]);
   return <View style={styles.container} testID="challenge-habits-screen">
     <View style={styles.header}>
-      <View style={styles.titleRow}><View style={styles.titleMark}><Feather name="zap" size={19} color={colors.accentForeground} /></View><View><Text style={styles.title}>Challenges &amp; Habits</Text><Text style={styles.subtitle}>Build the practice. Share the work.</Text></View></View>
-      <View style={styles.switcher} accessibilityRole="tablist">{(['challenges', 'habits'] as const).map(item => <TouchableOpacity key={item} style={[styles.switchButton, section === item && styles.active]} onPress={() => { if (section !== item) { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSection(item); } }} accessibilityRole="tab" accessibilityState={{ selected: section === item }}><Feather name={item === 'challenges' ? 'award' : 'repeat'} size={15} color={section === item ? colors.primary : colors.mutedForeground} /><Text style={[styles.switchText, section === item && { color: colors.primary }]}>{item === 'challenges' ? 'Challenges' : 'Habits'}</Text></TouchableOpacity>)}</View>
+      <View style={styles.titleRow}><View style={styles.titleMark}><Feather name="zap" size={19} color={colors.accentForeground} /></View><View><Text style={styles.title}>Habits &amp; Challenges</Text><Text style={styles.subtitle}>Build the practice. Share the work.</Text></View></View>
+      <View style={styles.switcher} accessibilityRole="tablist">{(['habits', 'challenges'] as const).map(item => <TouchableOpacity key={item} style={[styles.switchButton, section === item && styles.active]} onPress={() => { if (section !== item) { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSection(item); } }} accessibilityRole="tab" accessibilityState={{ selected: section === item }}><Feather name={item === 'challenges' ? 'award' : 'repeat'} size={15} color={section === item ? colors.primary : colors.mutedForeground} /><Text style={[styles.switchText, section === item && { color: colors.primary }]}>{item === 'challenges' ? 'Challenges' : 'Habits'}</Text></TouchableOpacity>)}</View>
     </View>
     <View style={styles.content}>{section === 'challenges' ? <ChallengesScreen embedded /> : <HabitsScreen embedded />}</View>
   </View>;
