@@ -10,6 +10,8 @@ export const assignmentsTable = pgTable("assignments", {
   userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   workshopId: integer("workshop_id").notNull().references(() => workshopsTable.id, { onDelete: "cascade" }),
   moduleId: integer("module_id").notNull().references(() => workshopModulesTable.id, { onDelete: "cascade" }),
+  submissionKind: text("submission_kind").notNull().default("practice_drill"), // practice_drill | lesson_reflection
+  reflectionPrompt: text("reflection_prompt"),
   submissionUrl: text("submission_url"),
   submissionNote: text("submission_note"),
   feedback: text("feedback"),

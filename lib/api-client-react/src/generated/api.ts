@@ -76,6 +76,7 @@ import type {
   JobApplication,
   JobApplicationInput,
   JobListing,
+  LessonReflectionInput,
   LinkInstructorUserInput,
   ListAdminUsers200,
   ListEventsParams,
@@ -2491,6 +2492,77 @@ export const useSubmitAssignment = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getSubmitAssignmentMutationOptions(options));
+    }
+
+export const getSubmitLessonReflectionUrl = () => {
+
+
+
+
+  return `/api/workshop-reflections`
+}
+
+/**
+ * @summary Save a private post-lesson reflection for instructor review
+ */
+export const submitLessonReflection = async (lessonReflectionInput: LessonReflectionInput, options?: Parameters<typeof customFetch>[1]): Promise<Assignment> => {
+
+  return customFetch<Assignment>(getSubmitLessonReflectionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(lessonReflectionInput)
+  }
+);}
+
+
+
+
+
+export const getSubmitLessonReflectionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitLessonReflection>>, TError,{data: BodyType<LessonReflectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitLessonReflection>>, TError,{data: BodyType<LessonReflectionInput>}, TContext> => {
+
+const mutationKey = ['submitLessonReflection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitLessonReflection>>, {data: BodyType<LessonReflectionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  submitLessonReflection(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitLessonReflectionMutationResult = NonNullable<Awaited<ReturnType<typeof submitLessonReflection>>>
+    export type SubmitLessonReflectionMutationBody = BodyType<LessonReflectionInput>
+    export type SubmitLessonReflectionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Save a private post-lesson reflection for instructor review
+ */
+export const useSubmitLessonReflection = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitLessonReflection>>, TError,{data: BodyType<LessonReflectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitLessonReflection>>,
+        TError,
+        {data: BodyType<LessonReflectionInput>},
+        TContext
+      > => {
+      return useMutation(getSubmitLessonReflectionMutationOptions(options));
     }
 
 export const getGetAssignmentUrl = (id: number,) => {

@@ -131,10 +131,13 @@ function ReviewAssignmentDialog({ assignment }: { assignment: any }) {
             {assignment.submissionUrl ? (
               <video src={assignment.submissionUrl} controls className="w-full h-full object-contain" />
             ) : (
-              <div className="flex-1 flex items-center justify-center text-muted-foreground font-mono text-sm">No video submitted</div>
+              <div className="flex-1 flex items-center justify-center text-muted-foreground font-mono text-sm">
+                {assignment.submissionKind === 'lesson_reflection' ? 'Lesson reflection — no clip required' : 'No video submitted'}
+              </div>
             )}
             <div className="p-4 bg-background border-t border-border">
               <h4 className="font-bold uppercase font-mono text-sm mb-1 text-primary">Student Reflection / Note</h4>
+              {assignment.reflectionPrompt && <p className="text-sm font-semibold mb-2">{assignment.reflectionPrompt}</p>}
               <p className="text-sm text-foreground/80">{assignment.submissionNote || 'No reflection or note was shared with this submission.'}</p>
             </div>
           </div>
@@ -346,7 +349,7 @@ export default function Instructor() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-lg font-display uppercase tracking-tight truncate">{assignment.workshopTitle}</h3>
-                      <p className="text-sm text-muted-foreground truncate font-mono">Module {assignment.moduleId} · Submitted {new Date(assignment.submittedAt).toLocaleDateString()}</p>
+                      <p className="text-sm text-muted-foreground truncate font-mono">{assignment.moduleTitle ?? `Module ${assignment.moduleId}`} · {assignment.submissionKind === 'lesson_reflection' ? 'Reflection' : 'Practice work'} · Submitted {new Date(assignment.submittedAt).toLocaleDateString()}</p>
                       {assignment.submissionNote && (
                         <p className="text-xs text-foreground/70 mt-1 line-clamp-1 border-l-2 border-primary/50 pl-2">
                           Reflection: "{assignment.submissionNote}"

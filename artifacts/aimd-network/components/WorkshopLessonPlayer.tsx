@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Modal,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -14,6 +14,8 @@ import { VideoView, useVideoPlayer } from 'expo-video';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getBaseUrl, useCreateWorkshopLessonPlayback } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
+import LessonReflectionForm from '@/components/LessonReflectionForm';
+import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 
 export type WorkshopLesson = {
   id: number;
@@ -38,6 +40,7 @@ type Props = {
   workshopTitle?: string;
   workshopId?: number | null;
   hasFullAccess?: boolean;
+  isEnrolled?: boolean;
   onUpgrade?: () => void;
   onRefreshAccess?: () => void;
   onClose: () => void;
@@ -152,6 +155,7 @@ export default function WorkshopLessonPlayer({
   workshopTitle,
   workshopId,
   hasFullAccess = false,
+  isEnrolled = false,
   onUpgrade,
   onRefreshAccess,
   onClose,
@@ -162,7 +166,19 @@ export default function WorkshopLessonPlayer({
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [gated, setGated] = useState(false);
-  useEffect(() => { setGated(false); }, [lesson?.id]);
+  const [reflectionDirty, setReflectionDirty] = useState(false);
+  useEffect(() => { setGated(false); setReflectionDirty(false); }, [lesson?.id]);
+  const leaveLesson = (next: () => void) => {
+    if (!reflectionDirty) { next(); return; }
+    if (Platform.OS === 'web') {
+      if (window.confirm('Discard your unsaved reflection?')) { setReflectionDirty(false); next(); }
+      return;
+    }
+    Alert.alert('Unsaved reflection', 'Save your response before leaving, or discard it.', [
+      { text: 'Keep writing', style: 'cancel' },
+      { text: 'Discard', style: 'destructive', onPress: () => { setReflectionDirty(false); next(); } },
+    ]);
+  };
   const style = useMemo(
     () =>
       StyleSheet.create({
@@ -271,10 +287,10 @@ export default function WorkshopLessonPlayer({
   const canPlayFull = entitled && !!lesson.hasVideo;
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
+    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => leaveLesson(onClose)}>
       <View style={style.overlay} testID="workshop-lesson-player">
         <View style={style.header}>
-          <TouchableOpacity style={style.back} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close lesson">
+          <TouchableOpacity style={style.back} onPress={() => leaveLesson(onClose)} accessibilityRole="button" accessibilityLabel="Close lesson">
             <Feather name="arrow-left" size={22} color={colors.foreground} />
           </TouchableOpacity>
           <View style={style.headerCopy}>
@@ -297,10 +313,11 @@ export default function WorkshopLessonPlayer({
           )}
         </View>
 
-        <ScrollView
+        <KeyboardAwareScrollViewCompat
           style={style.scroll}
           contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 18) }}
           showsVerticalScrollIndicator
+          bottomOffset={60}
         >
           <View style={style.body}>
             <Text style={style.lessonNumber}>Module {lesson.order}</Text>
@@ -321,6 +338,13 @@ export default function WorkshopLessonPlayer({
               </View>
             )}
             {entitled && !!lesson.description && <Text style={style.description}>{lesson.description}</Text>}
+            {canPlayFull && isEnrolled && (
+              <LessonReflectionForm key={`${workshopId}:${lesson.id}`} workshopId={workshopId as number} moduleId={lesson.id} onDirtyChange={setReflectionDirty} />
+            )}
+            {canPlayFull && !isEnrolled && <View style={style.note}>
+              <Text style={style.noteTitle}>Save a lesson reflection</Text>
+              <Text style={style.noteBody}>Start this workshop from its details screen to save reflections and practice work.</Text>
+            </View>}
             {entitled && <View style={style.note}>
               <Text style={style.noteTitle}>How this module works</Text>
               <Text style={style.noteBody}>
@@ -361,7 +385,7 @@ export default function WorkshopLessonPlayer({
             {canPlayFull && (
               <TouchableOpacity
                 style={style.secondary}
-                onPress={() => onStartAssignment(lesson.id)}
+                onPress={() => leaveLesson(() => onStartAssignment(lesson.id))}
                 testID="workshop-lesson-assignment"
               >
                 <Feather name="video" size={17} color={colors.electricMagenta} />
@@ -369,7 +393,7 @@ export default function WorkshopLessonPlayer({
               </TouchableOpacity>
             )}
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollViewCompat>
       </View>
     </Modal>
   );

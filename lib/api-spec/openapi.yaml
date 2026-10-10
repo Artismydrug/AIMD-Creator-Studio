@@ -706,6 +706,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/Assignment"
 
+  /workshop-reflections:
+    post:
+      operationId: submitLessonReflection
+      tags: [assignments]
+      summary: Save a private post-lesson reflection for instructor review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LessonReflectionInput"
+      responses:
+        "201":
+          description: Reflection saved with the lesson in the student's private learning portfolio
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assignment"
+
   /assignments/{id}:
     get:
       operationId: getAssignment
@@ -2789,6 +2808,13 @@ components:
           type: integer
         workshopTitle:
           type: ["string", "null"]
+        moduleTitle:
+          type: ["string", "null"]
+        submissionKind:
+          type: string
+          enum: [practice_drill, lesson_reflection]
+        reflectionPrompt:
+          type: ["string", "null"]
         submissionUrl:
           type: ["string", "null"]
         submissionNote:
@@ -2803,6 +2829,21 @@ components:
         submittedAt:
           type: string
           format: date-time
+
+    LessonReflectionInput:
+      type: object
+      required: [workshopId, moduleId, responseText]
+      properties:
+        workshopId:
+          type: integer
+          minimum: 1
+        moduleId:
+          type: integer
+          minimum: 1
+        responseText:
+          type: string
+          minLength: 1
+          maxLength: 1500
 
     AssignmentInput:
       type: object
@@ -4438,6 +4479,13 @@ components:
         moduleId:
           type: integer
         workshopTitle:
+          type: ["string", "null"]
+        moduleTitle:
+          type: ["string", "null"]
+        submissionKind:
+          type: string
+          enum: [practice_drill, lesson_reflection]
+        reflectionPrompt:
           type: ["string", "null"]
         submissionUrl:
           type: ["string", "null"]

@@ -407,6 +407,14 @@ export interface Enrollment {
   createdAt: string;
 }
 
+export type AssignmentSubmissionKind = typeof AssignmentSubmissionKind[keyof typeof AssignmentSubmissionKind];
+
+
+export const AssignmentSubmissionKind = {
+  practice_drill: 'practice_drill',
+  lesson_reflection: 'lesson_reflection',
+} as const;
+
 export type AssignmentStatus = typeof AssignmentStatus[keyof typeof AssignmentStatus];
 
 
@@ -425,6 +433,11 @@ export interface Assignment {
   /** @nullable */
   workshopTitle?: string | null;
   /** @nullable */
+  moduleTitle?: string | null;
+  submissionKind?: AssignmentSubmissionKind;
+  /** @nullable */
+  reflectionPrompt?: string | null;
+  /** @nullable */
   submissionUrl?: string | null;
   /** @nullable */
   submissionNote?: string | null;
@@ -434,6 +447,18 @@ export interface Assignment {
   grade?: string | null;
   status: AssignmentStatus;
   submittedAt: string;
+}
+
+export interface LessonReflectionInput {
+  /** @minimum 1 */
+  workshopId: number;
+  /** @minimum 1 */
+  moduleId: number;
+  /**
+     * @minLength 1
+     * @maxLength 1500
+     */
+  responseText: string;
 }
 
 export interface AssignmentInput {
@@ -1667,6 +1692,14 @@ export interface DrillPromptInput {
   maxDurationSeconds?: number;
 }
 
+export type AssignmentReviewItemSubmissionKind = typeof AssignmentReviewItemSubmissionKind[keyof typeof AssignmentReviewItemSubmissionKind];
+
+
+export const AssignmentReviewItemSubmissionKind = {
+  practice_drill: 'practice_drill',
+  lesson_reflection: 'lesson_reflection',
+} as const;
+
 export type AssignmentReviewItemStatus = typeof AssignmentReviewItemStatus[keyof typeof AssignmentReviewItemStatus];
 
 
@@ -1684,6 +1717,11 @@ export interface AssignmentReviewItem {
   moduleId: number;
   /** @nullable */
   workshopTitle?: string | null;
+  /** @nullable */
+  moduleTitle?: string | null;
+  submissionKind?: AssignmentReviewItemSubmissionKind;
+  /** @nullable */
+  reflectionPrompt?: string | null;
   /** @nullable */
   submissionUrl?: string | null;
   /** @nullable */

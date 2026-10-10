@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, desc, and, isNull } from "drizzle-orm";
+import { eq, desc, and, isNull, inArray } from "drizzle-orm";
 import {
   db,
   assignmentsTable,
@@ -15,6 +15,8 @@ import {
   SubmitAssignmentResponse,
   GetAssignmentParams,
   GetAssignmentResponse,
+  SubmitLessonReflectionBody,
+  SubmitLessonReflectionResponse,
 } from "@workspace/api-zod";
 import { getWorkshopLessonAccess } from "../lib/workshopLessonAccess";
 
@@ -22,6 +24,7 @@ const router: IRouter = Router();
 
 /** Prefix the client uses to reference a served private object. */
 const STORAGE_URL_PREFIX = "/api/storage";
+export const LESSON_REFLECTION_PROMPT = "What did you try from this lesson, and what will you practice next?";
 
 /**
  * Normalize a client submissionUrl to the stored object_path form.
@@ -48,12 +51,66 @@ router.get("/assignments", async (req, res): Promise<void> => {
   const workshopIds = [...new Set(assignments.map((a) => a.workshopId))];
   const workshopsData = workshopIds.length > 0 ? await db.select().from(workshopsTable) : [];
   const workshopMap = new Map(workshopsData.map((w) => [w.id, w]));
+  const moduleIds = [...new Set(assignments.map((a) => a.moduleId))];
+  const modules = moduleIds.length > 0
+    ? await db.select({ id: workshopModulesTable.id, title: workshopModulesTable.title })
+        .from(workshopModulesTable).where(inArray(workshopModulesTable.id, moduleIds))
+    : [];
+  const moduleMap = new Map(modules.map((m) => [m.id, m.title]));
 
   const result = assignments.map((a) => ({
     ...a,
     workshopTitle: workshopMap.get(a.workshopId)?.title ?? null,
+    moduleTitle: moduleMap.get(a.moduleId) ?? null,
   }));
   res.json(ListAssignmentsResponse.parse(result));
+});
+
+// Text-only learning evidence has its own endpoint. It never bypasses the
+// recorded-footage requirements of /assignments and is never a public post.
+router.post("/workshop-reflections", async (req, res): Promise<void> => {
+  if (!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const parsed = SubmitLessonReflectionBody.safeParse(req.body);
+  if (!parsed.success || !parsed.data.responseText.trim()) {
+    res.status(400).json({ error: "A reflection of 1–1500 characters is required" });
+    return;
+  }
+  const { workshopId, moduleId } = parsed.data;
+  const [workshop] = await db.select().from(workshopsTable).where(eq(workshopsTable.id, workshopId));
+  if (!workshop) { res.status(404).json({ error: "Workshop not found" }); return; }
+  const access = await getWorkshopLessonAccess(req.dbUser.id, workshopId);
+  if (!access.hasFullAccess) {
+    res.status(access.accessStatus === "unavailable" ? 503 : 403).json({
+      error: access.accessStatus === "unavailable" ? "membership_check_unavailable" : "lesson_access_required",
+    });
+    return;
+  }
+  if (!workshop.isPublished && !access.isStaff && !access.hasParticipantAccess) {
+    res.status(404).json({ error: "Workshop not found" }); return;
+  }
+  const [module] = await db.select().from(workshopModulesTable).where(and(
+    eq(workshopModulesTable.id, moduleId), eq(workshopModulesTable.workshopId, workshopId),
+  ));
+  if (!module) { res.status(400).json({ error: "Module does not belong to this workshop" }); return; }
+  if (!module.videoUrl) { res.status(409).json({ error: "Reflections open when the full lesson is released" }); return; }
+  const [enrollment] = await db.select().from(enrollmentsTable).where(and(
+    eq(enrollmentsTable.userId, req.dbUser.id), eq(enrollmentsTable.workshopId, workshopId),
+  ));
+  if (!enrollment || enrollment.status === "paused") {
+    res.status(403).json({ error: "An active workshop enrollment is required" }); return;
+  }
+  const [reflection] = await db.insert(assignmentsTable).values({
+    userId: req.dbUser.id,
+    workshopId,
+    moduleId,
+    submissionKind: "lesson_reflection",
+    reflectionPrompt: LESSON_REFLECTION_PROMPT,
+    submissionNote: parsed.data.responseText.trim(),
+    status: "pending",
+  }).returning();
+  res.status(201).json(SubmitLessonReflectionResponse.parse({
+    ...reflection, workshopTitle: workshop.title, moduleTitle: module.title,
+  }));
 });
 
 // Assignments use the same verified subscription/participant gate as lessons.

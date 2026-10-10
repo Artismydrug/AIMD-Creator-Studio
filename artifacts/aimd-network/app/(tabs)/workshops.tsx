@@ -4,7 +4,6 @@ import {
   Alert,
   Platform,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -31,6 +30,7 @@ import { useColors } from '@/hooks/useColors';
 import { safeImpact } from '@/lib/haptics';
 import { useRouter } from 'expo-router';
 import WorkshopLessonPlayer, { TeaserVideo, type WorkshopLesson } from '@/components/WorkshopLessonPlayer';
+import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 
 type CapturedVideo = {
   uri: string;
@@ -216,14 +216,14 @@ export default function WorkshopsScreen() {
     cardBody: { fontFamily: 'DMSans_400Regular', fontSize: 13, lineHeight: 19, color: colors.mutedForeground },
     metaRow: { flexDirection: 'row', gap: 14 },
     meta: { fontFamily: 'DMSans_500Medium', fontSize: 11, color: colors.mutedForeground },
-    submissionHub: { marginHorizontal: 20, marginTop: 4, padding: 18, borderRadius: colors.radius, backgroundColor: colors.foreground, gap: 14 },
+     submissionHub: { marginHorizontal: 20, marginTop: 4, padding: 18, borderRadius: colors.radius, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, gap: 14 },
      submissionHubEyebrow: { fontFamily: 'DMSans_700Bold', color: colors.cyan, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.5 },
-     submissionHubTitle: { fontFamily: 'DMSans_700Bold', color: colors.primaryForeground, fontSize: 24 },
-     submissionHubBody: { fontFamily: 'DMSans_400Regular', color: colors.primaryForeground, opacity: 0.78, fontSize: 13, lineHeight: 19 },
+     submissionHubTitle: { fontFamily: 'DMSans_700Bold', color: colors.foreground, fontSize: 24 },
+     submissionHubBody: { fontFamily: 'DMSans_400Regular', color: colors.mutedForeground, fontSize: 13, lineHeight: 19 },
     selector: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-    chip: { paddingVertical: 7, paddingHorizontal: 10, borderRadius: 99, borderWidth: 1, borderColor: 'rgba(250,248,245,0.25)' },
+     chip: { paddingVertical: 7, paddingHorizontal: 10, borderRadius: 99, borderWidth: 1, borderColor: colors.border },
     chipActive: { backgroundColor: colors.cyan, borderColor: colors.cyan },
-    chipText: { fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.primaryForeground },
+     chipText: { fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.foreground },
     chipTextActive: { color: colors.accentForeground },
      detailNotice: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 9, backgroundColor: 'rgba(255,255,255,0.09)' },
      detailNoticeText: { flex: 1, fontFamily: 'DMSans_400Regular', color: colors.primaryForeground, opacity: 0.82, fontSize: 12, lineHeight: 18 },
@@ -231,14 +231,14 @@ export default function WorkshopsScreen() {
      detailRetryText: { fontFamily: 'DMSans_700Bold', color: colors.primaryForeground, fontSize: 12 },
     picker: { padding: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.gold, borderRadius: 10, alignItems: 'center', gap: 6 },
     pickerText: { fontFamily: 'DMSans_700Bold', color: colors.gold, fontSize: 13 },
-    note: { minHeight: 80, padding: 12, borderRadius: 9, backgroundColor: 'rgba(255,255,255,0.09)', color: colors.primaryForeground, fontFamily: 'DMSans_400Regular', textAlignVertical: 'top' },
+     note: { minHeight: 80, padding: 12, borderRadius: 9, backgroundColor: colors.background, color: colors.foreground, fontFamily: 'DMSans_400Regular', textAlignVertical: 'top' },
     submit: { paddingVertical: 13, borderRadius: 9, backgroundColor: colors.electricMagenta, alignItems: 'center' },
     submitText: { fontFamily: 'DMSans_700Bold', color: colors.primaryForeground },
-    assignment: { padding: 12, backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 9, flexDirection: 'row', alignItems: 'center', gap: 10 },
+     assignment: { padding: 12, backgroundColor: colors.background, borderRadius: 9, flexDirection: 'row', alignItems: 'center', gap: 10 },
     assignmentCopy: { flex: 1 },
-    assignmentTitle: { fontFamily: 'DMSans_600SemiBold', color: colors.primaryForeground, fontSize: 13 },
-    assignmentMeta: { fontFamily: 'DMSans_400Regular', color: colors.primaryForeground, opacity: 0.65, fontSize: 11 },
-     assignmentReflection: { fontFamily: 'DMSans_400Regular', color: colors.primaryForeground, opacity: 0.78, fontSize: 11, lineHeight: 16, marginTop: 4 },
+     assignmentTitle: { fontFamily: 'DMSans_600SemiBold', color: colors.foreground, fontSize: 13 },
+     assignmentMeta: { fontFamily: 'DMSans_400Regular', color: colors.mutedForeground, fontSize: 11 },
+     assignmentReflection: { fontFamily: 'DMSans_400Regular', color: colors.foreground, fontSize: 11, lineHeight: 16, marginTop: 4 },
     locked: { margin: 20, padding: 22, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, alignItems: 'center', gap: 10 },
     lockedTitle: { fontFamily: 'DMSans_700Bold', color: colors.foreground, fontSize: 21, textAlign: 'center' },
     lockedBody: { fontFamily: 'DMSans_400Regular', color: colors.mutedForeground, fontSize: 14, lineHeight: 21, textAlign: 'center' },
@@ -262,14 +262,24 @@ export default function WorkshopsScreen() {
 
   return (
     <View style={s.container} testID="workshops-screen">
-      <ScrollView
+      <KeyboardAwareScrollViewCompat
         contentContainerStyle={s.content}
+        bottomOffset={60}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
         <View style={s.header}>
           <Text style={s.eyebrow}>AIMD Workshops</Text>
           <Text style={s.title}>One craft. One apprenticeship.</Text>
           <Text style={s.intro}>Watch the teasers free. Full lessons need membership or instructor enrollment.</Text>
+          <TouchableOpacity
+            accessibilityRole="button"
+            testID="open-learning-portfolio"
+            onPress={() => router.push('/learning-portfolio')}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, alignSelf: 'flex-start' }}
+          >
+            <Feather name="book-open" size={17} color={colors.primary} />
+            <Text style={{ color: colors.primary, fontFamily: 'DMSans_600SemiBold', fontSize: 14 }}>My learning portfolio</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={{ paddingHorizontal: 20, gap: 10 }}>
@@ -457,7 +467,7 @@ export default function WorkshopsScreen() {
                 value={submissionNote}
                 onChangeText={setSubmissionNote}
                 placeholder="Reflection (optional): What did you try from this lesson, and what will you practice next?"
-                placeholderTextColor="rgba(250,248,245,0.4)"
+                placeholderTextColor={colors.mutedForeground}
                 multiline
                 maxLength={500}
                 accessibilityLabel="Optional lesson reflection for your workshop portfolio"
@@ -481,8 +491,8 @@ export default function WorkshopsScreen() {
                     <View key={assignment.id} style={s.assignment} testID={`assignment-item-${assignment.id}`}>
                       <Feather name={assignment.status === 'reviewed' ? 'check-circle' : 'clock'} size={18} color={assignment.status === 'reviewed' ? colors.cyan : colors.gold} />
                       <View style={s.assignmentCopy}>
-                        <Text style={s.assignmentTitle}>{assignment.workshopTitle ?? 'Workshop project'} · Lesson {assignment.moduleId}</Text>
-                        <Text style={s.assignmentMeta}>{assignment.status === 'reviewed' ? 'Instructor feedback ready' : 'Pending instructor review'}</Text>
+                        <Text style={s.assignmentTitle}>{assignment.moduleTitle ?? assignment.workshopTitle ?? 'Workshop project'}</Text>
+                        <Text style={s.assignmentMeta}>{assignment.status === 'pending' ? 'Pending instructor review' : assignment.status === 'revision_requested' ? 'Revision requested' : 'Instructor feedback ready'}</Text>
                         {!!assignment.submissionNote && (
                           <Text style={s.assignmentReflection} numberOfLines={2}>
                             Reflection: {assignment.submissionNote}
@@ -495,7 +505,7 @@ export default function WorkshopsScreen() {
               )}
             </View>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollViewCompat>
 
       <DrillCameraCapture
         visible={drillCameraVisible}
@@ -511,6 +521,7 @@ export default function WorkshopsScreen() {
         lesson={selectedLesson}
         workshopId={selectedWorkshopId}
         hasFullAccess={hasFullAccess}
+        isEnrolled={isEnrolled}
         onRefreshAccess={() => void refetchWorkshopDetail()}
         onUpgrade={() => { setSelectedLesson(null); upgrade(); }}
         workshopTitle={workshopDetail?.title}

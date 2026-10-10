@@ -347,10 +347,13 @@ router.get("/instructor/submissions", requireInstructor, async (req, res): Promi
         .select({ title: workshopsTable.title })
         .from(workshopsTable)
         .where(eq(workshopsTable.id, a.workshopId));
+      const [module] = await db.select({ title: workshopModulesTable.title })
+        .from(workshopModulesTable).where(eq(workshopModulesTable.id, a.moduleId));
 
       return {
         ...a,
         workshopTitle: workshop?.title ?? null,
+        moduleTitle: module?.title ?? null,
         captureSource: ext?.captureSource ?? null,
         measuredDurationSeconds: ext?.measuredDurationSeconds ?? null,
         feedbackText: ext?.feedbackText ?? a.feedback ?? null,

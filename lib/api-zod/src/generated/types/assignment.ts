@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.2.0
  */
 import type { AssignmentStatus } from './assignmentStatus';
+import type { AssignmentSubmissionKind } from './assignmentSubmissionKind';
 
 export interface Assignment {
   id: number;
@@ -14,6 +15,11 @@ export interface Assignment {
   moduleId: number;
   /** @nullable */
   workshopTitle?: string | null;
+  /** @nullable */
+  moduleTitle?: string | null;
+  submissionKind?: AssignmentSubmissionKind;
+  /** @nullable */
+  reflectionPrompt?: string | null;
   /** @nullable */
   submissionUrl?: string | null;
   /** @nullable */

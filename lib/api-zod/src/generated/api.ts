@@ -682,6 +682,9 @@ export const ListAssignmentsResponseItem = zod.object({
   "workshopId": zod.int(),
   "moduleId": zod.int(),
   "workshopTitle": zod.string().nullish(),
+  "moduleTitle": zod.string().nullish(),
+  "submissionKind": zod.enum(['practice_drill', 'lesson_reflection']).optional(),
+  "reflectionPrompt": zod.string().nullish(),
   "submissionUrl": zod.string().nullish(),
   "submissionNote": zod.string().nullish(),
   "feedback": zod.string().nullish(),
@@ -708,6 +711,42 @@ export const SubmitAssignmentResponse = zod.object({
   "workshopId": zod.int(),
   "moduleId": zod.int(),
   "workshopTitle": zod.string().nullish(),
+  "moduleTitle": zod.string().nullish(),
+  "submissionKind": zod.enum(['practice_drill', 'lesson_reflection']).optional(),
+  "reflectionPrompt": zod.string().nullish(),
+  "submissionUrl": zod.string().nullish(),
+  "submissionNote": zod.string().nullish(),
+  "feedback": zod.string().nullish(),
+  "grade": zod.string().nullish(),
+  "status": zod.enum(['pending', 'reviewed', 'approved', 'revision_requested']),
+  "submittedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Save a private post-lesson reflection for instructor review
+ */
+
+
+export const submitLessonReflectionBodyResponseTextMax = 1500;
+
+
+
+export const SubmitLessonReflectionBody = zod.object({
+  "workshopId": zod.int().min(1),
+  "moduleId": zod.int().min(1),
+  "responseText": zod.string().min(1).max(submitLessonReflectionBodyResponseTextMax)
+})
+
+export const SubmitLessonReflectionResponse = zod.object({
+  "id": zod.int(),
+  "userId": zod.int(),
+  "workshopId": zod.int(),
+  "moduleId": zod.int(),
+  "workshopTitle": zod.string().nullish(),
+  "moduleTitle": zod.string().nullish(),
+  "submissionKind": zod.enum(['practice_drill', 'lesson_reflection']).optional(),
+  "reflectionPrompt": zod.string().nullish(),
   "submissionUrl": zod.string().nullish(),
   "submissionNote": zod.string().nullish(),
   "feedback": zod.string().nullish(),
@@ -730,6 +769,9 @@ export const GetAssignmentResponse = zod.object({
   "workshopId": zod.int(),
   "moduleId": zod.int(),
   "workshopTitle": zod.string().nullish(),
+  "moduleTitle": zod.string().nullish(),
+  "submissionKind": zod.enum(['practice_drill', 'lesson_reflection']).optional(),
+  "reflectionPrompt": zod.string().nullish(),
   "submissionUrl": zod.string().nullish(),
   "submissionNote": zod.string().nullish(),
   "feedback": zod.string().nullish(),
@@ -2354,6 +2396,9 @@ export const ListSubmissionQueueResponseItem = zod.object({
   "workshopId": zod.int(),
   "moduleId": zod.int(),
   "workshopTitle": zod.string().nullish(),
+  "moduleTitle": zod.string().nullish(),
+  "submissionKind": zod.enum(['practice_drill', 'lesson_reflection']).optional(),
+  "reflectionPrompt": zod.string().nullish(),
   "submissionUrl": zod.string().nullish(),
   "submissionNote": zod.string().nullish(),
   "captureSource": zod.string().nullish(),
@@ -2391,6 +2436,9 @@ export const SubmitAssignmentFeedbackResponse = zod.object({
   "workshopId": zod.int(),
   "moduleId": zod.int(),
   "workshopTitle": zod.string().nullish(),
+  "moduleTitle": zod.string().nullish(),
+  "submissionKind": zod.enum(['practice_drill', 'lesson_reflection']).optional(),
+  "reflectionPrompt": zod.string().nullish(),
   "submissionUrl": zod.string().nullish(),
   "submissionNote": zod.string().nullish(),
   "captureSource": zod.string().nullish(),
