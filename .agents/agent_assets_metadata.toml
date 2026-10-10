@@ -70,3 +70,31 @@ mtime_ms = 1791504635164
 storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/fa4049b0-e969-4e9c-b2c4-1a01499eff11/051b73ca-c69d-44cc-82e4-849dc18d6736"
 storage_version_token = "1791504654277186"
 content_type = "image/png"
+
+[[outputs]]
+id = "dA6JWcXnA91IAamE1MS8t"
+uri = "file://.local/outputs/Creator-Studio-AIMD-Investor-Presentation.pdf"
+type = "pdf"
+title = "Creator Studio by AIMD — Investor Presentation (PDF)"
+description = "13-slide investor presentation covering the product thesis, market context, proposed memberships, team, execution and clearly labeled illustrative financial scenarios."
+logical_id = "301258a1-03e9-436e-9161-f010d18ab7d9"
+content_hash = "sha256:64164a398daa22d6bf13bf0b5242c9eea0296ebb9be3aeb7137caefa7d269445"
+size = 350666
+mtime_ms = 1791600306461
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/301258a1-03e9-436e-9161-f010d18ab7d9/07004e92-5b28-4666-b3f5-647c5ebb0cfd"
+storage_version_token = "1791600315371404"
+content_type = "application/pdf"
+
+[[outputs]]
+id = "_9E89EkVaXVfIJbMIUkh7"
+uri = "file://.local/outputs/Creator-Studio-AIMD-Schools-Community-Presentation.pdf"
+type = "pdf"
+title = "Creator Studio by AIMD — Schools & Community Presentation (PDF)"
+description = "7-slide presentation for schools, teachers, students, creators and community partners, covering habits, creative learning, portfolios, educator support and community impact."
+logical_id = "9754015b-aba9-47bd-a29d-ad0166806a5a"
+content_hash = "sha256:2a7522407ce6cebfb3e47cc6b664968a0416120f173d2b859973e2cbff1643e0"
+size = 255999
+mtime_ms = 1791600317460
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/9754015b-aba9-47bd-a29d-ad0166806a5a/e863a26c-5679-4abc-895d-85a4a754d211"
+storage_version_token = "1791600334224480"
+content_type = "application/pdf"

@@ -1,0 +1,54 @@
+@import 'tailwindcss';
+
+@theme inline {
+  --color-primary: var(--slide-primary);
+  --color-accent: var(--slide-accent);
+  --color-bg: var(--slide-bg);
+  --color-text: var(--slide-text);
+  --color-muted: var(--slide-muted);
+  --font-display: var(--font-display-family);
+  --font-body: var(--font-body-family);
+}
+
+:root {
+  /* Replace these with brand colors */
+  --slide-primary: #b3125f;
+  --slide-accent: #edb942;
+  --slide-bg: #fbf7ef;
+  --slide-text: #262329;
+  --slide-muted: #625d63;
+  --font-display-family: 'Bricolage Grotesque', sans-serif;
+  --font-body-family: 'DM Sans', sans-serif;
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--slide-bg);
+  color: var(--slide-text);
+}
+
+.slide {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.slide-viewer {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.deck-stage { background: radial-gradient(ellipse at 95% 0%, #f3e4cf, var(--slide-bg) 60%); }
+.deck-title { font-family: var(--font-display-family); font-size: 5.2vw; font-weight: 700; line-height: 1.05; margin: 0; text-wrap: balance; }
+.deck-body { font-size: 2vw; line-height: 1.4; text-wrap: pretty; }
+.deck-label { font-size: 1.5vw; line-height: 1.35; }
+.deck-name { font-family: var(--font-display-family); font-size: 2.8vw; font-weight: 700; line-height: 1.15; }

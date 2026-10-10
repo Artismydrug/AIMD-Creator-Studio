@@ -1,0 +1,9 @@
+[
+  {"id":"08b00202-b202-4202-8202-000000000001","position":1,"filepath":"src/pages/slides/Welcome.tsx","title":"HERO & WELCOME","description":"Creator Studio by AIMD for schools, educators, students and community partners.","speakerNotes":""},
+  {"id":"08b00202-b202-4202-8202-000000000002","position":2,"filepath":"src/pages/slides/Habits.tsx","title":"THE POWER OF HABITS","description":"Discipline Eats Talent: consistency, resilience and accountability through practice.","speakerNotes":""},
+  {"id":"08b00202-b202-4202-8202-000000000003","position":3,"filepath":"src/pages/slides/Learning.tsx","title":"WHAT EDUCATORS & STUDENTS GET","description":"Multi-medium video workshops in production and community feedback.","speakerNotes":""},
+  {"id":"08b00202-b202-4202-8202-000000000004","position":4,"filepath":"src/pages/slides/Pathways.tsx","title":"Creative work in view","description":"Portfolio-style profiles, Studio posts and exploration of creative pathways.","speakerNotes":""},
+  {"id":"08b00202-b202-4202-8202-000000000005","position":5,"filepath":"src/pages/slides/Educators.tsx","title":"Support for educators","description":"Ways teachers can use challenges, reflection and feedback in creative learning.","speakerNotes":""},
+  {"id":"08b00202-b202-4202-8202-000000000006","position":6,"filepath":"src/pages/slides/Impact.tsx","title":"COMMUNITY IMPACT","description":"AIMD's mission around youth workshops, mentorship and creative grants.","speakerNotes":""},
+  {"id":"08b00202-b202-4202-8202-000000000007","position":7,"filepath":"src/pages/slides/Invitation.tsx","title":"CALL TO ACTION","description":"An invitation to join the community and explore Creator Studio by AIMD.","speakerNotes":""}
+]

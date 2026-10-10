@@ -1,0 +1,28 @@
+kind = "slides"
+previewPath = "/aimd-schools-presentation/"
+title = "Creator Studio by AIMD — Schools & Community Presentation"
+description = "A welcoming slide presentation for schools, educators, students, creators and community partners, converted from the schools one-sheet with habits, learning, portfolios, educator support and community impact."
+version = "1.0.0"
+id = "artifacts/aimd-schools-presentation"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/aimd-schools-presentation/" ]
+localPort = 22133
+
+[services.development]
+run = "pnpm --filter @workspace/aimd-schools-presentation run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aimd-schools-presentation", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/aimd-schools-presentation/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22133"
+BASE_PATH = "/aimd-schools-presentation/"

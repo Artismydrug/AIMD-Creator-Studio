@@ -1,0 +1,28 @@
+kind = "slides"
+previewPath = "/aimd-investor-presentation/"
+title = "Creator Studio by AIMD — Investor Presentation"
+description = "An investor slide presentation converted from the investor one-sheet: creator practice, market context, proposed memberships, execution, team, planned expansion and clearly labeled illustrative financial scenarios."
+version = "1.0.0"
+id = "artifacts/aimd-investor-presentation"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/aimd-investor-presentation/" ]
+localPort = 24316
+
+[services.development]
+run = "pnpm --filter @workspace/aimd-investor-presentation run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aimd-investor-presentation", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/aimd-investor-presentation/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24316"
+BASE_PATH = "/aimd-investor-presentation/"

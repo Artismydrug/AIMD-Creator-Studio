@@ -1,0 +1,15 @@
+[
+  {"id":"07a00101-a101-4101-8101-000000000001","position":1,"filepath":"src/pages/slides/Cover.tsx","title":"Creator Studio by AIMD","description":"Investor presentation and product positioning.","speakerNotes":""},
+  {"id":"07a00101-a101-4101-8101-000000000002","position":2,"filepath":"src/pages/slides/Practice.tsx","title":"The creative-practice thesis","description":"Daily discipline, structured learning and professional development.","speakerNotes":""},
+  {"id":"07a00101-a101-4101-8101-000000000003","position":3,"filepath":"src/pages/slides/Market.tsx","title":"Market context","description":"Historical sourced market research, not current AIMD results.","speakerNotes":""},
+  {"id":"07a00101-a101-4101-8101-000000000004","position":4,"filepath":"src/pages/slides/Ecosystem.tsx","title":"The connected ecosystem","description":"Digital foundation and clearly identified planned physical expansion.","speakerNotes":""},
+  {"id":"07a00101-a101-4101-8101-000000000005","position":5,"filepath":"src/pages/slides/Memberships.tsx","title":"Proposed membership model","description":"Proposed tiers and pricing; paid checkout is not live.","speakerNotes":""},
+  {"id":"07a00101-a101-4101-8101-000000000006","position":6,"filepath":"src/pages/slides/Execution.tsx","title":"The operating system","description":"Modular production targets and technology foundation.","speakerNotes":""},
+  {"id":"07a00101-a101-4101-8101-000000000007","position":7,"filepath":"src/pages/slides/Team.tsx","title":"The team","description":"The founder, production, operations and outreach team.","speakerNotes":""},
+  {"id":"07a00101-a101-4101-8101-000000000008","position":8,"filepath":"src/pages/slides/YearOne.tsx","title":"Illustrative Year 1 model","description":"Founder-provided subscriber and financial assumptions, not actual results.","speakerNotes":""},
+  {"id":"07a00101-a101-4101-8101-000000000009","position":9,"filepath":"src/pages/slides/Growth.tsx","title":"Illustrative growth assumptions","description":"Year 2 and Year 3 projections with variable-cost caveats.","speakerNotes":""},
+  {"id":"07a00101-a101-4101-8101-000000000010","position":10,"filepath":"src/pages/slides/Compensation.tsx","title":"The compensation roadmap","description":"Illustrative compensation phases and triggers.","speakerNotes":""},
+  {"id":"07a00101-a101-4101-8101-000000000011","position":11,"filepath":"src/pages/slides/Demand.tsx","title":"Investor questions: demand","description":"Retention and acquisition hypotheses, with CAC not established.","speakerNotes":""},
+  {"id":"07a00101-a101-4101-8101-000000000012","position":12,"filepath":"src/pages/slides/Scale.tsx","title":"Investor questions: scale","description":"Margin risks and planned digital-to-physical expansion.","speakerNotes":""},
+  {"id":"07a00101-a101-4101-8101-000000000013","position":13,"filepath":"src/pages/slides/Close.tsx","title":"Raw talent deserves a real-world path","description":"Creator Studio investor presentation closing.","speakerNotes":""}
+]
