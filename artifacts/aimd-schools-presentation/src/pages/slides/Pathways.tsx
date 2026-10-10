@@ -9,10 +9,10 @@ export default function Pathways() {
         </div>
         <div className="grid grid-cols-[0.85fr_1.15fr] gap-[6vw] border-t border-primary/30 pt-[4vh]">
           <h2 className="deck-name text-primary">Real-world creative pathways</h2>
-          <p className="deck-body">Explore creative disciplines, professional habits, and community connections beyond a single assignment.</p>
+          <p className="deck-body">Explore creative disciplines beyond one assignment, with school partnerships mapping projects to existing CTE courses.</p>
         </div>
       </div>
-      <p className="deck-label text-muted mt-[6vh]">A space for exploration—not a guarantee of placements, jobs, or career outcomes.</p>
+      <p className="deck-label text-muted mt-[6vh]">CTE credit, completion funding, placements, and career outcomes depend on local rules and validation.</p>
     </div>
   );
 }

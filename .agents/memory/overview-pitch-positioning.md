@@ -24,3 +24,11 @@ Creator Studio plans to dedicate a percentage to nonprofit support for community
 **Why:** The user explicitly requested this future giving model in the investor pitch as part of AIMD's community purpose.
 
 **How to apply:** Present the intent as planned, not an established donation policy or existing donation history. Do not invent a rate, calculation basis, partner agreement, or tax treatment. Financial scenarios should disclose when this allocation has not been modeled.
+
+## School partner feedback
+
+An early school reviewer highlighted digital portfolios and creative pathways as especially compelling. They asked how workshops could fit existing curriculum and CTE goals, support interactive video reflection, and work alongside Canvas grading and assignment workflows.
+
+**Why:** This feedback identifies useful topics for school-facing conversations, but one review does not establish general demand or an agreed integration roadmap.
+
+**How to apply:** Treat Canvas workflows, interactive lesson checks, curriculum alignment, and CTE reporting as opportunities to validate with partner schools. Do not imply integrations, CTE funding gains, or credit recognition already exist.
