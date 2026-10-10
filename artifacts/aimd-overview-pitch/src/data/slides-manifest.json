@@ -1,8 +1,10 @@
 [
-  { "id": "d61d0a88-79d3-4f06-86b2-99bdc9f1a001", "position": 1, "filepath": "src/pages/slides/Cover.tsx", "title": "The Creator Studio by AIMD", "description": "A creative home to learn, practice, share, and grow.", "speakerNotes": "" },
-  { "id": "d61d0a88-79d3-4f06-86b2-99bdc9f1a002", "position": 2, "filepath": "src/pages/slides/Roots.tsx", "title": "An Artist-Led Foundation", "description": "Fine art, tattooing, leather craft, and community.", "speakerNotes": "" },
-  { "id": "d61d0a88-79d3-4f06-86b2-99bdc9f1a003", "position": 3, "filepath": "src/pages/slides/Platform.tsx", "title": "One Creative Ecosystem", "description": "Creator posts, portfolios, messages, and events.", "speakerNotes": "" },
-  { "id": "d61d0a88-79d3-4f06-86b2-99bdc9f1a004", "position": 4, "filepath": "src/pages/slides/Practice.tsx", "title": "Make Creative Learning Active", "description": "Practice routines and creative challenges help students engage with the work.", "speakerNotes": "" },
-  { "id": "d61d0a88-79d3-4f06-86b2-99bdc9f1a005", "position": 5, "filepath": "src/pages/slides/Learning.tsx", "title": "Resources for Creative Teaching", "description": "Instructor-led lessons, workshop previews, and tools across creative disciplines.", "speakerNotes": "" },
-  { "id": "d61d0a88-79d3-4f06-86b2-99bdc9f1a006", "position": 6, "filepath": "src/pages/slides/Partnerships.tsx", "title": "Support for Schools and Teachers", "description": "A creative-practice layer alongside instruction for teachers and students.", "speakerNotes": "" }
+	{
+		"id": "f21ba9eb-f83c-4d52-a09a-a93026b63d78",
+		"position": 1,
+		"filepath": "src/pages/slides/PartnershipsCopyrrOpU3.tsx",
+		"title": "Support for Schools and Teachers (copy)",
+		"description": "A creative-practice layer alongside instruction for teachers and students.",
+		"speakerNotes": ""
+	}
 ]

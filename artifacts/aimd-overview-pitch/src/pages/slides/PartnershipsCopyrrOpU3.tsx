@@ -1,4 +1,4 @@
-export default function Partnerships() {
+export default function PartnershipsCopyrrOpU3() {
   return (
     <div className="deck-slide w-screen h-screen overflow-hidden relative bg-bg text-text">
       <div className="absolute bottom-0 right-0 h-[72vh] w-[42vw] border-l border-t border-accent/50" />
