@@ -6,6 +6,8 @@
 
 This audit concerns the current workspace. It does not establish that the approved binary contains the same code or the same gaps. These findings are follow-up priorities and checks for future updates—not Apple rejection findings or proof that the already approved version must redo review. Approval alone does not establish public release availability.
 
+**Release-plan clarification:** The owner confirmed the approved build has not been released. The intended soft launch will use an improved build submitted for a fresh Apple review after testing and fixes. For this new candidate, the recommendation is to close the essential current-code issues and validate a production-configured native build before resubmission—not to release the earlier approved build or implement every optional enhancement.
+
 ## Fixed during the audit
 
 The mobile package did not directly install `expo-asset`, a required native peer of `expo-audio`. Expo Doctor warned that the app could fail outside Expo Go. Added the SDK-compatible dependency and its Expo configuration plugin.
