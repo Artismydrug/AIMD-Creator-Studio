@@ -104,9 +104,25 @@ id = "2k_o7RsgCIRKprYq7-uWp"
 uri = "file://.local/outputs/Creator-Studio-by-AIMD---Schools---Community-Presentation.pdf"
 type = "pdf"
 title = "Creator Studio by AIMD — Schools & Community Presentation.pdf"
+logical_id = "8a867213-e89d-44e2-95cc-f736af04f019"
 
 [[outputs]]
 id = "Ci9I7YnIOzATIV2c5zHyf"
 uri = "file://.local/outputs/Creator-Studio-by-AIMD---Investor-Presentation.pdf"
 type = "pdf"
 title = "Creator Studio by AIMD — Investor Presentation.pdf"
+logical_id = "523899eb-2a09-472f-88e2-f8e8966e60bc"
+
+[[outputs]]
+id = "POfhd1G_JPq6NzGvXsZY6"
+uri = "file://docs/app-store-readiness.md"
+type = "text"
+title = "Creator Studio — App Store Readiness Audit"
+description = "Verified build checks, the audio dependency fix, launch risks, and the TestFlight/App Store checklist."
+logical_id = "9924af90-b23d-478d-ae40-d4c53c0d8b0f"
+content_hash = "sha256:6d04ae12a6526680987464204f8813b2f1f3cb9996498c0cbff59d16cc2dd938"
+size = 10628
+mtime_ms = 1791662147737
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/9924af90-b23d-478d-ae40-d4c53c0d8b0f/bd18ffdb-d328-428d-9135-3c9546272f1c"
+storage_version_token = "1791662226058417"
+content_type = "text/markdown"

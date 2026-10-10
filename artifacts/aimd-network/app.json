@@ -52,7 +52,8 @@
           "cameraPermission": "Allow Creator Studio by AIMD to take habit practice photos and capture live challenge proof.",
           "microphonePermission": "Allow Creator Studio by AIMD to record sound with creator videos."
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,
