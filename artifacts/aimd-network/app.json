@@ -53,7 +53,8 @@
           "microphonePermission": "Allow Creator Studio by AIMD to record sound with creator videos."
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,

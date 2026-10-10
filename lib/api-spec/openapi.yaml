@@ -1466,6 +1466,42 @@ paths:
         "403":
           description: Admin access required
 
+  /moderation/reports/{id}:
+    patch:
+      operationId: reviewModerationReport
+      tags: [moderation]
+      summary: Review a safety report or remove its reported post/message (admins only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModerationReviewInput"
+      responses:
+        "200":
+          description: Updated report with review history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentReport"
+        "400":
+          description: Invalid action or note
+        "401":
+          description: Authentication required
+        "403":
+          description: Admin access required
+        "404":
+          description: Report or reported content not found
+        "409":
+          description: Report is already closed
+
   # ── Conversations ─────────────────────────────────────────────────────────
   /conversations:
     get:
@@ -3564,6 +3600,47 @@ components:
         reviewedAt:
           type: ["string", "null"]
           format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        contentText:
+          type: ["string", "null"]
+        mediaUrl:
+          type: ["string", "null"]
+        mediaType:
+          type: ["string", "null"]
+        reviewHistory:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContentReportReview"
+
+    ModerationReviewInput:
+      type: object
+      required: [action, note]
+      properties:
+        action:
+          type: string
+          enum: [review, resolve, dismiss, remove_content]
+        note:
+          type: string
+          minLength: 1
+          maxLength: 1000
+
+    ContentReportReview:
+      type: object
+      required: [id, action, note, reviewerId, createdAt]
+      properties:
+        id:
+          type: integer
+        action:
+          type: string
+          enum: [review, resolve, dismiss, remove_content]
+        note:
+          type: string
+        reviewerId:
+          type: ["integer", "null"]
+        reviewerName:
+          type: ["string", "null"]
         createdAt:
           type: string
           format: date-time

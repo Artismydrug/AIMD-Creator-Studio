@@ -39,7 +39,7 @@ async function createProofUpload(
   {
     purpose = "challenge_final",
     captureSource = "native_camera",
-    capturedAt = "2026-10-25T18:00:00.000Z",
+    capturedAt = "2026-11-10T11:00:00.000Z",
   }: {
     purpose?: "challenge_final" | "challenge_process";
     captureSource?: "native_camera" | "media_library";
@@ -74,7 +74,7 @@ beforeAll(async () => {
   // Keep proof validation tests inside the configured challenge window.
   // The route must still reject real submissions after its deadline.
   vi.useFakeTimers();
-  vi.setSystemTime(new Date("2026-10-25T12:00:00.000Z"));
+  vi.setSystemTime(new Date("2026-11-10T12:00:00.000Z"));
 
   const { rows } = await pool.query<TestUser>(
     `INSERT INTO users (email, username, is_admin)

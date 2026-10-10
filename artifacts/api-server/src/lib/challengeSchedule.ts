@@ -18,8 +18,8 @@ export const LAUNCH_CHALLENGES: readonly ScheduledChallenge[] = [
     theme: "Where I’m From",
     prompt:
       "Create an original piece that symbolizes the place you’re from. Respond in your own medium—a drawing, poem, painting, sketch, song, dance, photograph, outfit, recipe, sculpture, video, workout, movement piece, or another form of creative expression.",
-    startsAt: "2026-10-24T07:00:00.000Z",
-    deadline: "2026-11-07T07:59:59.999Z",
+    startsAt: "2026-11-09T08:00:00.000Z",
+    deadline: "2026-11-14T07:59:59.999Z",
   },
   {
     id: "2026-launch-02-my-creative-ritual",
@@ -27,8 +27,8 @@ export const LAUNCH_CHALLENGES: readonly ScheduledChallenge[] = [
     theme: "My Creative Ritual",
     prompt:
       "Create an original response that represents a habit, ritual, or routine that helps you keep creating. Show it through any medium that fits your practice.",
-    startsAt: "2026-11-07T08:00:00.000Z",
-    deadline: "2026-11-21T07:59:59.999Z",
+    startsAt: "2026-11-23T08:00:00.000Z",
+    deadline: "2026-12-07T07:59:59.999Z",
   },
   {
     id: "2026-launch-03-everyday",
@@ -36,8 +36,8 @@ export const LAUNCH_CHALLENGES: readonly ScheduledChallenge[] = [
     theme: "Make Something From the Everyday",
     prompt:
       "Choose an everyday object, place, sound, movement, or moment and turn it into an original creative response using any medium.",
-    startsAt: "2026-11-21T08:00:00.000Z",
-    deadline: "2026-12-05T07:59:59.999Z",
+    startsAt: "2026-12-07T08:00:00.000Z",
+    deadline: "2026-12-21T07:59:59.999Z",
   },
   {
     id: "2026-launch-04-future-self",
@@ -45,8 +45,8 @@ export const LAUNCH_CHALLENGES: readonly ScheduledChallenge[] = [
     theme: "A Message to My Future Self",
     prompt:
       "Create an original piece your future self can look back on. Use any medium to capture what you hope to remember about this moment.",
-    startsAt: "2026-12-05T08:00:00.000Z",
-    deadline: "2026-12-19T07:59:59.999Z",
+    startsAt: "2026-12-21T08:00:00.000Z",
+    deadline: "2027-01-04T07:59:59.999Z",
   },
 ] as const;
 

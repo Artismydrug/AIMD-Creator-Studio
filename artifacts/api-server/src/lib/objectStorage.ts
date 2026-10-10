@@ -215,6 +215,24 @@ export class ObjectStorageService {
    * entity paths are ignored because they may point to shared or
    * platform-owned assets.
    */
+  /** Withdraw public access during moderation without touching shared assets. */
+  async revokePublicObjectEntityIfOwned(rawPath: string, ownerId: string): Promise<void> {
+    const path = rawPath.startsWith('/api/storage/')
+      ? rawPath.slice('/api/storage'.length)
+      : rawPath;
+    if (!path.startsWith('/objects/')) return;
+    let file: File;
+    try {
+      file = await this.getObjectEntityFile(path);
+    } catch (error) {
+      if (error instanceof ObjectNotFoundError) return;
+      throw error;
+    }
+    const policy = await getObjectAclPolicy(file);
+    if (policy?.owner !== ownerId) return;
+    await setObjectAclPolicy(file, { owner: policy.owner, visibility: 'private' });
+  }
+
   async deleteObjectEntityIfOwned(
     rawPath: string,
     ownerId: string,

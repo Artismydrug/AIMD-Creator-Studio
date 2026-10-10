@@ -16,4 +16,5 @@ export * from "./progress"; // exports creatorDailyCheckinsTable, creatorRewardS
 export * from "./challenges";
 export * from "./tattoo-bookings";
 export * from "./sms-subscriptions";
+export * from "./moderation";
 export * from "./instructor"; // userRolesTable, instructorProfilesTable, workshopInstructorsTable, drillPromptsTable, assignmentExtensionsTable, assignmentMediaUploadsTable

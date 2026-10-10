@@ -1,9 +1,12 @@
 import React, { useEffect, useRef, useState, type ReactNode } from 'react';
+import { setHabitReminderAccount } from '@/lib/habitReminders';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
+  Alert,
+  AppState,
   ActivityIndicator,
   Pressable,
   StyleSheet,
@@ -223,6 +226,10 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
     if (!isLoaded) return;
 
     const nextUserId = userId ?? null;
+    void setHabitReminderAccount(nextUserId).catch((error) => {
+      console.warn('Habit reminder scheduling failed:', error instanceof Error ? error.message : 'Unknown error');
+      Alert.alert('Habit alerts need attention', 'Saved habit alerts could not be restored or paused. Check your device notification settings and reopen Habits.');
+    });
     if (
       previousUserId.current !== undefined &&
       previousUserId.current !== nextUserId
@@ -230,6 +237,16 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
       queryClient.clear();
     }
     previousUserId.current = nextUserId;
+  }, [isLoaded, userId]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void setHabitReminderAccount(userId ?? null).catch(() => {
+        Alert.alert('Could not refresh habit alerts', 'Please check your connection and device notification settings.');
+      });
+    });
+    return () => subscription.remove();
   }, [isLoaded, userId]);
 
   useEffect(() => {

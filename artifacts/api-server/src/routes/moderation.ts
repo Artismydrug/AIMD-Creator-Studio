@@ -6,11 +6,16 @@ import {
   CreateContentReportBody,
   CreateContentReportResponse,
   ListModerationReportsResponse,
+  ReviewModerationReportBody,
+  ReviewModerationReportParams,
+  ReviewModerationReportResponse,
 } from "@workspace/api-zod";
 import { db } from "@workspace/db";
 import { requireAdmin } from "../middlewares/requireAdmin";
+import { ObjectStorageService } from "../lib/objectStorage";
 
 const router: IRouter = Router();
+const objectStorageService = new ObjectStorageService();
 
 const reportReasons = new Set([
   "spam",
@@ -64,7 +69,11 @@ router.post("/moderation/reports", async (req, res): Promise<void> => {
     reportedUserId = post.userId ?? null;
   } else if (messageId != null) {
     const result = await db.execute(
-      sql`SELECT sender_id AS "senderId" FROM messages WHERE id = ${messageId}`,
+      sql`SELECT m.sender_id AS "senderId" FROM messages m
+          WHERE m.id = ${messageId} AND EXISTS (
+            SELECT 1 FROM conversation_participants cp
+            WHERE cp.conversation_id = m.conversation_id AND cp.user_id = ${req.dbUser.id}
+          )`,
     );
     const message = result.rows[0] as { senderId?: number } | undefined;
     if (!message) {
@@ -104,8 +113,7 @@ router.post("/moderation/reports", async (req, res): Promise<void> => {
   res.status(201).json(CreateContentReportResponse.parse(result.rows[0]));
 });
 
-router.get("/moderation/reports", requireAdmin, async (_req, res): Promise<void> => {
-  const result = await db.execute(sql`
+const reportSelection = sql`
     SELECT
       r.id,
       r.reporter_id AS "reporterId",
@@ -119,14 +127,109 @@ router.get("/moderation/reports", requireAdmin, async (_req, res): Promise<void>
       r.status,
       r.reviewed_by AS "reviewedBy",
       r.reviewed_at AS "reviewedAt",
-      r.created_at AS "createdAt"
+      r.created_at AS "createdAt",
+      CASE WHEN r.post_id IS NOT NULL THEN p.caption
+           WHEN r.message_id IS NOT NULL THEN m.content
+           ELSE reported.bio END AS "contentText",
+      p.image_url AS "mediaUrl",
+      p.media_type AS "mediaType",
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', h.id, 'action', h.action, 'note', h.note,
+          'reviewerId', h.reviewer_id, 'reviewerName', reviewer.username,
+          'createdAt', h.created_at
+        ) ORDER BY h.created_at, h.id)
+        FROM content_report_reviews h
+        LEFT JOIN users reviewer ON reviewer.id = h.reviewer_id
+        WHERE h.report_id = r.id
+      ), '[]'::json) AS "reviewHistory"
     FROM content_reports r
     JOIN users reporter ON reporter.id = r.reporter_id
     LEFT JOIN users reported ON reported.id = r.reported_user_id
-    ORDER BY r.created_at DESC
+    LEFT JOIN studio_posts p ON p.id = r.post_id
+    LEFT JOIN messages m ON m.id = r.message_id
+`;
+
+router.get("/moderation/reports", requireAdmin, async (_req, res): Promise<void> => {
+  const result = await db.execute(sql`${reportSelection}
+    ORDER BY (r.status IN ('open', 'reviewing')) DESC,
+      CASE WHEN r.status IN ('open', 'reviewing') THEN r.created_at END ASC,
+      r.created_at DESC
     LIMIT 200
   `);
   res.json(ListModerationReportsResponse.parse(result.rows));
+});
+
+class ReviewError extends Error {
+  constructor(public status: number, message: string) { super(message); }
+}
+
+router.patch("/moderation/reports/:id", requireAdmin, async (req, res): Promise<void> => {
+  const params = ReviewModerationReportParams.safeParse(req.params);
+  const body = ReviewModerationReportBody.safeParse(req.body);
+  if (!params.success || !body.success || !body.data.note.trim()) {
+    res.status(400).json({ error: "A valid report, action, and nonblank review note are required" });
+    return;
+  }
+  const { action } = body.data;
+  const note = body.data.note.trim();
+  const reportId = params.data.id;
+  const reviewerId = req.dbUser!.id;
+  try {
+    await db.transaction(async (tx) => {
+      const locked = await tx.execute(sql`
+        SELECT id, post_id AS "postId", message_id AS "messageId", status
+        FROM content_reports WHERE id = ${reportId} FOR UPDATE
+      `);
+      const report = locked.rows[0] as {
+        id: number; postId: number | null; messageId: number | null; status: string;
+      } | undefined;
+      if (!report) throw new ReviewError(404, "Report not found");
+      if (report.status === "resolved" || report.status === "dismissed") {
+        throw new ReviewError(409, "Report is already closed; refresh to see the staff review");
+      }
+
+      if (action === "remove_content") {
+        if (report.postId != null) {
+          const result = await tx.execute(sql`
+            SELECT image_url AS "mediaUrl", user_id AS "ownerId"
+            FROM studio_posts WHERE id = ${report.postId} FOR UPDATE
+          `);
+          const post = result.rows[0] as { mediaUrl: string | null; ownerId: number } | undefined;
+          if (!post) throw new ReviewError(404, "Reported post no longer exists");
+          // Fail closed if owned-media withdrawal fails. Shared/external media
+          // is not modified; its reported post is still removed from this app.
+          if (post.mediaUrl) {
+            await objectStorageService.revokePublicObjectEntityIfOwned(post.mediaUrl, String(post.ownerId));
+          }
+          await tx.execute(sql`DELETE FROM studio_posts WHERE id = ${report.postId}`);
+        } else if (report.messageId != null) {
+          const deleted = await tx.execute(sql`DELETE FROM messages WHERE id = ${report.messageId} RETURNING id`);
+          if (!deleted.rows.length) throw new ReviewError(404, "Reported message no longer exists");
+        } else {
+          throw new ReviewError(400, "Creator reports cannot delete an account; remove a specific reported post or message instead");
+        }
+      }
+
+      const status = action === "review" ? "reviewing" : action === "dismiss" ? "dismissed" : "resolved";
+      await tx.execute(sql`
+        INSERT INTO content_report_reviews (report_id, reviewer_id, action, note)
+        VALUES (${reportId}, ${reviewerId}, ${action}, ${note})
+      `);
+      await tx.execute(sql`
+        UPDATE content_reports SET status = ${status}, reviewed_by = ${reviewerId}, reviewed_at = now()
+        WHERE id = ${reportId}
+      `);
+    });
+  } catch (error) {
+    if (error instanceof ReviewError) {
+      res.status(error.status).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+  const result = await db.execute(sql`${reportSelection} WHERE r.id = ${reportId}`);
+  res.json(ReviewModerationReportResponse.parse(result.rows[0]));
 });
 
 router.post("/users/:id/block", async (req, res): Promise<void> => {

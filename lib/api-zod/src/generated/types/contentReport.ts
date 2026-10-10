@@ -5,6 +5,7 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+import type { ContentReportReview } from './contentReportReview';
 import type { ContentReportStatus } from './contentReportStatus';
 import type { ReportReason } from './reportReason';
 
@@ -29,4 +30,11 @@ export interface ContentReport {
   /** @nullable */
   reviewedAt?: Date | null;
   createdAt: Date;
+  /** @nullable */
+  contentText?: string | null;
+  /** @nullable */
+  mediaUrl?: string | null;
+  /** @nullable */
+  mediaType?: string | null;
+  reviewHistory?: ContentReportReview[];
 }

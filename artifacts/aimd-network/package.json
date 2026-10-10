@@ -69,6 +69,7 @@
     "expo-audio": "~1.1.1",
     "expo-camera": "^17.0.10",
     "expo-document-picker": "~14.0.8",
+    "expo-notifications": "~0.32.17",
     "expo-video": "~3.0.16",
     "react-native-purchases": "^10.7.2"
   }

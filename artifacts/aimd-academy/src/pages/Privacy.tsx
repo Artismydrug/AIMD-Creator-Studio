@@ -122,7 +122,7 @@ export default function Privacy() {
               </div>
               <aside className="border-l-2 border-[#BC3A20] pl-5">
                 <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#8A8077]">Policy details</p>
-                <p className="mt-2 font-display text-xl font-bold uppercase text-[#2C2623]">Effective August 25, 2026</p>
+                <p className="mt-2 font-display text-xl font-bold uppercase text-[#2C2623]">Last updated October 10, 2026</p>
                 <p className="mt-3 text-sm leading-6 text-[#6E6660]">
                   This policy applies to the Creator Studio web and mobile experiences operated by Art Is My Drug (“AIMD,” “we,” or “us”).
                 </p>
@@ -174,10 +174,13 @@ export default function Privacy() {
 
             <PolicySection id="user-content" number="02" icon={Image} title="User Content">
               <p>
-                You may add photos, videos, captions, artwork, challenge submissions, workshop assignments, habit proof, and other creative work (“User Content”). You keep ownership of your User Content.
+                You may add photos, videos, audio tracks, captions, artwork, challenge submissions, workshop assignments, habit proof, and other creative work (“User Content”). You keep ownership of your User Content.
               </p>
               <p>
                 We process User Content to store it, display it where you choose to share it, support workshop and challenge features, and help the AIMD team review submissions when a feature calls for review. Public posts, profile artwork, usernames, and related information may be visible to other creators according to the feature and your settings.
+              </p>
+              <p>
+                Direct messages are shared with conversation participants, not the public feed. Private lesson reflections are available to you and authorized instructors or staff supporting the relevant learning experience. Authorized AIMD staff may review a reported message or other reported content to handle safety concerns; this does not make the whole conversation public.
               </p>
               <div className="flex gap-3 border-l-2 border-[#0E7490] bg-[#0E7490]/6 p-4 text-sm leading-6 text-[#4B5B5E]">
                 <FileText className="mt-1 h-4 w-4 shrink-0 text-[#0E7490]" aria-hidden="true" />
@@ -208,11 +211,17 @@ export default function Privacy() {
                 </div>
               </div>
               <p>
+                Microphone access is used when you choose to record sound with a creator video or practice recording. Choosing an existing audio file uploads that file; it does not require continuous microphone access.
+              </p>
+              <p>
                 You can allow, deny, or later change these permissions in your device settings. If access is denied, the related capture or attachment feature may not work, but other parts of the app remain available.
               </p>
             </PolicySection>
 
             <PolicySection id="use-and-sharing" number="04" icon={Database} title="How We Use & Share Information">
+              <p>
+                Membership and purchase providers, including RevenueCat and Apple for supported iOS purchases and Stripe for supported web purchases, help verify purchase status and access. Purchase and entitlement information may be linked to your account identifier. Full payment-card numbers are handled by payment providers, not stored in Creator Studio. Provider SDKs may also process device, session, and diagnostic information to deliver and troubleshoot their services.
+              </p>
               <p>We use information to operate and improve Creator Studio, including to:</p>
               <ul className="list-disc space-y-2 pl-5 marker:text-[#BC3A20]">
                 <li>provide profiles, community, messaging, workshops, challenges, and creator tools;</li>

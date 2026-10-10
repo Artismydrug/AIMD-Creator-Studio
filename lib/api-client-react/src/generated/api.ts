@@ -88,6 +88,7 @@ import type {
   ListWorkshopsParams,
   MarkAllNotificationsReadResult,
   MessageInput,
+  ModerationReviewInput,
   Notification,
   NotificationsResponse,
   Plan,
@@ -5421,6 +5422,78 @@ export function useListModerationReports<TData = Awaited<ReturnType<typeof listM
 
 
 
+
+export const getReviewModerationReportUrl = (id: number,) => {
+
+
+
+
+  return `/api/moderation/reports/${id}`
+}
+
+/**
+ * @summary Review a safety report or remove its reported post/message (admins only)
+ */
+export const reviewModerationReport = async (id: number,
+    moderationReviewInput: ModerationReviewInput, options?: Parameters<typeof customFetch>[1]): Promise<ContentReport> => {
+
+  return customFetch<ContentReport>(getReviewModerationReportUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(moderationReviewInput)
+  }
+);}
+
+
+
+
+
+export const getReviewModerationReportMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewModerationReport>>, TError,{id: number;data: BodyType<ModerationReviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewModerationReport>>, TError,{id: number;data: BodyType<ModerationReviewInput>}, TContext> => {
+
+const mutationKey = ['reviewModerationReport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewModerationReport>>, {id: number;data: BodyType<ModerationReviewInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  reviewModerationReport(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviewModerationReportMutationResult = NonNullable<Awaited<ReturnType<typeof reviewModerationReport>>>
+    export type ReviewModerationReportMutationBody = BodyType<ModerationReviewInput>
+    export type ReviewModerationReportMutationError = ErrorType<void>
+
+    /**
+ * @summary Review a safety report or remove its reported post/message (admins only)
+ */
+export const useReviewModerationReport = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewModerationReport>>, TError,{id: number;data: BodyType<ModerationReviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reviewModerationReport>>,
+        TError,
+        {id: number;data: BodyType<ModerationReviewInput>},
+        TContext
+      > => {
+      return useMutation(getReviewModerationReportMutationOptions(options));
+    }
 
 export const getListConversationsUrl = () => {
 

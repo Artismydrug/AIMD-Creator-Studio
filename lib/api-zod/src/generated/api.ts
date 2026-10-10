@@ -1662,7 +1662,18 @@ export const CreateContentReportResponse = zod.object({
   "status": zod.enum(['open', 'reviewing', 'resolved', 'dismissed']),
   "reviewedBy": zod.int().nullish(),
   "reviewedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "contentText": zod.string().nullish(),
+  "mediaUrl": zod.string().nullish(),
+  "mediaType": zod.string().nullish(),
+  "reviewHistory": zod.array(zod.object({
+  "id": zod.int(),
+  "action": zod.enum(['review', 'resolve', 'dismiss', 'remove_content']),
+  "note": zod.string(),
+  "reviewerId": zod.int().nullable(),
+  "reviewerName": zod.string().nullish(),
   "createdAt": zod.coerce.date()
+})).optional()
 })
 
 
@@ -1682,9 +1693,67 @@ export const ListModerationReportsResponseItem = zod.object({
   "status": zod.enum(['open', 'reviewing', 'resolved', 'dismissed']),
   "reviewedBy": zod.int().nullish(),
   "reviewedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "contentText": zod.string().nullish(),
+  "mediaUrl": zod.string().nullish(),
+  "mediaType": zod.string().nullish(),
+  "reviewHistory": zod.array(zod.object({
+  "id": zod.int(),
+  "action": zod.enum(['review', 'resolve', 'dismiss', 'remove_content']),
+  "note": zod.string(),
+  "reviewerId": zod.int().nullable(),
+  "reviewerName": zod.string().nullish(),
   "createdAt": zod.coerce.date()
+})).optional()
 })
 export const ListModerationReportsResponse = zod.array(ListModerationReportsResponseItem)
+
+
+/**
+ * @summary Review a safety report or remove its reported post/message (admins only)
+ */
+
+
+
+export const ReviewModerationReportParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+export const reviewModerationReportBodyNoteMax = 1000;
+
+
+
+export const ReviewModerationReportBody = zod.object({
+  "action": zod.enum(['review', 'resolve', 'dismiss', 'remove_content']),
+  "note": zod.string().min(1).max(reviewModerationReportBodyNoteMax)
+})
+
+export const ReviewModerationReportResponse = zod.object({
+  "id": zod.int(),
+  "reporterId": zod.int(),
+  "reporterName": zod.string().optional(),
+  "postId": zod.int().nullish(),
+  "reportedUserId": zod.int().nullish(),
+  "reportedUserName": zod.string().nullish(),
+  "messageId": zod.int().nullish(),
+  "reason": zod.enum(['spam', 'harassment', 'hate', 'sexual_content', 'violence', 'scam', 'other']),
+  "details": zod.string().nullish(),
+  "status": zod.enum(['open', 'reviewing', 'resolved', 'dismissed']),
+  "reviewedBy": zod.int().nullish(),
+  "reviewedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "contentText": zod.string().nullish(),
+  "mediaUrl": zod.string().nullish(),
+  "mediaType": zod.string().nullish(),
+  "reviewHistory": zod.array(zod.object({
+  "id": zod.int(),
+  "action": zod.enum(['review', 'resolve', 'dismiss', 'remove_content']),
+  "note": zod.string(),
+  "reviewerId": zod.int().nullable(),
+  "reviewerName": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})).optional()
+})
 
 
 /**

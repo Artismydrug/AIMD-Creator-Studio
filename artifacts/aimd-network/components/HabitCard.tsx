@@ -14,6 +14,9 @@ import * as Haptics from 'expo-haptics';
 import { customFetch, useDeleteHabit, useLogHabitSession } from '@workspace/api-client-react';
 import type { Habit } from '@workspace/api-client-react';
 import * as ImagePicker from 'expo-image-picker';
+import { useAuth } from '@clerk/expo';
+import HabitReminderControl from '@/components/HabitReminderControl';
+import { removeHabitReminder } from '@/lib/habitReminders';
 
 interface HabitCardProps {
   habit: Habit;
@@ -26,6 +29,7 @@ export const HABIT_ACTION_HELP =
 
 export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps) {
   const colors = useColors();
+  const { userId } = useAuth();
   const categoryColors: Record<string, string> = {
     drawing: colors.cyan,
     painting: colors.primary,
@@ -52,6 +56,14 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
     mutation: {
       onSuccess: () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        if (userId && (Platform.OS === 'ios' || Platform.OS === 'android')) {
+          removeHabitReminder(userId, habit.id).catch(() => {
+            Alert.alert(
+              'Habit deleted, reminder may remain',
+              `"${habit.name}" was deleted, but its daily reminder could not be cancelled on this device. You can turn it off in your device notification settings.`,
+            );
+          });
+        }
         onDeleted?.();
       },
       onError: () => {
@@ -334,6 +346,7 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
             </View>
           </View>
         )}
+        <HabitReminderControl habitId={habit.id} habitName={habit.name} />
         </View>
 
         <View style={s.actionColumn}>

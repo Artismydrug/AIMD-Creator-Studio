@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { MediaUpload } from '@/components/MediaUpload';
+import { AdminModerationPanel } from '@/components/AdminModerationPanel';
 import { AlertTriangle, Calendar, ClipboardList, Crown, Image as ImageIcon, Mail, Phone, Search, ShieldCheck, Users } from 'lucide-react';
 
 // ─── Challenge data (same shape the Studio Log uses) ─────────────────────────
@@ -673,13 +674,14 @@ export default function Admin() {
           </div>
           <h1 className="font-display font-black text-4xl md:text-5xl uppercase tracking-tight">Admin Dashboard</h1>
           <p className="text-muted-foreground font-mono text-sm mt-1">
-            Manage bookings · Post events · Pick challenge winners · Manage instructors
+            Review safety reports · Manage bookings · Post events · Pick challenge winners · Manage instructors
           </p>
         </div>
       </div>
 
       <div className="px-6 md:px-10 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
+          <AdminModerationPanel />
           <InstructorManagementCard />
           <TattooBookingsCard />
           <MembersCard />

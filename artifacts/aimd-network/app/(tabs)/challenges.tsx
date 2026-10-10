@@ -193,7 +193,9 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
             <View style={s.challengeMeta}>
               <Text style={s.meta}>
                 {challenge.status === 'upcoming' ? 'Opens' : 'Due'}{' '}
-                {new Date(challenge.status === 'upcoming' ? challenge.startsAt : challenge.deadline).toLocaleDateString()}
+                {new Date(challenge.status === 'upcoming' ? challenge.startsAt : challenge.deadline).toLocaleDateString(undefined, { timeZone: 'America/Los_Angeles' })}
+                {challenge.status === 'upcoming' ? ` · Due ${new Date(challenge.deadline).toLocaleDateString(undefined, { timeZone: 'America/Los_Angeles' })}` : ''}
+                {' (Pacific)'}
               </Text>
               <Text style={s.meta}>{challenge.totalSubmissions} submissions</Text>
             </View>
@@ -212,7 +214,7 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
                 <Feather name="calendar" size={17} color={colors.cyan} />
                 <Text style={s.submittedText}>
                   {challenge.status === 'upcoming'
-                    ? `Opens ${new Date(challenge.startsAt).toLocaleDateString()}`
+                    ? `Opens ${new Date(challenge.startsAt).toLocaleDateString(undefined, { timeZone: 'America/Los_Angeles' })}`
                     : 'Submissions closed'}
                 </Text>
               </View>

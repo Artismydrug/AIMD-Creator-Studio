@@ -30,6 +30,7 @@ import { useColors } from '@/hooks/useColors';
 import { safeImpact } from '@/lib/haptics';
 import { useRouter } from 'expo-router';
 import WorkshopLessonPlayer, { TeaserVideo, type WorkshopLesson } from '@/components/WorkshopLessonPlayer';
+import WorkshopPreviewPlaceholder from '@/components/WorkshopPreviewPlaceholder';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 
 type CapturedVideo = {
@@ -246,11 +247,9 @@ export default function WorkshopsScreen() {
     upgradeText: { fontFamily: 'DMSans_700Bold', color: colors.primaryForeground, fontSize: 14 },
     previewActions: { gap: 8, marginBottom: 8 },
     workshopCard: { borderRadius: colors.radius, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
-    workshopPreview: { width: '100%', aspectRatio: 16 / 9, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
+    workshopPreview: { width: '100%', aspectRatio: 16 / 9, overflow: 'hidden', backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
     workshopPreviewBadge: { position: 'absolute', top: 10, left: 10, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 99, backgroundColor: 'rgba(16,19,23,0.82)' },
     workshopPreviewBadgeText: { fontFamily: 'DMSans_700Bold', fontSize: 9, color: '#FFFFFF', letterSpacing: 0.8 },
-    workshopPreviewMissing: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-    workshopPreviewMissingText: { fontFamily: 'DMSans_600SemiBold', fontSize: 12, color: colors.primaryForeground },
     workshopCardInfo: { padding: 16, gap: 8 },
     workshopOpenHint: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 9, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
     workshopOpenHintText: { fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.primary },
@@ -298,7 +297,7 @@ export default function WorkshopsScreen() {
               <Feather name="play-circle" size={28} color={colors.mutedForeground} />
               <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.mutedForeground, textAlign: 'center' }}>No workshops are published yet.</Text>
             </View>
-          ) : workshops.map((workshop) => (
+          ) : workshops.slice(0, 4).map((workshop) => (
             <View
               key={workshop.id}
               style={[s.workshopCard, selectedWorkshopId === workshop.id && s.selectedCard]}
@@ -308,10 +307,7 @@ export default function WorkshopsScreen() {
                 {workshop.previewVideoUrl ? (
                   <TeaserVideo uri={workshop.previewVideoUrl} />
                 ) : (
-                  <View style={s.workshopPreviewMissing}>
-                    <Feather name="play-circle" size={18} color={colors.primaryForeground} />
-                    <Text style={s.workshopPreviewMissingText}>Preview video coming soon</Text>
-                  </View>
+                  <WorkshopPreviewPlaceholder category={workshop.category} title={workshop.title} />
                 )}
                 {!!workshop.previewVideoUrl && (
                   <View pointerEvents="none" style={s.workshopPreviewBadge}>

@@ -15,6 +15,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { type Href, Link, Redirect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import LegalHelpLinks from '@/components/LegalHelpLinks';
 
 // Handle any pending authentication sessions on Android
 WebBrowser.maybeCompleteAuthSession();
@@ -281,6 +282,7 @@ export default function SignUpScreen() {
 
         {/* Required by Clerk for bot-protection */}
         <View nativeID="clerk-captcha" />
+        <LegalHelpLinks color="#bdb4a8" />
       </ScrollView>
     </KeyboardAvoidingView>
   );

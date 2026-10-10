@@ -33,6 +33,8 @@ import {
   getGetNotificationsQueryKey,
 } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
+import LegalHelpLinks from '@/components/LegalHelpLinks';
+import { clearHabitReminders } from '@/lib/habitReminders';
 import StudioVideo from '@/components/StudioVideo';
 import AudioTrackPlayer from '@/components/AudioTrackPlayer';
 import AppearanceSettings from '@/components/AppearanceSettings';
@@ -296,7 +298,7 @@ export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { signOut } = useAuth();
+  const { signOut, userId } = useAuth();
   const deleteAccount = useDeleteCurrentUser();
   const {
     data: me,
@@ -444,9 +446,15 @@ export default function ProfileScreen() {
           style: 'destructive',
           onPress: () => {
             void deleteAccount.mutateAsync(undefined)
+              .then(async () => {
+                if (userId) {
+                  try { await clearHabitReminders(userId); }
+                  catch { Alert.alert('Account deleted', 'Local reminder cleanup failed. Turn off Creator Studio alerts in device settings.'); }
+                }
+              })
               .then(() => signOut())
               .then(() => router.replace('/(auth)/sign-in'))
-              .catch(() => Alert.alert('Could not delete account', 'Your account is still active. Please try again.'));
+              .catch(() => Alert.alert('Could not confirm completion', 'Please reopen the app or contact info@artismydrug.com before retrying account deletion.'));
           },
         },
       ],
@@ -625,10 +633,11 @@ export default function ProfileScreen() {
             <Feather name="log-out" size={16} color={colors.destructive} />
             <Text style={[s.signOutText, { color: colors.destructive }]}>Sign out</Text>
           </Pressable>
+          <LegalHelpLinks />
           <View style={[s.deleteAccountSection, { borderTopColor: colors.border }]}>
             <Text style={s.deleteAccountTitle}>Delete account</Text>
             <Text style={s.deleteAccountDescription}>
-              Permanently remove your AIMD account and all associated data. This action cannot be undone.
+              Permanently remove your Creator Studio profile and personal content. Any required record retention is described in our Privacy Policy. This action cannot be undone.
             </Text>
             <Pressable
               accessibilityRole="button"

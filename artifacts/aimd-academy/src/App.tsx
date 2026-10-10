@@ -49,6 +49,8 @@ import Notifications from '@/pages/Notifications';
 import Community from '@/pages/Community';
 import ChallengesHabits from '@/pages/ChallengesHabits';
 import Admin from '@/pages/Admin';
+import Terms from '@/pages/Terms';
+import Support from '@/pages/Support';
 import Onboarding from '@/pages/Onboarding';
 import Tattoo from '@/pages/Tattoo';
 import Gallery from '@/pages/Gallery';
@@ -282,6 +284,8 @@ function Router() {
       <Route path="/tattoo" component={Tattoo} />
       <Route path="/gallery" component={Gallery} />
       <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/support" component={Support} />
       <Route path="/text-club"><Redirect to="/" /></Route>
       <Route path="/sms-terms" component={SmsTerms} />
       {/* Creator app entry: dashboard when signed in, sign-in otherwise */}

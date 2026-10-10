@@ -274,9 +274,8 @@ export async function ensureCreatorStudioSchema(
       reviewed_at timestamptz,
       created_at timestamptz NOT NULL DEFAULT now(),
       CONSTRAINT content_reports_one_target CHECK (
-        (CASE WHEN post_id IS NOT NULL THEN 1 ELSE 0 END) +
-        (CASE WHEN reported_user_id IS NOT NULL THEN 1 ELSE 0 END) +
-        (CASE WHEN message_id IS NOT NULL THEN 1 ELSE 0 END) = 1
+        NOT (post_id IS NOT NULL AND message_id IS NOT NULL)
+        AND (post_id IS NOT NULL OR message_id IS NOT NULL OR reported_user_id IS NOT NULL)
       )
     )
   `);

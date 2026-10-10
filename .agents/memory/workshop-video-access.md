@@ -5,6 +5,12 @@ description: Public lead-magnet teasers, full lesson entitlement, and participan
 
 Public visitors can watch uploaded module/workshop preview clips for free. Full lessons require an active $39 Dedicated Artist subscription or enrollment as a workshop participant. Assigned teaching staff and admins can manage their curriculum without buying a subscription.
 
+Keep only four workshop examples visible on the mobile workshop page for now; hide additional examples rather than deleting curriculum or learner records.
+
+**Why:** On October 10, 2026, the owner asked to leave only four examples up in the app, not to permanently delete workshop data.
+
+**How to apply:** Preserve existing lesson access and staff management when simplifying the preview list.
+
 **Why:** The creator explicitly requested free previews as lead magnets, with full lessons strictly restricted to subscribers and enrolled workshop participants.
 
 **How to apply:** Enforce full lesson access on the server and keep full files private. Locked viewers need a clear membership prompt; membership checkout remains subject to the separate paid-launch policy in `paid-membership-rollout.md`.

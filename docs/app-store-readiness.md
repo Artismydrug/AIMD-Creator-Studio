@@ -36,37 +36,39 @@ The iOS export used workspace development configuration. It must not be uploaded
 
 ### 1. Publish real, publicly accessible Terms and complete the policy review
 
-**Confirmed:** The mobile membership screen links to `https://artismydrug.com/terms`, but the web router has no public `/terms` page. An anonymous preview of that route displays sign-in instead of Terms. HTTP 200 from the SPA was not evidence of a valid legal page.
+**Fixed in development after the audit:** `/terms` and `/support` now load publicly without sign-in. Privacy, Terms, and Help links are present on mobile sign-in, sign-up, and Profile screens. Privacy disclosures include audio, microphone use, messages, private learning reflections, and purchase providers. Account deletion copy no longer promises removal of every retained record or incorrectly claims an account remains active when completion cannot be confirmed.
 
 **Required next:**
 
-- Provide an actual public Terms/Community Standards page and have the owner approve its terms.
+- Have the owner approve the draft Terms/Community Standards and updated privacy wording before publishing; these are general drafts, not attorney-reviewed legal advice.
 - Check the production page anonymously, not only its HTTP status.
-- Put easy-to-find Privacy, Terms, and support links in the normal mobile account/help experience.
-- Review privacy disclosures against current audio uploads, microphone use, direct messages, private learning reflections, purchases/RevenueCat, and retention behavior.
-- Reconcile deletion copy stating “all associated data” with legitimate retained/anonymized records. Do not promise more deletion than the system performs.
-- Use the existing published contact address, not an invented support address.
+- Publish the web/API update through the normal Publish flow, including the development database schema diff. No production migration script or new startup migration was added.
+- Verify the mobile links in the new signed native build against the published pages.
 
 **Relevant sources:** `artifacts/aimd-network/app/membership.tsx`, `artifacts/aimd-network/app/profile.tsx`, `artifacts/aimd-academy/src/App.tsx`, `artifacts/aimd-academy/src/pages/Privacy.tsx`, `artifacts/api-server/src/lib/accountDeletion.ts`.
 
 ### 2. Complete the community moderation process
 
-**Already present:** Creator/post/message reporting, server-owned reporter identity, blocking, and an admin-protected report-list API. An existing demonstration checklist covers those controls.
+**Implemented in development:** Creator/post/message reporting, server-owned identity, blocking, admin-only review UI at `/admin`, required staff decision notes, review history, resolve/dismiss actions, and confirmed takedown of an individual reported post or message. Reports remain available after takedown. Owned uploaded media loses public access; shared/external assets are not modified. No account or entire conversation is deleted by a takedown.
 
-**Gaps found:**
+**Remaining gaps and completed repairs:**
 
 - The post creation route publishes valid submissions directly; no objectionable-content screening or pre-publication moderation step was found.
-- Reports can be created/listed, but no staff report-resolution endpoint or report review/removal UI was found.
-- The ordinary post-delete endpoint only allows the post owner to delete it; it is not a staff takedown workflow.
-- Private-message reporting checks that a message exists, but does not verify that the reporter participates in that conversation.
+- Repaired the report target constraint: a post/message owner is no longer incorrectly counted as a second report target.
+- Private-message reports now require conversation participation, including for staff submitting a report.
+- Non-admin review is forbidden; closed reports reject stale actions. Media withdrawal failure rolls back the database takedown/review.
 
 **Required next:**
 
-- Choose and implement a proportionate screening/review policy covering text and uploaded photo/video/audio content, not only file-type validation.
-- Give authorized staff a usable queue, safe removal/restriction actions, status tracking, and an auditable resolution path.
+- **Owner decision, October 10, 2026:** keep community posts publishing immediately for now. Staff approval and automated pre-publication screening are deferred. This does not establish that filtering requirements are satisfied or guarantee acceptance of the updated build.
 - Define who monitors reports and how quickly concerns are handled.
-- Require conversation participation for private-message reports.
 - Verify that blocks work across feed, profile, and messaging, including already-open conversations.
+
+**Verification of these repairs:** shared-library, mobile, web, and API type checks passed; 22 regression tests passed across moderation, owned-media withdrawal, account deletion, and social profiles. Mobile account-deletion smoke contract passed. Public Terms rendered anonymously. Staff browser verification is recorded separately below when completed. These checks do not constitute Apple approval or native TestFlight testing.
+
+**Staff browser verification completed:** a disposable Clerk-authenticated admin reviewed a report, canceled a removal without deleting content, confirmed the removal, and inspected persisted closed-report history after reload. Demoting that disposable account immediately produced 403 for list/review APIs. All disposable data was cleaned up; existing users/content were untouched.
+
+**Public/preview checks:** Terms rendered on desktop and Support rendered on a narrow phone viewport without sign-in. The Expo screenshot was still in its account-session initialization screen, so it did not visually verify the new mobile footer. Mobile type checks and the account-deletion contract passed, but the new native build still requires device verification.
 
 Apple guideline 1.2 requires filtering, reporting with timely responses, blocking, and published contact information. Persisting a report alone is not the whole moderation process.
 

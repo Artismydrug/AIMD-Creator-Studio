@@ -33,3 +33,5 @@
 - [Logo image preparation](logo-image-preparation.md) — raster logo backgrounds and faint edge pixels can survive automatic trimming; inspect the isolated mark before icon compositing.
 - [School learning evidence](school-learning-evidence.md) — reflections stay private; public portfolio publishing and LMS/grade integration require separate scope.
 - [App Store approval context](app-store-approval-context.md) — an iOS release was approved; separate current-code audit findings from the approved binary and future updates.
+- [Community publication policy](community-publication-policy.md) — soft-launch posts publish immediately; screening is deferred, while reporting, blocking, and staff removal remain.
+- [Habit reminder policy](habit-reminder-policy.md) — optional device-local daily alerts; preserve offline delivery, isolate accounts, and verify native delivery in a fresh build.

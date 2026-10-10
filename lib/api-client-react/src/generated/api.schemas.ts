@@ -1032,6 +1032,27 @@ export const ContentReportStatus = {
   dismissed: 'dismissed',
 } as const;
 
+export type ContentReportReviewAction = typeof ContentReportReviewAction[keyof typeof ContentReportReviewAction];
+
+
+export const ContentReportReviewAction = {
+  review: 'review',
+  resolve: 'resolve',
+  dismiss: 'dismiss',
+  remove_content: 'remove_content',
+} as const;
+
+export interface ContentReportReview {
+  id: number;
+  action: ContentReportReviewAction;
+  note: string;
+  /** @nullable */
+  reviewerId: number | null;
+  /** @nullable */
+  reviewerName?: string | null;
+  createdAt: string;
+}
+
 export interface ContentReport {
   id: number;
   reporterId: number;
@@ -1053,6 +1074,32 @@ export interface ContentReport {
   /** @nullable */
   reviewedAt?: string | null;
   createdAt: string;
+  /** @nullable */
+  contentText?: string | null;
+  /** @nullable */
+  mediaUrl?: string | null;
+  /** @nullable */
+  mediaType?: string | null;
+  reviewHistory?: ContentReportReview[];
+}
+
+export type ModerationReviewInputAction = typeof ModerationReviewInputAction[keyof typeof ModerationReviewInputAction];
+
+
+export const ModerationReviewInputAction = {
+  review: 'review',
+  resolve: 'resolve',
+  dismiss: 'dismiss',
+  remove_content: 'remove_content',
+} as const;
+
+export interface ModerationReviewInput {
+  action: ModerationReviewInputAction;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  note: string;
 }
 
 export type ContentReportList = ContentReport[];
