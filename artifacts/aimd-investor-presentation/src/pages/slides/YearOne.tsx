@@ -11,7 +11,7 @@ export default function YearOne() {
         <div><p className="font-display font-bold text-[5vw]">~$47k</p><p className="deck-label">Lean operating expenses</p></div>
         <div><p className="font-display font-bold text-[5vw] text-accent">+$110.5k</p><p className="deck-label">Modeled operating profit / EBITDA</p><p className="deck-label text-muted">Approximately 70% margin</p></div>
       </div>
-      <p className="deck-label text-muted mt-[4vh]">Annualized run rate is not recognized revenue. Costs and margins require validation.</p>
+      <p className="deck-label text-muted mt-[4vh]">Annualized run rate is not recognized revenue. Costs and margins require validation; planned nonprofit giving is not modeled.</p>
     </div>
   );
 }

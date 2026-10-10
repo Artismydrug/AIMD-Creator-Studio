@@ -17,7 +17,7 @@ export default function Growth() {
           <p className="deck-label text-muted mt-[2vh]">Technology overhead assumed to flatten</p>
         </div>
       </div>
-      <p className="deck-body text-muted mt-[7vh]">Support, payments, infrastructure, and physical programs still carry variable costs.</p>
+      <p className="deck-body text-muted mt-[7vh]">Support, payments, infrastructure, and physical programs carry variable costs; planned nonprofit giving is not modeled.</p>
     </div>
   );
 }

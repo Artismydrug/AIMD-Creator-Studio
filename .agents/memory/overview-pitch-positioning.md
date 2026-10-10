@@ -16,3 +16,11 @@ Creator Studio's investor and schools/community pitches must be separate editabl
 **Why:** The user explicitly corrected both recent web-based one-sheets and said they need two presentations they can send to investors and to schools/general audiences.
 
 **How to apply:** Use slides artifacts for these pitch requests. Keep investor material separate from the approachable school/community message, and provide shareable presentation exports when requested. Do not turn presentation requests into websites or suggest publishing domains.
+
+## Nonprofit reinvestment intent
+
+Creator Studio plans to dedicate a percentage to nonprofit support for community workshops, retreats, and artist sponsorships. The percentage and whether it is based on revenue, profit, or other proceeds have not been specified.
+
+**Why:** The user explicitly requested this future giving model in the investor pitch as part of AIMD's community purpose.
+
+**How to apply:** Present the intent as planned, not an established donation policy or existing donation history. Do not invent a rate, calculation basis, partner agreement, or tax treatment. Financial scenarios should disclose when this allocation has not been modeled.
