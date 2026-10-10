@@ -98,3 +98,9 @@ mtime_ms = 1791600317460
 storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/9754015b-aba9-47bd-a29d-ad0166806a5a/e863a26c-5679-4abc-895d-85a4a754d211"
 storage_version_token = "1791600334224480"
 content_type = "application/pdf"
+
+[[outputs]]
+id = "2k_o7RsgCIRKprYq7-uWp"
+uri = "file://.local/outputs/Creator-Studio-by-AIMD---Schools---Community-Presentation.pdf"
+type = "pdf"
+title = "Creator Studio by AIMD — Schools & Community Presentation.pdf"
