@@ -2,7 +2,9 @@
 
 **Reviewed:** October 10, 2026  
 **Scope:** Mobile source/configuration, release dependencies, selected backend protections, public production endpoints, and Apple review requirements.  
-**Decision:** Continue controlled testing; do not treat this audit as approval to submit the public App Store release.
+**Approval update:** The owner provided an App Store Connect screenshot showing iOS version 1.0.0 (build 10) approved and review completed. The earlier recommendation to withhold submission was too categorical.
+
+This audit concerns the current workspace. It does not establish that the approved binary contains the same code or the same gaps. These findings are follow-up priorities and checks for future updates—not Apple rejection findings or proof that the already approved version must redo review. Approval alone does not establish public release availability.
 
 ## Fixed during the audit
 
@@ -28,7 +30,7 @@ No bundle identifier, account settings, subscription catalog, production records
 
 The iOS export used workspace development configuration. It must not be uploaded as a production release configuration.
 
-## High-priority launch gates
+## High-priority follow-ups for the current code
 
 ### 1. Publish real, publicly accessible Terms and complete the policy review
 
@@ -81,9 +83,9 @@ Apple guideline 1.2 requires filtering, reporting with timely responses, blockin
 
 Do not silently default to an adult-only launch or claim school/child compliance without the owner's decision. Apple creator-app guideline 1.2.1(a) addresses age restrictions and content beyond an app's age rating.
 
-### 4. Finish a production-configured native TestFlight pass
+### 4. Test the next updated native build
 
-This audit did not install or drive a new signed iOS build. The earlier signed-in mobile preview check was also blocked by the preview/auth testing setup. Native verification remains a release gate.
+This audit did not install or drive a new signed iOS build. The earlier signed-in mobile preview check was also blocked by the preview/auth testing setup. Before distributing the current workspace changes, verify the updated native build; this is not a request to repeat the already completed Apple approval.
 
 Use a fresh build through the managed iOS publishing flow and test:
 
@@ -122,7 +124,7 @@ Expo Go cannot establish native purchase readiness. For a future paid rollout, s
 1. Public legal/help pages and policy approval.
 2. Moderation screening, staff resolution/takedown, and age-policy safeguards.
 3. App Store metadata/disclosures plus a fresh production-configured TestFlight pass.
-4. Submit only after the launch gates pass. Add new instructor features after the core launch risks are resolved.
+4. For future updates, validate the changed flows before submission. Do not assume the already approved binary contains new workspace fixes. Prioritize confirmed bugs and safety work over adding instructor features.
 
 ## Official references consulted
 
