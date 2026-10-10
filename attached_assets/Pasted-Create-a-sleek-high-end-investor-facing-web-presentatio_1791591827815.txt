@@ -1,0 +1,38 @@
+Create a sleek, high-end, investor-facing web presentation and interactive "One-Sheet" for our application: "Creator Studio by AIMD". 
+
+The aesthetic should be dark-mode, professional, minimalist, and bold—utilizing deep charcoals, clean typography, subtle card borders, and sharp accent styling (reflecting a premium creative agency and tech startup vibe).
+
+Please structure the web application/slides to include the following comprehensive sections with exact details:
+
+1. HERO SECTION & FOUNDER'S THESIS
+- Title: Creator Studio by AIMD
+- Subtitle: Bridging raw artistic talent and sustainable professional independence through discipline, digital structure, and real-world physical residency pipelines.
+- Core Thesis ("Discipline Eats Talent"): Highlight why habits and daily discipline form the foundation of the app. Explain that mastery requires daily mechanical execution, check-in streaks, and behavioral retention to transform sporadic hobbyists into consistent professionals.
+
+2. MARKET OPPORTUNITY & THE MOAT
+- Highlight the $230B+ global creator economy bottleneck: 48% of creators run solo and struggle with fragmented software stacks and zero business/operational training.
+- The Moat: Explain how Creator Studio unites digital learning with a tangible physical ecosystem (mobile container studios, gallery shows, pop-up markets, and artist retreats) that digital-only SaaS platforms cannot replicate.
+
+3. TIERED MONETIZATION MODEL (THE VALUE LADDER)
+- Tier 1: The Inspiring Artist ($0 / Freemium) - Community feeds, daily streaks, reward wheels, weekly challenges, top-of-funnel previews.
+- Tier 2: The Dedicated Artist ($39.99/mo or $399/yr) - Full craft video modules (Tattoo Prep, Fashion, Audio, Visual Arts, Athletics) and interactive workshop feedback.
+- Tier 3: The Professional Artist ($99.00/mo or $999/yr) - Advanced business modules, digital client pipelines, priority physical residency/container access, and monthly 1-on-1 mentor consultations.
+
+4. OPERATIONS, HEAVY PRODUCTION & CORE TEAM
+- Production Pipeline (Led by Anthony Davila): Multi-camera masterclass shoots, technical skill breakdowns, and business blueprints (capped at $500–$1,000 per modular video block).
+- Technology Stack: Cloud infrastructure built on Replit with automated Stripe and In-App Purchase routing.
+- Executive Leadership & Team: Edward Davila (Founder, CEO & Creative Director), Anthony Davila (Project Director), Nay (Operations), Bri & Ashley Rae (Artist Relations & Events), Dwayne (Institutional Outreach), Nancy (Marketing), and Temo (Physical Logistical Production).
+
+5. FINANCIAL PROJECTIONS & UNIT ECONOMICS
+- Year 1 Model (500 Active Paid Subscribers): Blended ARPU ~$45/mo; Year-End MRR ~$22,500 ($270k annualized SaaS run-rate); Cumulative Year 1 Gross Revenue $157,500; Lean OpEx ~$47,000; Net Operating Profit (EBITDA) +$110,500 (~70%+ net margin).
+- Multi-Year Scale: Year 2 gross revenue past $1.1M (75%+ margins); Year 3 gross revenue past $2.86M as tech overhead flattens.
+- Sustainable Staff Compensation: Three-phase transition model (Phase A sweat-equity/trade soft launch; Phase B hourly/retainer growth via Gusto; Phase C scaled salaries and quarterly bonus pools upon hitting 500 subscribers).
+
+6. HARD-HITTING INVESTOR Q&A (INTERACTIVE ACCORDION / CARDS)
+- Include expandable or clean card sections answering key investor pushbacks on:
+  1) Churn prevention & community moats vs. generic habit apps.
+  2) Customer Acquisition Cost (CAC) & organic ecosystem cross-pollination.
+  3) Margin defense and flat technology/production overhead.
+  4) The structural tie between digital subscriptions and physical asset expansion.
+
+Make sure the UI features smooth navigation, responsive layout for desktop and mobile pitch presentations, clean financial data tables, and an executive export/print view.

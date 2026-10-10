@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/aimd-schools-one-sheet/"
+title = "Creator Studio by AIMD — Schools & Community"
+description = "A welcoming, shareable school-and-community one-sheet introducing Creator Studio to educators, students, and youth-development partners."
+version = "1.0.0"
+id = "artifacts/aimd-schools-one-sheet"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/aimd-schools-one-sheet/" ]
+localPort = 25401
+
+[services.development]
+run = "pnpm --filter @workspace/aimd-schools-one-sheet run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aimd-schools-one-sheet", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/aimd-schools-one-sheet/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25401"
+BASE_PATH = "/aimd-schools-one-sheet/"

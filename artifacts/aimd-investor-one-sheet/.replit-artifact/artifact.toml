@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/aimd-investor-one-sheet/"
+title = "Creator Studio by AIMD — Investor One-Sheet"
+description = "An interactive investor-facing overview of Creator Studio by AIMD, presenting its creator-discipline model, creative learning ecosystem, proposed membership ladder, operating plan, team, and clearly labeled financial scenarios."
+version = "1.0.0"
+id = "artifacts/aimd-investor-one-sheet"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/aimd-investor-one-sheet/" ]
+localPort = 22503
+
+[services.development]
+run = "pnpm --filter @workspace/aimd-investor-one-sheet run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aimd-investor-one-sheet", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/aimd-investor-one-sheet/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22503"
+BASE_PATH = "/aimd-investor-one-sheet/"
