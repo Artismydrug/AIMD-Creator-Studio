@@ -224,7 +224,7 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
       maxWidth: 150,
     },
     chart: {
-      height: 128,
+      height: 162,
       flexDirection: 'row',
       alignItems: 'stretch',
       justifyContent: 'space-around',
@@ -238,15 +238,14 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
       color: colors.foreground,
     },
     chartBarTrack: {
-      height: 78,
+      height: 112,
       width: '100%',
       maxWidth: 38,
       justifyContent: 'flex-end',
+      alignItems: 'center',
       overflow: 'hidden',
-      borderRadius: 7,
-      backgroundColor: colors.muted,
     },
-    chartBar: { width: '100%', borderRadius: 7, minHeight: 2 },
+    chartFlame: { fontSize: 16, lineHeight: 16 },
     chartLabel: {
       fontFamily: 'DMSans_400Regular',
       fontSize: 9,
@@ -459,7 +458,7 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
                 <View style={s.progressPanel} testID="habit-weekly-progress">
                   <View>
                     <Text style={s.progressHeading}>Practice over time</Text>
-      <Text style={s.progressSubtitle}>Completed practice days for this habit across four rolling weeks.</Text>
+                  <Text style={s.progressSubtitle}>Each 🔥 is one completed practice day across four rolling weeks.</Text>
                   </View>
 
                   {habits.length > 1 && (
@@ -506,28 +505,21 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
                   ) : (
                     <>
                       <View style={s.chart} testID="habit-weekly-chart">
-                        {weeklyPractice.map((week, index) => {
-                          const barHeight = week.daysCompleted === 0 ? 0 : Math.max(6, (week.daysCompleted / 7) * 78);
+                        {weeklyPractice.map((week) => {
                           return (
                             <View
                               key={week.label}
                               style={s.chartColumn}
                               accessible
                               accessibilityRole="progressbar"
-                            accessibilityLabel={`${week.label}: ${week.daysCompleted} completed practice days`}
+                              accessibilityLabel={`${week.label}: ${week.daysCompleted} completed practice days`}
                               accessibilityValue={{ min: 0, max: 7, now: week.daysCompleted }}
                             >
                               <Text style={s.chartValue}>{week.daysCompleted}</Text>
-                              <View style={s.chartBarTrack}>
-                                <View
-                                  style={[
-                                    s.chartBar,
-                                    {
-                                      height: barHeight,
-                                      backgroundColor: index === 0 ? colors.primary : colors.cyan,
-                                    },
-                                  ]}
-                                />
+                              <View style={s.chartBarTrack} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                                {Array.from({ length: week.daysCompleted }, (_, day) => (
+                                  <Text key={day} style={s.chartFlame} allowFontScaling={false}>🔥</Text>
+                                ))}
                               </View>
                               <Text style={s.chartLabel}>{week.label}</Text>
                             </View>
