@@ -36,3 +36,4 @@
 - [App Store approval context](app-store-approval-context.md) — an iOS release was approved; separate current-code audit findings from the approved binary and future updates.
 - [Community publication policy](community-publication-policy.md) — soft-launch posts publish immediately; screening is deferred, while reporting, blocking, and staff removal remain.
 - [Habit reminder policy](habit-reminder-policy.md) — optional device-local daily alerts; preserve offline delivery, isolate accounts, and verify native delivery in a fresh build.
+- [Request reliability](request-reliability.md) — timed-out writes may already have succeeded; client tap locks do not replace server-backed idempotency.

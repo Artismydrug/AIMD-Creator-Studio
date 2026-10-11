@@ -1,5 +1,6 @@
 export type CustomFetchOptions = RequestInit & {
   responseType?: "json" | "text" | "blob" | "auto";
+  /** Whole-operation deadline, including auth and response body. Zero disables it. */
   timeoutMs?: number;
 };
 
@@ -11,6 +12,8 @@ export type AuthTokenGetter = () => Promise<string | null> | string | null;
 
 const NO_BODY_STATUS = new Set([204, 205, 304]);
 const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
+const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
+const DEFAULT_UPLOAD_TIMEOUT_MS = 180_000;
 
 // ---------------------------------------------------------------------------
 // Module-level configuration
@@ -364,58 +367,62 @@ export async function customFetch<T = unknown>(
     headers.set("accept", DEFAULT_JSON_ACCEPT);
   }
 
-  // Attach bearer token when an auth getter is configured and no
-  // Authorization header has been explicitly provided.
-  if (_authTokenGetter && !headers.has("authorization")) {
-    const token = await _authTokenGetter();
-    if (token) {
-      headers.set("authorization", `Bearer ${token}`);
-    }
-  }
-
   const requestInfo = { method, url: resolveUrl(input) };
-
-  const timeoutController =
-    typeof timeoutMs === "number" && timeoutMs > 0
-      ? new AbortController()
-      : null;
-  const forwardAbort = () => timeoutController?.abort();
-  if (callerSignal && timeoutController) {
-    if (callerSignal.aborted) {
-      timeoutController.abort();
-    } else {
-      callerSignal.addEventListener("abort", forwardAbort, { once: true });
-    }
+  // Binary/multipart media needs more time than ordinary JSON requests.
+  const deadlineMs = timeoutMs ??
+    (init.body != null && typeof init.body !== "string"
+      ? DEFAULT_UPLOAD_TIMEOUT_MS
+      : DEFAULT_REQUEST_TIMEOUT_MS);
+  const signal = callerSignal ?? (isRequest(input) ? input.signal : undefined);
+  const controller = new AbortController();
+  let rejectInterrupted: (error: Error) => void = () => undefined;
+  const interrupted = new Promise<never>((_, reject) => {
+    rejectInterrupted = reject;
+  });
+  const forwardAbort = () => {
+    const error = new Error("Request cancelled.");
+    error.name = "AbortError";
+    rejectInterrupted(error);
+    controller.abort();
+  };
+  if (signal?.aborted) {
+    forwardAbort();
+  } else {
+    signal?.addEventListener("abort", forwardAbort, { once: true });
   }
-  const timeout = timeoutController
-    ? setTimeout(() => timeoutController.abort(), timeoutMs)
+  const timeout = deadlineMs > 0
+    ? setTimeout(() => {
+        rejectInterrupted(new Error(`Request timed out after ${deadlineMs}ms.`));
+        controller.abort();
+      }, deadlineMs)
     : null;
 
-  let response: Response;
   try {
-    response = await fetch(input, {
-      ...init,
-      method,
-      headers,
-      signal: timeoutController?.signal ?? callerSignal,
-    });
-  } catch (error) {
-    if (
-      timeoutController?.signal.aborted &&
-      !callerSignal?.aborted
-    ) {
-      throw new Error(`Request timed out after ${timeoutMs}ms.`);
-    }
-    throw error;
+    const execute = async (): Promise<T> => {
+      // A pre-cancelled request must not acquire a token or reach the server.
+      if (controller.signal.aborted) return await interrupted;
+      if (_authTokenGetter && !headers.has("authorization")) {
+        const token = await _authTokenGetter();
+        if (controller.signal.aborted) return await interrupted;
+        if (token) headers.set("authorization", `Bearer ${token}`);
+      }
+      const response = await fetch(input, {
+        ...init,
+        method,
+        headers,
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        const errorData = await parseErrorBody(response, method);
+        throw new ApiError(response, errorData, requestInfo);
+      }
+      return (await parseSuccessBody(response, responseType, requestInfo)) as T;
+    };
+    // Some native token/fetch implementations do not settle on abort alone.
+    // Keep the deadline active until the response body has finished as well.
+    return await Promise.race([execute(), interrupted]);
   } finally {
     if (timeout) clearTimeout(timeout);
-    callerSignal?.removeEventListener("abort", forwardAbort);
+    signal?.removeEventListener("abort", forwardAbort);
   }
-
-  if (!response.ok) {
-    const errorData = await parseErrorBody(response, method);
-    throw new ApiError(response, errorData, requestInfo);
-  }
-
-  return (await parseSuccessBody(response, responseType, requestInfo)) as T;
 }

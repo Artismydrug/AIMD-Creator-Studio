@@ -23,6 +23,7 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import { runExclusiveSubmission } from '@/lib/submissionLock';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
@@ -94,6 +95,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
   const [tags, setTags] = useState('');
   const [selectedMedia, setSelectedMedia] = useState<SelectedMedia | null>(null);
   const [uploading, setUploading] = useState(false);
+  const submittingRef = useRef(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [videosMuted, setVideosMuted] = useState(true);
@@ -175,7 +177,12 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
       onError: (error) => {
         const message =
           error instanceof Error ? error.message : 'Could not publish your post.';
-        Alert.alert('Post failed', message);
+        Alert.alert(
+          'Post failed',
+          message.includes('timed out')
+            ? 'The connection timed out. Your draft is still here. Check your feed before sharing again, in case the post was already received.'
+            : message,
+        );
       },
     },
   });
@@ -323,43 +330,45 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
 
   const handleSubmit = async () => {
     if (!caption.trim()) return;
-    const tagList = tags
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
-
-    if (!selectedMedia) {
-      createMutation.mutate({ data: { caption: caption.trim(), tags: tagList } });
-      return;
-    }
-
-    setUploading(true);
-    setUploadProgress(0);
-    try {
-      const objectPath = await uploadMediaToServer(
-        selectedMedia.uri,
-        selectedMedia.contentType,
-        selectedMedia.mediaType,
-        setUploadProgress,
-      );
-      const imageUrl = `/api/storage${objectPath}`;
-      createMutation.mutate({
-        data: {
-          caption: caption.trim(),
-          tags: tagList,
-          imageUrl,
-          mediaType: selectedMedia.mediaType,
-        },
-      });
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Could not upload this media. Try a smaller file.';
-      Alert.alert('Upload failed', message);
-    } finally {
-      setUploading(false);
-    }
+    await runExclusiveSubmission(submittingRef, async () => {
+      const tagList = tags.split(',').map((t) => t.trim()).filter(Boolean);
+      let imageUrl: string | undefined;
+      try {
+        if (selectedMedia) {
+          setUploading(true);
+          setUploadProgress(0);
+          try {
+            const objectPath = await uploadMediaToServer(
+              selectedMedia.uri,
+              selectedMedia.contentType,
+              selectedMedia.mediaType,
+              setUploadProgress,
+            );
+            imageUrl = `/api/storage${objectPath}`;
+          } catch (error) {
+            Alert.alert(
+              'Upload failed',
+              error instanceof Error ? error.message : 'Could not upload this media. Try a smaller file.',
+            );
+            return;
+          }
+        }
+        try {
+          // Keep the lock through publishing, not just the media upload.
+          await createMutation.mutateAsync({
+            data: {
+              caption: caption.trim(),
+              tags: tagList,
+              ...(selectedMedia ? { imageUrl, mediaType: selectedMedia.mediaType } : {}),
+            },
+          });
+        } catch {
+          // The mutation's onError shows the error; keep the draft for retry.
+        }
+      } finally {
+        setUploading(false);
+      }
+    });
   };
 
   const isPending = uploading || createMutation.isPending;
@@ -919,7 +928,9 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
                   />
                 </View>
                 <Text style={s.uploadText}>
-                  {uploadProgress < 0.35 ? 'Preparing media…' : 'Uploading media…'}
+                  {uploadProgress >= 1
+                    ? 'Publishing post…'
+                    : uploadProgress < 0.35 ? 'Preparing media…' : 'Uploading media…'}
                 </Text>
               </View>
             ) : null}
