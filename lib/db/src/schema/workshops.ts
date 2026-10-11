@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, boolean, timestamp, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
@@ -39,7 +39,7 @@ export const enrollmentsTable = pgTable("enrollments", {
   status: text("status").notNull().default("active"), // active | completed | paused
   accessSource: text("access_source").notNull().default("subscription"), // subscription | participant
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => [index("enrollments_user_workshop_idx").on(table.userId, table.workshopId)]);
 
 export const completedModulesTable = pgTable("completed_modules", {
   id: serial("id").primaryKey(),

@@ -17,8 +17,17 @@ import {
 } from "./lib/stripeEntitlements";
 import { handleClerkWebhook } from "./routes/webhooks/clerk";
 import { logger } from "./lib/logger";
+import { apiAdmissionGuard, apiErrorHandler, heavyAdmissionGuard, isTransientDatabaseError } from "./lib/serverReliability";
 
 const app: Express = express();
+app.use(pinoHttp({
+  logger,
+  serializers: {
+    req(req) { return { id: req.id, method: req.method, url: req.url?.split("?")[0] }; },
+    res(res) { return { statusCode: res.statusCode }; },
+  },
+}));
+app.use("/api", apiAdmissionGuard());
 
 // ── Clerk FAPI proxy — must be before ALL body parsers ────────────────────────
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
@@ -70,26 +79,15 @@ app.post(
       res.status(200).json({ received: true });
     } catch (error: any) {
       logger.error({ err: error }, 'Stripe webhook error');
-      res.status(400).json({ error: 'Webhook processing error' });
+      const retryable = isTransientDatabaseError(error) || error?.status === 503;
+      if (retryable) res.set("Retry-After", "1");
+      res.status(retryable ? 503 : 400).json({ error: 'Webhook processing error' });
     }
   }
 );
 
 // ── Standard middleware ───────────────────────────────────────────────────────
 app.use(cors({ credentials: true, origin: true }));
-app.use(
-  pinoHttp({
-    logger,
-    serializers: {
-      req(req) {
-        return { id: req.id, method: req.method, url: req.url?.split("?")[0] };
-      },
-      res(res) {
-        return { statusCode: res.statusCode };
-      },
-    },
-  }),
-);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -106,6 +104,13 @@ app.use(
 // ── JIT user provisioning: sets req.dbUser for authenticated requests ─────────
 app.use(clerkAuth);
 
+// Buffering a 100 MB upload / sanitizing proof is unlike a small JSON read.
+// Reserve just one heavy slot per process BEFORE the route's raw body parser.
+app.use("/api", heavyAdmissionGuard(1, (req) =>
+  Boolean(req.dbUser) && req.method === "POST" &&
+  (req.path === "/storage/uploads" || req.path === "/challenges/submit"),
+));
 app.use("/api", router);
+app.use(apiErrorHandler);
 
 export default app;

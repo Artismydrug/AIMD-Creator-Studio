@@ -8,6 +8,7 @@
 
 import { Router, type IRouter } from "express";
 import { pool } from "@workspace/db";
+import { trackHeavyWork } from "../lib/serverReliability";
 import {
   GetCurrentChallengeResponse,
   SubmitChallengeEntryBody,
@@ -183,7 +184,7 @@ router.get("/challenges/current", async (req, res): Promise<void> => {
 
 // ─── POST /challenges/submit ──────────────────────────────────────────────────
 
-router.post("/challenges/submit", async (req, res): Promise<void> => {
+router.post("/challenges/submit", trackHeavyWork(async (req, res): Promise<void> => {
   if (!req.dbUser) {
     res.status(401).json({ error: "Unauthorized — sign in to submit an entry" });
     return;
@@ -329,7 +330,7 @@ router.post("/challenges/submit", async (req, res): Promise<void> => {
   } finally {
     client.release();
   }
-});
+}));
 
 // ─── PATCH /challenges/:id/verification ───────────────────────────────────────
 

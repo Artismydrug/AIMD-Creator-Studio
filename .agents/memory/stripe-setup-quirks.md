@@ -9,6 +9,21 @@ The Replit connectors API returns `settings.secret` (not `settings.secret_key`) 
 
 **How to apply:** In `stripeClient.ts`, always read `settings.secret`, not `settings.secret_key`.
 
+## SDK connection budgeting and rotation
+
+The sync SDK's advisory-lock wrapper holds a dedicated pool connection while
+callback queries may acquire another. Reusing a sync client must also preserve
+operations already running when credentials rotate.
+
+**Why:** A pool sized only to the number of operations can exhaust itself on
+nested queries; ending the old pool immediately can interrupt a valid webhook.
+
+**How to apply:** Budget lock holders plus their nested queries, bound concurrent
+provider operations, and retire old clients only after their operations finish.
+Refresh credential configuration independently of database client reuse. Do not
+recreate a sync pool for each webhook or run provider provisioning/backfills on
+every API cold start.
+
 ## Managed webhook verification
 
 When no webhook secret is supplied in configuration, `stripe-replit-sync` securely loads the managed endpoint secret from its own Stripe metadata table during `processWebhook`.

@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, and, desc, gte, sql } from "drizzle-orm";
-import { db, habitsTable, habitLogsTable } from "@workspace/db";
+import { db, habitsTable, habitLogsTable, usersTable } from "@workspace/db";
+import { currentHabitStreak } from "../lib/habitStreak";
 import {
   ListHabitsResponse,
   CreateHabitBody,
@@ -58,34 +59,21 @@ function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-async function updateStreak(habitId: number, userId: number): Promise<void> {
-  const logs = await db
-    .select()
+async function updateStreak(
+  habitId: number, userId: number,
+  database: Pick<typeof db, "selectDistinct" | "update"> = db,
+): Promise<void> {
+  const logs = await database
+    .selectDistinct({ date: habitLogsTable.date })
     .from(habitLogsTable)
-    .where(and(eq(habitLogsTable.habitId, habitId), eq(habitLogsTable.completed, true)))
+    .where(and(eq(habitLogsTable.habitId, habitId), eq(habitLogsTable.userId, userId), eq(habitLogsTable.completed, true)))
     .orderBy(desc(habitLogsTable.date));
 
-  let streak = 0;
-  let checkDate = new Date();
-  checkDate.setHours(0, 0, 0, 0);
-
-  for (const log of logs) {
-    const logDate = new Date(log.date + "T00:00:00");
-    const diff = Math.round((checkDate.getTime() - logDate.getTime()) / (1000 * 60 * 60 * 24));
-    if (diff === 0 || diff === 1) {
-      streak++;
-      checkDate = logDate;
-    } else {
-      break;
-    }
-  }
-
-  const [habit] = await db.select().from(habitsTable).where(eq(habitsTable.id, habitId));
-  const longestStreak = Math.max(habit?.longestStreak ?? 0, streak);
-  await db
+  const streak = currentHabitStreak(logs.map((log) => log.date), todayStr());
+  await database
     .update(habitsTable)
-    .set({ currentStreak: streak, longestStreak })
-    .where(eq(habitsTable.id, habitId));
+    .set({ currentStreak: streak, longestStreak: sql`greatest(${habitsTable.longestStreak}, ${streak})` })
+    .where(and(eq(habitsTable.id, habitId), eq(habitsTable.userId, userId)));
 }
 
 router.get("/habits", async (req, res): Promise<void> => {
@@ -229,28 +217,34 @@ router.post("/habits/:id/log", async (req, res): Promise<void> => {
     .where(and(eq(habitsTable.id, params.data.id), eq(habitsTable.userId, userId)));
   if (!habit) { res.status(404).json({ error: "Habit not found" }); return; }
 
-  const logDate: string = (parsed.data.date as string | undefined) ?? todayStr();
+  const logDate = parsed.data.date?.toISOString().slice(0, 10) ?? todayStr();
   const ownsProof = await isOwnedHabitProof(userId, parsed.data.proofUrl, parsed.data.proofMediaType);
   if (!ownsProof) {
     res.status(400).json({ error: "Habit proof must be your uploaded image or video." });
     return;
   }
-  const completed = parsed.data.minutesSpent >= habit.targetMinutes;
-
-  const [log] = await db
-    .insert(habitLogsTable)
-    .values({
+  const log = await db.transaction(async (tx) => {
+    // Lock parent before child to remain compatible with account deletion.
+    const [owner] = await tx.select({ id: usersTable.id }).from(usersTable)
+      .where(eq(usersTable.id, userId)).for("key share");
+    if (!owner) return null;
+    const [lockedHabit] = await tx.select().from(habitsTable)
+      .where(and(eq(habitsTable.id, habit.id), eq(habitsTable.userId, userId))).for("update");
+    if (!lockedHabit) return null;
+    const [saved] = await tx.insert(habitLogsTable).values({
       habitId: habit.id,
       userId,
       date: logDate,
       minutesSpent: parsed.data.minutesSpent,
-      completed,
+      completed: parsed.data.minutesSpent >= lockedHabit.targetMinutes,
       proofUrl: parsed.data.proofUrl,
       proofMediaType: parsed.data.proofMediaType,
     })
     .returning();
-
-  await updateStreak(habit.id, userId);
+    await updateStreak(habit.id, userId, tx);
+    return saved;
+  });
+  if (!log) { res.status(404).json({ error: "Habit not found" }); return; }
   res.status(201).json(LogHabitSessionResponse.parse(log));
 });
 

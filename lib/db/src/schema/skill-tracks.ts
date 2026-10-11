@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, boolean, real, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, boolean, real, timestamp, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
@@ -12,7 +12,7 @@ export const skillTracksTable = pgTable("skill_tracks", {
   percentComplete: real("percent_complete").notNull().default(0),
   status: text("status").notNull().default("in_progress"), // in_progress | certified | paused
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => [index("skill_tracks_user_status_idx").on(table.userId, table.status)]);
 
 export const skillMilestonesTable = pgTable("skill_milestones", {
   id: serial("id").primaryKey(),

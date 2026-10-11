@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, timestamp, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
@@ -13,14 +13,20 @@ export const studioPostsTable = pgTable("studio_posts", {
   tags: text("tags").array().notNull().default([]),
   likes: integer("likes").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => [
+  index("studio_posts_created_idx").on(table.createdAt),
+  index("studio_posts_user_created_idx").on(table.userId, table.createdAt),
+]);
 
 export const postLikesTable = pgTable("post_likes", {
   id: serial("id").primaryKey(),
   postId: integer("post_id").notNull().references(() => studioPostsTable.id, { onDelete: "cascade" }),
   userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => [
+  index("post_likes_user_post_idx").on(table.userId, table.postId),
+  index("post_likes_post_idx").on(table.postId),
+]);
 
 export const studioPostMediaUploadsTable = pgTable("studio_post_media_uploads", {
   id: serial("id").primaryKey(),

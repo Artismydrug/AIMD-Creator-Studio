@@ -1,5 +1,5 @@
 import type Stripe from "stripe";
-import { getStripeSync } from './stripeClient';
+import { withStripeSync } from './stripeClient';
 import { processStoreWebhookEvent } from "./lib/storeWebhook";
 
 export class WebhookHandlers {
@@ -13,11 +13,10 @@ export class WebhookHandlers {
       );
     }
 
-    const sync = await getStripeSync();
     // StripeSync verifies this exact raw payload and, when the connector does
     // not expose a webhook secret, securely loads the managed secret from its
     // own stripe._managed_webhooks table.
-    await sync.processWebhook(payload, signature);
+    await withStripeSync((sync) => sync.processWebhook(payload, signature));
     const event = JSON.parse(payload.toString("utf8")) as Stripe.Event;
     await processStoreWebhookEvent(event);
   }

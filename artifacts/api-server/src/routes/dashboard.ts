@@ -22,65 +22,41 @@ router.get("/dashboard/summary", async (req, res): Promise<void> => {
   if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
   const userId = req.dbUser!.id;
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
-
-  const habits = await db.select().from(habitsTable).where(eq(habitsTable.userId, userId));
-  const totalHabits = habits.length;
-
-  const currentStreakDays = habits.reduce((max, h) => Math.max(max, h.currentStreak), 0);
-  const longestStreakDays = habits.reduce((max, h) => Math.max(max, h.longestStreak), 0);
-
   const monthStart = new Date();
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
 
-  const [postCountRow] = await db
-    .select({ cnt: sql<number>`count(*)`.mapWith(Number) })
-    .from(studioPostsTable)
-    .where(
-      and(
-        eq(studioPostsTable.userId, userId),
-        gte(studioPostsTable.createdAt, monthStart)
-      )
-    );
-  const totalPostsThisMonth = postCountRow?.cnt ?? 0;
-
-  const [enrollCountRow] = await db
-    .select({ cnt: sql<number>`count(*)`.mapWith(Number) })
-    .from(enrollmentsTable)
-    .where(eq(enrollmentsTable.userId, userId));
-  const workshopsEnrolled = enrollCountRow?.cnt ?? 0;
-
-  const [badgeCountRow] = await db
-    .select({ cnt: sql<number>`count(*)`.mapWith(Number) })
-    .from(badgesTable)
-    .where(eq(badgesTable.userId, userId));
-  const badgesEarned = badgeCountRow?.cnt ?? 0;
-
-  const [skillCountRow] = await db
-    .select({ cnt: sql<number>`count(*)`.mapWith(Number) })
-    .from(skillTracksTable)
-    .where(and(eq(skillTracksTable.userId, userId), eq(skillTracksTable.status, "in_progress")));
-  const skillTracksActive = skillCountRow?.cnt ?? 0;
-
   const today = new Date().toISOString().slice(0, 10);
-  const todayLogs = await db
-    .select()
-    .from(habitLogsTable)
-    .where(and(eq(habitLogsTable.userId, userId), eq(habitLogsTable.date, today), eq(habitLogsTable.completed, true)));
-  const completionRate = totalHabits > 0 ? (todayLogs.length / totalHabits) * 100 : 0;
-
+  // One database round trip and one consistent snapshot. Multiple practice
+  // sessions for the same habit/day count as one completed habit, not >100%.
+  const { rows } = await db.execute<{
+    totalHabits: number; currentStreakDays: number; longestStreakDays: number;
+    totalPostsThisMonth: number; workshopsEnrolled: number; badgesEarned: number;
+    skillTracksActive: number; completedHabits: number; studioReadyStatus: boolean;
+  }>(sql`
+    WITH habit_stats AS (
+      SELECT count(*)::int AS "totalHabits",
+        coalesce(max(current_streak), 0)::int AS "currentStreakDays",
+        coalesce(max(longest_streak), 0)::int AS "longestStreakDays"
+      FROM ${habitsTable} WHERE user_id = ${userId}
+    )
+    SELECT habit_stats.*,
+      (SELECT count(*)::int FROM ${studioPostsTable} WHERE user_id = ${userId}
+        AND created_at >= ${monthStart.toISOString()}) AS "totalPostsThisMonth",
+      (SELECT count(*)::int FROM ${enrollmentsTable} WHERE user_id = ${userId}) AS "workshopsEnrolled",
+      (SELECT count(*)::int FROM ${badgesTable} WHERE user_id = ${userId}) AS "badgesEarned",
+      (SELECT count(*)::int FROM ${skillTracksTable} WHERE user_id = ${userId}
+        AND status = 'in_progress') AS "skillTracksActive",
+      (SELECT count(DISTINCT habit_id)::int FROM ${habitLogsTable} WHERE user_id = ${userId}
+        AND date = ${today} AND completed = true) AS "completedHabits",
+      coalesce((SELECT studio_ready_badge FROM ${usersTable} WHERE id = ${userId}), false) AS "studioReadyStatus"
+    FROM habit_stats
+  `);
+  const { completedHabits, ...summary } = rows[0];
   res.json(
     GetDashboardSummaryResponse.parse({
-      totalHabits,
-      currentStreakDays,
-      longestStreakDays,
-      totalPostsThisMonth,
-      workshopsEnrolled,
-      badgesEarned,
-      completionRate,
-      skillTracksActive,
-      studioReadyStatus: user?.studioReadyBadge ?? false,
+      ...summary,
+      completionRate: summary.totalHabits > 0 ? (completedHabits / summary.totalHabits) * 100 : 0,
     })
   );
 });
@@ -102,18 +78,23 @@ router.get("/dashboard/activity-feed", async (req, res): Promise<void> => {
 
   // habit logs
   const logs = await db
-    .select()
+    .select({
+      id: habitLogsTable.id,
+      minutesSpent: habitLogsTable.minutesSpent,
+      createdAt: habitLogsTable.createdAt,
+      habitName: habitsTable.name,
+    })
     .from(habitLogsTable)
+    .leftJoin(habitsTable, and(eq(habitsTable.id, habitLogsTable.habitId), eq(habitsTable.userId, userId)))
     .where(and(eq(habitLogsTable.userId, userId), eq(habitLogsTable.completed, true)))
     .orderBy(desc(habitLogsTable.createdAt))
     .limit(10);
 
   for (const log of logs) {
-    const [habit] = await db.select().from(habitsTable).where(eq(habitsTable.id, log.habitId));
     items.push({
       id: log.id,
       type: "habit_log",
-      description: `Completed "${habit?.name ?? "habit"}" — ${log.minutesSpent} minutes`,
+      description: `Completed "${log.habitName ?? "habit"}" — ${log.minutesSpent} minutes`,
       imageUrl: null,
       createdAt: log.createdAt,
     });

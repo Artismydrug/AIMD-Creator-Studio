@@ -1,5 +1,6 @@
 import express, { Router, type IRouter, type Request, type Response } from 'express';
-import { Readable } from 'stream';
+import { pipeMediaBody } from '../lib/streamMedia';
+import { trackHeavyWork } from '../lib/serverReliability';
 import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { writeFile, rm, mkdtemp } from 'node:fs/promises';
@@ -241,7 +242,7 @@ router.post(
     },
     limit: MAX_VIDEO_UPLOAD_BYTES,
   }),
-  async (req: Request, res: Response) => {
+  trackHeavyWork(async (req: Request, res: Response) => {
     const contentType = (req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
 
     // Reject if express.raw declined to parse (unsupported content-type)
@@ -510,7 +511,7 @@ router.post(
       req.log.error({ err: error }, 'Error uploading object');
       res.status(500).json({ error: 'Failed to upload file' });
     }
-  },
+  }),
 );
 
 /**
@@ -538,14 +539,14 @@ router.get(
       res.setHeader('X-Content-Type-Options', 'nosniff');
 
       if (response.body) {
-        const nodeStream = Readable.fromWeb(response.body as ReadableStream<Uint8Array>);
-        nodeStream.pipe(res);
+        await pipeMediaBody(response.body, res);
       } else {
         res.end();
       }
     } catch (error) {
       req.log.error({ err: error }, 'Error serving public object');
-      res.status(500).json({ error: 'Failed to serve public object' });
+      if (!res.headersSent && !res.destroyed) res.status(500).json({ error: 'Failed to serve public object' });
+      else if (!res.destroyed) res.destroy();
     }
   },
 );
@@ -621,8 +622,7 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
     res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self'; media-src 'self'");
 
     if (response.body) {
-      const nodeStream = Readable.fromWeb(response.body as ReadableStream<Uint8Array>);
-      nodeStream.pipe(res);
+      await pipeMediaBody(response.body, res);
     } else {
       res.end();
     }
@@ -633,7 +633,8 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
       return;
     }
     req.log.error({ err: error }, 'Error serving object');
-    res.status(500).json({ error: 'Failed to serve object' });
+    if (!res.headersSent && !res.destroyed) res.status(500).json({ error: 'Failed to serve object' });
+    else if (!res.destroyed) res.destroy();
   }
 });
 

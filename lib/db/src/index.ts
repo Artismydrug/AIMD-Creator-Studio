@@ -10,7 +10,16 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// Per API process: keep the existing ten-connection ceiling, but bound waits
+// and SQL execution instead of leaving an unlimited queue during an outage.
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 10,
+  connectionTimeoutMillis: 5_000,
+  idleTimeoutMillis: 10_000,
+  statement_timeout: 15_000,
+  query_timeout: 17_000,
+});
 export const db = drizzle(pool, { schema });
 
 export * from "./schema";

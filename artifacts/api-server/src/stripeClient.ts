@@ -1,5 +1,7 @@
 import Stripe from 'stripe';
 import { StripeSync } from 'stripe-replit-sync';
+import { createClientLifecycle } from "./lib/stripeSyncLifecycle";
+import { logger } from "./lib/logger";
 
 /**
  * Fetches Stripe credentials from the Replit connection API.
@@ -57,20 +59,46 @@ export async function getUncachableStripeClient(): Promise<Stripe> {
   return new Stripe(secretKey);
 }
 
-/**
- * Returns a fresh StripeSync instance for webhook processing and data sync.
- * Not cached — fetches credentials on every call so rotated keys are picked up.
- */
-export async function getStripeSync(): Promise<StripeSync> {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    throw new Error('DATABASE_URL environment variable is required');
-  }
+const syncLifecycle = createClientLifecycle(
+  getStripeCredentials,
+  (a, b) => a.secretKey === b.secretKey && a.webhookSecret === b.webhookSecret,
+  ({ secretKey, webhookSecret }) => {
+    if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL environment variable is required");
+    const client = new StripeSync({
+      poolConfig: {
+        connectionString: process.env.DATABASE_URL,
+        // SDK advisory locks hold a dedicated connection while their callback
+        // uses another. Two simultaneous operations need four connections.
+        max: 4,
+        connectionTimeoutMillis: 5_000,
+        idleTimeoutMillis: 10_000,
+        statement_timeout: 15_000,
+        query_timeout: 17_000,
+      },
+      stripeSecretKey: secretKey,
+      stripeWebhookSecret: webhookSecret ?? "",
+    });
+    client.postgresClient.pool.on("error", (error) => {
+      logger.error({ errorName: error.name, errorCode: (error as NodeJS.ErrnoException).code }, "Idle Stripe database connection failed");
+    });
+    return client;
+  },
+  async (client) => {
+    try { await client.postgresClient.pool.end(); }
+    catch (error) {
+      logger.error({ errorName: (error as Error).name }, "Stripe database pool cleanup failed");
+      throw error;
+    }
+  },
+);
 
-  const { secretKey, webhookSecret } = await getStripeCredentials();
-  return new StripeSync({
-    poolConfig: { connectionString: databaseUrl },
-    stripeSecretKey: secretKey,
-    stripeWebhookSecret: webhookSecret ?? '',
-  });
+let activeSyncOperations = 0;
+export async function withStripeSync<T>(operation: (client: StripeSync) => Promise<T>): Promise<T> {
+  if (activeSyncOperations >= 2) {
+    throw Object.assign(new Error("Stripe processing is temporarily busy"), { status: 503 });
+  }
+  activeSyncOperations++;
+  try { return await syncLifecycle.run(operation); }
+  finally { activeSyncOperations--; }
 }
+export const closeStripeSyncPools = syncLifecycle.close;

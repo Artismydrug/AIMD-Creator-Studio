@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, desc, isNull, sql } from "drizzle-orm";
+import { eq, and, desc, isNull, sql, inArray } from "drizzle-orm";
 import {
   db,
   studioPostsTable,
@@ -124,7 +124,7 @@ router.get("/studio-posts", async (req, res): Promise<void> => {
     const likes = await db
       .select()
       .from(postLikesTable)
-      .where(eq(postLikesTable.userId, userId));
+      .where(and(eq(postLikesTable.userId, userId), inArray(postLikesTable.postId, posts.map((post) => post.id))));
     likes.forEach((l) => likedSet.add(l.postId));
   }
 
