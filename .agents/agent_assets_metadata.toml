@@ -61,14 +61,14 @@ content_type = "application/pdf"
 id = "tpJrLXy7cfZ-NHgfUiwFr"
 uri = "file://artifacts/aimd-network/assets/images/icon.png"
 type = "image"
-title = "Creator Studio icon — original AIMD black box"
-description = "Original AIMD boxed logo on a warm cream background, with Creator Studio underneath. Updated for the next mobile build."
+title = "Creator Studio — purple & orange app icon"
+description = "Purple gradients, flowing orange paint accents, and the original AIMD black-box logo with Creator Studio beneath it. Configured for the next mobile build."
 logical_id = "fa4049b0-e969-4e9c-b2c4-1a01499eff11"
-content_hash = "sha256:d08448c37bdbf11f5ee58ae39197ce4d064e274020dfd9d6178b6da33cc491f5"
-size = 48345
-mtime_ms = 1791691870737
-storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/fa4049b0-e969-4e9c-b2c4-1a01499eff11/88206416-485c-4f53-9633-6651297e1ce1"
-storage_version_token = "1791691875249962"
+content_hash = "sha256:6f54685695f4c6dea899ec4106909bfbfc6a6b6b31f1251ee0d79e11bd9dc2f1"
+size = 251494
+mtime_ms = 1791691994899
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/fa4049b0-e969-4e9c-b2c4-1a01499eff11/569a652a-d373-4049-94e5-815d6de83230"
+storage_version_token = "1791692005123522"
 content_type = "image/png"
 
 [[outputs]]

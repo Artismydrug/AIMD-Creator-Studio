@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/images/icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F4EEE3"
+      "backgroundColor": "#602AA9"
     },
     "ios": {
       "supportsTablet": false,
@@ -20,7 +20,8 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/aimd-adaptive-foreground.png",
-        "backgroundColor": "#F4EEE3"
+        "backgroundImage": "./assets/images/aimd-adaptive-background.png",
+        "backgroundColor": "#602AA9"
       }
     },
     "web": {
