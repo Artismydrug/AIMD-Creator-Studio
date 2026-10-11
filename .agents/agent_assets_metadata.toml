@@ -154,3 +154,17 @@ mtime_ms = 1791693026732
 storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/c7fb65e2-9fd5-4080-9d0c-835e4c30d8f5/9fa3e397-e11f-454a-a141-9b9a6004dba5"
 storage_version_token = "1791693058182450"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "SCXNLAvta-ISGx1EwPReE"
+uri = "file://generated-artifacts/creator-studio-icon-options/round-three/creator-studio-icon-options-round-three-sheet.jpg"
+type = "image"
+title = "Creator Studio — refined icon options 14–19"
+description = "Six professional, understated icon concepts with refined palettes and simpler logo treatments. Share the sheet and ask people to vote by number, 14–19."
+logical_id = "9184f091-2d66-4838-9fd9-8cd8329163b2"
+content_hash = "sha256:482553900cecc5832c12e17334d1f07218ee6d2590be4b4eeee637bb99b55c8a"
+size = 347684
+mtime_ms = 1791693259008
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/9184f091-2d66-4838-9fd9-8cd8329163b2/f2c5eb5f-b1f3-4ba6-b170-75e2ec9e3eb7"
+storage_version_token = "1791693295992620"
+content_type = "image/jpeg"
