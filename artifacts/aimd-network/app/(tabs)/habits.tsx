@@ -26,6 +26,7 @@ import {
 } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import HabitCard, { HABIT_ACTION_HELP } from '@/components/HabitCard';
+import RisingPracticeFlame from '@/components/RisingPracticeFlame';
 
 const CATEGORIES = ['Drawing', 'Painting', 'Sculpture', 'Photography', 'Music', 'Writing', 'Other'];
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
@@ -245,7 +246,6 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
       alignItems: 'center',
       overflow: 'hidden',
     },
-    chartFlame: { fontSize: 16, lineHeight: 16 },
     chartLabel: {
       fontFamily: 'DMSans_400Regular',
       fontSize: 9,
@@ -458,7 +458,7 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
                 <View style={s.progressPanel} testID="habit-weekly-progress">
                   <View>
                     <Text style={s.progressHeading}>Practice over time</Text>
-                  <Text style={s.progressSubtitle}>Each 🔥 is one completed practice day across four rolling weeks.</Text>
+                  <Text style={s.progressSubtitle}>The 🔥 rises with each completed practice day (0–7) in each of four rolling weeks.</Text>
                   </View>
 
                   {habits.length > 1 && (
@@ -517,9 +517,7 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
                             >
                               <Text style={s.chartValue}>{week.daysCompleted}</Text>
                               <View style={s.chartBarTrack} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                                {Array.from({ length: week.daysCompleted }, (_, day) => (
-                                  <Text key={day} style={s.chartFlame} allowFontScaling={false}>🔥</Text>
-                                ))}
+                                <RisingPracticeFlame daysCompleted={week.daysCompleted} trackColor={colors.muted} railColor={colors.border} />
                               </View>
                               <Text style={s.chartLabel}>{week.label}</Text>
                             </View>
