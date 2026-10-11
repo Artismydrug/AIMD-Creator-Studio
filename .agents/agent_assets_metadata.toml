@@ -126,3 +126,17 @@ mtime_ms = 1791662147737
 storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/9924af90-b23d-478d-ae40-d4c53c0d8b0f/bd18ffdb-d328-428d-9135-3c9546272f1c"
 storage_version_token = "1791662226058417"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "YoqIJ8B1CyA6aLTSyc03F"
+uri = "file://generated-artifacts/creator-studio-icon-options/creator-studio-icon-options-sheet.jpg"
+type = "image"
+title = "Creator Studio — numbered icon voting sheet"
+description = "Share-ready sheet with the current icon as #1 and six new color variations as #2–7. Ask people to reply with their favorite number."
+logical_id = "8b916927-9471-4c50-8eec-fd7a3138dde1"
+content_hash = "sha256:b202aaaef90b768354363f90c20264e6e42b71ebb8afa5f9480bc7a0b89b1da7"
+size = 685948
+mtime_ms = 1791692861085
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/8b916927-9471-4c50-8eec-fd7a3138dde1/7fc42ddd-0221-4ef7-a9a0-3526fbb9b7b0"
+storage_version_token = "1791692895873360"
+content_type = "image/jpeg"
