@@ -140,3 +140,17 @@ mtime_ms = 1791692861085
 storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/8b916927-9471-4c50-8eec-fd7a3138dde1/7fc42ddd-0221-4ef7-a9a0-3526fbb9b7b0"
 storage_version_token = "1791692895873360"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "3qoZP2JXP9saGiX2enhwc"
+uri = "file://generated-artifacts/creator-studio-icon-options/round-two/creator-studio-icon-options-round-two-sheet.jpg"
+type = "image"
+title = "Creator Studio — six more designs, options 8–13"
+description = "Shareable voting sheet featuring paint splatter, paper collage, liquid marble, pop print, color prism, and brush studio patterns. Reply with a favorite number from 8–13."
+logical_id = "c7fb65e2-9fd5-4080-9d0c-835e4c30d8f5"
+content_hash = "sha256:7ad08d601a813935170abec0b574e3d71cbccebc87af0c70d4a61cf7ee4d7149"
+size = 1159798
+mtime_ms = 1791693026732
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/c7fb65e2-9fd5-4080-9d0c-835e4c30d8f5/9fa3e397-e11f-454a-a141-9b9a6004dba5"
+storage_version_token = "1791693058182450"
+content_type = "image/jpeg"
