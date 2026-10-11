@@ -61,14 +61,14 @@ content_type = "application/pdf"
 id = "tpJrLXy7cfZ-NHgfUiwFr"
 uri = "file://artifacts/aimd-network/assets/images/icon.png"
 type = "image"
-title = "Creator Studio — Updated AIMD Icon"
-description = "App icon rebuilt from your latest original PNG logo, with the AIMD wordmark centered on black."
+title = "Current Creator Studio app icon"
+description = "This is the icon currently configured for the Expo/iOS app. It is the white AIMD wordmark on black, with generous margins."
 logical_id = "fa4049b0-e969-4e9c-b2c4-1a01499eff11"
 content_hash = "sha256:a1709e623b35dfa107b6648abef19961048e964ae33aec3368ed9cd51015962b"
 size = 53096
 mtime_ms = 1791504635164
-storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/fa4049b0-e969-4e9c-b2c4-1a01499eff11/051b73ca-c69d-44cc-82e4-849dc18d6736"
-storage_version_token = "1791504654277186"
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/fa4049b0-e969-4e9c-b2c4-1a01499eff11/6687d403-755f-41ba-bb10-1a9338c176c3"
+storage_version_token = "1791691180833924"
 content_type = "image/png"
 
 [[outputs]]
