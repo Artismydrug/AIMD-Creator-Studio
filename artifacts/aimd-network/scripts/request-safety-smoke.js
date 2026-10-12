@@ -22,6 +22,7 @@ function loadTypeScript(file) {
 const { customFetch, setAuthTokenGetter, setBaseUrl, ApiError } =
   loadTypeScript('../../../lib/api-client-react/src/custom-fetch.ts');
 const { runExclusiveSubmission } = loadTypeScript('../lib/submissionLock.ts');
+const { COMING_SOON_WORKSHOP_PREVIEWS } = loadTypeScript('../lib/workshopPreviews.ts');
 const originalFetch = global.fetch;
 const originalSetTimeout = global.setTimeout;
 const originalClearTimeout = global.clearTimeout;
@@ -183,4 +184,25 @@ test('failed submission releases its lock for an intentional retry', async () =>
   await assert.rejects(runExclusiveSubmission(lock, async () => { throw new Error('offline'); }), /offline/);
   assert.equal(lock.current, false);
   assert.equal(await runExclusiveSubmission(lock, async () => {}), true);
+});
+
+test('an unpublished workshop catalog has exactly four distinct preview examples', () => {
+  assert.equal(COMING_SOON_WORKSHOP_PREVIEWS.length, 4);
+  assert.equal(new Set(COMING_SOON_WORKSHOP_PREVIEWS.map((preview) => preview.title)).size, 4);
+  for (const preview of COMING_SOON_WORKSHOP_PREVIEWS) {
+    assert(preview.category && preview.title && preview.description);
+    assert.equal('id' in preview, false);
+    assert.equal('previewVideoUrl' in preview, false);
+    assert.equal('lessonVideoUrl' in preview, false);
+  }
+});
+
+test('empty workshop catalog renders coming-soon artwork without enrollable cards', () => {
+  const source = fs.readFileSync(path.resolve(__dirname, '../app/(tabs)/workshops.tsx'), 'utf8');
+  const emptyBranch = source.split('!workshops?.length ? (')[1].split(') : workshops.slice(0, 4)')[0];
+  assert(emptyBranch.includes('COMING_SOON_WORKSHOP_PREVIEWS.map'));
+  assert(emptyBranch.includes('WorkshopPreviewPlaceholder'));
+  assert(emptyBranch.includes('enrollment not open'));
+  assert.equal(emptyBranch.includes('TouchableOpacity'), false);
+  assert.equal(emptyBranch.includes('openLesson('), false);
 });

@@ -31,6 +31,7 @@ import { safeImpact } from '@/lib/haptics';
 import { useRouter } from 'expo-router';
 import WorkshopLessonPlayer, { TeaserVideo, type WorkshopLesson } from '@/components/WorkshopLessonPlayer';
 import WorkshopPreviewPlaceholder from '@/components/WorkshopPreviewPlaceholder';
+import { COMING_SOON_WORKSHOP_PREVIEWS } from '@/lib/workshopPreviews';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 
 type CapturedVideo = {
@@ -293,9 +294,21 @@ export default function WorkshopsScreen() {
               </TouchableOpacity>
             </View>
           ) : !workshops?.length ? (
-            <View style={{ alignItems: 'center', paddingVertical: 16, gap: 8 }} testID="workshops-empty">
-              <Feather name="play-circle" size={28} color={colors.mutedForeground} />
-              <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.mutedForeground, textAlign: 'center' }}>No workshops are published yet.</Text>
+            <View style={{ gap: 10 }} testID="workshops-coming-soon">
+              <Text style={s.intro}>Example workshops below. Preview videos and lesson details are coming soon.</Text>
+              {COMING_SOON_WORKSHOP_PREVIEWS.map((preview) => (
+                <View key={preview.title} style={s.workshopCard}>
+                  <View style={s.workshopPreview}>
+                    <WorkshopPreviewPlaceholder category={preview.category} title={preview.title} />
+                  </View>
+                  <View style={s.workshopCardInfo}>
+                    <Text style={s.category}>{preview.category}</Text>
+                    <Text style={s.cardTitle}>{preview.title}</Text>
+                    <Text style={s.cardBody}>{preview.description}</Text>
+                    <Text style={s.meta}>Example preview · enrollment not open</Text>
+                  </View>
+                </View>
+              ))}
             </View>
           ) : workshops.slice(0, 4).map((workshop) => (
             <View
