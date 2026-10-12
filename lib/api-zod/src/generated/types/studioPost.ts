@@ -22,7 +22,15 @@ export interface StudioPost {
   mediaType: StudioPostMediaType;
   caption: string;
   tags?: string[];
+  /**
+     * Legacy compatibility field; always zero. Feed likes are retired.
+     * @deprecated
+     */
   likes: number;
+  /**
+     * Legacy compatibility field; always false.
+     * @deprecated
+     */
   likedByMe?: boolean;
   createdAt: Date;
 }

@@ -8,8 +8,10 @@ const { assertDashboardSmokeContract } = require('./dashboard-smoke');
 const { assertAccountDeletionSmokeContract } = require('./account-deletion-smoke');
 const { assertAuthHandoffSmokeContract } = require('./auth-handoff-smoke');
 const { assertHqLoadingSmokeContract } = require('./hq-loading-smoke');
+const { assertReleaseContentContract, publishReleaseIcon, assertBuiltReleaseContent } = require('./release-content-smoke');
 
 assertAccountDeletionSmokeContract();
+assertReleaseContentContract();
 
 let metroProcess = null;
 let metroPort = Number(process.env.METRO_PORT || 8081);
@@ -551,6 +553,7 @@ function updateBundleUrls(timestamp, baseUrl) {
 }
 
 function updateManifests(manifests, timestamp, baseUrl, assetsByHash) {
+  const iconUrl = publishReleaseIcon(timestamp, baseUrl, basePath);
   const updateForPlatform = (platform, manifest) => {
     if (!manifest.launchAsset || !manifest.extra) {
       exitWithError(`Malformed manifest for ${platform}`);
@@ -566,6 +569,7 @@ function updateManifests(manifests, timestamp, baseUrl, assetsByHash) {
     manifest.extra.expoGo.debuggerHost =
       baseUrl.replace('https://', '') + '/' + platform;
     manifest.extra.expoGo.packagerOpts.dev = false;
+    manifest.extra.expoClient.iconUrl = iconUrl;
 
     if (manifest.assets && manifest.assets.length > 0) {
       manifest.assets.forEach((asset) => {
@@ -645,6 +649,7 @@ async function main() {
 
   console.log('Updating manifests and creating landing page...');
   updateManifests(manifests, timestamp, baseUrl, assetsByHash);
+  assertBuiltReleaseContent(manifests, timestamp);
 
   console.log('Build complete! Deploy to:', baseUrl);
 

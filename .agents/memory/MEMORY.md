@@ -15,7 +15,7 @@
 - [Workspace static build environment](workspace-static-build-env.md) — static workspace builds load Vite configs without workflow PORT or BASE_PATH values.
 - [Stripe catalog mirror refresh](stripe-catalog-sync.md) — metadata-only Stripe edits may need per-entity mirror refresh beyond incremental backfill.
 - [Drizzle SQL array parameters](drizzle-array-parameters.md) — bind PostgreSQL arrays with a typed ARRAY expression, not direct JavaScript-array interpolation.
-- [React Native web pager sizing](react-native-web-pager-sizing.md) — fixed-height FlatList pages must disable flex shrinking or web can compress multiple pages into one viewport.
+- [React Native feed paging](react-native-web-pager-sizing.md) — keep viewport-sized pages stable; inner writing should scroll only when it overflows.
 - [Clerk iPad OAuth callbacks](clerk-ipad-oauth-callbacks.md) — native SSO must use the app scheme explicitly and surface incomplete OAuth states instead of failing silently.
 - [SMS consent authority](sms-consent-authority.md) — local records stay pending; only the server-side AIMD SMS/HQ adapter may send confirmations or confirm consent.
 - [SMS signup placement](sms-signup-placement.md) — keep text-list signup only on the public homepage, without a standalone route or navigation entry.
@@ -37,3 +37,5 @@
 - [Community publication policy](community-publication-policy.md) — soft-launch posts publish immediately; screening is deferred, while reporting, blocking, and staff removal remain.
 - [Habit reminder policy](habit-reminder-policy.md) — optional device-local daily alerts; preserve offline delivery, isolate accounts, and verify native delivery in a fresh build.
 - [Request reliability](request-reliability.md) — timed-out writes may already have succeeded; client tap locks do not replace server-backed idempotency.
+- [Feed engagement policy](feed-engagement-policy.md) — private messages replace public feed likes and comments; preserve safety tools and historical records.
+- [HTTP query booleans](http-query-booleans.md) — validate true/false strings explicitly; generated boolean coercion can turn the text false into true.

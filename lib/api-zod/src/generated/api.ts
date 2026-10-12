@@ -240,13 +240,13 @@ export const ListHabitLogsResponse = zod.array(ListHabitLogsResponseItem)
  */
 export const listStudioPostsQueryLimitDefault = 20;
 export const listStudioPostsQueryOffsetDefault = 0;
-export const listStudioPostsQueryFollowingOnlyDefault = false;
+export const listStudioPostsQueryFollowingOnlyDefault = `false`;
 
 export const ListStudioPostsQueryParams = zod.object({
   "limit": zod.coerce.number().int().default(listStudioPostsQueryLimitDefault),
   "offset": zod.coerce.number().int().default(listStudioPostsQueryOffsetDefault),
   "userId": zod.coerce.number().int().nullish(),
-  "followingOnly": zod.coerce.boolean().default(listStudioPostsQueryFollowingOnlyDefault).describe('Return posts from creators followed by the signed-in user. Requires authentication when true.')
+  "followingOnly": zod.enum(['true', 'false']).default(listStudioPostsQueryFollowingOnlyDefault).describe('Use the exact string true for creators followed by the signed-in user, or false for all visible creators. Requires authentication when true.')
 })
 
 export const listStudioPostsResponseMediaTypeDefault = `image`;
@@ -263,8 +263,8 @@ export const ListStudioPostsResponseItem = zod.object({
   "mediaType": zod.enum(['image', 'video', 'audio']).default(listStudioPostsResponseMediaTypeDefault).describe('Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB.'),
   "caption": zod.string(),
   "tags": zod.array(zod.string()).optional(),
-  "likes": zod.int(),
-  "likedByMe": zod.boolean().optional(),
+  "likes": zod.int().describe('Legacy compatibility field; always zero. Feed likes are retired.'),
+  "likedByMe": zod.boolean().optional().describe('Legacy compatibility field; always false.'),
   "createdAt": zod.coerce.date()
 })
 export const ListStudioPostsResponse = zod.array(ListStudioPostsResponseItem)
@@ -297,8 +297,8 @@ export const CreateStudioPostResponse = zod.object({
   "mediaType": zod.enum(['image', 'video', 'audio']).default(createStudioPostResponseMediaTypeDefault).describe('Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB.'),
   "caption": zod.string(),
   "tags": zod.array(zod.string()).optional(),
-  "likes": zod.int(),
-  "likedByMe": zod.boolean().optional(),
+  "likes": zod.int().describe('Legacy compatibility field; always zero. Feed likes are retired.'),
+  "likedByMe": zod.boolean().optional().describe('Legacy compatibility field; always false.'),
   "createdAt": zod.coerce.date()
 })
 
@@ -324,8 +324,8 @@ export const GetStudioPostResponse = zod.object({
   "mediaType": zod.enum(['image', 'video', 'audio']).default(getStudioPostResponseMediaTypeDefault).describe('Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB.'),
   "caption": zod.string(),
   "tags": zod.array(zod.string()).optional(),
-  "likes": zod.int(),
-  "likedByMe": zod.boolean().optional(),
+  "likes": zod.int().describe('Legacy compatibility field; always zero. Feed likes are retired.'),
+  "likedByMe": zod.boolean().optional().describe('Legacy compatibility field; always false.'),
   "createdAt": zod.coerce.date()
 })
 
@@ -341,30 +341,15 @@ export const DeleteStudioPostResponse = zod.void()
 
 
 /**
- * @summary Toggle like on a studio post
+ * Feed engagement uses direct messages. This endpoint returns 410 without modifying historical likes.
+ * @deprecated
+ * @summary Retired feed likes endpoint
  */
 export const LikeStudioPostParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
-export const likeStudioPostResponseMediaTypeDefault = `image`;
-
-export const LikeStudioPostResponse = zod.object({
-  "id": zod.int(),
-  "userId": zod.int(),
-  "username": zod.string().optional(),
-  "userAvatarUrl": zod.string().nullish(),
-  "followerCount": zod.int(),
-  "followingCount": zod.int(),
-  "followedByMe": zod.boolean(),
-  "imageUrl": zod.string().nullish(),
-  "mediaType": zod.enum(['image', 'video', 'audio']).default(likeStudioPostResponseMediaTypeDefault).describe('Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB.'),
-  "caption": zod.string(),
-  "tags": zod.array(zod.string()).optional(),
-  "likes": zod.int(),
-  "likedByMe": zod.boolean().optional(),
-  "createdAt": zod.coerce.date()
-})
+export const LikeStudioPostResponse = zod.void()
 
 
 /**
@@ -2141,26 +2126,19 @@ export const UpdateChallengeVerificationResponse = zod.object({
 
 
 /**
- * @summary List comments on a studio post
+ * @deprecated
+ * @summary Retired public feed comments
  */
 export const ListPostCommentsParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
-export const ListPostCommentsResponseItem = zod.object({
-  "id": zod.int(),
-  "postId": zod.int(),
-  "userId": zod.int(),
-  "username": zod.string(),
-  "avatarUrl": zod.string().nullish(),
-  "content": zod.string(),
-  "createdAt": zod.coerce.date()
-})
-export const ListPostCommentsResponse = zod.array(ListPostCommentsResponseItem)
+export const ListPostCommentsResponse = zod.void()
 
 
 /**
- * @summary Add a comment (critique) to a studio post
+ * @deprecated
+ * @summary Retired public feed comment creation
  */
 export const AddPostCommentParams = zod.object({
   "id": zod.coerce.number().int()
@@ -2173,15 +2151,7 @@ export const AddPostCommentBody = zod.object({
   "content": zod.string().min(1)
 })
 
-export const AddPostCommentResponse = zod.object({
-  "id": zod.int(),
-  "postId": zod.int(),
-  "userId": zod.int(),
-  "username": zod.string(),
-  "avatarUrl": zod.string().nullish(),
-  "content": zod.string(),
-  "createdAt": zod.coerce.date()
-})
+export const AddPostCommentResponse = zod.void()
 
 
 /**

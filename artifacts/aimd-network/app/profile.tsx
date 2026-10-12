@@ -601,8 +601,6 @@ export default function ProfileScreen() {
                  ) : null}
                  {post.caption ? <Text style={s.portfolioCaption}>{post.caption}</Text> : null}
                  <View style={s.portfolioMeta}>
-                   <Feather name="heart" size={13} color={colors.mutedForeground} />
-                   <Text style={s.portfolioMetaText}>{post.likes ?? 0}</Text>
                    <Text style={s.portfolioMetaText}>{new Date(post.createdAt).toLocaleDateString()}</Text>
                  </View>
                </View>

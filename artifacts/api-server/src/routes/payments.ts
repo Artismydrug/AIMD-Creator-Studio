@@ -33,7 +33,7 @@ const PLANS = [
     description: "Free access for aspiring creators. Start your creative practice today.",
     features: [
       "Up to 3 active habits & basic focus timers",
-      "Full Studio Feed — post, like & comment",
+      "Full Studio Feed — share work & message creators",
       "Module 1 + free previews across all Workshops & Masterclasses",
       "Community event access & RSVPs",
       "AIMD community Discord",

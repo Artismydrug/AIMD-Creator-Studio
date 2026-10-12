@@ -6,3 +6,6 @@
 
 # Verification captures and exports are not application assets.
 /generated-artifacts/
+
+# Do not ship private tester recordings in deployment images.
+/attached_assets/ScreenRecording_*.mp4

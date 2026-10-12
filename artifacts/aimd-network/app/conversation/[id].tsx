@@ -8,17 +8,22 @@ import {
   TextInput,
   ActivityIndicator,
   Platform,
+  Alert,
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
-import * as Haptics from 'expo-haptics';
+import { useLocalSearchParams, useNavigation, useFocusEffect } from 'expo-router';
+import { safeImpact } from '@/lib/haptics';
+import { runExclusiveSubmission } from '@/lib/submissionLock';
+import { draftAfterConfirmedSend } from '@/lib/messageDraft';
 import {
   useListMessages,
   useSendMessage,
   getListConversationsQueryKey,
+  getListMessagesQueryKey,
   getGetNotificationsQueryKey,
 } from '@workspace/api-client-react';
 import type { ConversationMessage } from '@workspace/api-client-react';
@@ -86,6 +91,7 @@ function MessageBubble({ msg, currentUserId }: { msg: ConversationMessage; curre
 export default function ConversationScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const { id, name } = useLocalSearchParams<{ id: string; name?: string }>();
   const navigation = useNavigation();
   const queryClient = useQueryClient();
@@ -93,12 +99,27 @@ export default function ConversationScreen() {
   const convId = parseInt(id ?? '0', 10);
   const [text, setText] = useState('');
   const [localMessages, setLocalMessages] = useState<ConversationMessage[]>([]);
+  const sendingRef = useRef(false);
+  const [focused, setFocused] = useState(false);
+
+  useFocusEffect(React.useCallback(() => {
+    setFocused(true);
+    return () => setFocused(false);
+  }, []));
 
   React.useLayoutEffect(() => {
-    navigation.setOptions({ title: name ?? 'Messages' });
+    navigation.setOptions({ title: name ?? 'Messages', headerBackButtonDisplayMode: 'minimal' });
   }, [navigation, name]);
 
-  const { data: messages, isLoading, isError, refetch } = useListMessages(convId);
+  const { data: messages, isLoading, isError, refetch } = useListMessages(convId, {
+    query: {
+      queryKey: getListMessagesQueryKey(convId),
+      enabled: focused && Number.isInteger(convId) && convId > 0,
+      refetchInterval: focused ? 5000 : false,
+      refetchIntervalInBackground: false,
+      refetchOnMount: 'always',
+    },
+  });
   useEffect(() => {
     if (!messages) return;
     void queryClient.invalidateQueries({ queryKey: getListConversationsQueryKey() });
@@ -122,19 +143,29 @@ export default function ConversationScreen() {
     mutation: {
       onSuccess: (msg) => {
         setLocalMessages((prev) => [...prev, msg]);
-        refetch();
+        void refetch();
         void queryClient.invalidateQueries({ queryKey: getListConversationsQueryKey() });
         void queryClient.invalidateQueries({ queryKey: getGetNotificationsQueryKey() });
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        void safeImpact();
       },
     },
   });
 
-  const handleSend = () => {
-    const content = text.trim();
-    if (!content) return;
-    setText('');
-    sendMutation.mutate({ id: convId, data: { content } });
+  const handleSend = async () => {
+    const sentDraft = text;
+    const content = sentDraft.trim();
+    if (!content || sendMutation.isPending || !Number.isInteger(convId) || convId <= 0) return;
+    try {
+      await runExclusiveSubmission(sendingRef, async () => {
+        await sendMutation.mutateAsync({ id: convId, data: { content } });
+        setText((current) => draftAfterConfirmedSend(current, sentDraft));
+      });
+    } catch {
+      Alert.alert(
+        'Could not confirm delivery',
+        'Your draft is still here. Check the conversation before retrying; a slow connection can hide a successful send.',
+      );
+    }
   };
 
   const s = useMemo(() => StyleSheet.create({
@@ -233,7 +264,7 @@ export default function ConversationScreen() {
     <KeyboardAvoidingView
       style={s.container}
       behavior="padding"
-      keyboardVerticalOffset={0}
+      keyboardVerticalOffset={Platform.OS === 'web' ? 0 : headerHeight}
     >
       {otherParticipant && user?.id !== otherParticipant.senderId ? (
         <View style={s.safetyBar}>
@@ -246,6 +277,7 @@ export default function ConversationScreen() {
         </View>
       ) : null}
       <FlatList
+        style={{ flex: 1 }}
         data={reversed}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => <MessageBubble msg={item} currentUserId={user?.id ?? null} />}
@@ -271,6 +303,8 @@ export default function ConversationScreen() {
           placeholderTextColor={colors.mutedForeground}
           multiline
           returnKeyType="send"
+          submitBehavior="submit"
+          accessibilityLabel="Message"
           onSubmitEditing={handleSend}
           testID="message-input"
         />
@@ -278,9 +312,16 @@ export default function ConversationScreen() {
           style={[s.sendBtn, { opacity: text.trim() ? 1 : 0.4 }]}
           onPress={handleSend}
           disabled={!text.trim() || sendMutation.isPending}
+          accessibilityRole="button"
+          accessibilityLabel="Send message"
+          accessibilityState={{ busy: sendMutation.isPending }}
           testID="send-message"
         >
-          <Feather name="send" size={16} color={colors.primaryForeground} />
+          {sendMutation.isPending ? (
+            <ActivityIndicator size="small" color={colors.primaryForeground} />
+          ) : (
+            <Feather name="send" size={16} color={colors.primaryForeground} />
+          )}
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

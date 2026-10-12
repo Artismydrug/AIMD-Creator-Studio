@@ -209,10 +209,16 @@ export default function CreatorProfileScreen() {
     },
     usernameRow: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      width: '100%',
       alignItems: 'center',
       gap: 8,
     },
     username: {
+      flexShrink: 1,
+      maxWidth: '100%',
+      textAlign: 'center',
       fontFamily: 'DMSans_700Bold',
       fontSize: 20,
       color: colors.foreground,
@@ -687,10 +693,6 @@ export default function CreatorProfileScreen() {
                     </View>
                   )}
                   <View style={s.postMeta}>
-                    <View style={s.postMetaItem}>
-                      <Feather name="heart" size={12} color={colors.mutedForeground} />
-                      <Text style={s.postMetaText}>{post.likes ?? 0}</Text>
-                    </View>
                     <Text style={s.postMetaText}>{formatDate(post.createdAt)}</Text>
                   </View>
                 </View>

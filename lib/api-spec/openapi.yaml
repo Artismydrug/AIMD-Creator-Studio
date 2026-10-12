@@ -312,10 +312,11 @@ paths:
             type: ["integer", "null"]
         - name: followingOnly
           in: query
-          description: Return posts from creators followed by the signed-in user. Requires authentication when true.
+          description: Use the exact string true for creators followed by the signed-in user, or false for all visible creators. Requires authentication when true.
           schema:
-            type: boolean
-            default: false
+            type: string
+            enum: ["true", "false"]
+            default: "false"
       responses:
         "200":
           description: Studio posts
@@ -379,7 +380,9 @@ paths:
     post:
       operationId: likeStudioPost
       tags: [studio-posts]
-      summary: Toggle like on a studio post
+      summary: Retired feed likes endpoint
+      deprecated: true
+      description: Feed engagement uses direct messages. This endpoint returns 410 without modifying historical likes.
       parameters:
         - name: id
           in: path
@@ -387,12 +390,12 @@ paths:
           schema:
             type: integer
       responses:
-        "200":
-          description: Updated like count
+        "410":
+          description: Feed likes are retired; message the creator directly.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StudioPost"
+                $ref: "#/components/schemas/FeedInteractionUnavailable"
 
   # ── Workshops ─────────────────────────────────────────────────────────────
   /workshops:
@@ -1808,7 +1811,8 @@ paths:
     get:
       operationId: listPostComments
       tags: [studio-posts]
-      summary: List comments on a studio post
+      summary: Retired public feed comments
+      deprecated: true
       parameters:
         - name: id
           in: path
@@ -1816,18 +1820,17 @@ paths:
           schema:
             type: integer
       responses:
-        "200":
-          description: Comments
+        "410":
+          description: Public comments are retired; historical records are retained but no longer exposed.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Comment"
+                $ref: "#/components/schemas/FeedInteractionUnavailable"
     post:
       operationId: addPostComment
       tags: [studio-posts]
-      summary: Add a comment (critique) to a studio post
+      summary: Retired public feed comment creation
+      deprecated: true
       parameters:
         - name: id
           in: path
@@ -1841,12 +1844,12 @@ paths:
             schema:
               $ref: "#/components/schemas/CommentInput"
       responses:
-        "201":
-          description: Created comment
+        "410":
+          description: Public comments are retired; message the creator directly.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Comment"
+                $ref: "#/components/schemas/FeedInteractionUnavailable"
 
   # ── Tattoo Bookings ──────────────────────────────────────────────────────
   /tattoo-bookings:
@@ -2659,11 +2662,22 @@ components:
             type: string
         likes:
           type: integer
+          deprecated: true
+          description: Legacy compatibility field; always zero. Feed likes are retired.
         likedByMe:
           type: boolean
+          deprecated: true
+          description: Legacy compatibility field; always false.
         createdAt:
           type: string
           format: date-time
+
+    FeedInteractionUnavailable:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
 
     StudioPostInput:
       type: object

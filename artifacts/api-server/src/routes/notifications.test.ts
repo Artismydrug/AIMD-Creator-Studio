@@ -60,4 +60,22 @@ describe("notifications", () => {
     expect((await request(appFor(recipient)).post("/api/notifications/read-all")).body.updatedCount).toBe(1);
     expect((await request(appFor(recipient)).get("/api/notifications")).body.unreadCount).toBe(0);
   });
+
+  it("hides archived likes and critiques without counting them as unread or deleting their history", async () => {
+    await pool.query(
+      `INSERT INTO notifications (recipient_user_id, actor_user_id, type)
+       VALUES ($1, $2, 'like'), ($1, $2, 'critique')`,
+      [recipient.id, actor.id],
+    );
+    const listed = await request(appFor(recipient)).get("/api/notifications");
+    expect(listed.status).toBe(200);
+    expect(listed.body.notifications.every((notification: { type: string }) => !["like", "critique"].includes(notification.type))).toBe(true);
+    expect(listed.body.notifications.some((notification: { type: string }) => notification.type === "follow")).toBe(true);
+    expect(listed.body.unreadCount).toBe(0);
+    const history = await pool.query(
+      "SELECT count(*)::int AS count FROM notifications WHERE recipient_user_id = $1 AND type IN ('like', 'critique')",
+      [recipient.id],
+    );
+    expect(history.rows[0].count).toBe(2);
+  });
 });

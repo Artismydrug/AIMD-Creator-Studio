@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { communityMemberVisibility } from "../lib/communityMemberVisibility";
 import { createClerkClient, getAuth } from "@clerk/express";
 import { eq, sql } from "drizzle-orm";
 import { db, pool, usersTable } from "@workspace/db";
@@ -221,6 +222,11 @@ router.get("/directory", async (req, res): Promise<void> => {
     FROM users u
     LEFT JOIN studio_posts p ON p.user_id = u.id
     LEFT JOIN badges b       ON b.user_id = u.id
+    WHERE ${communityMemberVisibility({
+      username: sql`u.username`,
+      clerkId: sql`u.clerk_id`,
+      replitId: sql`u.replit_id`,
+    })}
     GROUP BY u.id
     ORDER BY u.created_at DESC
   `);
@@ -288,6 +294,11 @@ router.get("/users/:id/profile", async (req, res): Promise<void> => {
     FROM users u
     LEFT JOIN studio_posts p ON p.user_id = u.id
     WHERE u.id = ${userId}
+      AND ${communityMemberVisibility({
+        username: sql`u.username`,
+        clerkId: sql`u.clerk_id`,
+        replitId: sql`u.replit_id`,
+      })}
     GROUP BY u.id
   `);
 

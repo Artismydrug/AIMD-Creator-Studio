@@ -35,7 +35,6 @@ import type {
   ChallengeVerificationUpdate,
   CheckoutSession,
   CheckoutSessionInput,
-  Comment,
   CommentInput,
   CommunityEvent,
   CommunityEventInput,
@@ -56,6 +55,7 @@ import type {
   EventCheckInInput,
   EventCheckInResult,
   EventQrToken,
+  FeedInteractionUnavailable,
   FollowRelationship,
   GetActivityFeedParams,
   GetProgressParams,
@@ -1391,11 +1391,13 @@ export const getLikeStudioPostUrl = (id: number,) => {
 }
 
 /**
- * @summary Toggle like on a studio post
+ * Feed engagement uses direct messages. This endpoint returns 410 without modifying historical likes.
+ * @deprecated
+ * @summary Retired feed likes endpoint
  */
-export const likeStudioPost = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<StudioPost> => {
+export const likeStudioPost = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<unknown> => {
 
-  return customFetch<StudioPost>(getLikeStudioPostUrl(id),
+  return customFetch<unknown>(getLikeStudioPostUrl(id),
   {
     ...options,
     method: 'POST'
@@ -1408,7 +1410,7 @@ export const likeStudioPost = async (id: number, options?: Parameters<typeof cus
 
 
 
-export const getLikeStudioPostMutationOptions = <TError = ErrorType<unknown>,
+export const getLikeStudioPostMutationOptions = <TError = ErrorType<FeedInteractionUnavailable>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof likeStudioPost>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof likeStudioPost>>, TError,{id: number}, TContext> => {
 
@@ -1437,12 +1439,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type LikeStudioPostMutationResult = NonNullable<Awaited<ReturnType<typeof likeStudioPost>>>
 
-    export type LikeStudioPostMutationError = ErrorType<unknown>
+    export type LikeStudioPostMutationError = ErrorType<FeedInteractionUnavailable>
 
     /**
- * @summary Toggle like on a studio post
+ * @deprecated
+ * @summary Retired feed likes endpoint
  */
-export const useLikeStudioPost = <TError = ErrorType<unknown>,
+export const useLikeStudioPost = <TError = ErrorType<FeedInteractionUnavailable>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof likeStudioPost>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof likeStudioPost>>,
@@ -6493,11 +6496,12 @@ export const getListPostCommentsUrl = (id: number,) => {
 }
 
 /**
- * @summary List comments on a studio post
+ * @deprecated
+ * @summary Retired public feed comments
  */
-export const listPostComments = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<Comment[]> => {
+export const listPostComments = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<unknown> => {
 
-  return customFetch<Comment[]>(getListPostCommentsUrl(id),
+  return customFetch<unknown>(getListPostCommentsUrl(id),
   {
     ...options,
     method: 'GET'
@@ -6517,7 +6521,7 @@ export const getListPostCommentsQueryKey = (id: number,) => {
     }
 
 
-export const getListPostCommentsQueryOptions = <TData = Awaited<ReturnType<typeof listPostComments>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPostComments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getListPostCommentsQueryOptions = <TData = Awaited<ReturnType<typeof listPostComments>>, TError = ErrorType<FeedInteractionUnavailable>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPostComments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -6536,14 +6540,15 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ListPostCommentsQueryResult = NonNullable<Awaited<ReturnType<typeof listPostComments>>>
-export type ListPostCommentsQueryError = ErrorType<unknown>
+export type ListPostCommentsQueryError = ErrorType<FeedInteractionUnavailable>
 
 
 /**
- * @summary List comments on a studio post
+ * @deprecated
+ * @summary Retired public feed comments
  */
 
-export function useListPostComments<TData = Awaited<ReturnType<typeof listPostComments>>, TError = ErrorType<unknown>>(
+export function useListPostComments<TData = Awaited<ReturnType<typeof listPostComments>>, TError = ErrorType<FeedInteractionUnavailable>>(
  id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPostComments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
@@ -6570,12 +6575,13 @@ export const getAddPostCommentUrl = (id: number,) => {
 }
 
 /**
- * @summary Add a comment (critique) to a studio post
+ * @deprecated
+ * @summary Retired public feed comment creation
  */
 export const addPostComment = async (id: number,
-    commentInput: CommentInput, options?: Parameters<typeof customFetch>[1]): Promise<Comment> => {
+    commentInput: CommentInput, options?: Parameters<typeof customFetch>[1]): Promise<unknown> => {
 
-  return customFetch<Comment>(getAddPostCommentUrl(id),
+  return customFetch<unknown>(getAddPostCommentUrl(id),
   {
     ...options,
     method: 'POST',
@@ -6588,7 +6594,7 @@ export const addPostComment = async (id: number,
 
 
 
-export const getAddPostCommentMutationOptions = <TError = ErrorType<unknown>,
+export const getAddPostCommentMutationOptions = <TError = ErrorType<FeedInteractionUnavailable>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addPostComment>>, TError,{id: number;data: BodyType<CommentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof addPostComment>>, TError,{id: number;data: BodyType<CommentInput>}, TContext> => {
 
@@ -6617,12 +6623,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type AddPostCommentMutationResult = NonNullable<Awaited<ReturnType<typeof addPostComment>>>
     export type AddPostCommentMutationBody = BodyType<CommentInput>
-    export type AddPostCommentMutationError = ErrorType<unknown>
+    export type AddPostCommentMutationError = ErrorType<FeedInteractionUnavailable>
 
     /**
- * @summary Add a comment (critique) to a studio post
+ * @deprecated
+ * @summary Retired public feed comment creation
  */
-export const useAddPostComment = <TError = ErrorType<unknown>,
+export const useAddPostComment = <TError = ErrorType<FeedInteractionUnavailable>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addPostComment>>, TError,{id: number;data: BodyType<CommentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof addPostComment>>,

@@ -135,7 +135,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
   }, []);
 
   const { data: posts, isLoading, isError, refetch } = useListStudioPosts(
-    { followingOnly: feedMode === 'following' },
+    { followingOnly: feedMode === 'following' ? 'true' : 'false' },
     {
       request: {
         cache: 'no-store',
@@ -149,7 +149,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
     mutation: {
       onSuccess: (createdPost) => {
         const allPostsQueryKey = getListStudioPostsQueryKey({
-          followingOnly: false,
+          followingOnly: 'false',
         });
         queryClient.setQueryData<StudioPost[]>(
           allPostsQueryKey,

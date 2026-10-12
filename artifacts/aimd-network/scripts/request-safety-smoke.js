@@ -23,11 +23,31 @@ const { customFetch, setAuthTokenGetter, setBaseUrl, ApiError } =
   loadTypeScript('../../../lib/api-client-react/src/custom-fetch.ts');
 const { runExclusiveSubmission } = loadTypeScript('../lib/submissionLock.ts');
 const { COMING_SOON_WORKSHOP_PREVIEWS } = loadTypeScript('../lib/workshopPreviews.ts');
+const { draftAfterConfirmedSend } = loadTypeScript('../lib/messageDraft.ts');
+const { shouldScrollTextPost } = loadTypeScript('../lib/textPostLayout.ts');
 const originalFetch = global.fetch;
 const originalSetTimeout = global.setTimeout;
 const originalClearTimeout = global.clearTimeout;
 const never = () => new Promise(() => {});
 const ok = () => new Response('{"ok":true}', { headers: { 'content-type': 'application/json' } });
+
+test('short writing leaves feed paging available; long writing can scroll in its own viewport', () => {
+  assert.equal(shouldScrollTextPost(140, 400), false);
+  assert.equal(shouldScrollTextPost(400.5, 400), false);
+  assert.equal(shouldScrollTextPost(700, 400), true);
+  assert.equal(shouldScrollTextPost(700, 0), false);
+});
+
+test('text-only posts render the full writing instead of a media placeholder', () => {
+  const body = fs.readFileSync(path.resolve(__dirname, '../components/TextPostBody.tsx'), 'utf8');
+  const card = fs.readFileSync(path.resolve(__dirname, '../components/PostCard.tsx'), 'utf8');
+  assert.match(card, /<TextPostBody postId=\{post\.id\} caption=\{post\.caption\} tags=\{post\.tags\}/);
+  assert.doesNotMatch(card, /Creator in progress|immersiveFallback|fallbackMark/);
+  assert.match(body, /<Text style=\{styles\.writing\} selectable>\{caption\}<\/Text>/);
+  assert.doesNotMatch(body, /numberOfLines/);
+  assert.match(body, /color: colors\.foreground/);
+  assert.match(body, /scrollEnabled=\{shouldScrollTextPost\(contentHeight, viewportHeight\)\}/);
+});
 
 afterEach(() => {
   global.fetch = originalFetch;
@@ -205,4 +225,19 @@ test('empty workshop catalog renders coming-soon artwork without enrollable card
   assert(emptyBranch.includes('enrollment not open'));
   assert.equal(emptyBranch.includes('TouchableOpacity'), false);
   assert.equal(emptyBranch.includes('openLesson('), false);
+});
+
+test('a confirmed message clears only the unchanged sent draft', () => {
+  assert.equal(draftAfterConfirmedSend('Hey there', 'Hey there'), '');
+  assert.equal(draftAfterConfirmedSend('A new message', 'Hey there'), 'A new message');
+});
+
+test('message composer compensates for the native stack header and keeps drafts until success', () => {
+  const source = fs.readFileSync(path.resolve(__dirname, '../app/conversation/[id].tsx'), 'utf8');
+  assert(source.includes("Platform.OS === 'web' ? 0 : headerHeight"));
+  assert(source.includes("headerBackButtonDisplayMode: 'minimal'"));
+  assert(source.includes('runExclusiveSubmission(sendingRef'));
+  assert(source.indexOf('await sendMutation.mutateAsync') < source.indexOf('setText((current) => draftAfterConfirmedSend'));
+  assert(source.includes('Could not confirm delivery'));
+  assert(source.includes('refetchInterval: focused ? 5000 : false'));
 });

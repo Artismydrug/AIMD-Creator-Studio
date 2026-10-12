@@ -4,7 +4,7 @@
     "slug": "aimd-network",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/aimd-ivory-ink-icon.png",
     "scheme": "aimd-network",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -14,6 +14,7 @@
       "backgroundColor": "#F8F3EA"
     },
     "ios": {
+      "icon": "./assets/images/aimd-ivory-ink-icon.png",
       "supportsTablet": false,
       "bundleIdentifier": "app.replit.creatorstudiobyaimd"
     },

@@ -1,21 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { useListStudioPosts, useCreateStudioPost, useLikeStudioPost } from '@workspace/api-client-react';
+import { useListStudioPosts, useCreateStudioPost, useCreateConversation, useGetCurrentUser } from '@workspace/api-client-react';
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
-
-async function fetchComments(postId: number) {
-  const r = await fetch(`/api/studio-posts/${postId}/comments`);
-  return r.ok ? r.json() : [];
-}
-
-async function postComment(postId: number, content: string, parentId?: number) {
-  const r = await fetch(`/api/studio-posts/${postId}/comments`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ content, parentId }),
-  });
-  return r.json();
-}
+import { useLocation } from 'wouter';
 import {
-  Clock, Heart, Image as ImageIcon, MessageSquare, Plus,
+  Clock, Image as ImageIcon, MessageSquare, Plus,
   ThumbsUp, Trophy, Upload, Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { MediaUpload, type MediaType } from '@/components/MediaUpload';
-import EmojiPicker from '@/components/EmojiPicker';
 import { getGetRewardsQueryKey, useGetRewards } from '@workspace/api-client-react';
 
 // ─── Tab type ─────────────────────────────────────────────────────────────────
@@ -493,87 +480,16 @@ function StudioFeed() {
 
 // ─── PostCard ─────────────────────────────────────────────────────────────────
 
-function CommentThread({ postId, onCount }: { postId: number; onCount: (n: number) => void }) {
-  const qc = useQueryClient();
-  const [draft, setDraft] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const { data: rawComments, isLoading } = useQuery({
-    queryKey: ['comments', postId],
-    queryFn: () => fetchComments(postId) as Promise<any[]>,
-  });
-  const comments: any[] = rawComments ?? [];
-
-  const addComment = useMutation({
-    mutationFn: (content: string) => postComment(postId, content),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['comments', postId] });
-      setDraft('');
-    },
-  });
-
-  const submit = () => { if (draft.trim()) addComment.mutate(draft.trim()); };
-
-  return (
-    <div className="border-t border-border bg-background/40">
-      {/* Existing comments */}
-      {isLoading ? (
-        <p className="px-5 py-3 font-mono text-xs text-muted-foreground animate-pulse">Loading…</p>
-      ) : comments.length === 0 ? (
-        <p className="px-5 py-3 font-mono text-xs text-muted-foreground">No critiques yet — be the first.</p>
-      ) : (
-        <div className="px-5 py-3 space-y-3">
-          {(comments as any[]).map((c: any) => (
-            <div key={c.id} className="flex gap-2.5">
-              <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center font-mono text-[10px] text-primary flex-shrink-0 mt-0.5">
-                {c.username?.[0]?.toUpperCase() || '?'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-baseline gap-2 mb-0.5">
-                  <span className="font-bold text-xs text-foreground">{c.username}</span>
-                  <span className="font-mono text-[10px] text-muted-foreground">
-                    {new Date(c.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-                <p className="text-sm text-foreground/80 leading-relaxed">{c.content}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Composer */}
-      <div className="px-5 pb-4 flex gap-2">
-        <EmojiPicker onSelect={(emoji) => setDraft(current => `${current}${emoji}`)} />
-        <input
-          ref={inputRef}
-          value={draft}
-          onChange={e => setDraft(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && submit()}
-          placeholder="Add a critique…"
-          className="flex-1 h-8 px-3 bg-muted/40 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 font-mono"
-        />
-        <button
-          onClick={submit}
-          disabled={!draft.trim() || addComment.isPending}
-          className="px-3 h-8 bg-primary hover:bg-primary/90 disabled:opacity-40 text-primary-foreground font-bold text-xs uppercase font-mono transition-colors"
-        >
-          Post
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function PostCard({ post }: { post: any }) {
-  const queryClient = useQueryClient();
-  const likePost = useLikeStudioPost();
-  const [showComments, setShowComments] = useState(false);
-  const [commentCount, setCommentCount] = useState(0);
-
-  const handleLike = () => {
-    likePost.mutate({ id: post.id }, {
-      onSuccess: () => queryClient.invalidateQueries({ queryKey: ['listStudioPosts'] }),
+  const [, navigate] = useLocation();
+  const { data: me } = useGetCurrentUser();
+  const conversation = useCreateConversation();
+  const { toast } = useToast();
+  const handleMessage = () => {
+    if (!me || me.id === post.userId || conversation.isPending) return;
+    conversation.mutate({ data: { participantIds: [post.userId] } }, {
+      onSuccess: ({ id }) => navigate(`/messages?conversation=${id}`),
+      onError: () => toast({ title: 'Could not start a message', description: 'Please try again in a moment.', variant: 'destructive' }),
     });
   };
 
@@ -621,31 +537,20 @@ function PostCard({ post }: { post: any }) {
             ))}
           </div>
         )}
+        {me && me.id !== post.userId && (
         <div className="flex items-center gap-6 pt-4 border-t border-border">
           <button
-            onClick={handleLike}
-            className={`flex items-center gap-2 text-sm font-mono transition-colors ${
-              post.likedByMe ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
-            }`}
+            onClick={handleMessage}
+            disabled={conversation.isPending}
+            aria-label={`Message ${post.username ?? 'creator'}`}
+            className="flex min-h-11 items-center gap-2 text-sm font-mono text-primary disabled:opacity-50"
           >
-            <Heart className={`w-5 h-5 ${post.likedByMe ? 'fill-current' : ''}`} />
-            <span>{post.likes}</span>
-          </button>
-          <button
-            onClick={() => setShowComments(v => !v)}
-            className={`flex items-center gap-2 text-sm font-mono transition-colors ${
-              showComments ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <MessageSquare className={`w-5 h-5 ${showComments ? 'fill-current/20' : ''}`} />
-            <span>{showComments && commentCount > 0 ? commentCount : 'Critique'}</span>
+            <MessageSquare className="w-5 h-5" />
+            <span>{conversation.isPending ? 'Opening message…' : 'Message'}</span>
           </button>
         </div>
+        )}
       </div>
-
-      {showComments && (
-        <CommentThread postId={post.id} onCount={setCommentCount} />
-      )}
     </article>
   );
 }

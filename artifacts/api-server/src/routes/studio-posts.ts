@@ -1,10 +1,9 @@
 import { Router, type IRouter } from "express";
-import { eq, and, desc, isNull, sql, inArray } from "drizzle-orm";
+import { eq, and, desc, isNull, sql } from "drizzle-orm";
 import {
   db,
   studioPostsTable,
   studioPostMediaUploadsTable,
-  postLikesTable,
   usersTable,
 } from "@workspace/db";
 import {
@@ -15,10 +14,8 @@ import {
   GetStudioPostParams,
   GetStudioPostResponse,
   DeleteStudioPostParams,
-  LikeStudioPostParams,
-  LikeStudioPostResponse,
 } from "@workspace/api-zod";
-import { createNotification, removeActiveNotification } from "../lib/notifications";
+import { communityMemberVisibility } from "../lib/communityMemberVisibility";
 
 const router: IRouter = Router();
 
@@ -34,7 +31,8 @@ function buildPostSelect(viewerUserId: number) {
     mediaType: studioPostsTable.mediaType,
     caption: studioPostsTable.caption,
     tags: studioPostsTable.tags,
-    likes: studioPostsTable.likes,
+    // Keep the legacy response shape without exposing archived engagement counts.
+    likes: sql<number>`0`,
     createdAt: studioPostsTable.createdAt,
     followerCount: sql<number>`(
       SELECT COUNT(*)::int FROM user_follows
@@ -62,7 +60,7 @@ router.get("/studio-posts", async (req, res): Promise<void> => {
   const limit = parsed.data.limit ?? 20;
   const offset = parsed.data.offset ?? 0;
   const filterUserId = parsed.data.userId ?? null;
-  const followingOnly = parsed.data.followingOnly ?? false;
+  const followingOnly = parsed.data.followingOnly === "true";
   const viewerUserId = req.dbUser?.id ?? -1;
 
   if (followingOnly && !req.dbUser) {
@@ -75,7 +73,7 @@ router.get("/studio-posts", async (req, res): Promise<void> => {
   const followingCondition = sql`${studioPostsTable.userId} IN (
     SELECT following_id FROM user_follows WHERE follower_id = ${viewerUserId}
   )`;
-  const visibleCondition = sql`NOT EXISTS (
+  const visibleCondition = sql`${communityMemberVisibility(usersTable)} AND NOT EXISTS (
     SELECT 1 FROM user_blocks
     WHERE blocker_id = ${viewerUserId}
       AND blocked_id = ${studioPostsTable.userId}
@@ -116,19 +114,7 @@ router.get("/studio-posts", async (req, res): Promise<void> => {
         .limit(limit)
         .offset(offset);
 
-  const postIds = posts.map((p) => p.id);
-  const likedSet = new Set<number>();
-
-  if (postIds.length > 0 && !!req.dbUser) {
-    const userId = req.dbUser!.id;
-    const likes = await db
-      .select()
-      .from(postLikesTable)
-      .where(and(eq(postLikesTable.userId, userId), inArray(postLikesTable.postId, posts.map((post) => post.id))));
-    likes.forEach((l) => likedSet.add(l.postId));
-  }
-
-  const result = posts.map((p) => ({ ...p, likedByMe: likedSet.has(p.id) }));
+  const result = posts.map((p) => ({ ...p, likedByMe: false }));
   res.json(ListStudioPostsResponse.parse(result));
 });
 
@@ -215,7 +201,7 @@ router.get("/studio-posts/:id", async (req, res): Promise<void> => {
     return;
   }
   const viewerUserId = req.dbUser?.id ?? -1;
-  const visibleCondition = sql`NOT EXISTS (
+  const visibleCondition = sql`${communityMemberVisibility(usersTable)} AND NOT EXISTS (
     SELECT 1 FROM user_blocks
     WHERE blocker_id = ${viewerUserId}
       AND blocked_id = ${studioPostsTable.userId}
@@ -231,16 +217,7 @@ router.get("/studio-posts/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  let likedByMe = false;
-  if (!!req.dbUser) {
-    const [like] = await db
-      .select()
-      .from(postLikesTable)
-      .where(and(eq(postLikesTable.postId, post.id), eq(postLikesTable.userId, req.dbUser!.id)));
-    likedByMe = !!like;
-  }
-
-  res.json(GetStudioPostResponse.parse({ ...post, likedByMe }));
+  res.json(GetStudioPostResponse.parse({ ...post, likedByMe: false }));
 });
 
 router.delete("/studio-posts/:id", async (req, res): Promise<void> => {
@@ -263,82 +240,8 @@ router.delete("/studio-posts/:id", async (req, res): Promise<void> => {
   res.sendStatus(204);
 });
 
-router.post("/studio-posts/:id/like", async (req, res): Promise<void> => {
-  if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const userId = req.dbUser!.id;
-
-  const params = LikeStudioPostParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: params.error.message });
-    return;
-  }
-  const [existing] = await db
-    .select()
-    .from(postLikesTable)
-    .where(and(eq(postLikesTable.postId, params.data.id), eq(postLikesTable.userId, userId)));
-
-  let likedByMe: boolean;
-  let postOwnerId: number | undefined;
-  if (existing) {
-    await db.delete(postLikesTable).where(eq(postLikesTable.id, existing.id));
-    await db
-      .update(studioPostsTable)
-      .set({ likes: sql`${studioPostsTable.likes} - 1` })
-      .where(eq(studioPostsTable.id, params.data.id));
-    likedByMe = false;
-  } else {
-    const ownerResult = await db.execute(sql`
-      SELECT user_id FROM studio_posts WHERE id = ${params.data.id}
-    `);
-    postOwnerId = (ownerResult.rows[0] as { user_id?: number } | undefined)?.user_id;
-    if (!postOwnerId) {
-      res.status(404).json({ error: "Post not found" });
-      return;
-    }
-    const blocked = await db.execute(sql`
-      SELECT 1 FROM user_blocks
-      WHERE (blocker_id = ${userId} AND blocked_id = ${postOwnerId})
-         OR (blocker_id = ${postOwnerId} AND blocked_id = ${userId})
-      LIMIT 1
-    `);
-    if (blocked.rows.length > 0) {
-      res.status(403).json({ error: "This creator is blocked." });
-      return;
-    }
-    await db.insert(postLikesTable).values({ postId: params.data.id, userId });
-    await db
-      .update(studioPostsTable)
-      .set({ likes: sql`${studioPostsTable.likes} + 1` })
-      .where(eq(studioPostsTable.id, params.data.id));
-    likedByMe = true;
-  }
-
-  const [post] = await db
-    .select(buildPostSelect(userId))
-    .from(studioPostsTable)
-    .innerJoin(usersTable, eq(studioPostsTable.userId, usersTable.id))
-    .where(eq(studioPostsTable.id, params.data.id));
-
-  if (!post) {
-    res.status(404).json({ error: "Post not found" });
-    return;
-  }
-  if (likedByMe) {
-    await createNotification({
-      recipientUserId: post.userId,
-      actorUserId: userId,
-      type: "like",
-      postId: post.id,
-    });
-  } else {
-    await removeActiveNotification({
-      recipientUserId: post.userId,
-      actorUserId: userId,
-      type: "like",
-      postId: post.id,
-    });
-  }
-  res.json(LikeStudioPostResponse.parse({ ...post, likedByMe }));
+router.post("/studio-posts/:id/like", (_req, res): void => {
+  res.status(410).json({ error: "Feed likes are no longer available. Message the creator directly." });
 });
 
 export default router;

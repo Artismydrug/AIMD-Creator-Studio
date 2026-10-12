@@ -12,3 +12,9 @@ The owner clarified that the approved build was intentionally held unreleased wh
 **How to apply:** Do not describe Creator Studio as awaiting its initial Apple approval. Separate confirmed current-code issues, unverified native behavior, and future-update recommendations from the previously approved binary. Approval is not proof of public availability or proof that subsequent workspace changes were reviewed; check current release status when needed.
 
 When discussing readiness, assess the updated release candidate against this launch approach. Do not recommend releasing the earlier approved build unless the owner changes the plan.
+
+A successful source check or JavaScript export does not prove that the latest UI and icon were packaged into an uploaded or installed native build.
+
+**Why:** The approved icon was correct in the workspace, but TestFlight showed older artwork; the tester recording also lacked workshop preview cards present in current source.
+
+**How to apply:** Distinguish the available TestFlight build from the installed build, especially when an Update button is visible. Verify exported manifests and bundle content, then require a fresh native upload and device checks before declaring the release candidate ready.

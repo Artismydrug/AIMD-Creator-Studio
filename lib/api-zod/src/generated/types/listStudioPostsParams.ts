@@ -5,6 +5,7 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+import type { ListStudioPostsFollowingOnly } from './listStudioPostsFollowingOnly';
 
 export type ListStudioPostsParams = {
 limit?: number;
@@ -14,7 +15,7 @@ offset?: number;
  */
 userId?: number | null;
 /**
- * Return posts from creators followed by the signed-in user. Requires authentication when true.
+ * Use the exact string true for creators followed by the signed-in user, or false for all visible creators. Requires authentication when true.
  */
-followingOnly?: boolean;
+followingOnly?: ListStudioPostsFollowingOnly;
 };

@@ -251,9 +251,21 @@ export interface StudioPost {
   mediaType: StudioPostMediaType;
   caption: string;
   tags?: string[];
+  /**
+     * Legacy compatibility field; always zero. Feed likes are retired.
+     * @deprecated
+     */
   likes: number;
+  /**
+     * Legacy compatibility field; always false.
+     * @deprecated
+     */
   likedByMe?: boolean;
   createdAt: string;
+}
+
+export interface FeedInteractionUnavailable {
+  error: string;
 }
 
 export type StudioPostInputMediaType = typeof StudioPostInputMediaType[keyof typeof StudioPostInputMediaType];
@@ -1892,10 +1904,18 @@ offset?: number;
  */
 userId?: number | null;
 /**
- * Return posts from creators followed by the signed-in user. Requires authentication when true.
+ * Use the exact string true for creators followed by the signed-in user, or false for all visible creators. Requires authentication when true.
  */
-followingOnly?: boolean;
+followingOnly?: ListStudioPostsFollowingOnly;
 };
+
+export type ListStudioPostsFollowingOnly = typeof ListStudioPostsFollowingOnly[keyof typeof ListStudioPostsFollowingOnly];
+
+
+export const ListStudioPostsFollowingOnly = {
+  true: 'true',
+  false: 'false',
+} as const;
 
 export type ListWorkshopsParams = {
 /**

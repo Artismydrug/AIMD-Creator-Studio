@@ -4,24 +4,15 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Modal,
-  FlatList,
-  TextInput,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
+  Alert,
   Image,
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  useLikeStudioPost,
-  useListPostComments,
-  getListPostCommentsQueryKey,
-  useAddPostComment,
+  useCreateConversation,
   useFollowUser,
   useUnfollowUser,
   getBaseUrl,
@@ -31,7 +22,7 @@ import { useRouter } from 'expo-router';
 import SafetyActions from '@/components/SafetyActions';
 import StudioVideo from '@/components/StudioVideo';
 import AudioTrackPlayer from '@/components/AudioTrackPlayer';
-import EmojiPicker from '@/components/EmojiPicker';
+import TextPostBody from '@/components/TextPostBody';
 
 /** Resolve a relative imageUrl (e.g. /api/storage/objects/…) to an absolute URL for React Native. */
 function resolveImageUrl(url: string | null | undefined): string | null {
@@ -98,53 +89,35 @@ export default function PostCard({
   const colors = useColors();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [liked, setLiked] = useState(post.likedByMe ?? false);
-  const [likeCount, setLikeCount] = useState(post.likes);
   const [followedByMe, setFollowedByMe] = useState(post.followedByMe);
   const [followerCount, setFollowerCount] = useState(post.followerCount);
-  const [showComments, setShowComments] = useState(false);
-  const [commentText, setCommentText] = useState('');
   const frameColors = [colors.primary, colors.sunsetCoral, colors.cyan, colors.gold];
   const frameColor = frameColors[post.id % frameColors.length];
+  const isTextOnly = !resolveImageUrl(post.imageUrl);
 
-  const likeMutation = useLikeStudioPost({
+  const createConversation = useCreateConversation({
     mutation: {
-      onSuccess: (data) => {
-        setLiked(data.likedByMe ?? !liked);
-        setLikeCount(data.likes);
+      onSuccess: (conversation) => {
+        router.push({
+          pathname: '/conversation/[id]',
+          params: { id: conversation.id, name: post.username ?? 'Messages' },
+        });
+      },
+      onError: () => {
+        Alert.alert('Could not start a message', 'Please try again in a moment.');
       },
     },
   });
 
-  const { data: comments, isLoading: commentsLoading, refetch: refetchComments } = useListPostComments(
-    post.id,
-    { query: { queryKey: getListPostCommentsQueryKey(post.id), enabled: showComments } }
-  );
-
-  const addCommentMutation = useAddPostComment({
-    mutation: {
-      onSuccess: () => {
-        setCommentText('');
-        refetchComments();
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      },
-    },
-  });
   const followMutation = useFollowUser();
   const unfollowMutation = useUnfollowUser();
   const isOwnPost = currentUserId === post.userId;
+  const canMessageCreator = !!currentUserId && !isOwnPost;
 
-  const handleLike = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const wasLiked = liked;
-    setLiked(!wasLiked);
-    setLikeCount(prev => wasLiked ? prev - 1 : prev + 1);
-    likeMutation.mutate({ id: post.id });
-  };
-
-  const handleOpenComments = () => {
-    setShowComments(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const handleMessage = () => {
+    if (canMessageCreator && !createConversation.isPending) {
+      createConversation.mutate({ data: { participantIds: [post.userId] } });
+    }
   };
 
   const handleFollow = () => {
@@ -167,11 +140,6 @@ export default function PostCard({
         },
       },
     );
-  };
-
-  const handleSendComment = () => {
-    if (!commentText.trim()) return;
-    addCommentMutation.mutate({ id: post.id, data: { content: commentText.trim() } });
   };
 
   const s = useMemo(() => StyleSheet.create({
@@ -207,12 +175,18 @@ export default function PostCard({
     immersiveVideo: {
       ...StyleSheet.absoluteFillObject,
     },
-    immersiveFallback: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 32,
-      backgroundColor: colors.ink,
+    textPostSurface: { backgroundColor: colors.card },
+    textPostFooter: {
+      position: 'relative',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      paddingLeft: 16,
+      paddingRight: 84,
+      paddingTop: 12,
+      paddingBottom: 24,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
     },
     audioSurface: {
       flex: 1,
@@ -221,31 +195,6 @@ export default function PostCard({
       paddingRight: 80,
       paddingBottom: 140,
       gap: 18,
-    },
-    fallbackMark: {
-      width: 76,
-      height: 76,
-      borderRadius: 38,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.primary,
-      marginBottom: 18,
-    },
-    fallbackEyebrow: {
-      color: colors.cyan,
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 11,
-      letterSpacing: 1.8,
-      textTransform: 'uppercase',
-      textAlign: 'center',
-    },
-    fallbackCaption: {
-      color: '#FFFFFF',
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 26,
-      lineHeight: 32,
-      textAlign: 'center',
-      marginTop: 10,
     },
     topGradient: {
       ...StyleSheet.absoluteFillObject,
@@ -448,98 +397,16 @@ export default function PostCard({
       borderTopColor: colors.border,
       paddingTop: 10,
     },
-    actionBtn: {
+    messageAction: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
+      minHeight: 44,
     },
-    actionCount: {
+    messageActionText: {
       fontFamily: 'DMSans_500Medium',
       fontSize: 13,
-      color: colors.mutedForeground,
-    },
-    // Comments modal
-    modalOverlay: {
-      flex: 1,
-      justifyContent: 'flex-end',
-      backgroundColor: 'rgba(0,0,0,0.7)',
-    },
-    commentsSheet: {
-      backgroundColor: colors.card,
-      maxHeight: '70%',
-      paddingTop: 12,
-    },
-    sheetHandle: {
-      width: 36,
-      height: 4,
-      backgroundColor: colors.border,
-      borderRadius: 2,
-      alignSelf: 'center',
-      marginBottom: 12,
-    },
-    commentsHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingBottom: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    commentsTitle: {
-      fontFamily: 'DMSans_600SemiBold',
-      fontSize: 16,
-      color: colors.foreground,
-    },
-    commentItem: {
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      flexDirection: 'row',
-      gap: 10,
-    },
-    commentContent: { flex: 1 },
-    commentUsername: {
-      fontFamily: 'DMSans_600SemiBold',
-      fontSize: 13,
-      color: colors.foreground,
-      marginBottom: 2,
-    },
-    commentText: {
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 14,
-      color: colors.foreground,
-      lineHeight: 20,
-    },
-    inputRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-      gap: 10,
-    },
-    input: {
-      flex: 1,
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 14,
-      color: colors.foreground,
-      backgroundColor: colors.input,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-    },
-    sendBtn: {
-      padding: 6,
-    },
-    emptyComments: {
-      padding: 24,
-      alignItems: 'center',
-      gap: 8,
-    },
-    emptyText: {
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 14,
-      color: colors.mutedForeground,
+      color: colors.primary,
     },
   }), [colors]);
 
@@ -547,7 +414,7 @@ export default function PostCard({
     <>
       {immersive ? (
         <View style={s.immersiveCard}>
-          <View style={s.mediaSurface}>
+          <View style={[s.mediaSurface, isTextOnly && s.textPostSurface]}>
             {resolveImageUrl(post.imageUrl) && post.mediaType === 'audio' ? (
               <View style={s.audioSurface}>
                 <Feather name="music" size={50} color={colors.cyan} />
@@ -569,20 +436,11 @@ export default function PostCard({
                 resizeMode="contain"
               />
             ) : (
-              <View style={s.immersiveFallback}>
-                <View style={s.fallbackMark}>
-                  <Feather
-                    name={post.mediaType === 'video' ? 'play' : 'aperture'}
-                    size={32}
-                    color={colors.primaryForeground}
-                  />
-                </View>
-                <Text style={s.fallbackEyebrow}>
-                  {post.mediaType === 'video' ? 'Video post' : 'Creator in progress'}
-                </Text>
-              </View>
+              <TextPostBody postId={post.id} caption={post.caption} tags={post.tags} />
             )}
 
+            {!isTextOnly && (
+            <>
             <LinearGradient
               pointerEvents="none"
               colors={['rgba(23,52,58,0.78)', 'transparent']}
@@ -593,29 +451,31 @@ export default function PostCard({
               colors={['transparent', 'rgba(23,52,58,0.96)']}
               style={s.bottomGradient}
             />
+            </>
+            )}
 
-            <View style={s.immersiveContent}>
+            <View style={[s.immersiveContent, isTextOnly && s.textPostFooter]}>
               <TouchableOpacity
                 accessibilityRole="button"
                 accessibilityLabel={`Open ${post.username ?? 'creator'} profile`}
                 onPress={() => router.push(`/creator/${post.userId}`)}
                 style={s.immersiveAuthorButton}
               >
-                <View style={s.immersiveAvatarFrame}>
+                <View style={[s.immersiveAvatarFrame, isTextOnly && { borderColor: colors.border }]}>
                   <Avatar username={post.username} avatarUrl={post.userAvatarUrl} size={42} />
                 </View>
                 <View style={s.immersiveUserInfo}>
-                  <Text style={s.immersiveUsername} numberOfLines={1}>
+                  <Text style={[s.immersiveUsername, isTextOnly && { color: colors.foreground }]} numberOfLines={1}>
                     {post.username ?? `User #${post.userId}`}
                   </Text>
-                  <Text style={s.immersiveMeta}>
+                  <Text style={[s.immersiveMeta, isTextOnly && { color: colors.mutedForeground }]}>
                     {formatTime(post.createdAt)} · {followerCount} followers
                   </Text>
                 </View>
               </TouchableOpacity>
 
-              <Text style={s.immersiveCaption} numberOfLines={4}>{post.caption}</Text>
-              {post.tags && post.tags.length > 0 && (
+              {!isTextOnly && <Text style={s.immersiveCaption} numberOfLines={4}>{post.caption}</Text>}
+              {!isTextOnly && post.tags && post.tags.length > 0 && (
                 <View style={s.immersiveTagsRow}>
                   {post.tags.slice(0, 4).map((tag, i) => (
                     <Text key={i} style={s.immersiveTag}>#{tag}</Text>
@@ -635,43 +495,38 @@ export default function PostCard({
                   }}
                   disabled={followMutation.isPending || unfollowMutation.isPending}
                   onPress={handleFollow}
-                  style={[s.immersiveFollow, followedByMe && s.immersiveFollowSelected]}
+                  style={[
+                    s.immersiveFollow,
+                    followedByMe && s.immersiveFollowSelected,
+                    isTextOnly && { borderColor: colors.border },
+                    isTextOnly && followedByMe && { backgroundColor: colors.muted },
+                  ]}
                   testID={`follow-user-${post.userId}`}
                 >
                   <Feather
                     name={followedByMe ? 'check' : 'plus'}
                     size={22}
-                    color="#FFFFFF"
+                    color={isTextOnly && followedByMe ? colors.foreground : '#FFFFFF'}
                   />
                 </TouchableOpacity>
               )}
 
+              {canMessageCreator && (
               <TouchableOpacity
                 accessibilityRole="button"
-                accessibilityLabel={`${liked ? 'Unlike' : 'Like'} post`}
-                accessibilityState={{ selected: liked, busy: likeMutation.isPending }}
+                accessibilityLabel={`Message ${post.username ?? 'creator'}`}
+                accessibilityState={{ busy: createConversation.isPending }}
+                disabled={createConversation.isPending}
                 style={s.immersiveAction}
-                onPress={handleLike}
-                testID={`like-post-${post.id}`}
+                onPress={handleMessage}
+                testID={`message-creator-${post.userId}`}
               >
-                <View style={s.immersiveActionIcon}>
-                  <Feather name="heart" size={22} color={liked ? colors.primary : '#FFFFFF'} />
+                <View style={[s.immersiveActionIcon, isTextOnly && { backgroundColor: colors.muted }]}>
+                  <Feather name="message-circle" size={21} color={isTextOnly ? colors.foreground : '#FFFFFF'} />
                 </View>
-                <Text style={s.immersiveActionCount}>{likeCount}</Text>
+                <Text style={[s.immersiveActionCount, isTextOnly && { color: colors.foreground }]}>Message</Text>
               </TouchableOpacity>
-
-              <TouchableOpacity
-                accessibilityRole="button"
-                accessibilityLabel="Open critiques"
-                style={s.immersiveAction}
-                onPress={handleOpenComments}
-                testID={`comment-post-${post.id}`}
-              >
-                <View style={s.immersiveActionIcon}>
-                  <Feather name="message-circle" size={21} color="#FFFFFF" />
-                </View>
-                <Text style={s.immersiveActionCount}>Critique</Text>
-              </TouchableOpacity>
+              )}
 
               {!isOwnPost && (
                 <SafetyActions
@@ -679,7 +534,7 @@ export default function PostCard({
                   username={post.username}
                   postId={post.id}
                   onBlocked={() => onRefresh?.()}
-                  triggerColor="#FFFFFF"
+                  triggerColor={isTextOnly ? colors.foreground : '#FFFFFF'}
                 />
               )}
             </View>
@@ -766,88 +621,27 @@ export default function PostCard({
             </View>
           )}
 
-          <View style={s.actions}>
-            <TouchableOpacity accessibilityLabel="Like post" style={s.actionBtn} onPress={handleLike} testID={`like-post-${post.id}`}>
-              <Feather
-                name={liked ? 'heart' : 'heart'}
-                size={18}
-                color={liked ? colors.primary : colors.mutedForeground}
-              />
-              <Text style={[s.actionCount, liked && { color: colors.primary }]}>{likeCount}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity accessibilityLabel="Open critiques" style={s.actionBtn} onPress={handleOpenComments} testID={`comment-post-${post.id}`}>
-              <Feather name="message-circle" size={18} color={colors.mutedForeground} />
-              <Text style={s.actionCount}>Critique</Text>
-            </TouchableOpacity>
-          </View>
+          {canMessageCreator && (
+            <View style={s.actions}>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={`Message ${post.username ?? 'creator'}`}
+                accessibilityState={{ busy: createConversation.isPending }}
+                disabled={createConversation.isPending}
+                onPress={handleMessage}
+                style={s.messageAction}
+                testID={`message-creator-${post.userId}`}
+              >
+                <Feather name="message-circle" size={18} color={colors.primary} />
+                <Text style={s.messageActionText}>
+                  {createConversation.isPending ? 'Opening message…' : 'Message'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       )}
 
-      <Modal visible={showComments} animationType="slide" transparent>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={s.modalOverlay}
-        >
-          <View style={s.commentsSheet}>
-            <View style={s.sheetHandle} />
-            <View style={s.commentsHeader}>
-              <Text style={s.commentsTitle}>Critiques</Text>
-              <TouchableOpacity onPress={() => setShowComments(false)}>
-                <Feather name="x" size={20} color={colors.mutedForeground} />
-              </TouchableOpacity>
-            </View>
-
-            {commentsLoading ? (
-              <View style={s.emptyComments}>
-                <ActivityIndicator color={colors.primary} />
-              </View>
-            ) : (
-              <FlatList
-                data={comments}
-                keyExtractor={c => String(c.id)}
-                renderItem={({ item }) => (
-                  <View style={s.commentItem}>
-                    <Avatar username={item.username} avatarUrl={item.avatarUrl} size={28} />
-                    <View style={s.commentContent}>
-                      <Text style={s.commentUsername}>{item.username}</Text>
-                      <Text style={s.commentText}>{item.content}</Text>
-                    </View>
-                  </View>
-                )}
-                ListEmptyComponent={
-                  <View style={s.emptyComments}>
-                    <Text style={s.emptyText}>No critiques yet — share your thoughts</Text>
-                  </View>
-                }
-              />
-            )}
-
-            <View style={s.inputRow}>
-              <EmojiPicker onSelect={(emoji) => setCommentText((current) => `${current}${emoji}`)} />
-              <TextInput
-                style={s.input}
-                value={commentText}
-                onChangeText={setCommentText}
-                placeholder="Add a critique..."
-                placeholderTextColor={colors.mutedForeground}
-              />
-              <TouchableOpacity
-                style={s.sendBtn}
-                onPress={handleSendComment}
-                disabled={!commentText.trim() || addCommentMutation.isPending}
-                testID="send-comment"
-              >
-                <Feather
-                  name="send"
-                  size={20}
-                  color={commentText.trim() ? colors.primary : colors.mutedForeground}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
     </>
   );
 }

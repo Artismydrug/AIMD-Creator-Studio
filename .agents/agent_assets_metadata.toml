@@ -168,3 +168,17 @@ mtime_ms = 1791693259008
 storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/9184f091-2d66-4838-9fd9-8cd8329163b2/f2c5eb5f-b1f3-4ba6-b170-75e2ec9e3eb7"
 storage_version_token = "1791693295992620"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "jUi6wIg9uwGbSh16E7SnH"
+uri = "file://artifacts/aimd-network/assets/images/aimd-ivory-ink-icon.png"
+type = "image"
+title = "Approved app icon — option 14"
+description = "Ivory Ink: the approved artwork configured for the next iOS build, not the older black icon currently shown in TestFlight."
+logical_id = "15e78aa2-b241-40fc-8dab-afd0028ef969"
+content_hash = "sha256:dbbb95fca20529be1caaa082e1d96013ca3e52e240e60e7f9cfc7ed4a0e502fe"
+size = 76454
+mtime_ms = 1791823341746
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/15e78aa2-b241-40fc-8dab-afd0028ef969/475e4e04-f5dd-4663-927c-6b54833c1e68"
+storage_version_token = "1791824270898689"
+content_type = "image/png"

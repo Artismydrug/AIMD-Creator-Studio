@@ -50,3 +50,6 @@ Thumbs.db
 
 # Generated exports and verification captures
 /generated-artifacts/
+
+# Tester screen recordings are diagnostic inputs, not application assets.
+/attached_assets/ScreenRecording_*.mp4

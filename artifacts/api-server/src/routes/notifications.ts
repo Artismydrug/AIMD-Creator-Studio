@@ -29,6 +29,7 @@ router.get("/notifications", async (req, res): Promise<void> => {
     FROM notifications n
     LEFT JOIN users actor ON actor.id = n.actor_user_id
     WHERE n.recipient_user_id = ${userId}
+      AND n.type NOT IN ('like', 'critique')
     ORDER BY n.created_at DESC
     LIMIT 100
   `);
