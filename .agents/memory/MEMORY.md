@@ -39,3 +39,4 @@
 - [Request reliability](request-reliability.md) — timed-out writes may already have succeeded; client tap locks do not replace server-backed idempotency.
 - [Feed engagement policy](feed-engagement-policy.md) — private messages replace public feed likes and comments; preserve safety tools and historical records.
 - [HTTP query booleans](http-query-booleans.md) — validate true/false strings explicitly; generated boolean coercion can turn the text false into true.
+- [Browser destructive confirmations](browser-destructive-confirmations.md) — use explicit app-owned controls; Cancel must send no write, while native confirmations remain separate.

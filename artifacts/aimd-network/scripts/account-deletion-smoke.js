@@ -17,6 +17,14 @@ function assertAccountDeletionSmokeContract() {
   assertIncludes(source, 'Delete your account permanently?', 'confirmation title');
   assertIncludes(source, 'This action cannot be undone.', 'permanence warning');
   assertIncludes(source, 'Delete permanently', 'destructive confirmation action');
+  assertIncludes(source, 'testID="delete-confirm-cancel"', 'browser confirmation has a non-destructive cancel control');
+  assertIncludes(source, 'testID="delete-confirm-submit"', 'browser deletion has an explicit destructive control');
+  assertIncludes(source, 'if (!deleteConfirmationOpen || deleteAccount.isPending) return;', 'browser deletion requires an open confirmation');
+  if (source.includes('window.confirm(')) {
+    throw new Error('Account deletion must not depend on browser-native confirmation interception.');
+  }
+  assertIncludes(source, 'onPress: performDeletion', 'native destructive confirmation uses the same deletion action');
+  assertIncludes(source, "window.alert(`${title}\\n\\n${message}`)", 'browser deletion notices are visible');
   assertIncludes(source, "router.replace('/(auth)/sign-in')", 'post-deletion sign-in route');
 
   console.log('Account deletion smoke contract passed');

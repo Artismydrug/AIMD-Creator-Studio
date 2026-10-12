@@ -103,9 +103,15 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
   const [feedMode, setFeedMode] = useState<'all' | 'following'>('all');
   const [activeIndex, setActiveIndex] = useState(0);
   const [pagerHeight, setPagerHeight] = useState(0);
-  const { height: windowHeight } = useWindowDimensions();
+  const pagerViewportRef = useRef<View>(null);
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const topPad = embedded ? 0 : Platform.OS === 'web' ? 67 : insets.top + 8;
   const pageHeight = pagerHeight || Math.max(480, windowHeight - topPad - 112);
+  const syncPagerHeight = useCallback((height: number) => {
+    const nextHeight = Math.round(height);
+    if (!Number.isFinite(nextHeight) || nextHeight <= 0) return;
+    setPagerHeight((previous) => previous === nextHeight ? previous : nextHeight);
+  }, []);
 
   useEffect(() => {
     if (!embedded && compose === '1') {
@@ -144,6 +150,23 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
     },
   );
   const { data: me } = useGetCurrentUser();
+
+  useEffect(() => {
+    // Measure the actual scroll host after data mounts. A wrapper's onLayout
+    // can be missed on web, leaving embedded rows at the full-screen estimate.
+    const frame = requestAnimationFrame(() => {
+      const onMeasured = (_x: number, _y: number, _width: number, height: number) => {
+        syncPagerHeight(height);
+      };
+      const scrollHost = feedRef.current?.getNativeScrollRef();
+      if (scrollHost && 'measure' in scrollHost) {
+        scrollHost.measure(onMeasured);
+      } else {
+        pagerViewportRef.current?.measure(onMeasured);
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isLoading, posts?.length, feedMode, windowHeight, windowWidth, syncPagerHeight]);
 
   const createMutation = useCreateStudioPost({
     mutation: {
@@ -726,12 +749,10 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
         </View>
       ) : (
         <View
+          ref={pagerViewportRef}
           style={s.pagerViewport}
           onLayout={(event) => {
-            const nextHeight = Math.round(event.nativeEvent.layout.height);
-            if (nextHeight > 0 && nextHeight !== pagerHeight) {
-              setPagerHeight(nextHeight);
-            }
+            syncPagerHeight(event.nativeEvent.layout.height);
           }}
         >
           <FlatList
@@ -764,6 +785,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
               </View>
             )}
             style={s.pager}
+            onLayout={(event) => syncPagerHeight(event.nativeEvent.layout.height)}
             showsVerticalScrollIndicator={false}
             pagingEnabled
             snapToInterval={pageHeight}
@@ -778,7 +800,10 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
               index,
             })}
             onScroll={(event) => {
-              const nextIndex = Math.round(event.nativeEvent.contentOffset.y / pageHeight);
+              const visibleHeight = Math.round(event.nativeEvent.layoutMeasurement.height);
+              syncPagerHeight(visibleHeight);
+              const currentPageHeight = Number.isFinite(visibleHeight) && visibleHeight > 0 ? visibleHeight : pageHeight;
+              const nextIndex = Math.round(event.nativeEvent.contentOffset.y / currentPageHeight);
               const boundedIndex = Math.max(0, Math.min(nextIndex, (posts?.length ?? 1) - 1));
               if (boundedIndex !== activeIndex) {
                 setActiveIndex(boundedIndex);

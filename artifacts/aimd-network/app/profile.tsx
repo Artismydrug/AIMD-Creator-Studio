@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Image,
   Linking,
+  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -300,6 +301,8 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { signOut, userId } = useAuth();
   const deleteAccount = useDeleteCurrentUser();
+  const deletionInFlight = useRef(false);
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const {
     data: me,
     isLoading: meLoading,
@@ -356,6 +359,9 @@ export default function ProfileScreen() {
     deleteAccountSection: { gap: 8, paddingTop: 8 },
     deleteAccountTitle: { color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 15 },
     deleteAccountDescription: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 13, lineHeight: 19 },
+    deleteOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: 'rgba(0,0,0,0.5)' },
+    deletePanel: { width: '100%', maxWidth: 420, padding: 20, gap: 16, backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border },
+    deletePanelActions: { gap: 10 },
     signOutButton: { alignItems: 'center', borderRadius: 10, borderWidth: 1, flexDirection: 'row', gap: 8, justifyContent: 'center', minHeight: 46 },
     signOutText: { fontFamily: 'DMSans_700Bold', fontSize: 14 },
     state: { alignItems: 'center', gap: 12, justifyContent: 'center', minHeight: 320, padding: 24 },
@@ -433,29 +439,48 @@ export default function ProfileScreen() {
       ],
     );
   };
+  const showDeletionNotice = (title: string, message: string) => {
+      if (Platform.OS === 'web') {
+        window.alert(`${title}\n\n${message}`);
+      } else {
+        Alert.alert(title, message);
+      }
+  };
+  const performDeletion = () => {
+      if (deleteAccount.isPending || deletionInFlight.current) return;
+      deletionInFlight.current = true;
+      void deleteAccount.mutateAsync(undefined)
+        .then(async () => {
+          if (userId) {
+            try { await clearHabitReminders(userId); }
+            catch { showDeletionNotice('Account deleted', 'Local reminder cleanup failed. Turn off Creator Studio alerts in device settings.'); }
+          }
+        })
+        .then(() => signOut())
+        .then(() => router.replace('/(auth)/sign-in'))
+        .catch(() => showDeletionNotice('Could not confirm completion', 'Please reopen the app or contact info@artismydrug.com before retrying account deletion.'))
+        .finally(() => { deletionInFlight.current = false; });
+  };
+  const deleteTitle = 'Delete your account permanently?';
+  const deleteWarning = 'This permanently removes your AIMD profile, posts, habits, badges, messages, and other account data. This cannot be undone.';
   const handleDeleteAccount = () => {
     if (deleteAccount.isPending) return;
 
+    // Only the explicit confirmation button may start browser deletion.
+    if (Platform.OS === 'web') {
+      setDeleteConfirmationOpen(true);
+      return;
+    }
+
     Alert.alert(
-      'Delete your account permanently?',
-      'This permanently removes your AIMD profile, posts, habits, badges, messages, and other account data. This cannot be undone.',
+      deleteTitle,
+      deleteWarning,
       [
         { text: 'Keep my account', style: 'cancel' },
         {
           text: 'Delete permanently',
           style: 'destructive',
-          onPress: () => {
-            void deleteAccount.mutateAsync(undefined)
-              .then(async () => {
-                if (userId) {
-                  try { await clearHabitReminders(userId); }
-                  catch { Alert.alert('Account deleted', 'Local reminder cleanup failed. Turn off Creator Studio alerts in device settings.'); }
-                }
-              })
-              .then(() => signOut())
-              .then(() => router.replace('/(auth)/sign-in'))
-              .catch(() => Alert.alert('Could not confirm completion', 'Please reopen the app or contact info@artismydrug.com before retrying account deletion.'));
-          },
+          onPress: performDeletion,
         },
       ],
     );
@@ -650,7 +675,45 @@ export default function ProfileScreen() {
             </Pressable>
           </View>
         </View>
-      </KeyboardAwareScrollView>
+      {Platform.OS === 'web' && (
+        <Modal
+          visible={deleteConfirmationOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setDeleteConfirmationOpen(false)}
+        >
+          <View style={s.deleteOverlay}>
+            <View style={s.deletePanel} accessibilityViewIsModal accessibilityRole="alert" testID="delete-account-confirmation">
+              <Text style={s.deleteAccountTitle}>{deleteTitle}</Text>
+              <Text style={s.deleteAccountDescription}>{deleteWarning}</Text>
+              <View style={s.deletePanelActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  testID="delete-confirm-cancel"
+                  style={[s.signOutButton, { borderColor: colors.border }]}
+                  onPress={() => setDeleteConfirmationOpen(false)}
+                >
+                  <Text style={[s.signOutText, { color: colors.foreground }]}>Keep my account</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  testID="delete-confirm-submit"
+                  disabled={deleteAccount.isPending}
+                  style={[s.signOutButton, { borderColor: colors.destructive, backgroundColor: colors.destructive }]}
+                  onPress={() => {
+                    if (!deleteConfirmationOpen || deleteAccount.isPending) return;
+                    setDeleteConfirmationOpen(false);
+                    performDeletion();
+                  }}
+                >
+                  <Text style={[s.signOutText, { color: colors.primaryForeground }]}>Delete permanently</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+    </KeyboardAwareScrollView>
     </View>
   );
 }

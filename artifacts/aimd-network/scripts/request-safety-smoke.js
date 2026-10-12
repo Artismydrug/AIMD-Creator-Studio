@@ -227,6 +227,20 @@ test('empty workshop catalog renders coming-soon artwork without enrollable card
   assert.equal(emptyBranch.includes('openLesson('), false);
 });
 
+test('the frosted tab bar reserves layout space for feed creator controls', () => {
+  const source = fs.readFileSync(path.resolve(__dirname, '../components/FrostedTabBar.tsx'), 'utf8');
+  assert.match(source, /blur:\s*\{\s*position: 'relative'/);
+});
+
+test('embedded feed rows use the actual scroll viewport instead of a screen estimate', () => {
+  const source = fs.readFileSync(path.resolve(__dirname, '../app/feed.tsx'), 'utf8');
+  assert(source.includes('getNativeScrollRef();'));
+  assert(source.includes('pagerViewportRef.current?.measure(onMeasured)'));
+  assert(source.includes('onLayout={(event) => syncPagerHeight(event.nativeEvent.layout.height)}'));
+  assert(source.includes('event.nativeEvent.layoutMeasurement.height'));
+  assert(source.includes('setPagerHeight((previous) => previous === nextHeight ? previous : nextHeight)'));
+});
+
 test('a confirmed message clears only the unchanged sent draft', () => {
   assert.equal(draftAfterConfirmedSend('Hey there', 'Hey there'), '');
   assert.equal(draftAfterConfirmedSend('A new message', 'Hey there'), 'A new message');

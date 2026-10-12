@@ -1,12 +1,52 @@
 # Creator Studio by AIMD — App Store readiness audit
 
-**Reviewed:** October 10, 2026  
+**Reviewed:** October 12, 2026
+
 **Scope:** Mobile source/configuration, release dependencies, selected backend protections, public production endpoints, and Apple review requirements.  
 **Approval update:** The owner provided an App Store Connect screenshot showing iOS version 1.0.0 (build 10) approved and review completed. The earlier recommendation to withhold submission was too categorical.
 
 This audit concerns the current workspace. It does not establish that the approved binary contains the same code or the same gaps. These findings are follow-up priorities and checks for future updates—not Apple rejection findings or proof that the already approved version must redo review. Approval alone does not establish public release availability.
 
 **Release-plan clarification:** The owner confirmed the approved build has not been released. The intended soft launch will use an improved build submitted for a fresh Apple review after testing and fixes. For this new candidate, the recommendation is to close the essential current-code issues and validate a production-configured native build before resubmission—not to release the earlier approved build or implement every optional enhancement.
+
+## October 12 final candidate audit
+
+**Release gate:** Do not submit the older TestFlight build 11 as evidence of these workspace fixes. Publish the current backend and create, install, and check a fresh production-configured native candidate before choosing a build for Apple review. No deployment or native upload was performed during this audit.
+
+### Verified
+
+- Mobile and API TypeScript checks passed.
+- The complete API suite passed: **335 tests across 37 files**.
+- Mobile request-safety checks passed: **25 tests**, including text-only reading, embedded viewport measurement, messaging safeguards, and four non-enrollable workshop previews.
+- Account deletion, auth handoff, dashboard, HQ loading, and release-content source smoke checks passed.
+- Expo dependency compatibility passed. No dependency versions changed during this audit.
+- The updated **iOS JavaScript export** and production **API server build** completed successfully. The export is not a signed IPA or a production-configured TestFlight installation.
+- Both top-level and iOS icon configuration point to approved option 14: an opaque 1024×1024 image. Physical installation remains the final icon check.
+- Signed-in development browser checks at 390×844 covered the tour, photo-backed habit completion and reload persistence, four coming-soon workshop previews, short/long text posts, All versus Following, test-to-test messaging and persistence, dark appearance, safety-menu availability, and public Terms/Privacy pages.
+- Browser account cancellation preserved the account, posts, habit, and practice log after reload, with **zero DELETE requests**. Explicit confirmation produced one deletion request, removed test-owned app data and proof media, and signed the session out. No real account was deleted. External provider identity records were not independently inspected.
+
+### Corrections made
+
+- Replaced unsupported browser account-deletion alerts with an explicit app-owned confirmation panel. Cancel only closes the panel; the destructive button submits deletion. Native iPhone/Android confirmation remains separate. Added a synchronous in-flight guard.
+- Made the frosted bottom bar participate in layout instead of covering content.
+- Added direct scroll-host measurement plus scroll/layout event synchronization. Embedded feed cards must match the visible pager rather than retain an estimated full-screen height.
+- Final feed bounds verification remains **unverified**: after fixture cleanup, the test helper authenticated the sibling web app rather than the dedicated Expo host. The tester did not substitute that different feed as evidence. Current mobile types, regression contracts, and iOS export pass, but the sizing correction must be checked in the new native candidate.
+
+### Production and phone checks still required
+
+The live server at `https://artismydrug.com` responded successfully to readiness and legal-page checks, but it still returned HTTP 200 for the retired public comments endpoint. The workspace returns HTTP 410 for that endpoint. **The production backend is not yet synchronized with the current source.** Publishing it is required for the latest feed and interaction behavior.
+
+After publishing the backend, install the fresh native candidate and check:
+
+1. Build identity and option 14 on the actual home screen/TestFlight installation.
+2. Real sign-in/sign-out, four workshop examples, and community All/Following behavior against production.
+3. Message composer with the iPhone keyboard open; send and reopen a thread.
+4. Photo/audio selection, upload, and playback; long writing and feed swipe behavior.
+5. Habit reminder delivery while the app is closed and cancellation/deletion using a disposable account—not the owner's account.
+
+App Store metadata, reviewer access, privacy declarations, and the selected review binary must still be checked in App Store Connect. Browser and source checks do not guarantee Apple approval, native behavior, or arbitrary production concurrency.
+
+## October 10 baseline (historical)
 
 ## Fixed during the audit
 

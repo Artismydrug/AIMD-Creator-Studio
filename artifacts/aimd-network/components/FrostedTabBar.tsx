@@ -126,7 +126,7 @@ export default function FrostedTabBar({
 
 const styles = StyleSheet.create({
   blur: {
-    position: 'absolute',
+    position: 'relative',
     left: 0,
     right: 0,
     bottom: 0,
