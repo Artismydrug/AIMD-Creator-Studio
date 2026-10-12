@@ -1,13 +1,14 @@
 ---
 name: Logo image preparation
-description: Preserve the AIMD black-box lockup and inspect transparency when adapting the logo.
+description: Use the approved Ivory Ink icon direction and preserve authentic wordmark geometry.
 ---
 
-When adapting the AIMD logo for the app icon, preserve its actual letter shapes and intentional black rectangular panel. Place that panel on a contrasting background, rather than a black canvas that hides the box. Remove only stray raster-edge seams, not the panel itself. The requested icon palette is now purple and orange with creative paint effects, superseding the cream-background version; this is an icon direction, not a request to recolor the entire app.
+## Approved app-icon direction
+Use the selected “Ivory Ink” design: warm ivory background, navy AIMD wordmark and “Creator Studio” descriptor, with a small bronze accent line. Preserve the approved artwork rather than recreating or redrawing it. The earlier purple/orange paint-effects direction and black-box requirement no longer apply to this selected icon.
 
-**Why:** The user explicitly corrected the icon to retain the original black box around AIMD, then requested a purple-and-orange scheme with creative effects. A previous black canvas hid this defining brand feature. Supplied raster files can also contain faint edge pixels that need cleaning.
+**Why:** On 2026-10-11 the user selected the Ivory Ink design after explicitly allowing the professional/classy alternatives to omit the black panel and change the palette. This supersedes the earlier exploration directions.
 
-**How to apply:** Inspect the boxed mark and final composite at full and small sizes. Check opaque output for iOS and appropriate mask-safe spacing for Android; avoid AI redrawing of an existing brand mark.
+**How to apply:** Keep iOS and Android visually consistent, using opaque output for iOS and mask-safe foreground spacing for Android. Do not recolor the app UI solely because the icon changed. Inspect the full-size and home-screen-size artwork before a native release build.
 
 Transparent cutout versions of the AIMD logo can appear as faint outlines in a dark image preview. Composite against a light backing to interpret the intended white-on-black wordmark before adapting it; do not mistake the preview for an outline redesign.
 

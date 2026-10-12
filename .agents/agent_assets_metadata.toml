@@ -61,14 +61,14 @@ content_type = "application/pdf"
 id = "tpJrLXy7cfZ-NHgfUiwFr"
 uri = "file://artifacts/aimd-network/assets/images/icon.png"
 type = "image"
-title = "Creator Studio — purple & orange app icon"
-description = "Purple gradients, flowing orange paint accents, and the original AIMD black-box logo with Creator Studio beneath it. Configured for the next mobile build."
+title = "Creator Studio — Selected Icon 14"
+description = "Ivory Ink: warm ivory background, navy AIMD wordmark, bronze accent and Creator Studio beneath it. Updated in the app’s icon assets."
 logical_id = "fa4049b0-e969-4e9c-b2c4-1a01499eff11"
-content_hash = "sha256:6f54685695f4c6dea899ec4106909bfbfc6a6b6b31f1251ee0d79e11bd9dc2f1"
-size = 251494
-mtime_ms = 1791691994899
-storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/fa4049b0-e969-4e9c-b2c4-1a01499eff11/569a652a-d373-4049-94e5-815d6de83230"
-storage_version_token = "1791692005123522"
+content_hash = "sha256:dbbb95fca20529be1caaa082e1d96013ca3e52e240e60e7f9cfc7ed4a0e502fe"
+size = 76454
+mtime_ms = 1791763980789
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/fa4049b0-e969-4e9c-b2c4-1a01499eff11/aae492ae-9900-4f8b-9793-29e9cb134c0f"
+storage_version_token = "1791764050245145"
 content_type = "image/png"
 
 [[outputs]]

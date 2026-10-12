@@ -31,7 +31,7 @@
 - [Workshop video access](workshop-video-access.md) — free public teasers; full lessons require active $39 membership or staff-granted workshop participation.
 - [Browser testing limits](browser-testing-limits.md) — test Chromium may lack H.264; use WebM fixtures and standard-domain Clerk test emails.
 - [Overview pitch positioning](overview-pitch-positioning.md) — broad school/creator/partner pitch centers product and mission; speculative business numbers belong in the business plan.
-- [Logo image preparation](logo-image-preparation.md) — retain AIMD’s black box and “Creator Studio” beneath it; icon direction is purple/orange with creative effects.
+- [Logo image preparation](logo-image-preparation.md) — approved Ivory Ink icon: ivory, navy AIMD wordmark and Creator Studio descriptor; supersedes earlier black-box/paint directions.
 - [School learning evidence](school-learning-evidence.md) — reflections stay private; public portfolio publishing and LMS/grade integration require separate scope.
 - [App Store approval context](app-store-approval-context.md) — an iOS release was approved; separate current-code audit findings from the approved binary and future updates.
 - [Community publication policy](community-publication-policy.md) — soft-launch posts publish immediately; screening is deferred, while reporting, blocking, and staff removal remain.
