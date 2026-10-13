@@ -13,6 +13,9 @@ import {
   CreateStudioPostResponse,
   GetStudioPostParams,
   GetStudioPostResponse,
+  UpdateStudioPostParams,
+  UpdateStudioPostBody,
+  UpdateStudioPostResponse,
   DeleteStudioPostParams,
 } from "@workspace/api-zod";
 import { communityMemberVisibility } from "../lib/communityMemberVisibility";
@@ -218,6 +221,43 @@ router.get("/studio-posts/:id", async (req, res): Promise<void> => {
   }
 
   res.json(GetStudioPostResponse.parse({ ...post, likedByMe: false }));
+});
+
+router.patch("/studio-posts/:id", async (req, res): Promise<void> => {
+  if (!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser.id;
+  const params = UpdateStudioPostParams.safeParse(req.params);
+  const body = UpdateStudioPostBody.strict().safeParse(req.body);
+  if (!params.success || !body.success) {
+    res.status(400).json({ error: "Provide a valid post ID and a caption of 1–5,000 characters." });
+    return;
+  }
+  const caption = body.data.caption.trim();
+  if (!caption) {
+    res.status(400).json({ error: "A caption cannot be empty." });
+    return;
+  }
+  // Ownership is part of the write itself; media, tags and attribution are not editable here.
+  const [updated] = await db
+    .update(studioPostsTable)
+    .set({ caption })
+    .where(and(eq(studioPostsTable.id, params.data.id), eq(studioPostsTable.userId, userId)))
+    .returning({ id: studioPostsTable.id });
+  if (!updated) {
+    res.status(404).json({ error: "Post not found" });
+    return;
+  }
+  const [post] = await db
+    .select(buildPostSelect(userId))
+    .from(studioPostsTable)
+    .innerJoin(usersTable, eq(studioPostsTable.userId, usersTable.id))
+    .where(eq(studioPostsTable.id, updated.id));
+  if (!post) {
+    res.status(404).json({ error: "Post not found" });
+    return;
+  }
+  res.set("Cache-Control", "no-store");
+  res.json(UpdateStudioPostResponse.parse({ ...post, likedByMe: false }));
 });
 
 router.delete("/studio-posts/:id", async (req, res): Promise<void> => {

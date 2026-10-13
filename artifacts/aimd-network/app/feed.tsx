@@ -152,6 +152,14 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
   const { data: me } = useGetCurrentUser();
 
   useEffect(() => {
+    if (posts && activeIndex >= posts.length && activeIndex > 0) {
+      const next = Math.max(0, posts.length - 1);
+      setActiveIndex(next);
+      feedRef.current?.scrollToOffset({ offset: next * pageHeight, animated: false });
+    }
+  }, [posts?.length, activeIndex, pageHeight]);
+
+  useEffect(() => {
     // Measure the actual scroll host after data mounts. A wrapper's onLayout
     // can be missed on web, leaving embedded rows at the full-screen estimate.
     const frame = requestAnimationFrame(() => {

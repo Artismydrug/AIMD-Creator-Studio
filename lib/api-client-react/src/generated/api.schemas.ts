@@ -41,16 +41,179 @@ export interface User {
   createdAt: string;
 }
 
+/**
+ * Earning a milestone does not mean the reward is currently available to claim.
+ */
+export type RewardTierAvailability = typeof RewardTierAvailability[keyof typeof RewardTierAvailability];
+
+
+export const RewardTierAvailability = {
+  coming_soon: 'coming_soon',
+  available: 'available',
+} as const;
+
 export interface RewardTier {
+  /** Stable milestone identifier, independent of the current reward offering. */
+  key: string;
+  /** @minimum 1 */
+  level: number;
   points: number;
   reward: string;
   description: string;
+  /** Earning a milestone does not mean the reward is currently available to claim. */
+  availability: RewardTierAvailability;
   unlocked: boolean;
 }
 
+export type MonthlyDropStatus = typeof MonthlyDropStatus[keyof typeof MonthlyDropStatus];
+
+
+export const MonthlyDropStatus = {
+  draft: 'draft',
+  open: 'open',
+  closed: 'closed',
+} as const;
+
+export type MonthlyDropRequestStatus = typeof MonthlyDropRequestStatus[keyof typeof MonthlyDropRequestStatus];
+
+
+export const MonthlyDropRequestStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  declined: 'declined',
+  fulfilled: 'fulfilled',
+} as const;
+
+export interface MonthlyDropRequest {
+  id: number;
+  dropId: number;
+  /** @nullable */
+  userId: number | null;
+  status: MonthlyDropRequestStatus;
+  requestedAt: string;
+  updatedAt: string;
+}
+
+export interface MonthlyDrop {
+  id: number;
+  monthKey: string;
+  title: string;
+  description: string;
+  items: string[];
+  stock: number;
+  remaining: number;
+  reserved: number;
+  requestCount: number;
+  status: MonthlyDropStatus;
+  ownRequest: MonthlyDropRequest | null;
+}
+
+export type MonthlyDropRequestHistory = MonthlyDropRequest & {
+  monthKey: string;
+  title: string;
+};
+
 export interface RewardsInfo {
   points: number;
+  /**
+     * Always empty. Fixed point reward offers were retired; points are never spent.
+     * @deprecated
+     */
   tiers: RewardTier[];
+  monthlyDrop: MonthlyDrop | null;
+  /** Most recent 24 requests, including prior months. */
+  recentRequests: MonthlyDropRequestHistory[];
+}
+
+export type AdminMonthlyDropRequest = MonthlyDropRequest & ({
+  /** @nullable */
+  username: string | null;
+});
+
+export interface MonthlyDropRequestsPage {
+  requests: AdminMonthlyDropRequest[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export type MonthlyDropInputStatus = typeof MonthlyDropInputStatus[keyof typeof MonthlyDropInputStatus];
+
+
+export const MonthlyDropInputStatus = {
+  draft: 'draft',
+  open: 'open',
+  closed: 'closed',
+} as const;
+
+export interface MonthlyDropInput {
+  /** @pattern ^\d{4}-(0[1-9]|1[0-2])$ */
+  monthKey: string;
+  /**
+     * @minLength 3
+     * @maxLength 120
+     */
+  title: string;
+  /** @maxLength 1500 */
+  description?: string;
+  /**
+     * @minItems 1
+     * @maxItems 20
+     * @items.minLength 1
+     * @items.maxLength 160
+     */
+  items: string[];
+  /**
+     * @minimum 0
+     * @maximum 100000
+     */
+  stock: number;
+  status?: MonthlyDropInputStatus;
+}
+
+export type MonthlyDropUpdateStatus = typeof MonthlyDropUpdateStatus[keyof typeof MonthlyDropUpdateStatus];
+
+
+export const MonthlyDropUpdateStatus = {
+  draft: 'draft',
+  open: 'open',
+  closed: 'closed',
+} as const;
+
+export interface MonthlyDropUpdate {
+  /**
+     * @minLength 3
+     * @maxLength 120
+     */
+  title?: string;
+  /** @maxLength 1500 */
+  description?: string;
+  /**
+     * @minItems 1
+     * @maxItems 20
+     * @items.minLength 1
+     * @items.maxLength 160
+     */
+  items?: string[];
+  /**
+     * @minimum 0
+     * @maximum 100000
+     */
+  stock?: number;
+  status?: MonthlyDropUpdateStatus;
+}
+
+export type MonthlyDropRequestUpdateStatus = typeof MonthlyDropRequestUpdateStatus[keyof typeof MonthlyDropRequestUpdateStatus];
+
+
+export const MonthlyDropRequestUpdateStatus = {
+  approved: 'approved',
+  declined: 'declined',
+  fulfilled: 'fulfilled',
+} as const;
+
+export interface MonthlyDropRequestUpdate {
+  status: MonthlyDropRequestUpdateStatus;
 }
 
 export interface AwardPointsBody {
@@ -284,6 +447,15 @@ export interface StudioPostInput {
   /** @minLength 1 */
   caption: string;
   tags?: string[];
+}
+
+export interface UpdateStudioPostInput {
+  /**
+     * Updated caption text. Leading and trailing whitespace is removed.
+     * @minLength 1
+     * @maxLength 5000
+     */
+  caption: string;
 }
 
 export type WorkshopTier = typeof WorkshopTier[keyof typeof WorkshopTier];
@@ -1215,6 +1387,37 @@ export interface NotificationsResponse {
   unreadCount: number;
 }
 
+export interface NotificationPreferences {
+  directMessages: boolean;
+  newFollowers: boolean;
+}
+
+export interface NotificationPreferencesUpdate {
+  directMessages?: boolean;
+  newFollowers?: boolean;
+}
+
+export type NotificationDeviceInputPlatform = typeof NotificationDeviceInputPlatform[keyof typeof NotificationDeviceInputPlatform];
+
+
+export const NotificationDeviceInputPlatform = {
+  ios: 'ios',
+  android: 'android',
+} as const;
+
+export interface NotificationDeviceInput {
+  /**
+     * @minLength 24
+     * @maxLength 300
+     */
+  expoPushToken: string;
+  platform: NotificationDeviceInputPlatform;
+}
+
+export interface NotificationDeviceResult {
+  ok: boolean;
+}
+
 export interface MarkAllNotificationsReadResult {
   updatedCount: number;
 }
@@ -1971,6 +2174,22 @@ category?: string | null;
 
 export type ListSponsorshipsParams = {
 limit?: number;
+};
+
+export type ListAdminMonthlyDropRequestsParams = {
+/**
+ * @minimum 1
+ */
+dropId: number;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+/**
+ * @minimum 0
+ */
+offset?: number;
 };
 
 export type ListAdminUsers200 = {

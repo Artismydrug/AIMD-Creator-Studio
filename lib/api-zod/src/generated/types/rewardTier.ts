@@ -5,10 +5,17 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+import type { RewardTierAvailability } from './rewardTierAvailability';
 
 export interface RewardTier {
+  /** Stable milestone identifier, independent of the current reward offering. */
+  key: string;
+  /** @minimum 1 */
+  level: number;
   points: number;
   reward: string;
   description: string;
+  /** Earning a milestone does not mean the reward is currently available to claim. */
+  availability: RewardTierAvailability;
   unlocked: boolean;
 }

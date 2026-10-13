@@ -217,7 +217,12 @@ function AuthenticatedShell() {
   const { isLoaded, isSignedIn } = useAuth();
 
   if (!isLoaded) {
-    return <div className="min-h-screen bg-[#FDFBF7]" />;
+    return (
+      <div role="status" className="min-h-screen bg-[#FDFBF7] flex flex-col items-center justify-center gap-4 px-6 text-[#1B3038]">
+        <span aria-hidden="true" className="h-8 w-8 rounded-full border-2 border-[#1B3038]/20 border-t-[#1B3038] animate-spin motion-reduce:animate-none" />
+        <p className="font-mono text-sm">Opening Creator Studio…</p>
+      </div>
+    );
   }
   if (!isSignedIn) {
     return <Redirect to="/sign-in" />;

@@ -5,9 +5,18 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+import type { MonthlyDrop } from './monthlyDrop';
+import type { MonthlyDropRequestHistory } from './monthlyDropRequestHistory';
 import type { RewardTier } from './rewardTier';
 
 export interface RewardsInfo {
   points: number;
+  /**
+     * Always empty. Fixed point reward offers were retired; points are never spent.
+     * @deprecated
+     */
   tiers: RewardTier[];
+  monthlyDrop: MonthlyDrop | null;
+  /** Most recent 24 requests, including prior months. */
+  recentRequests: MonthlyDropRequestHistory[];
 }

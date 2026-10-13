@@ -1,31 +1,25 @@
 /**
  * Rewards & admin points routes
  *
- * GET  /rewards                                        — reward tiers + current user's points
+ * GET  /rewards                                        — lifetime points + monthly member drops
  * POST /admin/points-awards                            — (admin) award points to any user
  */
 
 import { Router, type IRouter } from "express";
 import { pool } from "@workspace/db";
 import { requireAdmin } from "../middlewares/requireAdmin";
-import { REWARD_TIERS, awardPoints } from "../lib/rewards";
+import { awardPoints } from "../lib/rewards";
+import { memberRewards } from "../lib/monthlyDrops";
+import { GetRewardsResponse } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
 // ─── GET /rewards ─────────────────────────────────────────────────────────────
 router.get("/rewards", async (req, res): Promise<void> => {
-  let points = 0;
-  if (req.dbUser) {
-    const { rows } = await pool.query<{ points: number }>(
-      `SELECT points FROM users WHERE id = $1`,
-      [(req.dbUser as any).id]
-    );
-    points = rows[0]?.points ?? 0;
-  }
-  res.json({
-    points,
-    tiers: REWARD_TIERS.map((t) => ({ ...t, unlocked: points >= t.points })),
-  });
+  res.set("Cache-Control", "private, no-store");
+  res.vary("Authorization");
+  res.vary("Cookie");
+  res.json(GetRewardsResponse.parse(await memberRewards(req.dbUser?.id)));
 });
 
 // ─── POST /admin/points-awards ────────────────────────────────────────────────

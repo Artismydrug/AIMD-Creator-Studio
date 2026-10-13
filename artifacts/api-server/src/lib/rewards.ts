@@ -1,28 +1,6 @@
 import { pool } from "@workspace/db";
 
-/**
- * AIMD Points reward tiers.
- * Thresholds are lifetime points earned — creators unlock each reward as
- * their balance crosses the tier. Redemption is handled by the AIMD team
- * in person (T-shirt handoff, ticket at the door, workshop scheduling).
- */
-export const REWARD_TIERS = [
-  {
-    points: 500,
-    reward: "Free AIMD T-Shirt",
-    description: "Rep the movement. Claim your shirt at any AIMD event.",
-  },
-  {
-    points: 1000,
-    reward: "Free Ticket to the Next Event",
-    description: "Your entry is covered for the next ticketed AIMD event.",
-  },
-  {
-    points: 2000,
-    reward: "Free Workshop Lesson",
-    description: "One expert-led workshop lesson, on the house.",
-  },
-] as const;
+// Points are cumulative recognition, not a currency or monthly-drop eligibility gate.
 
 /**
  * Award points to a user: writes a ledger row and increments the balance

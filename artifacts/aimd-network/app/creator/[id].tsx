@@ -28,6 +28,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import SafetyActions from '@/components/SafetyActions';
 import StudioVideo from '@/components/StudioVideo';
 import AudioTrackPlayer from '@/components/AudioTrackPlayer';
+import PostOwnerActions from '@/components/PostOwnerActions';
 
 const TIER_COLORS: Record<string, string> = {
   pro: '#a855f7',
@@ -694,6 +695,7 @@ export default function CreatorProfileScreen() {
                   )}
                   <View style={s.postMeta}>
                     <Text style={s.postMetaText}>{formatDate(post.createdAt)}</Text>
+                    <PostOwnerActions post={post} currentUserId={me?.id} />
                   </View>
                 </View>
               ))

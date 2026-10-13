@@ -13,7 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { MediaUpload, type MediaType } from '@/components/MediaUpload';
-import { getGetRewardsQueryKey, useGetRewards } from '@workspace/api-client-react';
+import { MonthlyMemberDrops } from '@/components/monthly-drops/MonthlyMemberDrops';
+import { getGetRewardsQueryKey } from '@workspace/api-client-react';
 
 // ─── Tab type ─────────────────────────────────────────────────────────────────
 
@@ -108,64 +109,6 @@ function useCountdown(target: Date) {
   return t;
 }
 
-// ─── Reward tiers ─────────────────────────────────────────────────────────────
-
-function RewardTiers() {
-  const { data } = useGetRewards();
-  if (!data) return null;
-
-  const nextTier = data.tiers.find((t) => !t.unlocked);
-  const progressPct = nextTier ? Math.min(100, (data.points / nextTier.points) * 100) : 100;
-
-  return (
-    <div className="border border-border bg-card p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
-        <h3 className="font-display font-bold text-lg uppercase flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-amber-400" /> AIMD Points Rewards
-        </h3>
-        <span className="font-mono text-sm text-primary font-bold">{data.points} pts</span>
-      </div>
-
-      {/* Progress toward next tier */}
-      <div className="mb-6">
-        <div className="h-1.5 bg-muted overflow-hidden">
-          <div className="h-full bg-primary transition-all" style={{ width: `${progressPct}%` }} />
-        </div>
-        <p className="font-mono text-[11px] text-muted-foreground mt-2">
-          {nextTier
-            ? `${nextTier.points - data.points} pts to your next reward: ${nextTier.reward}`
-            : 'All reward tiers unlocked — see the AIMD team to claim.'}
-        </p>
-      </div>
-
-      <div className="grid sm:grid-cols-3 gap-3">
-        {data.tiers.map((tier, i) => (
-          <div
-            key={tier.points}
-            className={`p-4 border ${
-              tier.unlocked ? 'border-primary/50 bg-primary/5' : 'border-border bg-background'
-            }`}
-          >
-            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
-              Tier {i + 1} · {tier.points} pts
-            </p>
-            <p className={`font-display font-bold text-sm uppercase leading-tight mb-1.5 ${tier.unlocked ? 'text-primary' : 'text-foreground'}`}>
-              {tier.reward}
-            </p>
-            <p className="text-xs text-muted-foreground leading-relaxed">{tier.description}</p>
-            {tier.unlocked && (
-              <p className="font-mono text-[10px] text-primary uppercase tracking-widest mt-2">✓ Unlocked</p>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <p className="font-mono text-[10px] text-muted-foreground mt-4">
-        Every original featured-challenge submission earns 20 points. Rewards are claimed in person with the AIMD team.
-      </p>
-    </div>
-  );
-}
 
 // ─── Challenge tab ────────────────────────────────────────────────────────────
 
@@ -259,7 +202,7 @@ export function WeeklyChallenge() {
   return (
     <div className="space-y-8">
       {/* Reward tiers */}
-      <RewardTiers />
+      <MonthlyMemberDrops />
 
       {/* Challenge brief */}
       <div className="border border-primary/30 bg-primary/5 p-6 relative overflow-hidden">

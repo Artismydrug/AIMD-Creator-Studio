@@ -23,6 +23,7 @@ import SafetyActions from '@/components/SafetyActions';
 import StudioVideo from '@/components/StudioVideo';
 import AudioTrackPlayer from '@/components/AudioTrackPlayer';
 import TextPostBody from '@/components/TextPostBody';
+import PostOwnerActions from '@/components/PostOwnerActions';
 
 /** Resolve a relative imageUrl (e.g. /api/storage/objects/…) to an absolute URL for React Native. */
 function resolveImageUrl(url: string | null | undefined): string | null {
@@ -91,6 +92,7 @@ export default function PostCard({
   const queryClient = useQueryClient();
   const [followedByMe, setFollowedByMe] = useState(post.followedByMe);
   const [followerCount, setFollowerCount] = useState(post.followerCount);
+  const [ownerDialogOpen, setOwnerDialogOpen] = useState(false);
   const frameColors = [colors.primary, colors.sunsetCoral, colors.cyan, colors.gold];
   const frameColor = frameColors[post.id % frameColors.length];
   const isTextOnly = !resolveImageUrl(post.imageUrl);
@@ -418,12 +420,12 @@ export default function PostCard({
             {resolveImageUrl(post.imageUrl) && post.mediaType === 'audio' ? (
               <View style={s.audioSurface}>
                 <Feather name="music" size={50} color={colors.cyan} />
-                <AudioTrackPlayer uri={resolveImageUrl(post.imageUrl)!} active={active} />
+                <AudioTrackPlayer uri={resolveImageUrl(post.imageUrl)!} active={active && !ownerDialogOpen} />
               </View>
             ) : resolveImageUrl(post.imageUrl) && post.mediaType === 'video' ? (
               <StudioVideo
                 uri={resolveImageUrl(post.imageUrl)!}
-                active={active}
+                active={active && !ownerDialogOpen}
                 reducedMotion={reducedMotion}
                 muted={muted}
                 onMutedChange={onMutedChange}
@@ -485,6 +487,13 @@ export default function PostCard({
             </View>
 
             <View style={s.immersiveActions}>
+              {isOwnPost && (
+                <PostOwnerActions
+                  post={post} currentUserId={currentUserId}
+                  triggerColor={isTextOnly ? colors.foreground : colors.primaryForeground}
+                  onVisibilityChange={setOwnerDialogOpen}
+                />
+              )}
               {!isOwnPost && (
                 <TouchableOpacity
                   accessibilityRole="button"
@@ -556,6 +565,9 @@ export default function PostCard({
                 <Text style={s.socialMeta}>{followerCount} followers · {post.followingCount} following</Text>
               </View>
             </TouchableOpacity>
+            {isOwnPost && (
+              <PostOwnerActions post={post} currentUserId={currentUserId} onVisibilityChange={setOwnerDialogOpen} />
+            )}
             {!isOwnPost && (
               <>
                 <TouchableOpacity
@@ -584,13 +596,13 @@ export default function PostCard({
           <Text style={s.caption}>{post.caption}</Text>
 
           {resolveImageUrl(post.imageUrl) && post.mediaType === 'audio' ? (
-            <AudioTrackPlayer uri={resolveImageUrl(post.imageUrl)!} />
+            <AudioTrackPlayer uri={resolveImageUrl(post.imageUrl)!} active={!ownerDialogOpen} />
           ) : resolveImageUrl(post.imageUrl) ? (
             <View style={[s.imageFrame, { borderColor: frameColor }]}>
               {post.mediaType === 'video' ? (
                 <StudioVideo
                   uri={resolveImageUrl(post.imageUrl)!}
-                  active={active}
+                  active={active && !ownerDialogOpen}
                   reducedMotion={reducedMotion}
                   muted={muted}
                   onMutedChange={onMutedChange}

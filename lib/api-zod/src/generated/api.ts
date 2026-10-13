@@ -331,6 +331,41 @@ export const GetStudioPostResponse = zod.object({
 
 
 /**
+ * @summary Update the caption on an owned studio post
+ */
+export const UpdateStudioPostParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const updateStudioPostBodyCaptionMax = 5000;
+
+
+
+export const UpdateStudioPostBody = zod.object({
+  "caption": zod.string().min(1).max(updateStudioPostBodyCaptionMax).describe('Updated caption text. Leading and trailing whitespace is removed.')
+})
+
+export const updateStudioPostResponseMediaTypeDefault = `image`;
+
+export const UpdateStudioPostResponse = zod.object({
+  "id": zod.int(),
+  "userId": zod.int(),
+  "username": zod.string().optional(),
+  "userAvatarUrl": zod.string().nullish(),
+  "followerCount": zod.int(),
+  "followingCount": zod.int(),
+  "followedByMe": zod.boolean(),
+  "imageUrl": zod.string().nullish(),
+  "mediaType": zod.enum(['image', 'video', 'audio']).default(updateStudioPostResponseMediaTypeDefault).describe('Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB.'),
+  "caption": zod.string(),
+  "tags": zod.array(zod.string()).optional(),
+  "likes": zod.int().describe('Legacy compatibility field; always zero. Feed likes are retired.'),
+  "likedByMe": zod.boolean().optional().describe('Legacy compatibility field; always false.'),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Delete a studio post
  */
 export const DeleteStudioPostParams = zod.object({
@@ -1446,16 +1481,262 @@ export const UpdateCurrentUserResponse = zod.object({
 
 
 /**
- * @summary Reward tiers and the current user's AIMD Points balance
+ * @summary Lifetime points and account-only monthly member drops; no point redemption
  */
+
+
+
 export const GetRewardsResponse = zod.object({
   "points": zod.int(),
   "tiers": zod.array(zod.object({
+  "key": zod.string().describe('Stable milestone identifier, independent of the current reward offering.'),
+  "level": zod.int().min(1),
   "points": zod.int(),
   "reward": zod.string(),
   "description": zod.string(),
+  "availability": zod.enum(['coming_soon', 'available']).describe('Earning a milestone does not mean the reward is currently available to claim.'),
   "unlocked": zod.boolean()
-}))
+})).describe('Always empty. Fixed point reward offers were retired; points are never spent.'),
+  "monthlyDrop": zod.union([zod.object({
+  "id": zod.int(),
+  "monthKey": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "items": zod.array(zod.string()),
+  "stock": zod.int(),
+  "remaining": zod.int(),
+  "reserved": zod.int(),
+  "requestCount": zod.int(),
+  "status": zod.enum(['draft', 'open', 'closed']),
+  "ownRequest": zod.union([zod.object({
+  "id": zod.int(),
+  "dropId": zod.int(),
+  "userId": zod.int().nullable(),
+  "status": zod.enum(['pending', 'approved', 'declined', 'fulfilled']),
+  "requestedAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}),zod.null()])
+}),zod.null()]),
+  "recentRequests": zod.array(zod.object({
+  "id": zod.int(),
+  "dropId": zod.int(),
+  "userId": zod.int().nullable(),
+  "status": zod.enum(['pending', 'approved', 'declined', 'fulfilled']),
+  "requestedAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}).and(zod.object({
+  "monthKey": zod.string(),
+  "title": zod.string()
+}))).describe('Most recent 24 requests, including prior months.')
+})
+
+
+/**
+ * @summary Request this month's package once per account; retries return the same request
+ */
+
+
+
+export const RequestMonthlyDropParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+export const RequestMonthlyDropResponse = zod.object({
+  "id": zod.int(),
+  "dropId": zod.int(),
+  "userId": zod.int().nullable(),
+  "status": zod.enum(['pending', 'approved', 'declined', 'fulfilled']),
+  "requestedAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary (Admin) List monthly packages and remaining quantities
+ */
+export const ListAdminMonthlyDropsResponseItem = zod.object({
+  "id": zod.int(),
+  "monthKey": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "items": zod.array(zod.string()),
+  "stock": zod.int(),
+  "remaining": zod.int(),
+  "reserved": zod.int(),
+  "requestCount": zod.int(),
+  "status": zod.enum(['draft', 'open', 'closed']),
+  "ownRequest": zod.union([zod.object({
+  "id": zod.int(),
+  "dropId": zod.int(),
+  "userId": zod.int().nullable(),
+  "status": zod.enum(['pending', 'approved', 'declined', 'fulfilled']),
+  "requestedAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}),zod.null()])
+})
+export const ListAdminMonthlyDropsResponse = zod.array(ListAdminMonthlyDropsResponseItem)
+
+
+/**
+ * @summary (Admin) Create one package for a calendar month
+ */
+export const createAdminMonthlyDropBodyMonthKeyRegExp = new RegExp('^\\d{4}-(0[1-9]|1[0-2])$');
+export const createAdminMonthlyDropBodyTitleMin = 3;
+export const createAdminMonthlyDropBodyTitleMax = 120;
+
+export const createAdminMonthlyDropBodyDescriptionDefault = ``;
+export const createAdminMonthlyDropBodyDescriptionMax = 1500;
+
+export const createAdminMonthlyDropBodyItemsItemMax = 160;
+
+export const createAdminMonthlyDropBodyItemsMax = 20;
+
+export const createAdminMonthlyDropBodyStockMin = 0;
+export const createAdminMonthlyDropBodyStockMax = 100000;
+
+export const createAdminMonthlyDropBodyStatusDefault = `draft`;
+
+export const CreateAdminMonthlyDropBody = zod.object({
+  "monthKey": zod.string().regex(createAdminMonthlyDropBodyMonthKeyRegExp),
+  "title": zod.string().min(createAdminMonthlyDropBodyTitleMin).max(createAdminMonthlyDropBodyTitleMax),
+  "description": zod.string().max(createAdminMonthlyDropBodyDescriptionMax).default(createAdminMonthlyDropBodyDescriptionDefault),
+  "items": zod.array(zod.string().min(1).max(createAdminMonthlyDropBodyItemsItemMax)).min(1).max(createAdminMonthlyDropBodyItemsMax),
+  "stock": zod.int().min(createAdminMonthlyDropBodyStockMin).max(createAdminMonthlyDropBodyStockMax),
+  "status": zod.enum(['draft', 'open', 'closed']).default(createAdminMonthlyDropBodyStatusDefault)
+})
+
+export const CreateAdminMonthlyDropResponse = zod.object({
+  "id": zod.int(),
+  "monthKey": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "items": zod.array(zod.string()),
+  "stock": zod.int(),
+  "remaining": zod.int(),
+  "reserved": zod.int(),
+  "requestCount": zod.int(),
+  "status": zod.enum(['draft', 'open', 'closed']),
+  "ownRequest": zod.union([zod.object({
+  "id": zod.int(),
+  "dropId": zod.int(),
+  "userId": zod.int().nullable(),
+  "status": zod.enum(['pending', 'approved', 'declined', 'fulfilled']),
+  "requestedAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}),zod.null()])
+})
+
+
+/**
+ * @summary (Admin) Edit, open or close a package; requested contents are preserved
+ */
+
+
+
+export const UpdateAdminMonthlyDropParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+export const updateAdminMonthlyDropBodyTitleMin = 3;
+export const updateAdminMonthlyDropBodyTitleMax = 120;
+
+export const updateAdminMonthlyDropBodyDescriptionMax = 1500;
+
+export const updateAdminMonthlyDropBodyItemsItemMax = 160;
+
+export const updateAdminMonthlyDropBodyItemsMax = 20;
+
+export const updateAdminMonthlyDropBodyStockMin = 0;
+export const updateAdminMonthlyDropBodyStockMax = 100000;
+
+
+
+export const UpdateAdminMonthlyDropBody = zod.object({
+  "title": zod.string().min(updateAdminMonthlyDropBodyTitleMin).max(updateAdminMonthlyDropBodyTitleMax).optional(),
+  "description": zod.string().max(updateAdminMonthlyDropBodyDescriptionMax).optional(),
+  "items": zod.array(zod.string().min(1).max(updateAdminMonthlyDropBodyItemsItemMax)).min(1).max(updateAdminMonthlyDropBodyItemsMax).optional(),
+  "stock": zod.int().min(updateAdminMonthlyDropBodyStockMin).max(updateAdminMonthlyDropBodyStockMax).optional(),
+  "status": zod.enum(['draft', 'open', 'closed']).optional()
+})
+
+export const UpdateAdminMonthlyDropResponse = zod.object({
+  "id": zod.int(),
+  "monthKey": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "items": zod.array(zod.string()),
+  "stock": zod.int(),
+  "remaining": zod.int(),
+  "reserved": zod.int(),
+  "requestCount": zod.int(),
+  "status": zod.enum(['draft', 'open', 'closed']),
+  "ownRequest": zod.union([zod.object({
+  "id": zod.int(),
+  "dropId": zod.int(),
+  "userId": zod.int().nullable(),
+  "status": zod.enum(['pending', 'approved', 'declined', 'fulfilled']),
+  "requestedAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}),zod.null()])
+})
+
+
+/**
+ * @summary (Admin) Paginated member request list
+ */
+
+export const listAdminMonthlyDropRequestsQueryLimitDefault = 25;
+export const listAdminMonthlyDropRequestsQueryLimitMax = 100;
+
+export const listAdminMonthlyDropRequestsQueryOffsetDefault = 0;
+export const listAdminMonthlyDropRequestsQueryOffsetMin = 0;
+
+
+
+export const ListAdminMonthlyDropRequestsQueryParams = zod.object({
+  "dropId": zod.coerce.number().int().min(1),
+  "limit": zod.coerce.number().int().min(1).max(listAdminMonthlyDropRequestsQueryLimitMax).default(listAdminMonthlyDropRequestsQueryLimitDefault),
+  "offset": zod.coerce.number().int().min(listAdminMonthlyDropRequestsQueryOffsetMin).default(listAdminMonthlyDropRequestsQueryOffsetDefault)
+})
+
+export const ListAdminMonthlyDropRequestsResponse = zod.object({
+  "requests": zod.array(zod.object({
+  "id": zod.int(),
+  "dropId": zod.int(),
+  "userId": zod.int().nullable(),
+  "status": zod.enum(['pending', 'approved', 'declined', 'fulfilled']),
+  "requestedAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}).and(zod.object({
+  "username": zod.string().nullable()
+}))),
+  "total": zod.int(),
+  "limit": zod.int(),
+  "offset": zod.int()
+})
+
+
+/**
+ * @summary (Admin) Approve, decline or mark a package fulfilled
+ */
+
+
+
+export const UpdateAdminMonthlyDropRequestParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+export const UpdateAdminMonthlyDropRequestBody = zod.object({
+  "status": zod.enum(['approved', 'declined', 'fulfilled'])
+})
+
+export const UpdateAdminMonthlyDropRequestResponse = zod.object({
+  "id": zod.int(),
+  "dropId": zod.int(),
+  "userId": zod.int().nullable(),
+  "status": zod.enum(['pending', 'approved', 'declined', 'fulfilled']),
+  "requestedAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
 })
 
 
@@ -1885,6 +2166,65 @@ export const MarkNotificationReadResponse = zod.object({
  */
 export const MarkAllNotificationsReadResponse = zod.object({
   "updatedCount": zod.int()
+})
+
+
+/**
+ * @summary Get push notification preferences for the current creator
+ */
+export const GetNotificationPreferencesResponse = zod.object({
+  "directMessages": zod.boolean(),
+  "newFollowers": zod.boolean()
+})
+
+
+/**
+ * @summary Update push notification preferences for the current creator
+ */
+export const UpdateNotificationPreferencesBody = zod.object({
+  "directMessages": zod.boolean().optional(),
+  "newFollowers": zod.boolean().optional()
+})
+
+export const UpdateNotificationPreferencesResponse = zod.object({
+  "directMessages": zod.boolean(),
+  "newFollowers": zod.boolean()
+})
+
+
+/**
+ * @summary Register this device for opted-in push notifications
+ */
+export const registerNotificationDeviceBodyExpoPushTokenMin = 24;
+export const registerNotificationDeviceBodyExpoPushTokenMax = 300;
+
+
+
+export const RegisterNotificationDeviceBody = zod.object({
+  "expoPushToken": zod.string().min(registerNotificationDeviceBodyExpoPushTokenMin).max(registerNotificationDeviceBodyExpoPushTokenMax),
+  "platform": zod.enum(['ios', 'android'])
+})
+
+export const RegisterNotificationDeviceResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Unregister this device from push notifications
+ */
+export const unregisterNotificationDeviceBodyExpoPushTokenMin = 24;
+export const unregisterNotificationDeviceBodyExpoPushTokenMax = 300;
+
+
+
+export const UnregisterNotificationDeviceBody = zod.object({
+  "expoPushToken": zod.string().min(unregisterNotificationDeviceBodyExpoPushTokenMin).max(unregisterNotificationDeviceBodyExpoPushTokenMax),
+  "platform": zod.enum(['ios', 'android'])
+})
+
+export const UnregisterNotificationDeviceResponse = zod.object({
+  "ok": zod.boolean()
 })
 
 

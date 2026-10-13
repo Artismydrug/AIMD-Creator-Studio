@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   getGetProgressQueryKey,
+  getGetRewardsQueryKey,
   useCheckInProgress,
   useGetActivityFeed,
   useGetCurrentUser,
@@ -66,6 +67,7 @@ export default function Dashboard() {
     queryClient.setQueryData(progressQueryKey, nextProgress);
     queryClient.invalidateQueries({ queryKey: ['getDashboardSummary'] });
     queryClient.invalidateQueries({ queryKey: ['getCurrentUser'] });
+    queryClient.invalidateQueries({ queryKey: getGetRewardsQueryKey() });
   };
 
   const checkInMutation = useCheckInProgress({
@@ -90,6 +92,7 @@ export default function Dashboard() {
         );
         queryClient.invalidateQueries({ queryKey: ['getDashboardSummary'] });
         queryClient.invalidateQueries({ queryKey: ['getCurrentUser'] });
+        queryClient.invalidateQueries({ queryKey: getGetRewardsQueryKey() });
       },
     },
   });

@@ -11,6 +11,37 @@ This audit concerns the current workspace. It does not establish that the approv
 
 ## October 12 final candidate audit
 
+### Latest follow-up: monthly member drops replace fixed point offers
+
+- The owner retired all fixed 500/1,000/2,000-point reward offers. Point balances and earning are unchanged and keep accumulating. The API's deprecated `tiers` array is deliberately empty for compatibility with older clients.
+- Monthly packages are available to **all signed-in accounts**, including Free, $39 and $99. No minimum balance, payment, or subscription entitlement is used. Each account can request once per monthly drop.
+- Staff manage drops and stock in **web Admin → Monthly member drops**. Members see package items, available quantity, their persisted request status, and recent prior-month requests in web Studio Log → Weekly Challenge or mobile Dashboard → Member drops.
+- Each calendar month (Los Angeles time) has one package definition. Drafts remain hidden. Future drops become eligible only in their month; closing a drop blocks new requests while successful retries return the existing request.
+- Pending and approved requests reserve one package. Staff can approve, decline (release stock), or mark fulfilled (irreversible). Row locks and uniqueness prevent duplicate requests and oversubscription. Contents cannot change after requests; quantity cannot fall below reserved/fulfilled units. Deleted accounts are anonymized; delivered stock remains consumed.
+- No actual package or inventory has been invented. Staff must publish the first real package. Shipping, tickets, workshop enrollment, and contacting approved members are manual—not automatically granted by this feature.
+- Development gained two additive Drizzle-defined tables. Re-publishing the backend applies the managed database schema through the Publish flow; do not overwrite production data or introduce startup-time production DDL.
+- Checks: 385 backend tests, including real-database simultaneous stock requests, retry idempotency, Free/paid eligibility, untouched points, account deletion and approval/fulfillment guards; 25 native request-safety checks and the four existing launch contracts; mobile/API/web TypeScript; API/web builds and an updated iOS JavaScript export.
+- A fresh native candidate newer than build 12 is needed; source/export checks do not constitute an installed iPhone verification.
+- Signed-in web browser checks passed: cancel without mutation, single pending request with stock decrement and unchanged points, persisted approval/fulfillment after reload, fulfillment Cancel, locked contents, and narrow-screen dark layout. Temporary QA drops/requests were removed and only the QA account's temporary admin flag was restored. The reserved-stock floor was verified by real-database tests; browser form constraints prevented a below-floor submission. A web sign-in loading indicator replaces the transient blank bootstrap state.
+
+### Earlier reward-milestone experiment (retired by the monthly-drop policy above)
+
+- Mobile Dashboard now links to Creative rewards with three server-owned milestones: **500 points** for a shirt or art print, **1,000** for an eligible event ticket, and **2,000** for an eligible workshop when the program is ready.
+- Existing thresholds were retained so current progress is not moved backward. Points continue past the highest goal; unlocking never spends points. Stable keys and a shared catalog allow future reward offerings to evolve.
+- All current fulfillment is explicitly **Coming soon**, even after earning a milestone. These goals are not memberships and do not bypass paid-lesson access controls. No inventory, coupon, automatic entitlement, or redemption was fabricated.
+- Point-earning actions now refresh the rewards balance and current-user data. Reward responses are private/non-cacheable. Loading, retry, stale-balance, earned, and all-current-goals-complete states are covered.
+- The attached recording was reviewed; it is byte-identical to the earlier recording. It predates the new owner post controls and reward screen, so it cannot verify those additions.
+- Checks passed: mobile/API/web TypeScript; **361 backend tests**; 25 request-safety checks; dashboard, account-deletion, auth-handoff, and HQ-loading source contracts; API/web production builds; updated iOS JavaScript export. These are code/export checks, not a signed native installation or proof of production capacity.
+- Publish the updated backend before installing a fresh native candidate newer than build 12. On that candidate, verify the rewards link, totals after earning, 500/1,000/2,000 earned/locked states using disposable test accounts, light/dark appearance, and owner Edit/Cancel/Save plus Delete/Keep/Delete. Signed-in mobile UI verification remains pending due to the existing test-helper origin blocker.
+
+### Post management added after the build 12 upload
+
+Owner-only post menus now offer caption editing and confirmed deletion in both the mobile Studio Feed and creator profile post list. Caption updates preserve media, tags, author, and creation time. Cancelling an action invokes no write; saves and deletes have in-flight tap guards and refresh the shared post/profile caches.
+
+Current checks passed: mobile/API TypeScript, **349 backend tests**, 25 mobile request-safety checks, API production build, and the updated iOS JavaScript export. Tests cover caption validation, persistence, media preservation, cross-account rejection, and deletion of only the selected post.
+
+The signed-in mobile UI check remains **unverified**: the programmatic helper redirected to the sibling website rather than the Expo origin, so testing stopped without creating a post. Its temporary root-site account was cleaned up. Verify Edit → Cancel/Save and Delete → Keep/Delete on the next native candidate. **Build 12 predates this feature; install a newer build after publishing the new caption endpoint.** This audit did not deploy the backend or upload an iOS binary.
+
 **Release gate:** Do not submit the older TestFlight build 11 as evidence of these workspace fixes. Publish the current backend and create, install, and check a fresh production-configured native candidate before choosing a build for Apple review. No deployment or native upload was performed during this audit.
 
 ### Verified

@@ -29,7 +29,7 @@
 - [Music creator scope](music-creator-scope.md) — music artistry and vocal practice belong in the ordinary creative feed, not only private feedback.
 - [Creator tester feedback](creator-tester-feedback.md) — testers value clear navigation/history and need visible photo-proof and habit-delete guidance.
 - [Workshop video access](workshop-video-access.md) — free public teasers; full lessons require active $39 membership or staff-granted workshop participation.
-- [Browser testing limits](browser-testing-limits.md) — test Chromium may lack H.264; use WebM fixtures and standard-domain Clerk test emails.
+- [Browser testing limits](browser-testing-limits.md) — Chromium codec limits, Clerk fixture domains, and waiting for session/provisioning readiness before protected-page checks.
 - [Overview pitch positioning](overview-pitch-positioning.md) — broad school/creator/partner pitch centers product and mission; speculative business numbers belong in the business plan.
 - [Logo image preparation](logo-image-preparation.md) — approved Ivory Ink icon: ivory, navy AIMD wordmark and Creator Studio descriptor; supersedes earlier black-box/paint directions.
 - [School learning evidence](school-learning-evidence.md) — reflections stay private; public portfolio publishing and LMS/grade integration require separate scope.
@@ -40,3 +40,4 @@
 - [Feed engagement policy](feed-engagement-policy.md) — private messages replace public feed likes and comments; preserve safety tools and historical records.
 - [HTTP query booleans](http-query-booleans.md) — validate true/false strings explicitly; generated boolean coercion can turn the text false into true.
 - [Browser destructive confirmations](browser-destructive-confirmations.md) — use explicit app-owned controls; Cancel must send no write, while native confirmations remain separate.
+- [Creative reward policy](creative-reward-policy.md) — points keep accumulating; stock-limited monthly drops include Free, $39 and $99 accounts equally.

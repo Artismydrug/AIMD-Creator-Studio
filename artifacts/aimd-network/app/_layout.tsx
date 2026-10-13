@@ -367,6 +367,7 @@ function RootLayoutNav() {
       <Stack.Screen name="feed" options={{ headerShown: false }} />
        <Stack.Screen name="profile" options={{ headerShown: false }} />
        <Stack.Screen name="accomplishments" options={{ headerShown: false }} />
+       <Stack.Screen name="rewards" options={{ headerShown: false }} />
       <Stack.Screen name="membership" options={{ headerShown: false }} />
        <Stack.Screen
          name="notifications"

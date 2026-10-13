@@ -78,6 +78,7 @@ import type {
   JobListing,
   LessonReflectionInput,
   LinkInstructorUserInput,
+  ListAdminMonthlyDropRequestsParams,
   ListAdminUsers200,
   ListEventsParams,
   ListHabitLogsParams,
@@ -89,7 +90,17 @@ import type {
   MarkAllNotificationsReadResult,
   MessageInput,
   ModerationReviewInput,
+  MonthlyDrop,
+  MonthlyDropInput,
+  MonthlyDropRequest,
+  MonthlyDropRequestUpdate,
+  MonthlyDropRequestsPage,
+  MonthlyDropUpdate,
   Notification,
+  NotificationDeviceInput,
+  NotificationDeviceResult,
+  NotificationPreferences,
+  NotificationPreferencesUpdate,
   NotificationsResponse,
   Plan,
   PointAwardResult,
@@ -118,6 +129,7 @@ import type {
   TattooBookingReference,
   TattooBookingSubmissionResult,
   TattooBookingUpdate,
+  UpdateStudioPostInput,
   User,
   UserUpdate,
   WeeklyChallengeResult,
@@ -1310,6 +1322,78 @@ export function useGetStudioPost<TData = Awaited<ReturnType<typeof getStudioPost
 
 
 
+
+export const getUpdateStudioPostUrl = (id: number,) => {
+
+
+
+
+  return `/api/studio-posts/${id}`
+}
+
+/**
+ * @summary Update the caption on an owned studio post
+ */
+export const updateStudioPost = async (id: number,
+    updateStudioPostInput: UpdateStudioPostInput, options?: Parameters<typeof customFetch>[1]): Promise<StudioPost> => {
+
+  return customFetch<StudioPost>(getUpdateStudioPostUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateStudioPostInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateStudioPostMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateStudioPost>>, TError,{id: number;data: BodyType<UpdateStudioPostInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateStudioPost>>, TError,{id: number;data: BodyType<UpdateStudioPostInput>}, TContext> => {
+
+const mutationKey = ['updateStudioPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateStudioPost>>, {id: number;data: BodyType<UpdateStudioPostInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateStudioPost(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateStudioPostMutationResult = NonNullable<Awaited<ReturnType<typeof updateStudioPost>>>
+    export type UpdateStudioPostMutationBody = BodyType<UpdateStudioPostInput>
+    export type UpdateStudioPostMutationError = ErrorType<void>
+
+    /**
+ * @summary Update the caption on an owned studio post
+ */
+export const useUpdateStudioPost = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateStudioPost>>, TError,{id: number;data: BodyType<UpdateStudioPostInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateStudioPost>>,
+        TError,
+        {id: number;data: BodyType<UpdateStudioPostInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateStudioPostMutationOptions(options));
+    }
 
 export const getDeleteStudioPostUrl = (id: number,) => {
 
@@ -4624,7 +4708,7 @@ export const getGetRewardsUrl = () => {
 }
 
 /**
- * @summary Reward tiers and the current user's AIMD Points balance
+ * @summary Lifetime points and account-only monthly member drops; no point redemption
  */
 export const getRewards = async ( options?: Parameters<typeof customFetch>[1]): Promise<RewardsInfo> => {
 
@@ -4671,7 +4755,7 @@ export type GetRewardsQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Reward tiers and the current user's AIMD Points balance
+ * @summary Lifetime points and account-only monthly member drops; no point redemption
  */
 
 export function useGetRewards<TData = Awaited<ReturnType<typeof getRewards>>, TError = ErrorType<unknown>>(
@@ -4691,6 +4775,453 @@ export function useGetRewards<TData = Awaited<ReturnType<typeof getRewards>>, TE
 
 
 
+
+export const getRequestMonthlyDropUrl = (id: number,) => {
+
+
+
+
+  return `/api/rewards/monthly-drops/${id}/request`
+}
+
+/**
+ * @summary Request this month's package once per account; retries return the same request
+ */
+export const requestMonthlyDrop = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<MonthlyDropRequest> => {
+
+  return customFetch<MonthlyDropRequest>(getRequestMonthlyDropUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRequestMonthlyDropMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestMonthlyDrop>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof requestMonthlyDrop>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['requestMonthlyDrop'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof requestMonthlyDrop>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  requestMonthlyDrop(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RequestMonthlyDropMutationResult = NonNullable<Awaited<ReturnType<typeof requestMonthlyDrop>>>
+
+    export type RequestMonthlyDropMutationError = ErrorType<void>
+
+    /**
+ * @summary Request this month's package once per account; retries return the same request
+ */
+export const useRequestMonthlyDrop = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestMonthlyDrop>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof requestMonthlyDrop>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getRequestMonthlyDropMutationOptions(options));
+    }
+
+export const getListAdminMonthlyDropsUrl = () => {
+
+
+
+
+  return `/api/admin/monthly-drops`
+}
+
+/**
+ * @summary (Admin) List monthly packages and remaining quantities
+ */
+export const listAdminMonthlyDrops = async ( options?: Parameters<typeof customFetch>[1]): Promise<MonthlyDrop[]> => {
+
+  return customFetch<MonthlyDrop[]>(getListAdminMonthlyDropsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminMonthlyDropsQueryKey = () => {
+    return [
+    `/api/admin/monthly-drops`
+    ] as const;
+    }
+
+
+export const getListAdminMonthlyDropsQueryOptions = <TData = Awaited<ReturnType<typeof listAdminMonthlyDrops>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminMonthlyDrops>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminMonthlyDropsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminMonthlyDrops>>> = ({ signal }) => listAdminMonthlyDrops({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminMonthlyDrops>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminMonthlyDropsQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminMonthlyDrops>>>
+export type ListAdminMonthlyDropsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary (Admin) List monthly packages and remaining quantities
+ */
+
+export function useListAdminMonthlyDrops<TData = Awaited<ReturnType<typeof listAdminMonthlyDrops>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminMonthlyDrops>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminMonthlyDropsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateAdminMonthlyDropUrl = () => {
+
+
+
+
+  return `/api/admin/monthly-drops`
+}
+
+/**
+ * @summary (Admin) Create one package for a calendar month
+ */
+export const createAdminMonthlyDrop = async (monthlyDropInput: MonthlyDropInput, options?: Parameters<typeof customFetch>[1]): Promise<MonthlyDrop> => {
+
+  return customFetch<MonthlyDrop>(getCreateAdminMonthlyDropUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(monthlyDropInput)
+  }
+);}
+
+
+
+
+
+export const getCreateAdminMonthlyDropMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminMonthlyDrop>>, TError,{data: BodyType<MonthlyDropInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAdminMonthlyDrop>>, TError,{data: BodyType<MonthlyDropInput>}, TContext> => {
+
+const mutationKey = ['createAdminMonthlyDrop'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAdminMonthlyDrop>>, {data: BodyType<MonthlyDropInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAdminMonthlyDrop(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAdminMonthlyDropMutationResult = NonNullable<Awaited<ReturnType<typeof createAdminMonthlyDrop>>>
+    export type CreateAdminMonthlyDropMutationBody = BodyType<MonthlyDropInput>
+    export type CreateAdminMonthlyDropMutationError = ErrorType<void>
+
+    /**
+ * @summary (Admin) Create one package for a calendar month
+ */
+export const useCreateAdminMonthlyDrop = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminMonthlyDrop>>, TError,{data: BodyType<MonthlyDropInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAdminMonthlyDrop>>,
+        TError,
+        {data: BodyType<MonthlyDropInput>},
+        TContext
+      > => {
+      return useMutation(getCreateAdminMonthlyDropMutationOptions(options));
+    }
+
+export const getUpdateAdminMonthlyDropUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/monthly-drops/${id}`
+}
+
+/**
+ * @summary (Admin) Edit, open or close a package; requested contents are preserved
+ */
+export const updateAdminMonthlyDrop = async (id: number,
+    monthlyDropUpdate: MonthlyDropUpdate, options?: Parameters<typeof customFetch>[1]): Promise<MonthlyDrop> => {
+
+  return customFetch<MonthlyDrop>(getUpdateAdminMonthlyDropUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(monthlyDropUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateAdminMonthlyDropMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminMonthlyDrop>>, TError,{id: number;data: BodyType<MonthlyDropUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAdminMonthlyDrop>>, TError,{id: number;data: BodyType<MonthlyDropUpdate>}, TContext> => {
+
+const mutationKey = ['updateAdminMonthlyDrop'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAdminMonthlyDrop>>, {id: number;data: BodyType<MonthlyDropUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateAdminMonthlyDrop(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAdminMonthlyDropMutationResult = NonNullable<Awaited<ReturnType<typeof updateAdminMonthlyDrop>>>
+    export type UpdateAdminMonthlyDropMutationBody = BodyType<MonthlyDropUpdate>
+    export type UpdateAdminMonthlyDropMutationError = ErrorType<void>
+
+    /**
+ * @summary (Admin) Edit, open or close a package; requested contents are preserved
+ */
+export const useUpdateAdminMonthlyDrop = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminMonthlyDrop>>, TError,{id: number;data: BodyType<MonthlyDropUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAdminMonthlyDrop>>,
+        TError,
+        {id: number;data: BodyType<MonthlyDropUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateAdminMonthlyDropMutationOptions(options));
+    }
+
+export const getListAdminMonthlyDropRequestsUrl = (params: ListAdminMonthlyDropRequestsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/monthly-drop-requests?${stringifiedParams}` : `/api/admin/monthly-drop-requests`
+}
+
+/**
+ * @summary (Admin) Paginated member request list
+ */
+export const listAdminMonthlyDropRequests = async (params: ListAdminMonthlyDropRequestsParams, options?: Parameters<typeof customFetch>[1]): Promise<MonthlyDropRequestsPage> => {
+
+  return customFetch<MonthlyDropRequestsPage>(getListAdminMonthlyDropRequestsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminMonthlyDropRequestsQueryKey = (params?: ListAdminMonthlyDropRequestsParams,) => {
+    return [
+    `/api/admin/monthly-drop-requests`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAdminMonthlyDropRequestsQueryOptions = <TData = Awaited<ReturnType<typeof listAdminMonthlyDropRequests>>, TError = ErrorType<unknown>>(params: ListAdminMonthlyDropRequestsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminMonthlyDropRequests>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminMonthlyDropRequestsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminMonthlyDropRequests>>> = ({ signal }) => listAdminMonthlyDropRequests(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminMonthlyDropRequests>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminMonthlyDropRequestsQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminMonthlyDropRequests>>>
+export type ListAdminMonthlyDropRequestsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary (Admin) Paginated member request list
+ */
+
+export function useListAdminMonthlyDropRequests<TData = Awaited<ReturnType<typeof listAdminMonthlyDropRequests>>, TError = ErrorType<unknown>>(
+ params: ListAdminMonthlyDropRequestsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminMonthlyDropRequests>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminMonthlyDropRequestsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateAdminMonthlyDropRequestUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/monthly-drop-requests/${id}`
+}
+
+/**
+ * @summary (Admin) Approve, decline or mark a package fulfilled
+ */
+export const updateAdminMonthlyDropRequest = async (id: number,
+    monthlyDropRequestUpdate: MonthlyDropRequestUpdate, options?: Parameters<typeof customFetch>[1]): Promise<MonthlyDropRequest> => {
+
+  return customFetch<MonthlyDropRequest>(getUpdateAdminMonthlyDropRequestUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(monthlyDropRequestUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateAdminMonthlyDropRequestMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminMonthlyDropRequest>>, TError,{id: number;data: BodyType<MonthlyDropRequestUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAdminMonthlyDropRequest>>, TError,{id: number;data: BodyType<MonthlyDropRequestUpdate>}, TContext> => {
+
+const mutationKey = ['updateAdminMonthlyDropRequest'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAdminMonthlyDropRequest>>, {id: number;data: BodyType<MonthlyDropRequestUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateAdminMonthlyDropRequest(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAdminMonthlyDropRequestMutationResult = NonNullable<Awaited<ReturnType<typeof updateAdminMonthlyDropRequest>>>
+    export type UpdateAdminMonthlyDropRequestMutationBody = BodyType<MonthlyDropRequestUpdate>
+    export type UpdateAdminMonthlyDropRequestMutationError = ErrorType<void>
+
+    /**
+ * @summary (Admin) Approve, decline or mark a package fulfilled
+ */
+export const useUpdateAdminMonthlyDropRequest = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminMonthlyDropRequest>>, TError,{id: number;data: BodyType<MonthlyDropRequestUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAdminMonthlyDropRequest>>,
+        TError,
+        {id: number;data: BodyType<MonthlyDropRequestUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateAdminMonthlyDropRequestMutationOptions(options));
+    }
 
 export const getListAdminUsersUrl = () => {
 
@@ -6012,6 +6543,296 @@ export const useMarkAllNotificationsRead = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getMarkAllNotificationsReadMutationOptions(options));
+    }
+
+export const getGetNotificationPreferencesUrl = () => {
+
+
+
+
+  return `/api/notification-preferences`
+}
+
+/**
+ * @summary Get push notification preferences for the current creator
+ */
+export const getNotificationPreferences = async ( options?: Parameters<typeof customFetch>[1]): Promise<NotificationPreferences> => {
+
+  return customFetch<NotificationPreferences>(getGetNotificationPreferencesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetNotificationPreferencesQueryKey = () => {
+    return [
+    `/api/notification-preferences`
+    ] as const;
+    }
+
+
+export const getGetNotificationPreferencesQueryOptions = <TData = Awaited<ReturnType<typeof getNotificationPreferences>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNotificationPreferences>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetNotificationPreferencesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNotificationPreferences>>> = ({ signal }) => getNotificationPreferences({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNotificationPreferences>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetNotificationPreferencesQueryResult = NonNullable<Awaited<ReturnType<typeof getNotificationPreferences>>>
+export type GetNotificationPreferencesQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get push notification preferences for the current creator
+ */
+
+export function useGetNotificationPreferences<TData = Awaited<ReturnType<typeof getNotificationPreferences>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNotificationPreferences>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetNotificationPreferencesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateNotificationPreferencesUrl = () => {
+
+
+
+
+  return `/api/notification-preferences`
+}
+
+/**
+ * @summary Update push notification preferences for the current creator
+ */
+export const updateNotificationPreferences = async (notificationPreferencesUpdate: NotificationPreferencesUpdate, options?: Parameters<typeof customFetch>[1]): Promise<NotificationPreferences> => {
+
+  return customFetch<NotificationPreferences>(getUpdateNotificationPreferencesUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(notificationPreferencesUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateNotificationPreferencesMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateNotificationPreferences>>, TError,{data: BodyType<NotificationPreferencesUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateNotificationPreferences>>, TError,{data: BodyType<NotificationPreferencesUpdate>}, TContext> => {
+
+const mutationKey = ['updateNotificationPreferences'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateNotificationPreferences>>, {data: BodyType<NotificationPreferencesUpdate>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateNotificationPreferences(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateNotificationPreferencesMutationResult = NonNullable<Awaited<ReturnType<typeof updateNotificationPreferences>>>
+    export type UpdateNotificationPreferencesMutationBody = BodyType<NotificationPreferencesUpdate>
+    export type UpdateNotificationPreferencesMutationError = ErrorType<void>
+
+    /**
+ * @summary Update push notification preferences for the current creator
+ */
+export const useUpdateNotificationPreferences = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateNotificationPreferences>>, TError,{data: BodyType<NotificationPreferencesUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateNotificationPreferences>>,
+        TError,
+        {data: BodyType<NotificationPreferencesUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateNotificationPreferencesMutationOptions(options));
+    }
+
+export const getRegisterNotificationDeviceUrl = () => {
+
+
+
+
+  return `/api/notification-devices`
+}
+
+/**
+ * @summary Register this device for opted-in push notifications
+ */
+export const registerNotificationDevice = async (notificationDeviceInput: NotificationDeviceInput, options?: Parameters<typeof customFetch>[1]): Promise<NotificationDeviceResult> => {
+
+  return customFetch<NotificationDeviceResult>(getRegisterNotificationDeviceUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(notificationDeviceInput)
+  }
+);}
+
+
+
+
+
+export const getRegisterNotificationDeviceMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerNotificationDevice>>, TError,{data: BodyType<NotificationDeviceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registerNotificationDevice>>, TError,{data: BodyType<NotificationDeviceInput>}, TContext> => {
+
+const mutationKey = ['registerNotificationDevice'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registerNotificationDevice>>, {data: BodyType<NotificationDeviceInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  registerNotificationDevice(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegisterNotificationDeviceMutationResult = NonNullable<Awaited<ReturnType<typeof registerNotificationDevice>>>
+    export type RegisterNotificationDeviceMutationBody = BodyType<NotificationDeviceInput>
+    export type RegisterNotificationDeviceMutationError = ErrorType<void>
+
+    /**
+ * @summary Register this device for opted-in push notifications
+ */
+export const useRegisterNotificationDevice = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerNotificationDevice>>, TError,{data: BodyType<NotificationDeviceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof registerNotificationDevice>>,
+        TError,
+        {data: BodyType<NotificationDeviceInput>},
+        TContext
+      > => {
+      return useMutation(getRegisterNotificationDeviceMutationOptions(options));
+    }
+
+export const getUnregisterNotificationDeviceUrl = () => {
+
+
+
+
+  return `/api/notification-devices`
+}
+
+/**
+ * @summary Unregister this device from push notifications
+ */
+export const unregisterNotificationDevice = async (notificationDeviceInput: NotificationDeviceInput, options?: Parameters<typeof customFetch>[1]): Promise<NotificationDeviceResult> => {
+
+  return customFetch<NotificationDeviceResult>(getUnregisterNotificationDeviceUrl(),
+  {
+    ...options,
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(notificationDeviceInput)
+  }
+);}
+
+
+
+
+
+export const getUnregisterNotificationDeviceMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unregisterNotificationDevice>>, TError,{data: BodyType<NotificationDeviceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unregisterNotificationDevice>>, TError,{data: BodyType<NotificationDeviceInput>}, TContext> => {
+
+const mutationKey = ['unregisterNotificationDevice'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unregisterNotificationDevice>>, {data: BodyType<NotificationDeviceInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  unregisterNotificationDevice(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnregisterNotificationDeviceMutationResult = NonNullable<Awaited<ReturnType<typeof unregisterNotificationDevice>>>
+    export type UnregisterNotificationDeviceMutationBody = BodyType<NotificationDeviceInput>
+    export type UnregisterNotificationDeviceMutationError = ErrorType<void>
+
+    /**
+ * @summary Unregister this device from push notifications
+ */
+export const useUnregisterNotificationDevice = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unregisterNotificationDevice>>, TError,{data: BodyType<NotificationDeviceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unregisterNotificationDevice>>,
+        TError,
+        {data: BodyType<NotificationDeviceInput>},
+        TContext
+      > => {
+      return useMutation(getUnregisterNotificationDeviceMutationOptions(options));
     }
 
 export const getGetProgressUrl = (params?: GetProgressParams,) => {

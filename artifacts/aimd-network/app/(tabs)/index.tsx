@@ -28,6 +28,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import ChallengeCameraCapture from '@/components/ChallengeCameraCapture';
 import CreatorAppTour from '@/components/CreatorAppTour';
 import VerificationStatusTag from '@/components/VerificationStatusTag';
+import MonthlyMemberDrops from '@/components/MonthlyMemberDrops';
 import {
   ChallengeProofAsset,
   fromImagePickerAsset,
@@ -49,6 +50,7 @@ import {
   useGetCurrentUser,
   useGetNotifications,
   getGetNotificationsQueryKey,
+  getGetRewardsQueryKey,
 } from '@workspace/api-client-react';
 
 function resolveMediaUrl(url: string | null | undefined): string | null {
@@ -119,11 +121,12 @@ export default function ProgressScreen() {
         refetchChallenge(),
         refetchCurrentUser(),
         refetchProfileSnapshot(),
+        queryClient.invalidateQueries({ queryKey: getGetRewardsQueryKey() }),
       ]);
     } finally {
       setRefreshing(false);
     }
-  }, [refetchProgress, refetchChallenge, refetchCurrentUser, refetchProfileSnapshot]);
+  }, [refetchProgress, refetchChallenge, refetchCurrentUser, refetchProfileSnapshot, queryClient]);
 
   // Mutations
   const checkInMut = useCheckInProgress({
@@ -132,6 +135,8 @@ export default function ProgressScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         queryClient.invalidateQueries({ queryKey: getGetProgressQueryKey({ timezone }) });
         queryClient.invalidateQueries({ queryKey: getListBadgesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetRewardsQueryKey() });
+        void refetchCurrentUser();
       },
       onError: () => {
         Alert.alert('Check-In Failed', 'We could not record your check-in right now. Please try again.');
@@ -150,6 +155,8 @@ export default function ProgressScreen() {
         spinAnim.stopAnimation();
         setSpinResult(data);
         queryClient.invalidateQueries({ queryKey: getGetProgressQueryKey({ timezone }) });
+        queryClient.invalidateQueries({ queryKey: getGetRewardsQueryKey() });
+        void refetchCurrentUser();
       },
       onError: () => {
         spinAnim.stopAnimation();
@@ -210,6 +217,8 @@ export default function ProgressScreen() {
         setProcessProof(null);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         queryClient.invalidateQueries({ queryKey: getGetCurrentChallengeQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetRewardsQueryKey() });
+        void refetchCurrentUser();
       },
       onError: () => {
         setUploading(false);
@@ -1090,6 +1099,8 @@ export default function ProgressScreen() {
               </View>
             </>
           )}
+
+          <MonthlyMemberDrops compact />
 
           {challengeLoading && !challengeData && (
             <View style={s.challengeBlock}>
