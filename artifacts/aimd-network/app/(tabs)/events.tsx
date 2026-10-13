@@ -17,6 +17,7 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useListEvents, useCheckInToEvent } from '@workspace/api-client-react';
 import EventCard from '@/components/EventCard';
+import TattooBusResidencyCard from '@/components/TattooBusResidencyCard';
 
 // Camera is a native device feature — import only on native platforms
 let CameraView: any = null;
@@ -418,17 +419,20 @@ export default function EventsScreen({ embedded = false }: { embedded?: boolean 
             />
           }
           ListHeaderComponent={
-            events && events.length > 0 ? (
-              <View style={s.sectionHeader}>
-                <Text style={s.sectionTitle}>Upcoming Events</Text>
-              </View>
-            ) : null
+            <View>
+              <TattooBusResidencyCard />
+              {events && events.length > 0 && (
+                <View style={s.sectionHeader}>
+                  <Text style={s.sectionTitle}>Upcoming Events</Text>
+                </View>
+              )}
+            </View>
           }
           ListEmptyComponent={
             <View style={s.centered}>
-              <Feather name="calendar" size={48} color={colors.muted} />
-              <Text style={s.emptyTitle}>No events scheduled</Text>
-              <Text style={s.emptyText}>Check back soon for pop-ups and workshops</Text>
+              <Feather name="calendar" size={32} color={colors.muted} />
+              <Text style={s.emptyTitle}>More events coming soon</Text>
+              <Text style={s.emptyText}>Check back for pop-ups and workshops</Text>
             </View>
           }
         />
