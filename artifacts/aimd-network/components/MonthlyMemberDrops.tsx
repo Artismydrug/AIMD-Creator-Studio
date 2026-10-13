@@ -20,7 +20,7 @@ export default function MonthlyMemberDrops({ compact = false }: { compact?: bool
   const queryClient = useQueryClient();
   const { data, isLoading, isError, refetch } = useGetRewards({
     query: { queryKey: getGetRewardsQueryKey(), staleTime: 30_000, retry: 1 },
-    request: { signal: AbortSignal.timeout(10_000) },
+    request: { timeoutMs: 10_000 },
   });
   const requestPackage = useRequestMonthlyDrop();
   const submitting = useRef(false);
