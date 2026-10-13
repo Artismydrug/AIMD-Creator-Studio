@@ -13,6 +13,7 @@
 - [Creative UI copy density](creative-ui-copy-density.md) — favor compact, icon-led cues over feature-list paragraphs, especially in membership and pathway screens.
 - [Cross-platform tour consistency](cross-platform-tour-consistency.md) — mobile Dashboard tour is the source of truth for web onboarding content and inclusive creator language.
 - [Workspace static build environment](workspace-static-build-env.md) — static workspace builds load Vite configs without workflow PORT or BASE_PATH values.
+- [Expo public environment cache](expo-public-env-cache.md) — clear Metro transforms when verifying changed public build-time configuration; cached export success is not proof of injection.
 - [Stripe catalog mirror refresh](stripe-catalog-sync.md) — metadata-only Stripe edits may need per-entity mirror refresh beyond incremental backfill.
 - [Drizzle SQL array parameters](drizzle-array-parameters.md) — bind PostgreSQL arrays with a typed ARRAY expression, not direct JavaScript-array interpolation.
 - [React Native feed paging](react-native-web-pager-sizing.md) — keep viewport-sized pages stable; inner writing should scroll only when it overflows.

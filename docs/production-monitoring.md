@@ -9,6 +9,8 @@
 
 These values must be present when production bundles are built. Publishing the backend alone does not update an installed iOS binary. Rebuild the mobile app to include the monitoring code and public configuration.
 
+When public variables change after an earlier Expo export, use `expo export --clear` for the verification build. A cached successful export can retain the previous public configuration.
+
 Tracking is disabled in development previews. Missing configuration produces a warning, not a broken app. Configuration and successful compilation do not establish that PostHog received events; verify delivery from a production-configured build.
 
 ## Explicit events
@@ -39,3 +41,5 @@ Review the App Store privacy disclosures before submitting a build with newly en
 ## Local verification
 
 `pnpm --filter @workspace/aimd-network run smoke:telemetry` checks both clients using mocked SDKs: initialization, privacy filtering, duplicate/error limits, runtime handlers, missing configuration and failure isolation. It makes no real analytics requests.
+
+`node scripts/verify-posthog-capture.mjs --send-test-event` explicitly sends one labeled `monitoring_setup_check` event to validate the configured cloud capture token/host. It logs only host, HTTP status and acceptance, never credentials or response bodies. Keep this test event out of activation funnels. Acceptance is not proof of delivery from a native device or confirmation that the event is visible in a PostHog dashboard.

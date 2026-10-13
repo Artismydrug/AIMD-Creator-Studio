@@ -67,6 +67,7 @@ export default defineConfig({
           if (/\/node_modules\/(?:recharts|recharts-scale|d3-[^/]+|victory-vendor|internmap)\//.test(id)) return 'charts';
           if (/\/node_modules\/prosemirror-[^/]+\//.test(id)) return 'editor';
           if (id.includes('/node_modules/@clerk/')) return 'auth';
+          if (/\/node_modules\/(?:posthog-js|@posthog)\//.test(id)) return 'analytics';
           return 'vendor';
         },
       },
