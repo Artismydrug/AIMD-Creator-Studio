@@ -14,6 +14,7 @@
     "smoke:telemetry": "node scripts/telemetry-smoke.js",
     "smoke:error-diagnostics": "node scripts/error-diagnostics-smoke.js",
     "smoke:native-member-drops": "node scripts/native-member-drops-smoke.js",
+    "smoke:native-dashboard-data": "node scripts/native-dashboard-data-smoke.js",
     "serve": "node server/serve.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

@@ -55,10 +55,22 @@ import {
 } from '@workspace/api-client-react';
 
 function resolveMediaUrl(url: string | null | undefined): string | null {
-  if (!url) return null;
+  if (typeof url !== 'string' || !url.trim()) return null;
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   const base = getBaseUrl();
   return base ? `${base}${url}` : url;
+}
+
+function displayCount(value: number | null | undefined): number | string {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : '—';
+}
+
+function deviceTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions()?.timeZone || 'UTC';
+  } catch {
+    return 'UTC';
+  }
 }
 
 export default function ProgressScreen() {
@@ -75,7 +87,7 @@ export default function ProgressScreen() {
     return () => subscription.remove();
   }, []);
 
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  const timezone = deviceTimezone();
 
   const {
     data: progress,
@@ -100,6 +112,8 @@ export default function ProgressScreen() {
     refetch: refetchChallenge
   } = useGetCurrentChallenge();
   const { data: currentUser, refetch: refetchCurrentUser } = useGetCurrentUser();
+  const profileUserId = typeof currentUser?.id === 'number' && Number.isFinite(currentUser.id) && currentUser.id > 0
+    ? currentUser.id : null;
   const { data: notifications } = useGetNotifications({
     query: { queryKey: getGetNotificationsQueryKey(), refetchInterval: 60_000 },
   });
@@ -107,10 +121,10 @@ export default function ProgressScreen() {
     data: profileSnapshot,
     isError: profileIsError,
     refetch: refetchProfileSnapshot,
-  } = useGetUserProfile(currentUser?.id ?? 0, {
+  } = useGetUserProfile(profileUserId ?? 0, {
     query: {
-      enabled: !!currentUser,
-      queryKey: currentUser ? getGetUserProfileQueryKey(currentUser.id) : [],
+      enabled: profileUserId !== null,
+      queryKey: profileUserId !== null ? getGetUserProfileQueryKey(profileUserId) : [],
     },
   });
 
@@ -121,19 +135,19 @@ export default function ProgressScreen() {
         refetchProgress(),
         refetchChallenge(),
         refetchCurrentUser(),
-        refetchProfileSnapshot(),
+        ...(profileUserId !== null ? [refetchProfileSnapshot()] : []),
         queryClient.invalidateQueries({ queryKey: getGetRewardsQueryKey() }),
       ]);
     } finally {
       setRefreshing(false);
     }
-  }, [refetchProgress, refetchChallenge, refetchCurrentUser, refetchProfileSnapshot, queryClient]);
+  }, [refetchProgress, refetchChallenge, refetchCurrentUser, refetchProfileSnapshot, profileUserId, queryClient]);
 
   // Mutations
   const checkInMut = useCheckInProgress({
     mutation: {
       onSuccess: (data) => {
-        if (!progress?.checkedInToday && data.checkedInToday) trackEvent('daily_check_in_completed');
+        if (!progress?.checkedInToday && data?.checkedInToday) trackEvent('daily_check_in_completed');
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         queryClient.invalidateQueries({ queryKey: getGetProgressQueryKey({ timezone }) });
         queryClient.invalidateQueries({ queryKey: getListBadgesQueryKey() });
@@ -296,6 +310,17 @@ export default function ProgressScreen() {
   const isSubmitting = uploading || submitMut.isPending;
   const isFreeCreator = currentUser?.tier === 'free';
   const unreadNotifications = notifications?.unreadCount ?? 0;
+  const profileUsername = [profileSnapshot?.username, currentUser?.username]
+    .find((value) => typeof value === 'string' && value.trim().length > 0);
+  const profileInitials = typeof profileUsername === 'string' ? profileUsername.slice(0, 2).toUpperCase() : '?';
+  const profileAvatar = resolveMediaUrl(profileSnapshot?.avatarUrl ?? currentUser?.avatarUrl);
+  const recentBadges = Array.isArray(progress?.recentBadges)
+    ? progress.recentBadges.filter((badge) => badge && typeof badge.name === 'string') : [];
+  const submissions = Array.isArray(challengeData?.submissions)
+    ? challengeData.submissions.filter((submission) => submission && typeof submission.id === 'number') : [];
+  const nextBadge = progress?.nextBadge;
+  const nextBadgePercent = typeof nextBadge?.progressPercent === 'number' && Number.isFinite(nextBadge.progressPercent)
+    ? Math.max(0, Math.min(100, nextBadge.progressPercent)) : 0;
 
   const s = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
@@ -949,26 +974,26 @@ export default function ProgressScreen() {
                     onPress={() => router.push('/profile')}
                     testID="dashboard-profile-snapshot"
                     accessibilityRole="button"
-                    accessibilityLabel={`Open your profile, ${currentUser.username}`}
+                    accessibilityLabel={profileUsername ? `Open your profile, ${profileUsername}` : 'Open your profile'}
                   >
                     <View style={s.profileSnapshotAvatar}>
-                      {resolveMediaUrl(profileSnapshot?.avatarUrl ?? currentUser.avatarUrl) ? (
+                      {profileAvatar ? (
                         <Image
                           source={{
-                            uri: resolveMediaUrl(profileSnapshot?.avatarUrl ?? currentUser.avatarUrl)!,
+                            uri: profileAvatar,
                           }}
                           style={{ width: 54, height: 54 }}
                         />
                       ) : (
                         <Text style={s.profileSnapshotAvatarText}>
-                          {currentUser.username.slice(0, 2).toUpperCase()}
+                          {profileInitials}
                         </Text>
                       )}
                     </View>
                     <View style={s.profileSnapshotContent}>
                       <Text style={s.profileSnapshotEyebrow}>Your public profile</Text>
                       <Text style={s.profileSnapshotName} numberOfLines={1}>
-                        @{profileSnapshot?.username ?? currentUser.username}
+                        {profileUsername ? `@${profileUsername}` : 'Your profile'}
                       </Text>
                       <View style={s.profileSnapshotStats}>
                         <Text style={s.profileSnapshotStat}>
@@ -990,23 +1015,23 @@ export default function ProgressScreen() {
               <View style={s.statsGrid}>
                 <View style={s.statCell}>
                   <Feather name="zap" size={15} color={colors.cyan} style={s.statIcon} />
-                  <Text style={s.statValue}>{progress.currentStreak}</Text>
+                  <Text style={s.statValue}>{displayCount(progress?.currentStreak)}</Text>
                   <Text style={s.statLabel}>Day Streak</Text>
                 </View>
                 <View style={s.statCell}>
                   <Feather name="check-circle" size={15} color={colors.cyan} style={s.statIcon} />
-                  <Text style={s.statValue}>{progress.todayHabitsCompleted}/{progress.totalHabits}</Text>
+                  <Text style={s.statValue}>{displayCount(progress?.todayHabitsCompleted)}/{displayCount(progress?.totalHabits)}</Text>
                   <Text style={s.statLabel}>Habits Today</Text>
                 </View>
                 <View style={[s.statCell, s.statCellNoBorder]}>
                   <Feather name="award" size={15} color={colors.cyan} style={s.statIcon} />
-                  <Text style={s.statValue}>{(progress.recentBadges ?? []).length}</Text>
+                  <Text style={s.statValue}>{Array.isArray(progress?.recentBadges) ? recentBadges.length : '—'}</Text>
                   <Text style={s.statLabel}>Recent Badges</Text>
                 </View>
               </View>
 
               <View style={s.actionsBlock}>
-                {!progress.checkedInToday && (
+                {progress?.checkedInToday === false && (
                   <TouchableOpacity
                     style={[s.actionBtn, s.actionBtnPrimary]}
                     testID="check-in-button"
@@ -1028,7 +1053,7 @@ export default function ProgressScreen() {
                     )}
                   </TouchableOpacity>
                 )}
-                {progress.spinAvailableToday && (
+                {progress?.spinAvailableToday === true && (
                   <TouchableOpacity
                     style={s.actionBtn}
                     testID="spin-open-button"
@@ -1043,7 +1068,7 @@ export default function ProgressScreen() {
                     <Text style={s.actionBtnText}>Spin Daily Reward</Text>
                   </TouchableOpacity>
                 )}
-                {progress.checkedInToday && !progress.spinAvailableToday && (
+                {progress?.checkedInToday === true && progress?.spinAvailableToday === false && (
                   <View style={[s.actionBtn, { opacity: 0.5, borderColor: 'transparent' }]}>
                     <Feather name="check" size={18} color={colors.mutedForeground} />
                     <Text style={[s.actionBtnText, { color: colors.mutedForeground }]}>Checked in today</Text>
@@ -1051,7 +1076,7 @@ export default function ProgressScreen() {
                 )}
               </View>
 
-              {((progress.nextBadge) || (progress.recentBadges && progress.recentBadges.length > 0)) && (
+              {(nextBadge || recentBadges.length > 0) && (
                 <View style={s.badgesBlock}>
                   <View style={s.blockTitleRow}>
                     <Feather name="award" size={17} color={colors.primary} />
@@ -1067,22 +1092,22 @@ export default function ProgressScreen() {
                      </TouchableOpacity>
                   </View>
 
-                  {progress.nextBadge && (
+                  {nextBadge && (
                     <View style={s.nextBadgeBox}>
-                      <Text style={s.nextBadgeName}>Next Badge: {progress.nextBadge.name}</Text>
+                      <Text style={s.nextBadgeName}>Next Badge: {nextBadge?.name ?? 'Upcoming milestone'}</Text>
                       <View style={s.progressBarContainer}>
-                        <View style={[s.progressBarFill, { width: `${progress.nextBadge.progressPercent}%` }]} />
+                        <View style={[s.progressBarFill, { width: `${nextBadgePercent}%` }]} />
                       </View>
                       <View style={s.nextBadgeMeta}>
                         <Text style={s.nextBadgeText}>Streak progress</Text>
-                        <Text style={s.nextBadgeText}>{progress.nextBadge.currentStreak} / {progress.nextBadge.requiredStreak} days</Text>
+                        <Text style={s.nextBadgeText}>{displayCount(nextBadge?.currentStreak)} / {displayCount(nextBadge?.requiredStreak)} days</Text>
                       </View>
                     </View>
                   )}
 
-                  {progress.recentBadges && progress.recentBadges.length > 0 && (
+                  {recentBadges.length > 0 && (
                     <View style={s.recentBadgesList}>
-                      {progress.recentBadges.map((badge, idx) => (
+                      {recentBadges.map((badge, idx) => (
                         <View key={badge.id || idx} style={s.recentBadgeItem}>
                           {badge.imageUrl ? (
                             <Image source={{ uri: badge.imageUrl }} style={{ width: 24, height: 24 }} />
@@ -1175,10 +1200,10 @@ export default function ProgressScreen() {
                  </View>
                )}
 
-              {challengeData.submissions.length > 0 && (
+              {submissions.length > 0 && (
                 <View style={s.submissionsSection}>
                   <Text style={s.submissionsHeading}>Community Submissions</Text>
-                  {challengeData.submissions.map((submission) => {
+                  {submissions.map((submission) => {
                     const mediaUrl = resolveMediaUrl(
                       submission.finalMedia?.mediaUrl ?? submission.imageUrl,
                     );

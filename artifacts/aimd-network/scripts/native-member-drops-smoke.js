@@ -91,6 +91,17 @@ test('points and drops render safely before data arrives on native', () => {
   const details = render(false, { isLoading: true });
   assert.ok(findNode(details.tree, node => node.type === 'ActivityIndicator'));
 });
+test('partial balances and malformed request arrays never crash the Dashboard points card', () => {
+  for (const data of [
+    {}, { points: null, recentRequests: null },
+    { points: undefined, recentRequests: {} },
+    { points: '75', recentRequests: [null, undefined] },
+  ]) {
+    const result = render(true, { data });
+    assert.match(JSON.stringify(result.tree), /— points/);
+    assert.deepEqual(result.captures, []);
+  }
+});
 test('member drops request errors remain retryable rather than throwing during render', () => {
   const result = render(false, { isError: true });
   assert.match(JSON.stringify(result.tree), /Could not load your points and member drops/);

@@ -69,8 +69,10 @@ export default function MonthlyMemberDrops({ compact = false }: { compact?: bool
   };
   const drop = data?.monthlyDrop;
   const canRequest = !!drop && drop.status === 'open' && drop.remaining > 0 && !drop.ownRequest;
-  const history = (data?.recentRequests ?? []).filter(item => item.dropId !== drop?.id);
-  const pointsLabel = data ? `${data.points.toLocaleString()} points` : '— points';
+  const history = Array.isArray(data?.recentRequests)
+    ? data.recentRequests.filter(item => item && item.dropId !== drop?.id) : [];
+  const pointsLabel = typeof data?.points === 'number' && Number.isFinite(data.points)
+    ? `${data.points.toLocaleString()} points` : '— points';
 
   if (compact) {
     return (
@@ -133,7 +135,7 @@ export default function MonthlyMemberDrops({ compact = false }: { compact?: bool
                     <Text style={s.label}>{drop.monthKey} member drop</Text>
                     <Text style={s.title}>{drop.title}</Text>
                     {!!drop.description && <Text style={s.detail}>{drop.description}</Text>}
-                    {drop.items.map((item, i) => (
+                    {(Array.isArray(drop.items) ? drop.items : []).filter(item => typeof item === 'string').map((item, i) => (
                       <View key={`${i}-${item}`} style={s.item}>
                         <Feather name="package" size={17} color={colors.primary} />
                         <Text style={s.itemText}>{item}</Text>
