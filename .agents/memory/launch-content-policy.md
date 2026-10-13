@@ -20,3 +20,9 @@ Remove known legacy sample members from the public community while preserving re
 **Why:** On October 12, 2026, the owner requested removal of placeholder users while retaining real users. Some genuine members have generated handles.
 
 **How to apply:** Verify seed provenance and identity linkage before excluding a profile. Prefer reversible visibility filtering over account deletion unless permanent deletion is explicitly requested.
+
+Members directory exception: owner-designated automated-test namespaces should be hidden from the public Members list even when their test accounts have linked authentication identities.
+
+**Why:** On October 13, 2026, the owner explicitly requested exclusion of automated test/mock handles while preserving genuine sign-ups. An authentication identity alone does not make a known automation fixture a real community member.
+
+**How to apply:** Keep these exclusions directory-only and reversible. Do not delete accounts or change their post/profile visibility as part of a directory cleanup. Preserve ordinary generated handles, incomplete profiles, and names that merely contain “test.”

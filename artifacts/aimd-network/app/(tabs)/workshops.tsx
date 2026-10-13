@@ -31,6 +31,7 @@ import { safeImpact } from '@/lib/haptics';
 import { useRouter } from 'expo-router';
 import WorkshopLessonPlayer, { TeaserVideo, type WorkshopLesson } from '@/components/WorkshopLessonPlayer';
 import WorkshopPreviewPlaceholder from '@/components/WorkshopPreviewPlaceholder';
+import InstructorAttribution from '@/components/InstructorAttribution';
 import { COMING_SOON_WORKSHOP_PREVIEWS } from '@/lib/workshopPreviews';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 
@@ -55,6 +56,9 @@ export default function WorkshopsScreen() {
   const [drillCameraVisible, setDrillCameraVisible] = useState(false);
   const [submissionNote, setSubmissionNote] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [submissionReceived, setSubmissionReceived] = useState<{ workshopId: number; moduleId: number } | null>(null);
+
+  useEffect(() => { setSubmissionReceived(null); }, [selectedWorkshopId, selectedModuleId]);
 
   const {
     data: workshops,
@@ -117,10 +121,11 @@ export default function WorkshopsScreen() {
 
   const submitAssignment = useSubmitAssignment({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (_assignment, variables) => {
         setUploading(false);
         setCapturedVideo(null);
         setSubmissionNote('');
+        setSubmissionReceived({ workshopId: variables.data.workshopId, moduleId: variables.data.moduleId });
         void safeImpact();
         queryClient.invalidateQueries({ queryKey: getListAssignmentsQueryKey() });
         Alert.alert('Footage received', 'Your assignment is now in the instructor review queue.');
@@ -134,6 +139,7 @@ export default function WorkshopsScreen() {
 
   const handleSubmit = async () => {
     if (!capturedVideo || !selectedWorkshopId || !selectedModuleId) return;
+    setSubmissionReceived(null);
     setUploading(true);
     try {
       const response = await fetch(capturedVideo.uri);
@@ -305,7 +311,7 @@ export default function WorkshopsScreen() {
                     <Text style={s.category}>{preview.category}</Text>
                     <Text style={s.cardTitle}>{preview.title}</Text>
                     <Text style={s.cardBody}>{preview.description}</Text>
-                    <Text style={s.meta}>Example preview · enrollment not open</Text>
+                    <Text style={s.meta}>Preview available — full access coming soon</Text>
                   </View>
                 </View>
               ))}
@@ -338,10 +344,10 @@ export default function WorkshopsScreen() {
               >
                 <Text style={s.category}>{workshop.category}</Text>
                 <Text style={s.cardTitle}>{workshop.title}</Text>
+                <InstructorAttribution name={workshop.instructorName} />
                 <Text style={s.cardBody} numberOfLines={3}>{workshop.description}</Text>
                 <View style={s.metaRow}>
                   <Text style={s.meta}>{workshop.totalModules} modules</Text>
-                  {!!workshop.instructorName && <Text style={s.meta}>{workshop.instructorName}</Text>}
                 </View>
                 <View style={s.workshopOpenHint}>
                   <Text style={s.workshopOpenHintText}>View workshop</Text>
@@ -360,6 +366,7 @@ export default function WorkshopsScreen() {
               </View>
             )}
             <Text style={s.lockedTitle}>{selectedWorkshop.title}</Text>
+            <InstructorAttribution name={workshopDetail?.instructorName ?? selectedWorkshop.instructorName} />
             {workshopDetailError ? (
               <TouchableOpacity onPress={() => void refetchWorkshopDetail()} style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border }}>
                 <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 13, color: colors.foreground }}>Could not load modules. Retry</Text>
@@ -392,9 +399,9 @@ export default function WorkshopsScreen() {
                   </TouchableOpacity>
                 ))}
                 {!hasFullAccess && !accessUnavailable && (
-                  <TouchableOpacity style={[s.upgrade, { backgroundColor: colors.foreground }]} testID="mastery-upgrade" accessibilityRole="button" accessibilityLabel="View AIMD membership options" onPress={upgrade}>
-                    <Feather name="arrow-up-right" size={17} color={colors.primaryForeground} />
-                    <Text style={s.upgradeText}>View membership options</Text>
+                  <TouchableOpacity style={[s.upgrade, { backgroundColor: colors.foreground }]} testID="mastery-upgrade" accessibilityRole="button" accessibilityLabel="Unlock Full Access" onPress={upgrade}>
+                    <Feather name="arrow-up-right" size={17} color={colors.background} />
+                    <Text style={[s.upgradeText, { color: colors.background }]}>Unlock Full Access</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -418,6 +425,15 @@ export default function WorkshopsScreen() {
               <Text style={s.submissionHubBody}>
                 Record a focused practice drill and reflect on the lesson. Your work is saved here and sent to the instructor reviewing this workshop; it is not posted to your public profile.
               </Text>
+              {submissionReceived?.workshopId === selectedWorkshopId && submissionReceived?.moduleId === selectedModuleId && (
+                <View testID="workshop-submission-received" accessibilityLiveRegion="polite" style={{ padding: 14, gap: 8, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Feather name="check-circle" size={20} color={colors.foreground} />
+                    <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 15, color: colors.foreground }}>Submission received</Text>
+                  </View>
+                  <Text style={s.submissionHubBody}>Your practice and reflection were saved to your private learning portfolio and sent for instructor review.</Text>
+                </View>
+              )}
               {workshopDetailError ? (
                 <View style={{ alignItems: 'center', gap: 8 }}>
                   <Text style={[s.submissionHubBody, { textAlign: 'center' }]}>
@@ -459,7 +475,7 @@ export default function WorkshopsScreen() {
               )}
               <TouchableOpacity
                 style={s.picker}
-                onPress={() => setDrillCameraVisible(true)}
+                onPress={() => { setSubmissionReceived(null); setDrillCameraVisible(true); }}
                 testID="assignment-record-video"
                 accessibilityRole="button"
                 accessibilityLabel="Record assignment footage"
@@ -474,7 +490,8 @@ export default function WorkshopsScreen() {
               <TextInput
                 style={s.note}
                 value={submissionNote}
-                onChangeText={setSubmissionNote}
+                onChangeText={(text) => { setSubmissionNote(text); setSubmissionReceived(null); }}
+                editable={!uploading && !submitAssignment.isPending}
                 placeholder="Reflection (optional): What did you try from this lesson, and what will you practice next?"
                 placeholderTextColor={colors.mutedForeground}
                 multiline
@@ -520,6 +537,7 @@ export default function WorkshopsScreen() {
         visible={drillCameraVisible}
         onClose={() => setDrillCameraVisible(false)}
         onCaptured={(video) => {
+          setSubmissionReceived(null);
           setCapturedVideo(video);
           setDrillCameraVisible(false);
           void safeImpact();
@@ -530,6 +548,8 @@ export default function WorkshopsScreen() {
         lesson={selectedLesson}
         workshopId={selectedWorkshopId}
         hasFullAccess={hasFullAccess}
+        accessUnavailable={accessUnavailable}
+        instructorName={workshopDetail?.instructorName ?? selectedWorkshop?.instructorName}
         isEnrolled={isEnrolled}
         onRefreshAccess={() => void refetchWorkshopDetail()}
         onUpgrade={() => { setSelectedLesson(null); upgrade(); }}
@@ -538,6 +558,7 @@ export default function WorkshopsScreen() {
         onClose={() => setSelectedLesson(null)}
         onComplete={completeLesson}
         onStartAssignment={(moduleId) => {
+          setSubmissionReceived(null);
           setSelectedModuleId(moduleId);
           setSelectedLesson(null);
           setDrillCameraVisible(true);

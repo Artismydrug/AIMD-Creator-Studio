@@ -42,3 +42,4 @@
 - [Browser destructive confirmations](browser-destructive-confirmations.md) — use explicit app-owned controls; Cancel must send no write, while native confirmations remain separate.
 - [Creative reward policy](creative-reward-policy.md) — points keep accumulating; stock-limited monthly drops include Free, $39 and $99 accounts equally.
 - [Native push readiness](native-push-readiness.md) — use managed-build runtime identifiers; browser checks and accepted push tickets do not prove device delivery.
+- [Verification resource budget](verification-resource-budget.md) — run native exports and media-heavy backend tests sequentially; concurrent builds can cause misleading test timeouts.

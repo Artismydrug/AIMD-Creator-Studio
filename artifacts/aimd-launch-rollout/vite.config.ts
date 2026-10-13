@@ -53,6 +53,18 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, 'dist/public'),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('/node_modules/')) return;
+          if (/\/node_modules\/(?:react|react-dom|scheduler)\//.test(id)) return 'react';
+          if (/\/node_modules\/(?:recharts|recharts-scale|d3-[^/]+|victory-vendor|internmap)\//.test(id)) return 'charts';
+          if (/\/node_modules\/prosemirror-[^/]+\//.test(id)) return 'editor';
+          if (id.includes('/node_modules/@clerk/')) return 'auth';
+          return 'vendor';
+        },
+      },
+    },
   },
   server: {
     port,

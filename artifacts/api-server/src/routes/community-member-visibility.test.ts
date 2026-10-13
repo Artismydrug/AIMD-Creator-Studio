@@ -4,7 +4,10 @@ import { beforeAll, afterAll, describe, expect, it } from "vitest";
 import { db, pool } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
-import { communityMemberVisibility } from "../lib/communityMemberVisibility";
+import {
+  communityDirectoryAccountVisibility,
+  communityMemberVisibility,
+} from "../lib/communityMemberVisibility";
 import usersRouter from "./users";
 import postsRouter from "./studio-posts";
 
@@ -20,6 +23,7 @@ app.use((req, _res, next) => {
 app.use("/api", usersRouter);
 app.use("/api", postsRouter);
 let memberIds: number[] = [];
+let automatedAccountIds: number[] = [];
 
 beforeAll(async () => {
   const result = await pool.query<{ id: number }>(
@@ -32,6 +36,28 @@ beforeAll(async () => {
     ],
   );
   memberIds = result.rows.map((row) => row.id);
+  const automatedHandles = [
+    `clerk_test_${suffix}`,
+    `account_delete_${suffix}`,
+    `reflection_instructor_${suffix}`,
+    `social_recipient_${suffix}`,
+    `social_sender_${suffix}`,
+    `test_user_${suffix}`,
+    `test_account_${suffix}`,
+    `mock_user_${suffix}`,
+    `mock_account_${suffix}`,
+    `automated_test_${suffix}`,
+    `e2e_test_${suffix}`,
+    `playwright_test_${suffix}`,
+  ];
+  const automatedUsers = await pool.query<{ id: number }>(
+    `INSERT INTO users (username, email, clerk_id)
+     SELECT username, username || '@example.test', 'user_directory_filter_' || username
+     FROM unnest($1::text[]) AS accounts(username)
+     RETURNING id`,
+    [automatedHandles],
+  );
+  automatedAccountIds = automatedUsers.rows.map((row) => row.id);
   await pool.query(
     `INSERT INTO studio_posts (user_id, caption, tags)
      VALUES ($1, $2, '{}'), ($3, $4, '{}')`,
@@ -44,13 +70,14 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  if (!memberIds.length) return;
+  const createdIds = [...memberIds, ...automatedAccountIds];
+  if (!createdIds.length) return;
   await pool.query(
     "DELETE FROM user_follows WHERE follower_id = ANY($1::int[]) OR following_id = ANY($1::int[])",
-    [memberIds],
+    [createdIds],
   );
-  await pool.query("DELETE FROM studio_posts WHERE user_id = ANY($1::int[])", [memberIds]);
-  await pool.query("DELETE FROM users WHERE id = ANY($1::int[])", [memberIds]);
+  await pool.query("DELETE FROM studio_posts WHERE user_id = ANY($1::int[])", [createdIds]);
+  await pool.query("DELETE FROM users WHERE id = ANY($1::int[])", [createdIds]);
 });
 
 describe("legacy sample profile visibility", () => {
@@ -71,11 +98,40 @@ describe("legacy sample profile visibility", () => {
     expect(result.rows[0]?.visible).toBe(entry.visible);
   });
 
+  it.each([
+    "clerk_test_fake",
+    "account_delete_fake",
+    "reflection_instructor_fake",
+    "social_recipient_fake",
+    "social_sender_fake",
+    "test_user_fake",
+    "test_account_fake",
+    "mock_user_fake",
+    "mock_account_fake",
+    "automated_test_fake",
+    "e2e_test_fake",
+    "playwright_test_fake",
+  ])("hides system-generated directory handle %s", async (username) => {
+    const predicate = communityDirectoryAccountVisibility(sql`${username}::text`);
+    const result = await db.execute(sql`SELECT ${predicate} AS visible`);
+    expect(result.rows[0]?.visible).toBe(false);
+  });
+
+  it.each(["@ponchotheartist", "ReleaseTesterFan", "test_artist_123"])(
+    "preserves genuine or non-system test-like handle %s",
+    async (username) => {
+      const predicate = communityDirectoryAccountVisibility(sql`${username}::text`);
+      const result = await db.execute(sql`SELECT ${predicate} AS visible`);
+      expect(result.rows[0]?.visible).toBe(true);
+    },
+  );
+
   it("keeps newly registered and legacy members visible even with blank profile fields", async () => {
     const response = await request(app).get("/api/directory");
     expect(response.status).toBe(200);
     const visibleIds = response.body.map((member: { id: number }) => member.id);
     for (const id of memberIds) expect(visibleIds).toContain(id);
+    for (const id of automatedAccountIds) expect(visibleIds).not.toContain(id);
   });
 
   it("retains real public profiles and posts", async () => {

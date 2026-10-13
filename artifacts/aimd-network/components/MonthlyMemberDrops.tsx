@@ -31,6 +31,11 @@ export default function MonthlyMemberDrops({ compact = false }: { compact?: bool
     header: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     title: { fontFamily: 'DMSans_700Bold', fontSize: 19, lineHeight: 26, color: colors.foreground, flex: 1 },
     total: { fontFamily: 'DMSans_700Bold', fontSize: compact ? 28 : 38, color: colors.primary },
+    compactCard: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 16 },
+    compactIcon: { width: 42, height: 42, borderRadius: colors.radius, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.secondary },
+    compactBody: { flex: 1, gap: 2 },
+    compactTitle: { fontFamily: 'DMSans_700Bold', fontSize: 15, lineHeight: 20, color: colors.foreground },
+    compactTotal: { fontFamily: 'DMSans_700Bold', fontSize: 23, lineHeight: 29, color: colors.primary },
     detail: { fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21, color: colors.mutedForeground },
     label: { fontFamily: 'DMSans_600SemiBold', fontSize: 12, color: colors.mutedForeground, textTransform: 'uppercase', letterSpacing: 1 },
     link: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -63,6 +68,31 @@ export default function MonthlyMemberDrops({ compact = false }: { compact?: bool
   const drop = data?.monthlyDrop;
   const canRequest = !!drop && drop.status === 'open' && drop.remaining > 0 && !drop.ownRequest;
   const history = (data?.recentRequests ?? []).filter(item => item.dropId !== drop?.id);
+  const pointsLabel = data ? `${data.points.toLocaleString()} points` : '— points';
+
+  if (compact) {
+    return (
+      <View testID="monthly-member-drops">
+        <TouchableOpacity
+          style={[s.card, s.compactCard]}
+          onPress={() => router.push('/rewards')}
+          accessibilityRole="button"
+          accessibilityLabel={`Points & member drops, ${pointsLabel}`}
+          accessibilityHint="Opens the full Member Drops page."
+          testID="open-monthly-member-drops"
+        >
+          <View style={s.compactIcon}>
+            <Feather name="gift" size={20} color={colors.primary} />
+          </View>
+          <View style={s.compactBody}>
+            <Text style={s.compactTitle}>Points & member drops</Text>
+            <Text style={s.compactTotal} testID="reward-points">{pointsLabel}</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={s.card} testID="monthly-member-drops">
       <View style={s.header}>
@@ -82,7 +112,7 @@ export default function MonthlyMemberDrops({ compact = false }: { compact?: bool
         <>
           <View>
             <Text style={s.total} testID="reward-points">{data.points.toLocaleString()} points</Text>
-            <Text style={s.detail}>Members can use their AIMD points towards merch, events, workshops and more! Keep a look out for special drops!</Text>
+            <Text style={s.label}>Redeem for merch, events &amp; drops.</Text>
           </View>
           {isError && <Text style={s.detail}>Your balance may be out of date. Refresh to try again.</Text>}
           {compact ? (

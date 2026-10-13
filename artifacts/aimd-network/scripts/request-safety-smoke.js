@@ -31,6 +31,36 @@ const originalClearTimeout = global.clearTimeout;
 const never = () => new Promise(() => {});
 const ok = () => new Response('{"ok":true}', { headers: { 'content-type': 'application/json' } });
 
+test('the compact dashboard points card opens a safe-area-aware Member Drops page with a back fallback', () => {
+  const card = fs.readFileSync(path.resolve(__dirname, '../components/MonthlyMemberDrops.tsx'), 'utf8');
+  const dashboard = fs.readFileSync(path.resolve(__dirname, '../app/(tabs)/index.tsx'), 'utf8');
+  const page = fs.readFileSync(path.resolve(__dirname, '../app/rewards.tsx'), 'utf8');
+  const compact = card.slice(card.indexOf('if (compact)'), card.indexOf('<View style={s.card} testID="monthly-member-drops">'));
+  assert.match(dashboard, /<MonthlyMemberDrops compact/);
+  assert.match(compact, /onPress=\{\(\) => router\.push\('\/rewards'\)\}/);
+  assert.match(compact, /testID="open-monthly-member-drops"/);
+  assert.doesNotMatch(compact, /s\.detail|drop\?\.title|Members can use their AIMD points/);
+  assert.match(page, /useSafeAreaInsets/);
+  assert.match(page, /insets\.top \+ 20/);
+  assert.match(page, /headerCopy: \{ flex: 1, minWidth: 0 \}/);
+  assert.match(page, /router\.canGoBack\(\) \? router\.back\(\) : router\.replace\('\/\(tabs\)'\)/);
+});
+
+test('empty Following suggestions follow the selected creator and refresh both feeds and profiles', () => {
+  const suggestions = fs.readFileSync(path.resolve(__dirname, '../components/FollowingFeedSuggestions.tsx'), 'utf8');
+  const feed = fs.readFileSync(path.resolve(__dirname, '../app/feed.tsx'), 'utf8');
+  assert.match(feed, /<FollowingFeedSuggestions currentUserId=\{me\?\.id\}/);
+  assert.match(suggestions, /const FEATURED_HANDLE = 'ponchotheartist'/);
+  assert.match(suggestions, /follow\.mutate\(\{ id: creator\.id \}/);
+  assert.match(suggestions, /onPress=\{\(\) => followCreator\(creator\)\}/);
+  assert.match(suggestions, /if \(lock\.current \|\| !enabled\) return/);
+  assert.match(suggestions, /client\.setQueriesData<StudioPost\[\]>/);
+  assert.match(suggestions, /client\.invalidateQueries\(\{ queryKey: \['\/api\/studio-posts'\] \}/);
+  assert.match(suggestions, /client\.invalidateQueries\(\{ queryKey: getGetUserProfileQueryKey\(creator\.id\)/);
+  assert.match(suggestions, /pathname: '\/creator\/\[id\]', params: \{ id: creator\.id \}/);
+  assert.ok(fs.existsSync(path.resolve(__dirname, '../app/creator/[id].tsx')));
+});
+
 test('short writing leaves feed paging available; long writing can scroll in its own viewport', () => {
   assert.equal(shouldScrollTextPost(140, 400), false);
   assert.equal(shouldScrollTextPost(400.5, 400), false);
@@ -222,9 +252,40 @@ test('empty workshop catalog renders coming-soon artwork without enrollable card
   const emptyBranch = source.split('!workshops?.length ? (')[1].split(') : workshops.slice(0, 4)')[0];
   assert(emptyBranch.includes('COMING_SOON_WORKSHOP_PREVIEWS.map'));
   assert(emptyBranch.includes('WorkshopPreviewPlaceholder'));
-  assert(emptyBranch.includes('enrollment not open'));
+  assert(emptyBranch.includes('Preview available — full access coming soon'));
   assert.equal(emptyBranch.includes('TouchableOpacity'), false);
   assert.equal(emptyBranch.includes('openLesson('), false);
+});
+
+test('locked lesson upgrade action is immediate and does not upsell unverified access', () => {
+  const source = fs.readFileSync(path.resolve(__dirname, '../components/WorkshopLessonPlayer.tsx'), 'utf8');
+  assert(source.includes('!accessUnavailable && (!hasFullAccess || gated) && !!onUpgrade'));
+  assert(source.includes('>Unlock Full Access</Text>'));
+  assert(source.indexOf('testID="lesson-upgrade"') < source.indexOf('<KeyboardAwareScrollViewCompat'));
+  assert(source.includes('testID="lesson-access-retry"'));
+  const workshops = fs.readFileSync(path.resolve(__dirname, '../app/(tabs)/workshops.tsx'), 'utf8');
+  assert(workshops.includes("router.push('/membership')"));
+  assert(workshops.includes('onUpgrade={() => { setSelectedLesson(null); upgrade(); }}'));
+});
+
+test('practice receipt is scoped to the submission confirmed by the server', () => {
+  const source = fs.readFileSync(path.resolve(__dirname, '../app/(tabs)/workshops.tsx'), 'utf8');
+  assert(source.includes('onSuccess: (_assignment, variables)'));
+  assert(source.includes('setSubmissionReceived({ workshopId: variables.data.workshopId, moduleId: variables.data.moduleId })'));
+  assert(source.includes('submissionReceived?.workshopId === selectedWorkshopId && submissionReceived?.moduleId === selectedModuleId'));
+  assert(source.includes('testID="workshop-submission-received"'));
+  const reflection = fs.readFileSync(path.resolve(__dirname, '../components/LessonReflectionForm.tsx'), 'utf8');
+  assert(reflection.includes('>Reflection received</Text>'));
+  assert(reflection.includes('Saved to your private learning portfolio.'));
+});
+
+test('instructor attribution uses workshop data rather than a fabricated teacher', () => {
+  const source = fs.readFileSync(path.resolve(__dirname, '../components/InstructorAttribution.tsx'), 'utf8');
+  assert(source.includes('`Taught by ${instructor}`'));
+  assert(source.includes('Instructor to be announced'));
+  assert.equal(source.includes('ponchotheartist'), false);
+  const workshops = fs.readFileSync(path.resolve(__dirname, '../app/(tabs)/workshops.tsx'), 'utf8');
+  assert(workshops.includes('instructorName={workshopDetail?.instructorName ?? selectedWorkshop?.instructorName}'));
 });
 
 test('the frosted tab bar reserves layout space for feed creator controls', () => {

@@ -37,6 +37,7 @@ import {
 } from '@workspace/api-client-react';
 import PostCard from '@/components/PostCard';
 import AudioTrackPlayer from '@/components/AudioTrackPlayer';
+import FollowingFeedSuggestions from '@/components/FollowingFeedSuggestions';
 
 const MAX_STUDIO_VIDEO_BYTES = 50 * 1024 * 1024;
 const MAX_STUDIO_VIDEO_DURATION_MS = 60 * 1000;
@@ -795,8 +796,8 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
             style={s.pager}
             onLayout={(event) => syncPagerHeight(event.nativeEvent.layout.height)}
             showsVerticalScrollIndicator={false}
-            pagingEnabled
-            snapToInterval={pageHeight}
+            pagingEnabled={(posts?.length ?? 0) > 0}
+            snapToInterval={posts?.length ? pageHeight : undefined}
             snapToOffsets={(posts ?? []).map((_, index) => index * pageHeight)}
             snapToAlignment="start"
             decelerationRate="fast"
@@ -829,15 +830,17 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
               />
             }
             ListEmptyComponent={
-              <View style={[s.centered, { height: pageHeight }]}>
-                <Feather name="image" size={48} color={colors.muted} />
-                <Text style={s.emptyTitle}>{feedMode === 'following' ? 'Your following feed is quiet' : 'No posts yet'}</Text>
-                <Text style={s.emptyText}>
-                  {feedMode === 'following'
-                    ? 'Follow creators to see their studio posts here.'
-                    : 'Share what you’re creating'}
-                </Text>
-              </View>
+              feedMode === 'following' ? (
+                <View style={{ minHeight: pageHeight }}>
+                  <FollowingFeedSuggestions currentUserId={me?.id} />
+                </View>
+              ) : (
+                <View style={[s.centered, { height: pageHeight }]}>
+                  <Feather name="image" size={48} color={colors.muted} />
+                  <Text style={s.emptyTitle}>No posts yet</Text>
+                  <Text style={s.emptyText}>Share what you’re creating</Text>
+                </View>
+              )
             }
           />
         </View>

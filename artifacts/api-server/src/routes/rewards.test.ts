@@ -59,10 +59,14 @@ describe("lifetime points and independent member drops", () => {
     const web = readFileSync(new URL("../../../aimd-academy/src/pages/StudioLog.tsx", import.meta.url), "utf8");
     expect(card).not.toContain("data.tiers");
     expect(card).toContain("data.points.toLocaleString()");
-    expect(card).toContain("Free, $39 and $99 members have equal access");
+    expect(card).toContain("Redeem for merch, events &amp; drops.");
+    expect(card).not.toContain("Free, $39 and $99 members have equal access");
+    expect(card).not.toContain("Members can use their AIMD points towards");
+    expect(card).toContain("onPress={() => router.push('/rewards')}");
+    expect(card).toContain('testID="open-monthly-member-drops"');
     expect(card).toContain("submitting.current");
     expect(card).toContain("setConfirmation(null)");
-    expect(card).not.toMatch(/checkout|redeem/);
+    expect(card).not.toContain("checkout");
     expect(home).toContain("<MonthlyMemberDrops compact");
     expect(home.match(/invalidateQueries\(\{ queryKey: getGetRewardsQueryKey/g)?.length).toBeGreaterThanOrEqual(4);
     expect(web).toContain("<MonthlyMemberDrops");

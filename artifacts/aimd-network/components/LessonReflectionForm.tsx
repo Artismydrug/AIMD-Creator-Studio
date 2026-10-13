@@ -66,9 +66,15 @@ export default function LessonReflectionForm({ workshopId, moduleId, onDirtyChan
         {submit.isPending ? <ActivityIndicator color={colors.primaryForeground} /> : <Feather name="check" size={17} color={colors.primaryForeground} />}
         <Text style={{ fontFamily: 'DMSans_700Bold', color: colors.primaryForeground }}>Save reflection</Text>
       </TouchableOpacity>
-      {saved && <Text accessibilityLiveRegion="polite" testID="lesson-reflection-saved" style={{ fontSize: 13, lineHeight: 19, color: colors.foreground }}>
-        Saved to your learning portfolio. Your instructor can now review it.
-      </Text>}
+      {saved && (
+        <View accessibilityLiveRegion="polite" testID="lesson-reflection-saved" style={{ padding: 14, gap: 7, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Feather name="check-circle" size={20} color={colors.foreground} />
+            <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 15, color: colors.foreground }}>Reflection received</Text>
+          </View>
+          <Text style={{ fontSize: 13, lineHeight: 19, color: colors.foreground }}>Saved to your private learning portfolio. Your instructor can now review it.</Text>
+        </View>
+      )}
     </View>
   );
 }

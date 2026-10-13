@@ -1,5 +1,8 @@
 import { Router, type IRouter } from "express";
-import { communityMemberVisibility } from "../lib/communityMemberVisibility";
+import {
+  communityDirectoryAccountVisibility,
+  communityMemberVisibility,
+} from "../lib/communityMemberVisibility";
 import { createClerkClient, getAuth } from "@clerk/express";
 import { eq, sql } from "drizzle-orm";
 import { db, pool, usersTable } from "@workspace/db";
@@ -227,6 +230,7 @@ router.get("/directory", async (req, res): Promise<void> => {
       clerkId: sql`u.clerk_id`,
       replitId: sql`u.replit_id`,
     })}
+      AND ${communityDirectoryAccountVisibility(sql`u.username`)}
     GROUP BY u.id
     ORDER BY u.created_at DESC
   `);

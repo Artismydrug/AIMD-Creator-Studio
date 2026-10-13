@@ -7,5 +7,8 @@
 # Verification captures and exports are not application assets.
 /generated-artifacts/
 
+# The mobile production build regenerates these Expo bundles and manifests.
+/artifacts/aimd-network/static-build/
+
 # Do not ship private tester recordings in deployment images.
 /attached_assets/ScreenRecording_*.mp4

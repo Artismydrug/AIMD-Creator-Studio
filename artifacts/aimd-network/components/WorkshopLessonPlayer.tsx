@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getBaseUrl, useCreateWorkshopLessonPlayback } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import LessonReflectionForm from '@/components/LessonReflectionForm';
+import InstructorAttribution from '@/components/InstructorAttribution';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 
 export type WorkshopLesson = {
@@ -38,6 +39,8 @@ type Props = {
   visible: boolean;
   lesson: WorkshopLesson | null;
   workshopTitle?: string;
+  instructorName?: string | null;
+  accessUnavailable?: boolean;
   workshopId?: number | null;
   hasFullAccess?: boolean;
   isEnrolled?: boolean;
@@ -153,6 +156,8 @@ export default function WorkshopLessonPlayer({
   visible,
   lesson,
   workshopTitle,
+  instructorName,
+  accessUnavailable = false,
   workshopId,
   hasFullAccess = false,
   isEnrolled = false,
@@ -296,6 +301,7 @@ export default function WorkshopLessonPlayer({
           <View style={style.headerCopy}>
             <Text style={style.eyebrow}>{workshopTitle ?? 'Workshop lesson'}</Text>
             <Text style={style.title} numberOfLines={1}>{lesson.title}</Text>
+            <InstructorAttribution name={instructorName} />
           </View>
         </View>
 
@@ -313,6 +319,20 @@ export default function WorkshopLessonPlayer({
           )}
         </View>
 
+        {!accessUnavailable && (!hasFullAccess || gated) && !!onUpgrade && (
+          <TouchableOpacity
+            style={[style.action, { backgroundColor: colors.foreground, marginHorizontal: 20, marginTop: 12, marginBottom: 8 }]}
+            onPress={onUpgrade}
+            testID="lesson-upgrade"
+            accessibilityRole="button"
+            accessibilityLabel="Unlock Full Access"
+            accessibilityHint="Opens membership and upgrade options."
+          >
+            <Feather name="unlock" size={17} color={colors.background} />
+            <Text style={[style.actionText, { color: colors.background }]}>Unlock Full Access</Text>
+          </TouchableOpacity>
+        )}
+
         <KeyboardAwareScrollViewCompat
           style={style.scroll}
           contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 18) }}
@@ -325,14 +345,16 @@ export default function WorkshopLessonPlayer({
             <Text style={style.duration}>{lesson.durationMinutes ?? 0} minutes</Text>
             {!entitled && (
               <View style={style.note} testID="lesson-gate">
-                <Text style={style.noteTitle}>{lesson.previewVideoUrl ? 'You are watching the teaser' : 'Full lesson locked'}</Text>
+                <Text style={style.noteTitle}>{accessUnavailable ? 'Unable to verify access' : lesson.previewVideoUrl ? 'You are watching the teaser' : 'Full lesson locked'}</Text>
                 <Text style={style.noteBody}>
-                  Full lessons require an active Dedicated Artist subscription ($39/month) or enrollment in this workshop by the instructor. Check your membership options; membership availability may still be rolling out.
+                  {accessUnavailable
+                    ? 'We could not confirm your workshop access. Retry before changing your membership.'
+                    : 'Full lessons require an active Dedicated Artist subscription ($39/month) or enrollment in this workshop by the instructor. Membership availability may still be rolling out.'}
                 </Text>
-                {!!onUpgrade && (
-                  <TouchableOpacity style={style.action} onPress={onUpgrade} testID="lesson-upgrade" accessibilityRole="button">
-                    <Feather name="arrow-up-right" size={17} color={colors.primaryForeground} />
-                    <Text style={style.actionText}>View membership options</Text>
+                {accessUnavailable && !!onRefreshAccess && (
+                  <TouchableOpacity style={style.secondary} onPress={onRefreshAccess} testID="lesson-access-retry" accessibilityRole="button">
+                    <Feather name="refresh-cw" size={17} color={colors.foreground} />
+                    <Text style={style.secondaryText}>Retry access check</Text>
                   </TouchableOpacity>
                 )}
               </View>
