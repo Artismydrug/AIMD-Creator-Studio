@@ -39,6 +39,7 @@ import { clearHabitReminders } from '@/lib/habitReminders';
 import StudioVideo from '@/components/StudioVideo';
 import AudioTrackPlayer from '@/components/AudioTrackPlayer';
 import AppearanceSettings from '@/components/AppearanceSettings';
+import { unregisterPushDevice } from '@/lib/pushNotifications';
 
 type LocalImage = { uri: string; contentType: string } | null;
 const HANDLE_PATTERN = /^[a-zA-Z0-9_]{3,28}$/;
@@ -431,9 +432,16 @@ export default function ProfileScreen() {
           text: 'Sign out',
           style: 'destructive',
           onPress: () => {
-            void signOut()
+            const finish = () => void signOut()
               .then(() => router.replace('/(auth)/sign-in'))
               .catch(() => Alert.alert('Could not sign out', 'Please try again.'));
+            void (userId ? unregisterPushDevice(userId) : Promise.resolve())
+              .then(finish)
+              .catch(() => Alert.alert(
+                'Couldn’t disconnect phone alerts',
+                'You can still sign out, but generic push alerts may continue. You can silence them in device Settings.',
+                [{ text: 'Cancel', style: 'cancel' }, { text: 'Sign out anyway', style: 'destructive', onPress: finish }],
+              ));
           },
         },
       ],
@@ -593,6 +601,18 @@ export default function ProfileScreen() {
         </View>
 
         <AppearanceSettings />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Notification settings"
+          testID="profile-notification-settings"
+          onPress={() => router.push('/notification-settings')}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, minHeight: 60,
+            borderWidth: 1, borderRadius: 12, borderColor: colors.border, backgroundColor: colors.card }}
+        >
+          <Feather name="bell" size={22} color={colors.primary} />
+          <Text style={{ flex: 1, color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 16 }}>Notification settings</Text>
+          <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+        </Pressable>
 
          <View style={s.portfolio}>
            <View style={s.portfolioHeader}>

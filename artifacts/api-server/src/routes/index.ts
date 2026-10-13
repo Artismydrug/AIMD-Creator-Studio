@@ -28,6 +28,7 @@ import tattooBookingsRouter from "./tattoo-bookings";
 import instructorRouter from "./instructor";
 import hqRouter from "./hq";
 import notificationsRouter from "./notifications";
+import notificationSettingsRouter from "./notification-settings";
 import smsSubscriptionsRouter from "./sms-subscriptions";
 
 const router: IRouter = Router();
@@ -53,6 +54,7 @@ router.use("/store", storeRouter);
 router.use(commentsRouter);
 router.use(conversationsRouter);
 router.use(notificationsRouter);
+router.use(notificationSettingsRouter);
 router.use(moderationRouter);
 router.use(checkinRouter);
 router.use(challengesRouter);

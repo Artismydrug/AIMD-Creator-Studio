@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState, type ReactNode } from 'react';
 import { setHabitReminderAccount } from '@/lib/habitReminders';
+import NotificationLifecycle from '@/components/NotificationLifecycle';
+import { setPushNotificationAccount } from '@/lib/pushNotifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -226,6 +228,7 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
     if (!isLoaded) return;
 
     const nextUserId = userId ?? null;
+    setPushNotificationAccount(nextUserId);
     void setHabitReminderAccount(nextUserId).catch((error) => {
       console.warn('Habit reminder scheduling failed:', error instanceof Error ? error.message : 'Unknown error');
       Alert.alert('Habit alerts need attention', 'Saved habit alerts could not be restored or paused. Check your device notification settings and reopen Habits.');
@@ -360,6 +363,8 @@ const sessionStyles = StyleSheet.create({
 function RootLayoutNav() {
   const colors = useColors();
   return (
+    <>
+    <NotificationLifecycle />
     <Stack screenOptions={{ contentStyle: { backgroundColor: colors.background } }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -368,6 +373,7 @@ function RootLayoutNav() {
        <Stack.Screen name="profile" options={{ headerShown: false }} />
        <Stack.Screen name="accomplishments" options={{ headerShown: false }} />
        <Stack.Screen name="rewards" options={{ headerShown: false }} />
+       <Stack.Screen name="notification-settings" options={{ headerShown: false }} />
       <Stack.Screen name="membership" options={{ headerShown: false }} />
        <Stack.Screen
          name="notifications"
@@ -392,6 +398,7 @@ function RootLayoutNav() {
         options={{ headerShown: false }}
       />
     </Stack>
+    </>
   );
 }
 

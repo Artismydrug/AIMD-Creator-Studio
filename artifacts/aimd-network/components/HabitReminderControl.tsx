@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   View,
   Text,
@@ -17,6 +18,7 @@ import { useAuth } from '@clerk/expo';
 import { useColors } from '@/hooks/useColors';
 import {
   loadHabitReminders,
+  getHabitRemindersEnabled,
   saveHabitReminder,
   removeHabitReminder,
   type HabitReminder,
@@ -50,6 +52,7 @@ export default function HabitReminderControl({ habitId, habitName }: Props) {
   const { userId } = useAuth();
   const [open, setOpen] = useState(false);
   const [reminder, setReminder] = useState<HabitReminder | null>(null);
+  const [alertsEnabled, setAlertsEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ text: string; permission: boolean } | null>(null);
@@ -72,7 +75,8 @@ export default function HabitReminderControl({ habitId, habitName }: Props) {
     if (!NATIVE || !userId) return;
     setLoading(true);
     try {
-      const all = await loadHabitReminders(userId);
+      const [all, enabled] = await Promise.all([loadHabitReminders(userId), getHabitRemindersEnabled(userId)]);
+      setAlertsEnabled(enabled);
       const found = all.find((r) => r.habitId === habitId) ?? null;
       setReminder(found);
       if (fillForm) applyToForm(found);
@@ -83,7 +87,7 @@ export default function HabitReminderControl({ habitId, habitName }: Props) {
     }
   }, [userId, habitId, habitName]);
 
-  useEffect(() => { void refresh(false); }, [refresh]);
+  useFocusEffect(useCallback(() => { void refresh(false); }, [refresh]));
 
   const openModal = () => {
     setError(null);
@@ -202,7 +206,7 @@ export default function HabitReminderControl({ habitId, habitName }: Props) {
   }
 
   const summary = reminder
-    ? `Daily at ${formatReminderTime(reminder.hour, reminder.minute)} (local time)`
+    ? `${alertsEnabled ? 'Daily' : 'Paused'} at ${formatReminderTime(reminder.hour, reminder.minute)} (local time)`
     : 'Set a daily reminder';
 
   return (

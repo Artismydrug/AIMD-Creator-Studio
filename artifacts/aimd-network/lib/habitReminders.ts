@@ -31,7 +31,8 @@ const engine = createReminderEngine({
     }
     return Notifications.scheduleNotificationAsync({
       identifier: id,
-      content: { title: 'Creator Studio — daily practice', body: reminder.message, sound: 'default' },
+      content: { title: 'Creator Studio — daily practice', body: reminder.message, sound: 'default',
+        data: { type: 'habit_reminder', habitId: reminder.habitId } },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
         hour: reminder.hour, minute: reminder.minute, channelId: 'habit-reminders',
@@ -49,9 +50,45 @@ function assertAccount(owner: string) {
   if (!owner || owner !== account) throw new Error('Your account changed. Reopen the habit and try again.');
 }
 export const loadHabitReminders = (owner: string): Promise<HabitReminder[]> => engine.load(owner);
+const enabledKey = (owner: string) => `aimd:habit-reminders-enabled:${owner}`;
+export const getHabitRemindersEnabled = async (owner: string) =>
+  (await AsyncStorage.getItem(enabledKey(owner))) !== 'false';
+export function setHabitRemindersEnabled(owner: string, enabled: boolean) {
+  return serialized(async () => {
+    assertAccount(owner);
+    const saved = await engine.load(owner);
+    if (enabled && saved.length) {
+      await channel();
+      let permission = await Notifications.getPermissionsAsync();
+      if (!permission.granted) permission = await Notifications.requestPermissionsAsync({
+        ios: { allowAlert: true, allowSound: true, allowBadge: false },
+      });
+      if (!permission.granted) throw new Error('Allow notifications in device Settings to enable habit alerts.');
+    }
+    assertAccount(owner);
+    await AsyncStorage.setItem(enabledKey(owner), String(enabled));
+    try {
+      if (enabled) {
+        for (const reminder of saved) {
+          assertAccount(owner);
+          await engine.save(owner, reminder.habitId, reminder);
+        }
+      } else {
+        for (const reminder of saved) await Notifications.cancelScheduledNotificationAsync(reminder.notificationId);
+      }
+    } catch (error) {
+      await AsyncStorage.setItem(enabledKey(owner), 'false');
+      for (const reminder of saved) await Notifications.cancelScheduledNotificationAsync(reminder.notificationId);
+      throw error;
+    }
+  });
+}
 export function saveHabitReminder(owner: string, habitId: number, _habitName: string, input: ReminderInput) {
   return serialized(async () => {
     assertAccount(owner);
+    if (!(await getHabitRemindersEnabled(owner))) {
+      throw new Error('Habit alerts are paused. Turn them on in Profile → Notification settings first.');
+    }
     await channel();
     let permission = await Notifications.getPermissionsAsync();
     if (!permission.granted) permission = await Notifications.requestPermissionsAsync({
@@ -79,7 +116,16 @@ export function setHabitReminderAccount(owner: string | null) {
         await Notifications.cancelScheduledNotificationAsync(request.identifier);
       }
     }
-    if (!owner || account !== owner || !(await Notifications.getPermissionsAsync()).granted) return;
+    if (!owner || account !== owner) return;
+    if (!(await getHabitRemindersEnabled(owner))) {
+      for (const request of requests) {
+        if (ownPrefix && request.identifier.startsWith(ownPrefix)) {
+          await Notifications.cancelScheduledNotificationAsync(request.identifier);
+        }
+      }
+      return;
+    }
+    if (!(await Notifications.getPermissionsAsync()).granted) return;
     await channel();
     const saved = await engine.load(owner);
     for (const request of requests) {
@@ -112,6 +158,7 @@ export function clearHabitReminders(owner: string) {
       }
     } finally {
       await AsyncStorage.removeItem(reminderKey(owner));
+      await AsyncStorage.removeItem(enabledKey(owner));
     }
   });
 }

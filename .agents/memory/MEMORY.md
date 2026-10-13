@@ -41,3 +41,4 @@
 - [HTTP query booleans](http-query-booleans.md) — validate true/false strings explicitly; generated boolean coercion can turn the text false into true.
 - [Browser destructive confirmations](browser-destructive-confirmations.md) — use explicit app-owned controls; Cancel must send no write, while native confirmations remain separate.
 - [Creative reward policy](creative-reward-policy.md) — points keep accumulating; stock-limited monthly drops include Free, $39 and $99 accounts equally.
+- [Native push readiness](native-push-readiness.md) — use managed-build runtime identifiers; browser checks and accepted push tickets do not prove device delivery.

@@ -1,5 +1,6 @@
 import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
+import { deliverNotificationPush } from "./expoPush";
 
 export type NotificationType = "direct_message" | "follow" | "like" | "critique";
 
@@ -23,7 +24,7 @@ export async function createNotification({
 }): Promise<void> {
   if (recipientUserId === actorUserId) return;
 
-  await db.execute(sql`
+  const inserted = await db.execute(sql`
     INSERT INTO notifications (
       recipient_user_id, actor_user_id, type, conversation_id, post_id
     )
@@ -35,7 +36,14 @@ export async function createNotification({
          OR (blocker_id = ${actorUserId ?? null} AND blocked_id = ${recipientUserId})
     )
     ON CONFLICT DO NOTHING
+    RETURNING id
   `);
+  if (inserted.rows.length) {
+    void deliverNotificationPush(recipientUserId, type, conversationId).catch(() => {
+      // Push failure must never turn a successfully saved message into a retry.
+      console.warn("Push delivery failed; notification remains in the app inbox.");
+    });
+  }
 }
 
 export async function removeActiveNotification({
