@@ -427,6 +427,9 @@ function ProfileContent({ user, badges, posts, isOwnProfile }: { user: any; badg
         )}
 
         {/* Member since */}
+        <Link href="/support" className="mt-8 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary underline underline-offset-4" data-testid="profile-support-link">
+          <MessageSquare className="h-4 w-4" aria-hidden="true" /> Help &amp; feedback
+        </Link>
         <div className="mt-10 pt-6 border-t border-border flex items-center gap-2 text-muted-foreground font-mono text-xs">
           <Calendar className="w-3.5 h-3.5" />
           Member since {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}

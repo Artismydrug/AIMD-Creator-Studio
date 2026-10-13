@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { WorkshopPreviewVideo } from './WorkshopPreviewVideo';
 import { Link } from 'wouter';
 import { SignInButton, useAuth } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -86,7 +87,7 @@ export function WorkshopView({ id, backHref }: { id: number; backHref: '/learn' 
       </div>
 
       {w.previewVideoUrl && (
-        <video src={w.previewVideoUrl} controls preload="metadata" playsInline className="w-full aspect-video bg-black" data-testid="video-workshop-teaser" />
+        <WorkshopPreviewVideo src={w.previewVideoUrl} controls preload="metadata" playsInline className="w-full aspect-video bg-black" data-testid="video-workshop-teaser" />
       )}
       <p className="text-lg text-muted-foreground whitespace-pre-wrap leading-relaxed">{w.description}</p>
 
@@ -139,7 +140,7 @@ export function WorkshopView({ id, backHref }: { id: number; backHref: '/learn' 
                   </Button>
                 )}
               </div>
-              {teaserId === m.id && m.previewVideoUrl && <video src={m.previewVideoUrl} controls autoPlay playsInline className="w-full aspect-video bg-black" />}
+              {teaserId === m.id && m.previewVideoUrl && <WorkshopPreviewVideo src={m.previewVideoUrl} controls autoPlay playsInline className="w-full aspect-video bg-black" />}
             </div>
           );
         })}

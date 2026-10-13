@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { trackEvent } from '@/lib/telemetry';
 import {
   ActivityIndicator,
   Alert,
@@ -60,8 +61,16 @@ export function resolveMediaUrl(url: string): string {
 
 type Resume = { time: number; playing: boolean } | null;
 
-function NativeVideo({ uri, resume, onFail }: { uri: string; resume?: React.MutableRefObject<Resume>; onFail?: (time: number) => void }) {
+function NativeVideo({ uri, resume, onFail, onPlay }: { uri: string; resume?: React.MutableRefObject<Resume>; onFail?: (time: number) => void; onPlay?: () => void }) {
   const player = useVideoPlayer(null, (p) => { p.loop = false; });
+  const onPlayRef = useRef(onPlay);
+  onPlayRef.current = onPlay;
+  useEffect(() => {
+    const subscription = player.addListener('playingChange', ({ isPlaying }) => {
+      if (isPlaying) onPlayRef.current?.();
+    });
+    return () => subscription.remove();
+  }, [player]);
   useEffect(() => {
     const saved = resume?.current ?? null;
     const sub = player.addListener('statusChange', ({ status }) => {
@@ -80,10 +89,17 @@ function NativeVideo({ uri, resume, onFail }: { uri: string; resume?: React.Muta
 }
 
 export function TeaserVideo({ uri }: { uri: string }) {
+  const viewed = useRef(false);
+  useEffect(() => { viewed.current = false; }, [uri]);
+  const recordView = () => {
+    if (viewed.current) return;
+    viewed.current = true;
+    trackEvent('workshop_preview_viewed');
+  };
   const full = resolveMediaUrl(uri);
   return Platform.OS === 'web'
-    ? <video src={full} controls playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-    : <NativeVideo uri={full} />;
+    ? <video src={full} controls playsInline preload="metadata" onPlaying={recordView} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+    : <NativeVideo uri={full} onPlay={recordView} />;
 }
 
 /** Requests a protected 15-minute signed URL and renews it before expiry, preserving position. */

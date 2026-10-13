@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { reloadAppAsync } from 'expo';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { startTelemetry } from '@/lib/telemetry';
 import {
   DMSans_400Regular,
   DMSans_500Medium,
@@ -421,6 +422,7 @@ function ThemedApp() {
 }
 
 export default function RootLayout() {
+  useEffect(() => { startTelemetry(); }, []);
   const [fontsLoaded, fontError] = useFonts({
     DMSans_400Regular,
     DMSans_500Medium,

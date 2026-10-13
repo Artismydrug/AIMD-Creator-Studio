@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getGetRewardsQueryKey, useGetRewards, useRequestMonthlyDrop } from '@workspace/api-client-react';
+import { trackEvent } from '@/lib/telemetry';
 import { AlertTriangle, Package, RotateCw, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -53,7 +54,10 @@ export function MonthlyMemberDrops() {
     request.mutate(
       { id: drop.id },
       {
-        onSuccess: () => setConfirmOpen(false),
+        onSuccess: () => {
+          trackEvent('point_reward_claimed', { reward_type: 'member_drop' });
+          setConfirmOpen(false);
+        },
         onError: (err) => {
           setSubmitError(errorMessage(err, 'Your request was not submitted. Try again.'));
           setConfirmOpen(false);

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { trackEvent } from '@/lib/telemetry';
 import {
   getGetProgressQueryKey,
   getGetRewardsQueryKey,
@@ -72,13 +73,17 @@ export default function Dashboard() {
 
   const checkInMutation = useCheckInProgress({
     mutation: {
-      onSuccess: syncProgress,
+      onSuccess: (nextProgress) => {
+        if (!progress?.checkedInToday && nextProgress.checkedInToday) trackEvent('daily_check_in_completed');
+        syncProgress(nextProgress);
+      },
     },
   });
 
   const spinMutation = useSpinDailyReward({
     mutation: {
       onSuccess: (result) => {
+        if (!result.alreadySpun) trackEvent('point_reward_claimed', { reward_type: 'daily_spin', points_awarded: result.pointsAwarded });
         setSpinResult(result);
         queryClient.setQueryData<ProgressSummary>(progressQueryKey, (current) =>
           current

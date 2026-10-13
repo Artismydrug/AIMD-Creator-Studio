@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { trackEvent } from '@/lib/telemetry';
 import { 
   useListHabits, 
   useCreateHabit, 
@@ -197,6 +198,7 @@ function HabitCard({ habit }: { habit: any }) {
       { id: habit.id, data: { minutesSpent: Math.max(1, minutes), proofUrl, proofMediaType } },
       {
         onSuccess: () => {
+          trackEvent('habit_logged');
           toast({ title: 'Session logged!', description: `${Math.max(1, minutes)} minutes recorded.` });
           setElapsedSeconds(0);
            localStorage.removeItem(storageKey);

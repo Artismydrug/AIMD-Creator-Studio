@@ -1,4 +1,5 @@
 import { Link } from 'wouter';
+import { WorkshopPreviewVideo } from './WorkshopPreviewVideo';
 import { useListWorkshops } from '@workspace/api-client-react';
 import { PlayCircle, RefreshCw, Clock, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,7 +39,7 @@ export function WorkshopCatalog({ basePath }: { basePath: '/learn' | '/workshops
       {data.map((w) => (
         <article key={w.id} className="border border-border bg-card flex flex-col" data-testid={`card-workshop-${w.id}`}>
           {w.previewVideoUrl ? (
-            <video src={w.previewVideoUrl} controls preload="metadata" playsInline className="w-full aspect-video bg-black object-contain" data-testid={`video-teaser-${w.id}`} />
+            <WorkshopPreviewVideo src={w.previewVideoUrl} controls preload="metadata" playsInline className="w-full aspect-video bg-black object-contain" data-testid={`video-teaser-${w.id}`} />
           ) : (
             <div className="aspect-video bg-muted flex items-center justify-center font-mono text-xs uppercase text-muted-foreground">
               <PlayCircle className="w-5 h-5 mr-2" /> No teaser uploaded

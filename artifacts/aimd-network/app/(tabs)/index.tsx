@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
+import { trackEvent } from '@/lib/telemetry';
 import {
   View,
   Text,
@@ -131,7 +132,8 @@ export default function ProgressScreen() {
   // Mutations
   const checkInMut = useCheckInProgress({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        if (!progress?.checkedInToday && data.checkedInToday) trackEvent('daily_check_in_completed');
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         queryClient.invalidateQueries({ queryKey: getGetProgressQueryKey({ timezone }) });
         queryClient.invalidateQueries({ queryKey: getListBadgesQueryKey() });
@@ -151,6 +153,7 @@ export default function ProgressScreen() {
   const spinMut = useSpinDailyReward({
     mutation: {
       onSuccess: (data) => {
+        if (!data.alreadySpun) trackEvent('point_reward_claimed', { reward_type: 'daily_spin', points_awarded: data.pointsAwarded });
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         spinAnim.stopAnimation();
         setSpinResult(data);

@@ -11,6 +11,13 @@ import { ensureSmsSubscriptionTable } from './lib/ensureSmsSubscriptionTable';
 import app from "./app";
 import { logger } from "./lib/logger";
 
+// Observe fatal exceptions without suppressing Node's exit/restart behavior.
+// Error messages and stacks can contain SQL parameters, URLs and credentials.
+process.on("uncaughtExceptionMonitor", (error, origin) => {
+  const types = ["TypeError", "ReferenceError", "RangeError", "SyntaxError", "Error"];
+  logger.fatal({ errorType: types.includes(error.name) ? error.name : "Error", origin }, "Unhandled API exception");
+});
+
 const rawPort = process.env["PORT"];
 
 if (!rawPort) {

@@ -19,6 +19,12 @@ const basePath = process.env.BASE_PATH || '/';
 
 export default defineConfig({
   base: basePath,
+  // This capture-only public token is also used by the Expo native bundle.
+  // Never expose the PostHog personal/private API key here.
+  define: {
+    'import.meta.env.VITE_POSTHOG_PROJECT_TOKEN': JSON.stringify(process.env.EXPO_PUBLIC_POSTHOG_PROJECT_TOKEN || ''),
+    'import.meta.env.VITE_POSTHOG_HOST': JSON.stringify(process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com'),
+  },
   plugins: [
     react(),
     tailwindcss({ optimize: false }),

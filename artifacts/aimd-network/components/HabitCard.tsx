@@ -12,6 +12,7 @@ import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { customFetch, useDeleteHabit, useLogHabitSession } from '@workspace/api-client-react';
+import { trackEvent } from '@/lib/telemetry';
 import type { Habit } from '@workspace/api-client-react';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@clerk/expo';
@@ -46,6 +47,7 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
   const logMutation = useLogHabitSession({
     mutation: {
       onSuccess: () => {
+        trackEvent('habit_logged');
         setLocalDone(true);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         onLogged?.();

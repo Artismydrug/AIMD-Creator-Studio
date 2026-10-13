@@ -4,6 +4,7 @@ import {
   type ErrorInfo,
   type ReactNode,
 } from 'react';
+import { reportException } from '@/lib/telemetry';
 
 export interface ErrorFallbackProps {
   error: Error;
@@ -75,11 +76,8 @@ export class ErrorBoundary extends Component<
   }
 
   componentDidCatch(error: unknown, info: ErrorInfo): void {
-    console.error(
-      'ErrorBoundary caught an error:',
-      toError(error),
-      info.componentStack,
-    );
+    reportException(error, 'render');
+    if (import.meta.env.DEV) console.error(toError(error), info.componentStack);
   }
 
   componentDidUpdate(prevProps: ErrorBoundaryProps): void {

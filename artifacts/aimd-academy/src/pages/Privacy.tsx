@@ -122,7 +122,7 @@ export default function Privacy() {
               </div>
               <aside className="border-l-2 border-[#BC3A20] pl-5">
                 <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#8A8077]">Policy details</p>
-                <p className="mt-2 font-display text-xl font-bold uppercase text-[#2C2623]">Last updated October 10, 2026</p>
+                <p className="mt-2 font-display text-xl font-bold uppercase text-[#2C2623]">Last updated October 13, 2026</p>
                 <p className="mt-3 text-sm leading-6 text-[#6E6660]">
                   This policy applies to the Creator Studio web and mobile experiences operated by Art Is My Drug (“AIMD,” “we,” or “us”).
                 </p>
@@ -231,6 +231,9 @@ export default function Privacy() {
               </ul>
               <p>
                 We share information with service providers that help us run the service, such as Clerk for authentication and infrastructure providers for secure storage and delivery. We may share relevant User Content with authorized AIMD staff, instructors, or reviewers when needed to run a workshop, challenge, or proof-review feature. We do not sell your personal information.
+              </p>
+              <p>
+                We use PostHog for limited product analytics and diagnostic events, such as opening the app, completing a check-in, logging a habit, claiming a reward, starting a workshop preview, or encountering an error. These events use a generated device or session identifier rather than your email or account identity. Our tracking does not include message text, captions, reflection answers, uploaded media, screen recordings, or advertising identifiers. Diagnostic events report an error category and where it occurred, not the private contents of an error message.
               </p>
               <p>
                 If you voluntarily join the AIMD Text List, we process your name, mobile number, signup source, consent record, and message status to deliver the texts you requested and honor STOP or HELP requests. Promotional messages begin only after you confirm the double opt-in.

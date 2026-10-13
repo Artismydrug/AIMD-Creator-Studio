@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { getGetRewardsQueryKey, useGetRewards, useRequestMonthlyDrop } from '@workspace/api-client-react';
+import { trackEvent } from '@/lib/telemetry';
 import { useColors } from '@/hooks/useColors';
 
 const STATUS: Record<string, string> = {
@@ -57,6 +58,7 @@ export default function MonthlyMemberDrops({ compact = false }: { compact?: bool
     setError(null);
     try {
       await requestPackage.mutateAsync({ id: confirmation.id });
+      trackEvent('point_reward_claimed', { reward_type: 'member_drop' });
       setConfirmation(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not confirm your request. Refresh and try again.');
