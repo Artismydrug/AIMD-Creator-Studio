@@ -45,3 +45,4 @@
 - [Native push readiness](native-push-readiness.md) — use managed-build runtime identifiers; browser checks and accepted push tickets do not prove device delivery.
 - [Verification resource budget](verification-resource-budget.md) — run native exports and media-heavy backend tests sequentially; concurrent builds can cause misleading test timeouts.
 - [Monitoring privacy](monitoring-privacy.md) — measure pseudonymous devices/sessions, not personal profiles; private creative content is outside launch analytics scope.
+- [Startup service isolation](startup-service-isolation.md) — optional notification failures warn without blocking core navigation; sign-in and content access remain fail-closed.

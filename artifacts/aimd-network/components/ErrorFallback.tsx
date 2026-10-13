@@ -12,13 +12,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import { reloadAppAsync } from 'expo';
+import { getErrorDiagnosticCode, type ErrorDiagnosticCode } from '@/lib/errorDiagnostics';
 
 export type ErrorFallbackProps = {
   error: Error;
   resetError: () => void;
+  diagnosticCode?: ErrorDiagnosticCode;
 };
 
-export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
+export function ErrorFallback({ error, resetError, diagnosticCode }: ErrorFallbackProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
 
@@ -27,8 +29,8 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
   const handleRestart = async () => {
     try {
       await reloadAppAsync();
-    } catch (restartError) {
-      console.error('Failed to restart app:', restartError);
+    } catch {
+      console.error('Creator Studio could not restart automatically.');
       resetError();
     }
   };
@@ -74,6 +76,17 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
 
         <Text style={[styles.message, { color: colors.mutedForeground }]}>
           Please reload the app to continue.
+        </Text>
+        <Text
+          selectable
+          testID="app-error-diagnostic"
+          accessibilityLabel={`Support code ${diagnosticCode ?? getErrorDiagnosticCode(error)}`}
+          style={{ color: colors.mutedForeground, fontSize: 13, textAlign: 'center', lineHeight: 20 }}
+        >
+          Support code: {diagnosticCode ?? getErrorDiagnosticCode(error)}
+        </Text>
+        <Text style={{ color: colors.mutedForeground, fontSize: 13, textAlign: 'center', lineHeight: 20 }}>
+          If this happens again, share this code with support.
         </Text>
 
         <Pressable

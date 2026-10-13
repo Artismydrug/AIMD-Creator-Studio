@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, type ReactNode } from 'react';
 import { setHabitReminderAccount } from '@/lib/habitReminders';
 import NotificationLifecycle from '@/components/NotificationLifecycle';
+import NotificationStartupFallback from '@/components/NotificationStartupFallback';
 import { setPushNotificationAccount } from '@/lib/pushNotifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -365,7 +366,9 @@ function RootLayoutNav() {
   const colors = useColors();
   return (
     <>
-    <NotificationLifecycle />
+    <ErrorBoundary diagnosticStage="NOTIFY" FallbackComponent={NotificationStartupFallback}>
+      <NotificationLifecycle />
+    </ErrorBoundary>
     <Stack screenOptions={{ contentStyle: { backgroundColor: colors.background } }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -415,7 +418,9 @@ function ThemedApp() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
       <KeyboardProvider>
         <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-        <RootLayoutNav />
+        <ErrorBoundary diagnosticStage="NAVIGATION">
+          <RootLayoutNav />
+        </ErrorBoundary>
       </KeyboardProvider>
     </GestureHandlerRootView>
   );
@@ -452,9 +457,11 @@ export default function RootLayout() {
           <SafeAreaProvider>
             <QueryClientProvider client={queryClient}>
               <AppearanceProvider>
-                <ErrorBoundary>
+                <ErrorBoundary diagnosticStage="MEMBERSHIP">
                 <SubscriptionProvider>
-                  <ThemedApp />
+                  <ErrorBoundary diagnosticStage="SHELL">
+                    <ThemedApp />
+                  </ErrorBoundary>
                 </SubscriptionProvider>
                 </ErrorBoundary>
               </AppearanceProvider>

@@ -12,6 +12,7 @@
     "smoke:hq-loading": "node scripts/hq-loading-smoke.js",
     "smoke:request-safety": "node scripts/request-safety-smoke.js",
     "smoke:telemetry": "node scripts/telemetry-smoke.js",
+    "smoke:error-diagnostics": "node scripts/error-diagnostics-smoke.js",
     "serve": "node server/serve.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
