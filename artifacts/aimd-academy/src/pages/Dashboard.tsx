@@ -162,6 +162,9 @@ export default function Dashboard() {
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-amber-300">AIMD Points</p>
             <p className="font-display text-3xl font-black text-foreground">{progress?.points ?? user?.points ?? 0}</p>
+            <p className="mt-1 max-w-md text-sm leading-relaxed text-muted-foreground">
+              Members can use their AIMD points towards merch, events, workshops and more! Keep a look out for special drops!
+            </p>
           </div>
         </div>
         <div className="flex gap-3">

@@ -89,6 +89,9 @@ export function MonthlyMemberDrops() {
             <Trophy className="w-3 h-3 text-amber-400" /> AIMD points
           </p>
           <p className="font-display font-black text-2xl text-primary tabular-nums">{data.points.toLocaleString()}</p>
+          <p className="text-sm text-muted-foreground mt-2 leading-relaxed max-w-sm sm:ml-auto">
+            Members can use their AIMD points towards merch, events, workshops and more! Keep a look out for special drops!
+          </p>
         </div>
       </div>
 
@@ -174,9 +177,6 @@ export function MonthlyMemberDrops() {
           </div>
         )}
 
-        <p className="font-mono text-[10px] text-muted-foreground mt-5 leading-relaxed">
-          Points keep accumulating and are never spent. Monthly packages are separate from points and open to every signed-in account, one request per month while supplies last. Requests are reviewed by AIMD staff; submitting does not guarantee delivery.
-        </p>
       </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={(o) => { if (!request.isPending) setConfirmOpen(o); }}>

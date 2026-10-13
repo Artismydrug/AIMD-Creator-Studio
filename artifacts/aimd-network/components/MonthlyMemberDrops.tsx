@@ -82,7 +82,7 @@ export default function MonthlyMemberDrops({ compact = false }: { compact?: bool
         <>
           <View>
             <Text style={s.total} testID="reward-points">{data.points.toLocaleString()} points</Text>
-            <Text style={s.detail}>Keep collecting. Monthly drops never spend your points.</Text>
+            <Text style={s.detail}>Members can use their AIMD points towards merch, events, workshops and more! Keep a look out for special drops!</Text>
           </View>
           {isError && <Text style={s.detail}>Your balance may be out of date. Refresh to try again.</Text>}
           {compact ? (
@@ -95,10 +95,6 @@ export default function MonthlyMemberDrops({ compact = false }: { compact?: bool
             </>
           ) : (
             <>
-              <View style={s.note}>
-                <Text style={s.linkText}>Every account is included</Text>
-                <Text style={s.detail}>Free, $39 and $99 members have equal access. No points minimum, payment or membership upgrade is needed.</Text>
-              </View>
               <View style={s.section}>
                 {drop ? (
                   <>
@@ -131,7 +127,6 @@ export default function MonthlyMemberDrops({ compact = false }: { compact?: bool
                   </>
                 )}
               </View>
-              <Text style={s.detail}>One request per account per monthly drop. Quantities are limited and AIMD reviews requests before arranging fulfillment. A request is not guaranteed delivery or automatic workshop access. Monthly windows follow Los Angeles time.</Text>
               {history.length > 0 && (
                 <View style={s.section}>
                   <Text style={s.title}>Earlier requests</Text>
