@@ -220,6 +220,8 @@ export default function PostCard({
       gap: 10,
       marginBottom: 14,
     },
+    immersiveAuthorRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
+    ownerActionsSurface: { borderRadius: 22, backgroundColor: 'rgba(23,52,58,0.72)' },
     immersiveAvatarFrame: {
       borderWidth: 2,
       borderColor: '#FFFFFF',
@@ -456,12 +458,17 @@ export default function PostCard({
             </>
             )}
 
-            <View style={[s.immersiveContent, isTextOnly && s.textPostFooter]}>
+            <View style={[
+              s.immersiveContent,
+              isTextOnly && s.textPostFooter,
+              isOwnPost && (isTextOnly ? { paddingRight: 16 } : { right: 16 }),
+            ]}>
+              <View style={s.immersiveAuthorRow}>
               <TouchableOpacity
                 accessibilityRole="button"
                 accessibilityLabel={`Open ${post.username ?? 'creator'} profile`}
                 onPress={() => router.push(`/creator/${post.userId}`)}
-                style={s.immersiveAuthorButton}
+                style={[s.immersiveAuthorButton, { flex: 1, marginBottom: 0 }]}
               >
                 <View style={[s.immersiveAvatarFrame, isTextOnly && { borderColor: colors.border }]}>
                   <Avatar username={post.username} avatarUrl={post.userAvatarUrl} size={42} />
@@ -475,6 +482,17 @@ export default function PostCard({
                   </Text>
                 </View>
               </TouchableOpacity>
+              {isOwnPost && (
+                <View style={[s.ownerActionsSurface, isTextOnly && { backgroundColor: colors.muted }]}>
+                  <PostOwnerActions
+                    post={post}
+                    currentUserId={currentUserId}
+                    triggerColor={isTextOnly ? colors.foreground : '#FFFFFF'}
+                    onVisibilityChange={setOwnerDialogOpen}
+                  />
+                </View>
+              )}
+              </View>
 
               {!isTextOnly && <Text style={s.immersiveCaption} numberOfLines={4}>{post.caption}</Text>}
               {!isTextOnly && post.tags && post.tags.length > 0 && (
@@ -487,13 +505,6 @@ export default function PostCard({
             </View>
 
             <View style={s.immersiveActions}>
-              {isOwnPost && (
-                <PostOwnerActions
-                  post={post} currentUserId={currentUserId}
-                  triggerColor={isTextOnly ? colors.foreground : colors.primaryForeground}
-                  onVisibilityChange={setOwnerDialogOpen}
-                />
-              )}
               {!isOwnPost && (
                 <TouchableOpacity
                   accessibilityRole="button"

@@ -1046,7 +1046,7 @@ export default function ProgressScreen() {
                 {progress.checkedInToday && !progress.spinAvailableToday && (
                   <View style={[s.actionBtn, { opacity: 0.5, borderColor: 'transparent' }]}>
                     <Feather name="check" size={18} color={colors.mutedForeground} />
-                    <Text style={[s.actionBtnText, { color: colors.mutedForeground }]}>All caught up for today</Text>
+                    <Text style={[s.actionBtnText, { color: colors.mutedForeground }]}>Checked in today</Text>
                   </View>
                 )}
               </View>

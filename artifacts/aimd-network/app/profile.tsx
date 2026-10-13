@@ -38,6 +38,7 @@ import LegalHelpLinks from '@/components/LegalHelpLinks';
 import { clearHabitReminders } from '@/lib/habitReminders';
 import StudioVideo from '@/components/StudioVideo';
 import AudioTrackPlayer from '@/components/AudioTrackPlayer';
+import PostOwnerActions from '@/components/PostOwnerActions';
 import AppearanceSettings from '@/components/AppearanceSettings';
 import { unregisterPushDevice } from '@/lib/pushNotifications';
 
@@ -396,7 +397,7 @@ export default function ProfileScreen() {
      portfolioMedia: { height: 220, width: '100%' },
      portfolioImage: { backgroundColor: colors.muted, height: 220, width: '100%' },
      portfolioCaption: { color: colors.foreground, fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 20, padding: 14 },
-     portfolioMeta: { alignItems: 'center', borderTopColor: colors.border, borderTopWidth: 1, flexDirection: 'row', gap: 6, paddingHorizontal: 14, paddingBottom: 12 },
+     portfolioMeta: { alignItems: 'center', justifyContent: 'space-between', borderTopColor: colors.border, borderTopWidth: 1, flexDirection: 'row', gap: 6, paddingHorizontal: 14, paddingVertical: 4 },
      portfolioMetaText: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 11 },
   }), [colors, insets.bottom, topPadding]);
 
@@ -647,6 +648,7 @@ export default function ProfileScreen() {
                  {post.caption ? <Text style={s.portfolioCaption}>{post.caption}</Text> : null}
                  <View style={s.portfolioMeta}>
                    <Text style={s.portfolioMetaText}>{new Date(post.createdAt).toLocaleDateString()}</Text>
+                    <PostOwnerActions post={post} currentUserId={me.id} />
                  </View>
                </View>
              ))

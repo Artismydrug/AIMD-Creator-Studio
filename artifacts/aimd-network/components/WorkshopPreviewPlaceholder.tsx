@@ -24,7 +24,7 @@ export default function WorkshopPreviewPlaceholder({ category, title }: { catego
   const fg = '#FAF8F5';
   return (
     <View
-      style={StyleSheet.absoluteFill}
+      style={st.content}
       accessible
       accessibilityRole="image"
       accessibilityLabel={`${title} preview coming soon. Still artwork, video not yet available.`}
@@ -40,6 +40,10 @@ export default function WorkshopPreviewPlaceholder({ category, title }: { catego
       <View style={[st.ring, { width: 220, height: 220, right: -50, top: -70, borderColor: 'rgba(250,248,245,0.14)' }]} />
       <View style={[st.ring, { width: 140, height: 140, right: -10, top: -30, borderColor: 'rgba(250,248,245,0.2)' }]} />
       <View style={[st.disc, { backgroundColor: colors.gold, left: -30, bottom: -40 }]} />
+      <View style={st.badge}>
+        <Feather name="clock" size={10} color={fg} />
+        <Text style={st.badgeText}>PREVIEW COMING SOON</Text>
+      </View>
       <View style={st.center}>
         <View style={st.tile}>
           <Feather name={icon} size={34} color={fg} />
@@ -48,22 +52,19 @@ export default function WorkshopPreviewPlaceholder({ category, title }: { catego
           {side.map((n) => <Feather key={n} name={n} size={14} color="rgba(250,248,245,0.6)" />)}
         </View>
       </View>
-      <View style={st.badge}>
-        <Feather name="clock" size={10} color={fg} />
-        <Text style={st.badgeText}>PREVIEW COMING SOON</Text>
-      </View>
       <Text style={st.cat} numberOfLines={1}>{category}</Text>
     </View>
   );
 }
 
 const st = StyleSheet.create({
+  content: { ...StyleSheet.absoluteFillObject, padding: 14 },
   ring: { position: 'absolute', borderRadius: 999, borderWidth: 1.5 },
   disc: { position: 'absolute', width: 110, height: 110, borderRadius: 999, opacity: 0.35 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10 },
-  tile: { width: 72, height: 72, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(16,19,23,0.35)', borderWidth: 1, borderColor: 'rgba(250,248,245,0.28)', transform: [{ rotate: '-6deg' }] },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
+  tile: { width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(16,19,23,0.35)', borderWidth: 1, borderColor: 'rgba(250,248,245,0.28)', transform: [{ rotate: '-6deg' }] },
   sideRow: { flexDirection: 'row', gap: 14 },
-  badge: { position: 'absolute', top: 10, left: 10, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 99, backgroundColor: 'rgba(16,19,23,0.82)' },
-  badgeText: { fontFamily: 'DMSans_700Bold', fontSize: 9, color: '#FAF8F5', letterSpacing: 0.8 },
-  cat: { position: 'absolute', bottom: 10, right: 12, maxWidth: '60%', fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 1.4, textTransform: 'uppercase', color: 'rgba(250,248,245,0.85)' },
+  badge: { alignSelf: 'flex-start', maxWidth: '100%', flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 99, backgroundColor: 'rgba(16,19,23,0.82)' },
+  badgeText: { flexShrink: 1, fontFamily: 'DMSans_700Bold', fontSize: 9, color: '#FAF8F5', letterSpacing: 0.8 },
+  cat: { alignSelf: 'flex-end', maxWidth: '100%', fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 1.4, textTransform: 'uppercase', color: 'rgba(250,248,245,0.85)' },
 });
