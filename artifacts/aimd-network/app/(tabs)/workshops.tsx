@@ -1,9 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  LayoutChangeEvent,
   Platform,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -48,6 +50,9 @@ export default function WorkshopsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const scrollRef = useRef<ScrollView>(null);
+  const pendingDetailsScroll = useRef(false);
+  const detailsTopY = useRef<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedWorkshopId, setSelectedWorkshopId] = useState<number | null>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
@@ -186,6 +191,26 @@ export default function WorkshopsScreen() {
     void safeImpact();
   };
 
+  const selectWorkshop = (workshopId: number) => {
+    if (workshopId === selectedWorkshopId && detailsTopY.current !== null) {
+      scrollRef.current?.scrollTo({ y: Math.max(0, detailsTopY.current - 12), animated: true });
+      return;
+    }
+    pendingDetailsScroll.current = true;
+    setSelectedWorkshopId(workshopId);
+    setSelectedModuleId(null);
+  };
+
+  const onWorkshopDetailsLayout = (event: LayoutChangeEvent) => {
+    const y = event.nativeEvent.layout.y;
+    detailsTopY.current = y;
+    if (!pendingDetailsScroll.current) return;
+    pendingDetailsScroll.current = false;
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ y: Math.max(0, y - 12), animated: true });
+    });
+  };
+
   const completeLesson = (moduleId: number) => {
     if (!selectedWorkshopId) return;
     if (!isEnrolled) { Alert.alert('Start the workshop first', 'Close the lesson and tap Start workshop to save progress.'); return; }
@@ -269,6 +294,7 @@ export default function WorkshopsScreen() {
   return (
     <View style={s.container} testID="workshops-screen">
       <KeyboardAwareScrollViewCompat
+        ref={scrollRef}
         contentContainerStyle={s.content}
         bottomOffset={60}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
@@ -336,7 +362,7 @@ export default function WorkshopsScreen() {
               </View>
               <TouchableOpacity
                 style={s.workshopCardInfo}
-                onPress={() => { setSelectedWorkshopId(workshop.id); setSelectedModuleId(null); }}
+                onPress={() => selectWorkshop(workshop.id)}
                 accessibilityRole="button"
                 accessibilityLabel={`Open ${workshop.title}`}
                 accessibilityHint="Opens workshop details and the lesson list."
@@ -359,7 +385,12 @@ export default function WorkshopsScreen() {
         </View>
 
         {selectedWorkshop && (
-          <View style={s.locked} testID="workshop-detail-panel">
+          <View
+            key={selectedWorkshop.id}
+            style={s.locked}
+            onLayout={onWorkshopDetailsLayout}
+            testID="workshop-detail-panel"
+          >
             {workshopDetail?.previewVideoUrl && (
               <View style={{ alignSelf: 'stretch', height: 200, backgroundColor: '#171311', borderRadius: 10, overflow: 'hidden' }}>
                 <TeaserVideo uri={workshopDetail.previewVideoUrl} />

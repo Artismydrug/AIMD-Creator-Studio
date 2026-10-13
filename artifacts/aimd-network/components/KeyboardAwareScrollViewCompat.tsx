@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { Platform, ScrollView, ScrollViewProps } from 'react-native';
 import {
   KeyboardAwareScrollView,
@@ -6,14 +7,15 @@ import {
 
 type Props = KeyboardAwareScrollViewProps & ScrollViewProps;
 
-export function KeyboardAwareScrollViewCompat({
+export const KeyboardAwareScrollViewCompat = forwardRef<ScrollView, Props>(function KeyboardAwareScrollViewCompat({
   children,
   keyboardShouldPersistTaps = 'handled',
   ...props
-}: Props) {
+}, ref) {
   if (Platform.OS === 'web') {
     return (
       <ScrollView
+        ref={ref}
         keyboardShouldPersistTaps={keyboardShouldPersistTaps}
         {...props}
       >
@@ -23,10 +25,11 @@ export function KeyboardAwareScrollViewCompat({
   }
   return (
     <KeyboardAwareScrollView
+      ref={ref}
       keyboardShouldPersistTaps={keyboardShouldPersistTaps}
       {...props}
     >
       {children}
     </KeyboardAwareScrollView>
   );
-}
+});
