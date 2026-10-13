@@ -362,6 +362,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StudioPost"
+    patch:
+      operationId: updateStudioPost
+      tags: [studio-posts]
+      summary: Update the caption on an owned studio post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStudioPostInput"
+      responses:
+        "200":
+          description: Updated studio post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudioPost"
+        "400":
+          description: Invalid caption
+        "401":
+          description: Authentication required
+        "404":
+          description: Post not found or not owned by the caller
     delete:
       operationId: deleteStudioPost
       tags: [studio-posts]
@@ -2696,6 +2725,17 @@ components:
           type: array
           items:
             type: string
+
+    UpdateStudioPostInput:
+      type: object
+      required: [caption]
+      additionalProperties: false
+      properties:
+        caption:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Updated caption text. Leading and trailing whitespace is removed.
 
     # ── Workshops ─────────────────────────────────────────────────────────
     Workshop:
