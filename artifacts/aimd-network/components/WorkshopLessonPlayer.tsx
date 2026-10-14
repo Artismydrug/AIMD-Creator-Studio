@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { trackEvent } from '@/lib/telemetry';
 import {
   ActivityIndicator,
+  AppState,
   Alert,
   Modal,
   Platform,
@@ -12,6 +13,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { VideoView, useVideoPlayer } from 'expo-video';
+import { useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getBaseUrl, useCreateWorkshopLessonPlayback } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
@@ -65,6 +67,16 @@ function NativeVideo({ uri, resume, onFail, onPlay }: { uri: string; resume?: Re
   const player = useVideoPlayer(null, (p) => { p.loop = false; });
   const onPlayRef = useRef(onPlay);
   onPlayRef.current = onPlay;
+  const onFailRef = useRef(onFail);
+  onFailRef.current = onFail;
+  const pause = useCallback(() => {
+    try { player.pause(); } catch { /* A closed preview may already be released. */ }
+  }, [player]);
+  useFocusEffect(useCallback(() => () => pause(), [pause]));
+  useEffect(() => {
+    const listener = AppState.addEventListener('change', state => { if (state !== 'active') pause(); });
+    return () => { listener.remove(); pause(); };
+  }, [pause]);
   useEffect(() => {
     const subscription = player.addListener('playingChange', ({ isPlaying }) => {
       if (isPlaying) onPlayRef.current?.();
@@ -74,32 +86,48 @@ function NativeVideo({ uri, resume, onFail, onPlay }: { uri: string; resume?: Re
   useEffect(() => {
     const saved = resume?.current ?? null;
     const sub = player.addListener('statusChange', ({ status }) => {
-      if (status === 'error') onFail?.(player.currentTime);
+      if (status === 'error') onFailRef.current?.(player.currentTime);
       if (status === 'readyToPlay' && saved) {
         player.currentTime = saved.time;
         if (saved.playing) player.play();
         if (resume) resume.current = null;
       }
     });
-    player.replaceAsync(uri).catch(() => onFail?.(0));
-    return () => sub.remove();
+    let cancelled = false;
+    player.replaceAsync(uri).catch(() => { if (!cancelled) onFailRef.current?.(0); });
+    return () => { cancelled = true; sub.remove(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [player, uri, resume]);
   return <VideoView player={player} style={styles.video} contentFit="contain" nativeControls testID="workshop-lesson-video" />;
 }
 
 export function TeaserVideo({ uri }: { uri: string }) {
+  const colors = useColors();
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const viewed = useRef(false);
-  useEffect(() => { viewed.current = false; }, [uri]);
+  useEffect(() => { viewed.current = false; setFailed(false); }, [uri]);
   const recordView = () => {
     if (viewed.current) return;
     viewed.current = true;
     trackEvent('workshop_preview_viewed');
   };
   const full = resolveMediaUrl(uri);
+  if (failed) {
+    return (
+      <View style={{ padding: 20, gap: 12, alignItems: 'center' }} testID="workshop-preview-error">
+        <Text style={{ color: colors.primaryForeground, textAlign: 'center', fontFamily: 'DMSans_500Medium' }}>Preview unavailable. Check your connection and retry.</Text>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Retry workshop preview"
+          onPress={() => { setFailed(false); setAttempt(value => value + 1); }}
+          style={{ padding: 12, backgroundColor: colors.gold, borderRadius: colors.radius }}>
+          <Text style={{ color: colors.ink, fontFamily: 'DMSans_700Bold' }}>Retry preview</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
   return Platform.OS === 'web'
-    ? <video src={full} controls playsInline preload="metadata" onPlaying={recordView} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-    : <NativeVideo uri={full} onPlay={recordView} />;
+    ? <video key={`${uri}:${attempt}`} src={full} controls playsInline preload="metadata" onPlaying={recordView} onError={() => setFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+    : <NativeVideo key={`${uri}:${attempt}`} uri={full} onPlay={recordView} onFail={() => setFailed(true)} />;
 }
 
 /** Requests a protected 15-minute signed URL and renews it before expiry, preserving position. */
@@ -127,7 +155,7 @@ function ProtectedLesson({ workshopId, moduleId, onGate }: { workshopId: number;
       setUrl(res.playbackUrl); setExpiresAt(res.expiresAt); setError(null);
     } catch (e: any) {
       if ([401, 402, 403].includes(e?.status)) gateRef.current();
-      setError(e?.message || 'Could not start this lesson.');
+      setError('Could not start this lesson. Check your connection and workshop access, then retry.');
       if (renewing) setUrl(null);
     } finally { setLoading(false); }
   }, [workshopId, moduleId]);

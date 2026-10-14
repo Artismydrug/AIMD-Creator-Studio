@@ -19,9 +19,11 @@ export default function LearningPortfolioScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isLoaded, isSignedIn } = useAuth();
-  const { data: entries, isLoading, isError, isRefetching, refetch } = useListAssignments({
+  const { data: entriesResponse, isLoading, isError, isRefetching, refetch } = useListAssignments({
     query: { queryKey: getListAssignmentsQueryKey(), enabled: !!isSignedIn, staleTime: 15_000, refetchOnMount: 'always' },
   });
+  const entriesInvalid = entriesResponse != null && !Array.isArray(entriesResponse);
+  const entries = Array.isArray(entriesResponse) ? entriesResponse.filter(entry => entry != null && typeof entry.id === 'number') : [];
   if (!isLoaded) return <ActivityIndicator style={{ flex: 1, backgroundColor: colors.background }} color={colors.primary} />;
   if (!isSignedIn) return <Redirect href="/(auth)/sign-in" />;
   return (
@@ -36,7 +38,7 @@ export default function LearningPortfolioScreen() {
       <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21, color: colors.mutedForeground }}>
         Workshop reflections and practice work, linked to each lesson. This is not your public profile. Workshop instructors can review your submissions.
       </Text>
-      {isLoading ? <ActivityIndicator color={colors.primary} /> : isError ? (
+      {isLoading ? <ActivityIndicator color={colors.primary} /> : isError || entriesInvalid ? (
         <View style={{ gap: 10 }}>
           <Text style={{ color: colors.foreground }}>Could not load your portfolio.</Text>
           <TouchableOpacity accessibilityRole="button" onPress={() => void refetch()}><Text style={{ color: colors.primary }}>Retry</Text></TouchableOpacity>

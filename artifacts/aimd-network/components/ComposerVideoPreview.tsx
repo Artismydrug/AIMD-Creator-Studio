@@ -16,7 +16,9 @@ export default function ComposerVideoPreview({ uri, active }: { uri: string; act
       setFailed(status === 'error');
     });
     const background = AppState.addEventListener('change', (state) => {
-      if (state !== 'active') player.pause();
+      if (state !== 'active') {
+        try { player.pause(); } catch { /* Player may already have been released. */ }
+      }
     });
     if (!active) player.pause();
     return () => {
@@ -30,7 +32,7 @@ export default function ComposerVideoPreview({ uri, active }: { uri: string; act
       <VideoView
         player={player}
         style={styles.video}
-        nativeControls
+        nativeControls={active}
         contentFit="contain"
         accessibilityLabel="Selected video preview"
       />

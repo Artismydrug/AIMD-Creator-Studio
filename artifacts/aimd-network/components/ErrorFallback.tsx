@@ -18,20 +18,29 @@ export type ErrorFallbackProps = {
   error: Error;
   resetError: () => void;
   diagnosticCode?: ErrorDiagnosticCode;
+  recoverLocally?: boolean;
 };
 
-export function ErrorFallback({ error, resetError, diagnosticCode }: ErrorFallbackProps) {
+export function ErrorFallback({ error, resetError, diagnosticCode, recoverLocally = false }: ErrorFallbackProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [restarting, setRestarting] = useState(false);
 
   const handleRestart = async () => {
+    if (recoverLocally) {
+      resetError();
+      return;
+    }
+    setRestarting(true);
     try {
       await reloadAppAsync();
     } catch {
       console.error('Creator Studio could not restart automatically.');
       resetError();
+    } finally {
+      setRestarting(false);
     }
   };
 
@@ -50,7 +59,10 @@ export function ErrorFallback({ error, resetError, diagnosticCode }: ErrorFallba
   });
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      contentContainerStyle={[styles.container, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}
+    >
       {__DEV__ ? (
         <Pressable
           onPress={() => setIsModalVisible(true)}
@@ -75,7 +87,7 @@ export function ErrorFallback({ error, resetError, diagnosticCode }: ErrorFallba
         </Text>
 
         <Text style={[styles.message, { color: colors.mutedForeground }]}>
-          Please reload the app to continue.
+          {recoverLocally ? 'Please retry this screen. You can also use navigation to continue.' : 'Please reload the app to continue.'}
         </Text>
         <Text
           selectable
@@ -91,6 +103,10 @@ export function ErrorFallback({ error, resetError, diagnosticCode }: ErrorFallba
 
         <Pressable
           onPress={handleRestart}
+          disabled={restarting}
+          accessibilityRole="button"
+          accessibilityLabel={recoverLocally ? 'Retry this screen' : 'Reload Creator Studio'}
+          testID="app-error-retry"
           style={({ pressed }) => [
             styles.button,
             {
@@ -103,7 +119,7 @@ export function ErrorFallback({ error, resetError, diagnosticCode }: ErrorFallba
           <Text
             style={[styles.buttonText, { color: colors.primaryForeground }]}
           >
-            Try Again
+            {restarting ? 'Reloading…' : 'Try Again'}
           </Text>
         </Pressable>
       </View>
@@ -176,15 +192,14 @@ export function ErrorFallback({ error, resetError, diagnosticCode }: ErrorFallba
           </View>
         </Modal>
       ) : null}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     width: '100%',
-    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,

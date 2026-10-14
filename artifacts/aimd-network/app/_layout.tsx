@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { reloadAppAsync } from 'expo';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import ScreenErrorBoundary from '@/components/ScreenErrorBoundary';
 import { startTelemetry } from '@/lib/telemetry';
 import {
   DMSans_400Regular,
@@ -370,7 +371,14 @@ function RootLayoutNav() {
     <ErrorBoundary diagnosticStage="NOTIFY" FallbackComponent={NotificationStartupFallback}>
       <NotificationLifecycle />
     </ErrorBoundary>
-    <Stack screenOptions={{ contentStyle: { backgroundColor: colors.background } }}>
+    <Stack
+      screenLayout={({ children, route }) => <ScreenErrorBoundary key={route.key} routeName={route.name}>{children}</ScreenErrorBoundary>}
+      screenOptions={{
+        headerShown: false,
+        headerBackButtonDisplayMode: 'minimal',
+        contentStyle: { backgroundColor: colors.background },
+      }}
+    >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />

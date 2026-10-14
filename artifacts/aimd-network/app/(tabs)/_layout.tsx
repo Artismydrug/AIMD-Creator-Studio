@@ -5,6 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { useAuth } from '@clerk/expo';
 import FrostedTabBar from '@/components/FrostedTabBar';
+import ScreenErrorBoundary from '@/components/ScreenErrorBoundary';
 
 export default function TabLayout() {
   const colors = useColors();
@@ -26,6 +27,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      screenLayout={({ children, route }) => <ScreenErrorBoundary key={route.key} routeName={route.name}>{children}</ScreenErrorBoundary>}
       tabBar={(props) => <FrostedTabBar {...props} />}
       screenOptions={{
         tabBarActiveTintColor: colors.primary,

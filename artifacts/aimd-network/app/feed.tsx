@@ -142,7 +142,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
     );
   }, []);
 
-  const { data: posts, isLoading, isError, refetch } = useListStudioPosts(
+  const { data: postsResponse, isLoading, isError, refetch } = useListStudioPosts(
     { followingOnly: feedMode === 'following' ? 'true' : 'false' },
     {
       request: {
@@ -151,6 +151,8 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
       },
     },
   );
+  const postsInvalid = postsResponse != null && !Array.isArray(postsResponse);
+  const posts = useMemo(() => Array.isArray(postsResponse) ? postsResponse.filter(post => post != null && typeof post.id === 'number') : [], [postsResponse]);
   const { data: me } = useGetCurrentUser();
 
   useEffect(() => {
@@ -222,8 +224,11 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
   }, [refetch]);
 
   const usePickedMedia = (asset: ImagePicker.ImagePickerAsset) => {
@@ -694,7 +699,8 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
     <View style={s.container}>
       <View style={s.header}>
          {!embedded && (
-           <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Back to community"
+             onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/community')} hitSlop={12}>
              <Feather name="arrow-left" size={24} color={colors.foreground} />
            </TouchableOpacity>
          )}
@@ -757,7 +763,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
         <View style={s.centered}>
           <ActivityIndicator color={colors.primary} size="large" />
         </View>
-      ) : isError ? (
+      ) : isError || postsInvalid ? (
         <View style={s.centered}>
           <Feather name="wifi-off" size={40} color={colors.mutedForeground} />
           <Text style={s.emptyTitle}>Couldn't load feed</Text>
@@ -803,6 +809,9 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
               </View>
             )}
             style={s.pager}
+            initialNumToRender={2}
+            maxToRenderPerBatch={3}
+            windowSize={5}
             onLayout={(event) => syncPagerHeight(event.nativeEvent.layout.height)}
             showsVerticalScrollIndicator={false}
             pagingEnabled={(posts?.length ?? 0) > 0}

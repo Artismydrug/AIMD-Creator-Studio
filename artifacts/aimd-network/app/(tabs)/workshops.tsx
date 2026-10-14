@@ -66,11 +66,13 @@ export default function WorkshopsScreen() {
   useEffect(() => { setSubmissionReceived(null); }, [selectedWorkshopId, selectedModuleId]);
 
   const {
-    data: workshops,
+    data: workshopsResponse,
     isLoading: workshopsLoading,
     isError: workshopsError,
     refetch: refetchWorkshops,
   } = useListWorkshops({});
+  const workshopsInvalid = workshopsResponse != null && !Array.isArray(workshopsResponse);
+  const workshops = useMemo(() => Array.isArray(workshopsResponse) ? workshopsResponse.filter(workshop => workshop != null && typeof workshop.id === 'number') : [], [workshopsResponse]);
   const workshopQueryId = selectedWorkshopId ?? 0;
   const {
     data: workshopDetail,
@@ -98,9 +100,12 @@ export default function WorkshopsScreen() {
     },
   });
   const {
-    data: assignments,
+    data: assignmentsResponse,
     refetch: refetchAssignments,
   } = useListAssignments();
+  const assignments = Array.isArray(assignmentsResponse) ? assignmentsResponse.filter(assignment => assignment != null && typeof assignment.id === 'number') : [];
+  const modulesInvalid = workshopDetail != null && !Array.isArray(workshopDetail.modules);
+  const modules = Array.isArray(workshopDetail?.modules) ? workshopDetail.modules.filter(module => module != null && typeof module.id === 'number') : [];
   const completeModule = useCompleteWorkshopModule({
     mutation: {
       onSuccess: () => {
@@ -317,7 +322,7 @@ export default function WorkshopsScreen() {
         <View style={{ paddingHorizontal: 20, gap: 10 }}>
           {workshopsLoading ? (
             <ActivityIndicator color={colors.primary} />
-          ) : workshopsError ? (
+          ) : workshopsError || workshopsInvalid ? (
             <View style={{ alignItems: 'center', paddingVertical: 16, gap: 10 }}>
               <Feather name="cloud-off" size={28} color={colors.mutedForeground} />
               <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.mutedForeground, textAlign: 'center' }}>Could not load workshops.</Text>
@@ -398,7 +403,7 @@ export default function WorkshopsScreen() {
             )}
             <Text style={s.lockedTitle}>{selectedWorkshop.title}</Text>
             <InstructorAttribution name={workshopDetail?.instructorName ?? selectedWorkshop.instructorName} />
-            {workshopDetailError ? (
+            {workshopDetailError || modulesInvalid ? (
               <TouchableOpacity onPress={() => void refetchWorkshopDetail()} style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border }}>
                 <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 13, color: colors.foreground }}>Could not load modules. Retry</Text>
               </TouchableOpacity>
@@ -417,8 +422,8 @@ export default function WorkshopsScreen() {
                     {workshopDetail.accessStatus === 'unavailable' ? 'This workshop is not available right now.' : 'Teasers are open. Full lessons need an active Dedicated Artist subscription ($39/month) or enrollment in this workshop.'}
                   </Text>
                 )}
-                {workshopDetail.modules.length === 0 && <Text style={s.lockedBody}>No modules have been added yet.</Text>}
-                {workshopDetail.modules.map((module) => (
+                {modules.length === 0 && <Text style={s.lockedBody}>No modules have been added yet.</Text>}
+                {modules.map((module) => (
                   <TouchableOpacity key={module.id} style={s.card} onPress={() => openLesson(module)} testID={`module-row-${module.id}`}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                       <Feather name={module.isLocked || !hasFullAccess ? 'lock' : 'play-circle'} size={18} color={colors.gold} />
@@ -465,7 +470,7 @@ export default function WorkshopsScreen() {
                   <Text style={s.submissionHubBody}>Your practice and reflection were saved to your private learning portfolio and sent for instructor review.</Text>
                 </View>
               )}
-              {workshopDetailError ? (
+              {workshopDetailError || modulesInvalid ? (
                 <View style={{ alignItems: 'center', gap: 8 }}>
                   <Text style={[s.submissionHubBody, { textAlign: 'center' }]}>
                     We could not load the drills for this workshop.
@@ -481,7 +486,7 @@ export default function WorkshopsScreen() {
                     <Text style={s.detailRetryText}>Retry loading drills</Text>
                   </TouchableOpacity>
                 </View>
-              ) : workshopDetail && workshopDetail.modules?.length === 0 ? (
+              ) : workshopDetail && modules.length === 0 ? (
                 <View style={s.detailNotice} testID="workshop-empty-modules">
                   <Feather name="info" size={17} color={colors.gold} />
                   <Text style={s.detailNoticeText}>
@@ -490,7 +495,7 @@ export default function WorkshopsScreen() {
                 </View>
               ) : (
                 <View style={s.selector}>
-                  {workshopDetail?.modules?.map((module) => (
+                  {modules.map((module) => (
                     <TouchableOpacity
                       key={module.id}
                       style={[s.chip, selectedModuleId === module.id && s.chipActive]}

@@ -1,6 +1,6 @@
 export type ErrorDiagnosticStage =
   | 'APP' | 'SHELL' | 'NOTIFY' | 'MEMBERSHIP' | 'KEYBOARD' | 'DASHBOARD'
-  | 'NAVIGATION' | 'WORKSHOPS' | 'PROFILE' | 'FEED';
+  | 'NAVIGATION' | 'WORKSHOPS' | 'PROFILE' | 'FEED' | 'HABITS' | 'PORTFOLIO';
 
 type ErrorDiagnosticCause =
   | 'NATIVE' | 'HOOKS' | 'QUERY' | 'NAVIGATION'
@@ -19,6 +19,11 @@ const components: ReadonlyArray<readonly [string, ErrorDiagnosticStage]> = [
   ['WorkshopScreen', 'WORKSHOPS'],
   ['ProfileScreen', 'PROFILE'],
   ['FeedScreen', 'FEED'],
+  ['CommunityScreen', 'FEED'],
+  ['ChallengeHabitsScreen', 'HABITS'],
+  ['HabitsScreen', 'HABITS'],
+  ['ChallengesScreen', 'HABITS'],
+  ['LearningPortfolioScreen', 'PORTFOLIO'],
 ];
 
 /**

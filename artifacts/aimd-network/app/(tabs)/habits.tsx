@@ -8,6 +8,7 @@ import {
   Modal,
   TextInput,
   ActivityIndicator,
+  Alert,
   RefreshControl,
   Platform,
   KeyboardAvoidingView,
@@ -44,23 +45,25 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
 
   const { data: habitsResponse, isLoading, isError, refetch } = useListHabits();
   const { data: summary, refetch: refetchSummary } = useGetDashboardSummary();
-  const habits = habitsResponse?.habits ?? [];
+   const habitsInvalid = habitsResponse != null && !Array.isArray(habitsResponse.habits);
+   const habits = Array.isArray(habitsResponse?.habits) ? habitsResponse.habits.filter(habit => habit != null && typeof habit.id === 'number') : [];
   const selectedHabit = habits.find((habit) => habit.id === selectedHabitId) ?? habits[0];
   const historyParams = { habitId: selectedHabit?.id ?? 0, days: 27 };
   const {
     data: historyLogs,
     isLoading: historyLoading,
-    isError: historyError,
+    isError: historyFetchError,
     refetch: refetchHistory,
   } = useListHabitLogs(
     historyParams,
     { query: { enabled: Boolean(selectedHabit), queryKey: getListHabitLogsQueryKey(historyParams) } },
   );
+  const historyError = historyFetchError || (historyLogs != null && !Array.isArray(historyLogs));
   const weeklyPractice = useMemo(() => {
     const now = new Date();
     const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-    const completedDates = (historyLogs ?? [])
-      .filter((log) => log.completed)
+    const completedDates = (Array.isArray(historyLogs) ? historyLogs : [])
+      .filter((log) => log != null && log.completed && typeof log.date === 'string')
       .map((log) => log.date.slice(0, 10));
 
     return Array.from({ length: 4 }, (_, weeksAgo) => {
@@ -89,14 +92,18 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
         setTargetMinutes('30');
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       },
+      onError: () => Alert.alert('Habit not saved', 'Your draft is still here. Check your connection and try again.'),
     },
   });
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([refetch(), refetchHistory(), refetchSummary()]);
-    setRefreshing(false);
-  }, [refetch, refetchHistory, refetchSummary]);
+    try {
+      await Promise.all([refetch(), refetchSummary(), ...(selectedHabit ? [refetchHistory()] : [])]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetch, refetchHistory, refetchSummary, selectedHabit]);
 
   const handleHabitLogged = useCallback(() => {
     void refetch();
@@ -428,7 +435,7 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
         <View style={s.centered}>
           <ActivityIndicator color={colors.primary} size="large" />
         </View>
-      ) : isError ? (
+      ) : isError || habitsInvalid ? (
         <View style={s.centered}>
           <Feather name="wifi-off" size={40} color={colors.mutedForeground} />
           <Text style={s.emptyTitle}>Failed to load habits</Text>

@@ -61,7 +61,7 @@ const st = StyleSheet.create({
   content: { ...StyleSheet.absoluteFillObject, padding: 14 },
   ring: { position: 'absolute', borderRadius: 999, borderWidth: 1.5 },
   disc: { position: 'absolute', width: 110, height: 110, borderRadius: 999, opacity: 0.35 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
+   center: { flex: 1, minHeight: 0, flexShrink: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
   tile: { width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(16,19,23,0.35)', borderWidth: 1, borderColor: 'rgba(250,248,245,0.28)', transform: [{ rotate: '-6deg' }] },
   sideRow: { flexDirection: 'row', gap: 14 },
   badge: { alignSelf: 'flex-start', maxWidth: '100%', flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 99, backgroundColor: 'rgba(16,19,23,0.82)' },

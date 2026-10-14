@@ -14,3 +14,9 @@ Start optional native monitoring only after navigation has mounted, with cancell
 **Why:** A root layout's first effect can run while fonts or account preparation still prevent the navigation tree from rendering. Merely moving startup into that effect does not isolate monitoring from cold boot.
 
 **How to apply:** Keep monitoring outside critical readiness gates. Preserve native crash handling and content-free privacy filters; missing early analytics must not block sign-in or navigation. This isolation does not establish that monitoring caused a device crash.
+
+Recover content-screen render failures locally when navigation remains healthy. Reserve a full app reload for failures outside an individual content screen.
+
+**Why:** A broken media item or lesson view should not remove the user's ability to visit another tab. Repeated full reloads also repeat cold startup without necessarily changing the failing content.
+
+**How to apply:** Keep screen retries inside the navigation tree and use fixed, privacy-safe support categories. This must never weaken authentication/session readiness or full-lesson entitlement checks.
