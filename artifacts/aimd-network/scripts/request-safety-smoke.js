@@ -24,6 +24,7 @@ const { customFetch, setAuthTokenGetter, setBaseUrl, ApiError } =
 const { runExclusiveSubmission } = loadTypeScript('../lib/submissionLock.ts');
 const { COMING_SOON_WORKSHOP_PREVIEWS } = loadTypeScript('../lib/workshopPreviews.ts');
 const { draftAfterConfirmedSend } = loadTypeScript('../lib/messageDraft.ts');
+const { createMessageDraftStore, messageDraftKey } = loadTypeScript('../lib/messageDraftStore.ts');
 const { shouldScrollTextPost } = loadTypeScript('../lib/textPostLayout.ts');
 const originalFetch = global.fetch;
 const originalSetTimeout = global.setTimeout;
@@ -312,7 +313,88 @@ test('message composer compensates for the native stack header and keeps drafts 
   assert(source.includes("Platform.OS === 'web' ? 0 : headerHeight"));
   assert(source.includes("headerBackButtonDisplayMode: 'minimal'"));
   assert(source.includes('runExclusiveSubmission(sendingRef'));
-  assert(source.indexOf('await sendMutation.mutateAsync') < source.indexOf('setText((current) => draftAfterConfirmedSend'));
+  assert(source.indexOf('await sendMutation.mutateAsync') < source.indexOf('await draft.confirmSend(sent)'));
+  assert(source.includes('await queryClient.cancelQueries({ queryKey })'));
+  assert(source.includes('clientRequestId: sent.clientRequestId'));
   assert(source.includes('Could not confirm delivery'));
   assert(source.includes('refetchInterval: focused ? 5000 : false'));
+});
+
+function memoryDraftStorage() {
+  const values = new Map();
+  return {
+    values,
+    getItem: async key => values.get(key) ?? null,
+    setItem: async (key, value) => { await new Promise(resolve => setImmediate(resolve)); values.set(key, value); },
+    removeItem: async key => { values.delete(key); },
+  };
+}
+
+test('draft writes and reads are ordered; account/conversation storage stays isolated', async () => {
+  const storage = memoryDraftStorage();
+  const store = createMessageDraftStore(storage);
+  const key = messageDraftKey(1, 2);
+  await Promise.all([store.saveText(key, 'first'), store.saveText(key, 'newest')]);
+  assert.equal((await store.load(key)).text, 'newest');
+  assert.equal((await store.load(messageDraftKey(2, 2))).text, '');
+  assert.equal((await store.load(messageDraftKey(1, 3))).text, '');
+  assert.equal((await createMessageDraftStore(storage).load(key)).text, 'newest');
+});
+
+test('retry identity survives remount; late success preserves newer typing', async () => {
+  const storage = memoryDraftStorage();
+  let store = createMessageDraftStore(storage);
+  const sent = await store.prepareSend('draft', ' Hello ', () => 'send-one');
+  store = createMessageDraftStore(storage);
+  const retry = await store.prepareSend('draft', ' Hello ', () => 'must-not-change');
+  assert.equal(retry.clientRequestId, sent.clientRequestId);
+  await store.saveText('draft', 'My next message');
+  await store.confirmSend('draft', sent.clientRequestId, sent.text, sent.editVersion);
+  assert.equal((await store.load('draft')).text, 'My next message');
+});
+
+test('simultaneous preparation shares one identity; confirmed unchanged drafts clear', async () => {
+  const storage = memoryDraftStorage();
+  const store = createMessageDraftStore(storage);
+  const [first, second] = await Promise.all([
+    store.prepareSend('draft', 'Hello', () => 'first'),
+    store.prepareSend('draft', 'Hello', () => 'second'),
+  ]);
+  assert.equal(first.clientRequestId, second.clientRequestId);
+  await store.confirmSend('draft', first.clientRequestId, first.text, first.editVersion);
+  assert.equal(storage.values.has('draft'), false);
+  const next = await store.prepareSend('draft', 'Hello', () => 'intentional-new-send');
+  assert.equal(next.clientRequestId, 'intentional-new-send');
+});
+
+test('editing and restoring the same text during a send does not erase the newer draft', async () => {
+  const store = createMessageDraftStore(memoryDraftStorage());
+  const sent = await store.prepareSend('draft', 'Hello', () => 'one');
+  await store.saveText('draft', 'Hello again');
+  await store.saveText('draft', 'Hello');
+  assert.equal(await store.confirmSend('draft', sent.clientRequestId, sent.text, sent.editVersion), false);
+  assert.equal((await store.load('draft')).text, 'Hello');
+});
+
+test('failed persistence prevents sending and does not poison the storage queue', async () => {
+  const storage = memoryDraftStorage();
+  const store = createMessageDraftStore(storage);
+  const save = storage.setItem;
+  storage.setItem = async () => { throw new Error('device storage unavailable'); };
+  await assert.rejects(store.prepareSend('draft', 'Hello', () => 'one'), /storage unavailable/);
+  storage.setItem = save;
+  assert.equal((await store.prepareSend('draft', 'Hello', () => 'two')).clientRequestId, 'two');
+});
+
+test('feed scopes reuse access-controlled learning/practice views and separate writing from media', () => {
+  const feed = fs.readFileSync(path.resolve(__dirname, '../app/feed.tsx'), 'utf8');
+  const scope = fs.readFileSync(path.resolve(__dirname, '../components/FeedScopeTabs.tsx'), 'utf8');
+  const card = fs.readFileSync(path.resolve(__dirname, '../components/PostCard.tsx'), 'utf8');
+  assert.match(feed, /<WorkshopsScreen embedded/);
+  assert.match(feed, /<ChallengesScreen embedded/);
+  assert.match(feed, /enabled: scope === 'community'/);
+  assert.match(scope, /accessibilityState=\{\{ selected: scope === item.value \}\}/);
+  assert.match(card, /if \(typeof url !== 'string' \|\| !url.trim\(\)\) return null/);
+  assert.match(card, /script-post-card-/);
+  assert.match(card, /Script & writing/);
 });

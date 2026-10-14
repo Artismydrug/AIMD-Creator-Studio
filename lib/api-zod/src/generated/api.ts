@@ -2092,7 +2092,8 @@ export const SendMessageParams = zod.object({
 
 
 export const SendMessageBody = zod.object({
-  "content": zod.string().min(1)
+  "content": zod.string().min(1),
+  "clientRequestId": zod.uuid().optional().describe('Stable send identity reused after uncertain delivery; optional for older clients.')
 })
 
 export const SendMessageResponse = zod.object({

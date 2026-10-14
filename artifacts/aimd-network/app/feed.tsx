@@ -37,6 +37,9 @@ import PostCard from '@/components/PostCard';
 import AudioTrackPlayer from '@/components/AudioTrackPlayer';
 import FollowingFeedSuggestions from '@/components/FollowingFeedSuggestions';
 import ComposerVideoPreview from '@/components/ComposerVideoPreview';
+import FeedScopeTabs, { type FeedScope } from '@/components/FeedScopeTabs';
+import WorkshopsScreen from './(tabs)/workshops';
+import ChallengesScreen from './(tabs)/challenges';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
@@ -103,6 +106,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
   const [videosMuted, setVideosMuted] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [feedMode, setFeedMode] = useState<'all' | 'following'>('all');
+  const [scope, setScope] = useState<FeedScope>('community');
   const [activeIndex, setActiveIndex] = useState(0);
   const [pagerHeight, setPagerHeight] = useState(0);
   const pagerViewportRef = useRef<View>(null);
@@ -117,6 +121,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
 
   useEffect(() => {
     if (!embedded && compose === '1') {
+      setScope('community');
       setComposing(true);
     }
   }, [compose, embedded]);
@@ -145,6 +150,10 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
   const { data: postsResponse, isLoading, isError, refetch } = useListStudioPosts(
     { followingOnly: feedMode === 'following' ? 'true' : 'false' },
     {
+      query: {
+        queryKey: getListStudioPostsQueryKey({ followingOnly: feedMode === 'following' ? 'true' : 'false' }),
+        enabled: scope === 'community',
+      },
       request: {
         cache: 'no-store',
         headers: { 'Cache-Control': 'no-cache' },
@@ -707,7 +716,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
         <View style={s.headerCopy}>
           <Text style={s.headerEyebrow}>Creator Studio</Text>
           <Text style={s.headerTitle}>Studio Feed</Text>
-          <Text style={s.headerHint}>Swipe up to explore</Text>
+          <Text style={s.headerHint}>{scope === 'community' ? 'Swipe up to explore' : scope === 'masterclasses' ? 'Learn from working creators' : 'Your creative practice'}</Text>
         </View>
         <TouchableOpacity
           accessibilityRole="button"
@@ -718,7 +727,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
         >
           <Feather name="user" size={18} color={colors.foreground} />
         </TouchableOpacity>
-        <TouchableOpacity
+        {scope === 'community' && <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel="Create a new studio post"
           style={s.composeBtn}
@@ -729,8 +738,10 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
           testID="create-studio-post"
         >
           <Feather name="edit-2" size={18} color={colors.primaryForeground} />
-        </TouchableOpacity>
+        </TouchableOpacity>}
       </View>
+      <FeedScopeTabs scope={scope} onChange={(next) => { setScope(next); setActiveIndex(0); }} />
+      {scope === 'masterclasses' ? <WorkshopsScreen embedded /> : scope === 'challenges' ? <ChallengesScreen embedded /> : <>
       <View style={s.filterBar}>
         <View style={s.filterGroup}>
           <TouchableOpacity
@@ -863,6 +874,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
           />
         </View>
       )}
+      </>}
 
       <Modal visible={composing} animationType="slide" transparent
         onRequestClose={cancelComposer}>

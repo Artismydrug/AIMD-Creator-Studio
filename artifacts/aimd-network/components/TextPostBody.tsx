@@ -29,6 +29,11 @@ export default function TextPostBody({ postId, caption, tags }: TextPostBodyProp
       fontSize: 22,
       lineHeight: 32,
     },
+    label: {
+      alignSelf: 'flex-start', color: colors.primary, fontFamily: 'DMSans_700Bold',
+      fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16,
+      borderBottomWidth: 2, borderBottomColor: colors.primary, paddingBottom: 6,
+    },
     tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 18 },
     tag: {
       color: colors.primary,
@@ -53,6 +58,7 @@ export default function TextPostBody({ postId, caption, tags }: TextPostBodyProp
       directionalLockEnabled
       bounces={false}
     >
+      <Text style={styles.label}>Script & writing</Text>
       <Text style={styles.writing} selectable>{caption}</Text>
       {!!tags?.length && (
         <View style={styles.tags}>

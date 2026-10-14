@@ -4085,6 +4085,10 @@ components:
         content:
           type: string
           minLength: 1
+        clientRequestId:
+          type: string
+          format: uuid
+          description: Stable send identity reused after uncertain delivery; optional for older clients.
 
     NotificationActor:
       type: object

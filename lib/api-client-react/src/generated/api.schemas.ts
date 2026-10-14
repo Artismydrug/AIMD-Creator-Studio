@@ -1340,6 +1340,8 @@ export interface ConversationResult {
 export interface MessageInput {
   /** @minLength 1 */
   content: string;
+  /** Stable send identity reused after uncertain delivery; optional for older clients. */
+  clientRequestId?: string;
 }
 
 export interface NotificationActor {

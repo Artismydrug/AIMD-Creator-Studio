@@ -18,7 +18,7 @@ import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useNavigation, useFocusEffect } from 'expo-router';
 import { safeImpact } from '@/lib/haptics';
 import { runExclusiveSubmission } from '@/lib/submissionLock';
-import { draftAfterConfirmedSend } from '@/lib/messageDraft';
+import { useMessageDraft } from '@/hooks/useMessageDraft';
 import {
   useListMessages,
   useSendMessage,
@@ -97,8 +97,8 @@ export default function ConversationScreen() {
   const queryClient = useQueryClient();
   const { data: user } = useGetCurrentUser();
   const convId = parseInt(id ?? '0', 10);
-  const [text, setText] = useState('');
-  const [localMessages, setLocalMessages] = useState<ConversationMessage[]>([]);
+   const draft = useMessageDraft(user?.id, convId);
+   const { text, setText } = draft;
   const sendingRef = useRef(false);
   const [focused, setFocused] = useState(false);
 
@@ -127,11 +127,8 @@ export default function ConversationScreen() {
   }, [messages, queryClient]);
 
   const allMessages = useMemo(() => {
-    const remote = messages ?? [];
-    const ids = new Set(remote.map((m) => m.id));
-    const extra = localMessages.filter((m) => !ids.has(m.id));
-    return [...remote, ...extra];
-  }, [messages, localMessages]);
+     return Array.isArray(messages) ? messages.filter(message => message?.conversationId === convId) : [];
+   }, [messages, convId]);
 
   const reversed = useMemo(() => [...allMessages].reverse(), [allMessages]);
   const otherParticipant = useMemo(
@@ -139,31 +136,33 @@ export default function ConversationScreen() {
     [allMessages, user?.id],
   );
 
-  const sendMutation = useSendMessage({
-    mutation: {
-      onSuccess: (msg) => {
-        setLocalMessages((prev) => [...prev, msg]);
-        void refetch();
-        void queryClient.invalidateQueries({ queryKey: getListConversationsQueryKey() });
-        void queryClient.invalidateQueries({ queryKey: getGetNotificationsQueryKey() });
-        void safeImpact();
-      },
-    },
-  });
+   const sendMutation = useSendMessage({ mutation: { retry: false } });
 
   const handleSend = async () => {
-    const sentDraft = text;
-    const content = sentDraft.trim();
-    if (!content || sendMutation.isPending || !Number.isInteger(convId) || convId <= 0) return;
+     if (!text.trim() || !draft.ready || sendMutation.isPending || !Number.isSafeInteger(convId) || convId <= 0) return;
     try {
       await runExclusiveSubmission(sendingRef, async () => {
-        await sendMutation.mutateAsync({ id: convId, data: { content } });
-        setText((current) => draftAfterConfirmedSend(current, sentDraft));
+         const sent = await draft.prepareSend();
+         if (!draft.isCurrent(sent.key)) return;
+         const msg = await sendMutation.mutateAsync({
+           id: convId, data: { content: sent.content, clientRequestId: sent.clientRequestId },
+         });
+         const queryKey = getListMessagesQueryKey(convId);
+         // A polling response started before the send must not overwrite it.
+         await queryClient.cancelQueries({ queryKey });
+         queryClient.setQueryData<ConversationMessage[]>(queryKey, (current) =>
+           [...(Array.isArray(current) ? current.filter(item => item.id !== msg.id) : []), msg]
+             .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.id - b.id));
+         await draft.confirmSend(sent);
+         void queryClient.invalidateQueries({ queryKey });
+         void queryClient.invalidateQueries({ queryKey: getListConversationsQueryKey() });
+         void queryClient.invalidateQueries({ queryKey: getGetNotificationsQueryKey() });
+         void safeImpact();
       });
     } catch {
       Alert.alert(
         'Could not confirm delivery',
-        'Your draft is still here. Check the conversation before retrying; a slow connection can hide a successful send.',
+         'Your draft is kept on this device when storage is available. Retrying the same message uses the same send ID to prevent duplicate delivery.',
       );
     }
   };
@@ -293,7 +292,12 @@ export default function ConversationScreen() {
         }
       />
 
-      <View style={s.inputArea}>
+       {draft.storageError && (
+         <Text style={[s.safetyText, { paddingHorizontal: 16, paddingTop: 8 }]}>
+           Could not save the draft on this device. Please keep this conversation open and try again.
+         </Text>
+       )}
+       <View style={s.inputArea}>
         <EmojiPicker onSelect={(emoji) => setText((current) => `${current}${emoji}`)} />
         <TextInput
           style={s.input}
@@ -302,6 +306,7 @@ export default function ConversationScreen() {
           placeholder="Message..."
           placeholderTextColor={colors.mutedForeground}
           multiline
+           editable={draft.ready}
           returnKeyType="send"
           submitBehavior="submit"
           accessibilityLabel="Message"
@@ -311,7 +316,7 @@ export default function ConversationScreen() {
         <TouchableOpacity
           style={[s.sendBtn, { opacity: text.trim() ? 1 : 0.4 }]}
           onPress={handleSend}
-          disabled={!text.trim() || sendMutation.isPending}
+           disabled={!draft.ready || !text.trim() || sendMutation.isPending}
           accessibilityRole="button"
           accessibilityLabel="Send message"
           accessibilityState={{ busy: sendMutation.isPending }}

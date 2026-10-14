@@ -1,6 +1,8 @@
 import { Router, type IRouter } from "express";
+import { createHash } from "node:crypto";
 import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
+import { SendMessageBody } from "@workspace/api-zod";
 import { createNotification } from "../lib/notifications";
 
 const router: IRouter = Router();
@@ -77,11 +79,13 @@ router.post("/conversations", async (req, res): Promise<void> => {
   const userId = req.dbUser!.id;
 
   const { participantIds, name } = req.body as { participantIds?: number[]; name?: string };
-  if (!Array.isArray(participantIds) || participantIds.length === 0) {
+  if (!Array.isArray(participantIds) || participantIds.length === 0 ||
+    participantIds.some(id => !Number.isSafeInteger(id) || id <= 0)) {
     res.status(400).json({ error: "participantIds required" }); return;
   }
 
   const allIds = [...new Set([userId, ...participantIds])];
+  if (allIds.length < 2) { res.status(400).json({ error: "Another participant is required" }); return; }
   const isGroup = allIds.length > 2;
   const participantIdArray = sql`ARRAY[${sql.join(
     allIds.map((id) => sql`${id}`),
@@ -98,37 +102,37 @@ router.post("/conversations", async (req, res): Promise<void> => {
     return;
   }
 
-  // For DMs: check if conversation already exists between these two users
-  if (!isGroup) {
-    const otherId = participantIds[0];
-    const existing = await db.execute(sql`
+  const conversation = await db.transaction(async (tx) => {
+    // Serialize both directions of the same DM across all API instances.
+    // The lookup and participant inserts must share the same transaction.
+    if (!isGroup) {
+      const otherId = allIds.find(id => id !== userId)!;
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(${Math.min(userId, otherId)}::int, ${Math.max(userId, otherId)}::int)`);
+      const existing = await tx.execute(sql`
       SELECT c.id
       FROM conversations c
       JOIN conversation_participants cp1 ON cp1.conversation_id = c.id AND cp1.user_id = ${userId}
       JOIN conversation_participants cp2 ON cp2.conversation_id = c.id AND cp2.user_id = ${otherId}
       WHERE c.is_group = false
       LIMIT 1
-    `);
-    if (existing.rows.length > 0) {
-      res.json({ id: (existing.rows[0] as any).id, existing: true });
-      return;
+      `);
+      if (existing.rows.length > 0) {
+        return { id: (existing.rows[0] as { id: number }).id, existing: true };
+      }
     }
-  }
-
-  const convResult = await db.execute(sql`
-    INSERT INTO conversations (name, is_group) VALUES (${name ?? null}, ${isGroup})
-    RETURNING id
-  `);
-  const convId = (convResult.rows[0] as any).id;
-
-  for (const uid of allIds) {
-    await db.execute(sql`
+    const convResult = await tx.execute(sql`
+      INSERT INTO conversations (name, is_group) VALUES (${typeof name === "string" ? name : null}, ${isGroup})
+      RETURNING id
+    `);
+    const convId = (convResult.rows[0] as { id: number }).id;
+    for (const uid of allIds) await tx.execute(sql`
       INSERT INTO conversation_participants (conversation_id, user_id) VALUES (${convId}, ${uid})
       ON CONFLICT DO NOTHING
     `);
-  }
+    return { id: convId, existing: false };
+  });
 
-  res.status(201).json({ id: convId, existing: false });
+  res.status(conversation.existing ? 200 : 201).json(conversation);
 });
 
 // GET /conversations/:id/messages
@@ -188,11 +192,15 @@ router.post("/conversations/:id/messages", async (req, res): Promise<void> => {
   if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
   const userId = req.dbUser!.id;
 
-  const convId = parseInt(req.params.id);
-  if (isNaN(convId)) { res.status(400).json({ error: "Invalid id" }); return; }
+   const convId = Number(req.params.id);
+   if (!Number.isSafeInteger(convId) || convId <= 0) { res.status(400).json({ error: "Invalid id" }); return; }
 
-  const { content } = req.body as { content?: string };
-  if (!content?.trim()) { res.status(400).json({ error: "content required" }); return; }
+   const parsed = SendMessageBody.safeParse(req.body);
+   if (!parsed.success || !parsed.data.content.trim()) {
+     res.status(400).json({ error: "Valid message content and request identity required" }); return;
+   }
+   const content = parsed.data.content.trim();
+   const clientRequestId = parsed.data.clientRequestId;
 
   // Verify participant
   const check = await db.execute(sql`
@@ -214,18 +222,52 @@ router.post("/conversations/:id/messages", async (req, res): Promise<void> => {
     return;
   }
 
-  const result = await db.execute(sql`
-    INSERT INTO messages (conversation_id, sender_id, content)
-    VALUES (${convId}, ${userId}, ${content.trim()})
-    RETURNING id, conversation_id AS "conversationId", sender_id AS "senderId", content, created_at AS "createdAt"
-  `);
-
-  const msg = result.rows[0] as any;
+   const fingerprint = createHash("sha256").update(`${convId}\0${content}`).digest("hex");
+   const result = await db.transaction(async (tx) => {
+     if (clientRequestId) {
+       const claimed = await tx.execute(sql`
+         INSERT INTO message_send_receipts (sender_id, client_request_id, fingerprint)
+         VALUES (${userId}, ${clientRequestId}::uuid, ${fingerprint})
+         ON CONFLICT (sender_id, client_request_id) DO NOTHING RETURNING sender_id
+       `);
+       if (claimed.rows.length === 0) {
+         const receipt = await tx.execute(sql`
+           SELECT fingerprint, message_id FROM message_send_receipts
+           WHERE sender_id = ${userId} AND client_request_id = ${clientRequestId}::uuid
+         `);
+         const saved = receipt.rows[0] as { fingerprint: string; message_id: number };
+         return saved.fingerprint === fingerprint
+           ? { messageId: saved.message_id, created: false, conflict: false }
+           : { messageId: null, created: false, conflict: true };
+       }
+     }
+     const inserted = await tx.execute(sql`
+       INSERT INTO messages (conversation_id, sender_id, content)
+       VALUES (${convId}, ${userId}, ${content}) RETURNING id
+     `);
+     const messageId = (inserted.rows[0] as { id: number }).id;
+     if (clientRequestId) await tx.execute(sql`
+       UPDATE message_send_receipts SET message_id = ${messageId}
+       WHERE sender_id = ${userId} AND client_request_id = ${clientRequestId}::uuid
+     `);
+     return { messageId, created: true, conflict: false };
+   });
+   if (result.conflict) {
+     res.status(409).json({ error: "This send identity has already been used for a different message." }); return;
+   }
+   const message = await db.execute(sql`
+     SELECT id, conversation_id AS "conversationId", sender_id AS "senderId", content, created_at AS "createdAt"
+     FROM messages WHERE id = ${result.messageId} AND sender_id = ${userId} AND conversation_id = ${convId}
+   `);
+   if (!message.rows[0]) {
+     res.status(410).json({ error: "The previously sent message is no longer available." }); return;
+   }
+   const msg = message.rows[0];
   const recipients = await db.execute(sql`
     SELECT user_id FROM conversation_participants
     WHERE conversation_id = ${convId} AND user_id != ${userId}
   `);
-  await Promise.all(
+   if (result.created) await Promise.all(
     recipients.rows.map((row) => createNotification({
       recipientUserId: (row as { user_id: number }).user_id,
       actorUserId: userId,

@@ -45,7 +45,7 @@ type CapturedVideo = {
 };
 
 
-export default function WorkshopsScreen() {
+export default function WorkshopsScreen({ embedded = false }: { embedded?: boolean }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -229,7 +229,7 @@ export default function WorkshopsScreen() {
   const s = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     content: { paddingBottom: Platform.OS === 'web' ? 120 : insets.bottom + 110 },
-    header: { paddingTop: Platform.OS === 'web' ? 77 : insets.top + 16, paddingHorizontal: 20, paddingBottom: 22, gap: 6 },
+    header: { paddingTop: embedded ? 16 : Platform.OS === 'web' ? 77 : insets.top + 16, paddingHorizontal: 20, paddingBottom: 22, gap: 6 },
     eyebrow: { fontFamily: 'DMSans_700Bold', fontSize: 11, letterSpacing: 1.8, textTransform: 'uppercase', color: colors.sunsetCoral },
     title: { fontFamily: 'DMSans_700Bold', fontSize: 30, letterSpacing: -0.8, color: colors.foreground },
     intro: { fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21, color: colors.mutedForeground },
@@ -291,7 +291,7 @@ export default function WorkshopsScreen() {
     workshopOpenHint: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 9, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
     workshopOpenHintText: { fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.primary },
     ...{},
-  }), [colors, insets]);
+  }), [colors, insets, embedded]);
 
   const upgrade = () => { void safeImpact(); router.push('/membership'); };
   const selectedWorkshop = workshops?.find((w) => w.id === selectedWorkshopId);

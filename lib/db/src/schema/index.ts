@@ -6,6 +6,7 @@ export * from "./auth";
 export * from "./habits";
 export * from "./studio-posts";
 export * from "./notifications";
+export * from "./message-send-receipts";
 export * from "./notification-preferences";
 export * from "./notification-push-devices";
 export * from "./workshops";

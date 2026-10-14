@@ -27,7 +27,8 @@ import PostOwnerActions from '@/components/PostOwnerActions';
 
 /** Resolve a relative imageUrl (e.g. /api/storage/objects/…) to an absolute URL for React Native. */
 function resolveImageUrl(url: string | null | undefined): string | null {
-  if (!url) return null;
+  if (typeof url !== 'string' || !url.trim()) return null;
+  url = url.trim();
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   const base = getBaseUrl();
   return base ? `${base}${url}` : url;
@@ -351,6 +352,14 @@ export default function PostCard({
       lineHeight: 22,
       marginBottom: 12,
     },
+    writingLabel: {
+      fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 1.4,
+      color: colors.primary, marginBottom: 10, textTransform: 'uppercase',
+    },
+    scriptBody: {
+      backgroundColor: colors.background, padding: 16, borderRadius: colors.radius,
+      borderLeftWidth: 3, borderLeftColor: colors.primary, marginBottom: 12,
+    },
     tagsRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -604,7 +613,12 @@ export default function PostCard({
             )}
           </View>
 
-          <Text style={s.caption}>{post.caption}</Text>
+          {isTextOnly ? (
+            <View style={s.scriptBody} testID={`script-post-card-${post.id}`}>
+              <Text style={s.writingLabel}>Script & writing</Text>
+              <Text style={[s.caption, { marginBottom: 0 }]} selectable>{post.caption}</Text>
+            </View>
+          ) : <Text style={s.caption}>{post.caption}</Text>}
 
           {resolveImageUrl(post.imageUrl) && post.mediaType === 'audio' ? (
             <AudioTrackPlayer uri={resolveImageUrl(post.imageUrl)!} active={!ownerDialogOpen} />
