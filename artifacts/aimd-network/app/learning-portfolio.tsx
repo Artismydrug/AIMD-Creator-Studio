@@ -27,13 +27,10 @@ export default function LearningPortfolioScreen() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.background }}
-      contentContainerStyle={{ paddingTop: insets.top + 16, paddingHorizontal: 20, paddingBottom: insets.bottom + 36, gap: 16 }}
+      contentContainerStyle={{ paddingTop: 20, paddingHorizontal: 20, paddingBottom: insets.bottom + 36, gap: 16 }}
       refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={colors.primary} />}
       testID="learning-portfolio"
     >
-      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Back to workshops" onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/workshops')} style={{ alignSelf: 'flex-start', padding: 8 }}>
-        <Feather name="arrow-left" size={24} color={colors.foreground} />
-      </TouchableOpacity>
       <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 11, letterSpacing: 1.4, color: colors.sunsetCoral }}>PRIVATE LEARNING PORTFOLIO</Text>
       <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 30, lineHeight: 35, color: colors.foreground }}>Your learning, in progress.</Text>
       <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21, color: colors.mutedForeground }}>

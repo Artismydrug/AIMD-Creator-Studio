@@ -380,6 +380,18 @@ function RootLayoutNav() {
        <Stack.Screen name="rewards" options={{ headerShown: false }} />
        <Stack.Screen name="notification-settings" options={{ headerShown: false }} />
       <Stack.Screen name="membership" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="learning-portfolio"
+        options={{
+          headerShown: true,
+          title: 'Learning Portfolio',
+          headerStyle: { backgroundColor: colors.card },
+          headerTintColor: colors.foreground,
+          headerTitleStyle: { fontFamily: 'DMSans_600SemiBold' },
+          headerBackTitle: '',
+          headerShadowVisible: false,
+        }}
+      />
        <Stack.Screen
          name="notifications"
          options={{

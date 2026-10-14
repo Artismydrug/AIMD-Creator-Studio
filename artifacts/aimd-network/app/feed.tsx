@@ -1,7 +1,6 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
-  ScrollView,
   Text,
   FlatList,
   StyleSheet,
@@ -11,7 +10,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   Platform,
-  KeyboardAvoidingView,
   Image,
   Alert,
   useWindowDimensions,
@@ -38,6 +36,9 @@ import {
 import PostCard from '@/components/PostCard';
 import AudioTrackPlayer from '@/components/AudioTrackPlayer';
 import FollowingFeedSuggestions from '@/components/FollowingFeedSuggestions';
+import ComposerVideoPreview from '@/components/ComposerVideoPreview';
+import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 const MAX_STUDIO_VIDEO_BYTES = 50 * 1024 * 1024;
 const MAX_STUDIO_VIDEO_DURATION_MS = 60 * 1000;
@@ -270,6 +271,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
       duration: asset.duration,
       mediaType,
     });
+    setComposing(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
@@ -355,13 +357,14 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
         uri: asset.uri, fileName: asset.name, fileSize: asset.size,
         contentType, mediaType: 'audio',
       });
+      setComposing(true);
     } catch {
       Alert.alert('Could not open audio files', 'Try again and choose a track saved in Files on your device.');
     }
   };
 
   const handleSubmit = async () => {
-    if (!caption.trim()) return;
+    if (!composing || !caption.trim()) return;
     await runExclusiveSubmission(submittingRef, async () => {
       const tagList = tags.split(',').map((t) => t.trim()).filter(Boolean);
       let imageUrl: string | undefined;
@@ -404,6 +407,14 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
   };
 
   const isPending = uploading || createMutation.isPending;
+  const cancelComposer = () => {
+    if (submittingRef.current || isPending) return;
+    setComposing(false);
+    setSelectedMedia(null);
+    setCaption('');
+    setTags('');
+    setUploadProgress(0);
+  };
 
   const handleFeedModeChange = (mode: 'all' | 'following') => {
     setFeedMode(mode);
@@ -550,10 +561,12 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
         },
         sheet: {
           backgroundColor: colors.card,
-          maxHeight: '92%',
+          maxHeight: Math.max(240, windowHeight - insets.top - 12),
           paddingTop: 16,
           paddingHorizontal: 16,
           paddingBottom: Platform.OS === 'web' ? 40 : insets.bottom + 20,
+          borderTopLeftRadius: colors.radius,
+          borderTopRightRadius: colors.radius,
         },
         sheetHandle: {
           width: 36,
@@ -574,11 +587,26 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
           fontSize: 16,
           color: colors.foreground,
         },
-        postBtn: {
-          fontFamily: 'DMSans_700Bold',
-          fontSize: 15,
-          color: colors.primary,
+        composerFooter: {
+          flexDirection: 'row',
+          gap: 12,
+          paddingTop: 16,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
         },
+        composerButton: {
+          flex: 1,
+          minHeight: 48,
+          padding: 12,
+          borderRadius: colors.radius,
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderWidth: 1,
+          borderColor: colors.border,
+        },
+        composerButtonText: { fontFamily: 'DMSans_700Bold', fontSize: 14, color: colors.foreground },
+        mediaPreview: { width: '100%', height: 240, borderRadius: colors.radius, backgroundColor: colors.muted },
+        inputLabel: { fontFamily: 'DMSans_600SemiBold', fontSize: 13, color: colors.foreground, marginVertical: 10 },
         captionInput: {
           fontFamily: 'DMSans_400Regular',
           fontSize: 16,
@@ -621,20 +649,6 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
           color: colors.mutedForeground,
           marginTop: 8,
         },
-        videoPreview: {
-          width: 92,
-          height: 72,
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 4,
-          backgroundColor: colors.ink,
-          borderRadius: colors.radius,
-        },
-        videoPreviewText: {
-          color: '#FFFFFF',
-          fontFamily: 'DMSans_600SemiBold',
-          fontSize: 10,
-        },
         selectedMediaName: {
           flex: 1,
           fontFamily: 'DMSans_500Medium',
@@ -661,11 +675,6 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
           fontSize: 12,
           color: colors.mutedForeground,
         },
-        previewThumb: {
-          width: 56,
-          height: 56,
-          borderRadius: 4,
-        },
         removeImgBtn: {
           padding: 4,
         },
@@ -678,7 +687,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
           paddingTop: 12,
         },
       }),
-    [colors, insets, topPad],
+    [colors, insets, topPad, windowHeight],
   );
 
   return (
@@ -847,41 +856,30 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
       )}
 
       <Modal visible={composing} animationType="slide" transparent
-        onRequestClose={() => { if (!isPending) setComposing(false); }}>
+        onRequestClose={cancelComposer}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior="padding"
           style={s.modalOverlay}
         >
           <View style={s.sheet}>
             <View style={s.sheetHandle} />
             <View style={s.sheetHeader}>
-              <TouchableOpacity
-                disabled={isPending}
-                onPress={() => {
-                  setComposing(false);
-                  setSelectedMedia(null);
-                  setCaption('');
-                  setTags('');
-                }}
-              >
-                <Feather name="x" size={22} color={colors.mutedForeground} />
-              </TouchableOpacity>
-              <Text style={s.sheetTitle}>Studio Post</Text>
-              <TouchableOpacity
-                onPress={handleSubmit}
-                disabled={!caption.trim() || isPending}
-              >
-                {isPending ? (
-                  <ActivityIndicator size="small" color={colors.primary} />
-                ) : (
-                  <Text style={[s.postBtn, { opacity: caption.trim() ? 1 : 0.35 }]}>
-                    Share
-                  </Text>
-                )}
-              </TouchableOpacity>
+              <Text style={s.sheetTitle}>{selectedMedia ? 'Preview your post' : 'Studio Post'}</Text>
             </View>
 
-            <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={{ flexShrink: 1 }}>
+            <KeyboardAwareScrollViewCompat bottomOffset={20} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={{ flexShrink: 1 }}>
+            {composing && selectedMedia && (
+              <View testID="compose-media-preview">
+                {selectedMedia.mediaType === 'image' ? (
+                  <Image source={{ uri: selectedMedia.uri }} style={s.mediaPreview} resizeMode="contain" accessibilityLabel="Selected photo preview" />
+                ) : selectedMedia.mediaType === 'video' ? (
+                  <ComposerVideoPreview key={selectedMedia.uri} uri={selectedMedia.uri} active={composing && !isPending} />
+                ) : (
+                  <AudioTrackPlayer key={selectedMedia.uri} uri={selectedMedia.uri} title={selectedMedia.fileName} active={composing && !isPending} />
+                )}
+              </View>
+            )}
+            <Text style={s.inputLabel}>Caption</Text>
             <TextInput
               style={s.captionInput}
               value={caption}
@@ -890,7 +888,8 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
               placeholderTextColor={colors.mutedForeground}
               multiline
               maxLength={500}
-              autoFocus
+              accessibilityLabel="Post caption"
+              testID="compose-caption"
               editable={!isPending}
             />
 
@@ -917,26 +916,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
 
             {selectedMedia ? (
               <>
-              {selectedMedia.mediaType === 'audio' && (
-                <AudioTrackPlayer uri={selectedMedia.uri} title={selectedMedia.fileName} active={composing && !isPending} />
-              )}
               <View style={s.imageRow}>
-                {selectedMedia.mediaType === 'image' ? (
-                  <Image
-                    source={{ uri: selectedMedia.uri }}
-                    style={s.previewThumb}
-                    resizeMode="cover"
-                  />
-                ) : selectedMedia.mediaType === 'video' ? (
-                  <View style={s.videoPreview}>
-                    <Feather name="play-circle" size={24} color="#FFFFFF" />
-                    <Text style={s.videoPreviewText}>
-                      {selectedMedia.duration
-                        ? `${Math.ceil(selectedMedia.duration / 1000)} sec`
-                        : 'Video ready'}
-                    </Text>
-                  </View>
-                ) : <Feather name="music" size={22} color={colors.primary} />}
                 <Text style={s.selectedMediaName} numberOfLines={1}>
                   {selectedMedia.fileName}
                 </Text>
@@ -971,6 +951,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
               </View>
             ) : null}
 
+            <Text style={s.inputLabel}>Tags (comma-separated)</Text>
             <TextInput
               style={s.tagsInput}
               value={tags}
@@ -979,8 +960,24 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
               placeholder="Tags: painting, figure, composition"
               placeholderTextColor={colors.mutedForeground}
               returnKeyType="done"
+              accessibilityLabel="Post tags"
+              testID="compose-tags"
             />
-            </ScrollView>
+            </KeyboardAwareScrollViewCompat>
+            <View style={s.composerFooter}>
+              <TouchableOpacity style={s.composerButton} onPress={cancelComposer} disabled={isPending}
+                accessibilityRole="button" testID="compose-cancel">
+                <Text style={s.composerButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.composerButton, { backgroundColor: colors.primary, opacity: !caption.trim() || isPending ? 0.5 : 1 }]}
+                onPress={handleSubmit} disabled={!caption.trim() || isPending}
+                accessibilityRole="button" testID="compose-confirm">
+                {isPending ? <ActivityIndicator color={colors.primaryForeground} /> : (
+                  <Text style={[s.composerButtonText, { color: colors.primaryForeground }]}>Confirm &amp; Post</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         </KeyboardAvoidingView>
       </Modal>
