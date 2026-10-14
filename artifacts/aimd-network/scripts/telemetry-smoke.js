@@ -5,7 +5,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const ts = require('typescript');
 
-function loadTelemetry(platform, { development = false, configured = true, throws = false } = {}) {
+function loadTelemetry(platform, { development = false, configured = true, throws = false, importThrows = false } = {}) {
   const events = [], logs = [], listeners = {}, previousErrors = [];
   let options, globalHandler = (...args) => previousErrors.push(args), instances = 0;
   const capture = (event, properties) => {
@@ -40,7 +40,10 @@ function loadTelemetry(platform, { development = false, configured = true, throw
       setGlobalHandler: (callback) => { globalHandler = callback; },
     },
     require: (name) => {
-      if (name === 'posthog-react-native') return MockNative;
+      if (name === 'posthog-react-native') {
+        if (importThrows) throw new Error('SDK unavailable');
+        return MockNative;
+      }
       if (name === 'posthog-js') return { __esModule: true, default: mockWeb };
       if (name === 'react-native') return { Platform: { OS: 'ios' } };
       throw new Error(`Unexpected dependency ${name}`);
@@ -51,9 +54,15 @@ function loadTelemetry(platform, { development = false, configured = true, throw
 }
 
 for (const platform of ['native', 'web']) {
-  test(`${platform}: startup emits one app_open and disables invasive capture`, () => {
+  test(`${platform}: startup emits one app_open and disables invasive capture`, async () => {
     const app = loadTelemetry(platform);
-    app.api.startTelemetry(); app.api.startTelemetry();
+    const first = app.api.startTelemetry();
+    const second = app.api.startTelemetry();
+    assert.equal(first, second);
+    if (platform === 'native') {
+      assert.equal(app.instances(), 0, 'native SDK loading must be asynchronous');
+    }
+    await first;
     assert.equal(app.instances(), 1);
     assert.equal(app.events.filter(event => event.event === 'app_open').length, 1);
     const options = app.options();
@@ -61,26 +70,26 @@ for (const platform of ['native', 'web']) {
     assert.equal(platform === 'native' ? options.captureAppLifecycleEvents : options.autocapture, false);
     assert.equal(options.before_send({ event: '$autocapture', properties: {} }), null);
   });
-  test(`${platform}: outgoing events exclude content, URLs, identity and person profiles`, () => {
+  test(`${platform}: outgoing events exclude content, URLs, identity and person profiles`, async () => {
     const app = loadTelemetry(platform);
-    app.api.startTelemetry();
+    await app.api.startTelemetry();
     app.api.trackEvent('habit_logged', { caption: 'private', reflection: 'private', message: 'private', token: 'private', email: 'private' });
     const props = app.events.at(-1).properties;
     for (const key of ['caption', 'reflection', 'message', 'token', 'email', '$current_url']) assert.equal(key in props, false);
     assert.equal(props.$process_person_profile, false);
     assert.equal(props.$geoip_disable, true);
   });
-  test(`${platform}: missing configuration and development never send events`, () => {
+  test(`${platform}: missing configuration and development never send events`, async () => {
     for (const settings of [{ configured: false }, { development: true }]) {
       const app = loadTelemetry(platform, settings);
-      app.api.startTelemetry(); app.api.trackEvent('habit_logged');
+      await app.api.startTelemetry(); app.api.trackEvent('habit_logged');
       assert.equal(app.instances(), 0); assert.equal(app.events.length, 0);
       if (settings.configured === false) assert.equal(app.logs.length, 1);
     }
   });
-  test(`${platform}: errors are classified, deduplicated and rate limited without private messages`, () => {
+  test(`${platform}: errors are classified, deduplicated and rate limited without private messages`, async () => {
     const app = loadTelemetry(platform);
-    app.api.startTelemetry();
+    await app.api.startTelemetry();
     const error = new Error('PRIVATE_CONTENT');
     error.name = 'TypeError';
     app.api.reportException(error, 'render');
@@ -92,15 +101,15 @@ for (const platform of ['native', 'web']) {
     for (let i = 0; i < 25; i++) app.api.reportException(new Error('PRIVATE_CONTENT'), 'runtime', false);
     assert.equal(app.events.filter(event => event.event === 'app_exception').length, 10);
   });
-  test(`${platform}: failed analytics requests do not break user actions`, () => {
+  test(`${platform}: failed analytics requests do not break user actions`, async () => {
     const app = loadTelemetry(platform, { throws: true });
-    assert.doesNotThrow(() => { app.api.startTelemetry(); app.api.trackEvent('habit_logged'); app.api.reportException(new Error('private'), 'render'); });
+    await assert.doesNotReject(async () => { await app.api.startTelemetry(); app.api.trackEvent('habit_logged'); app.api.reportException(new Error('private'), 'render'); });
   });
 }
 
-test('native: preserve the previous runtime crash handler', () => {
+test('native: preserve the previous runtime crash handler', async () => {
   const app = loadTelemetry('native');
-  app.api.startTelemetry();
+  await app.api.startTelemetry();
   const error = new Error('private');
   app.errorHandler(error, true);
   assert.equal(app.previousErrors.length, 1);
@@ -109,10 +118,29 @@ test('native: preserve the previous runtime crash handler', () => {
   assert.equal(app.events.at(-1).properties.handled, false);
 });
 
-test('web: listen for uncaught errors and promise rejections', () => {
+test('web: listen for uncaught errors and promise rejections', async () => {
   const app = loadTelemetry('web');
-  app.api.startTelemetry();
+  await app.api.startTelemetry();
   app.listeners.error({ error: new Error('private') });
   app.listeners.unhandledrejection({ reason: new Error('private') });
   assert.equal(app.events.filter(event => event.event === 'app_exception').length, 2);
+});
+
+test('native: an SDK import failure is contained and leaves the crash handler intact', async () => {
+  const app = loadTelemetry('native', { importThrows: true });
+  await assert.doesNotReject(() => app.api.startTelemetry());
+  assert.equal(app.instances(), 0);
+  assert.equal(app.events.filter(event => event.event === 'app_open').length, 0);
+  assert.equal(app.logs.some(args => String(args[0]).includes('could not initialize')), true);
+  assert.doesNotThrow(() => app.errorHandler(new Error('private'), true));
+  assert.equal(app.previousErrors.length, 1);
+});
+
+test('root layout schedules telemetry only from the mounted navigation lifecycle', () => {
+  const source = readFileSync(resolve(__dirname, '../app/_layout.tsx'), 'utf8');
+  assert.match(source, /function TelemetryLifecycle\(\)[\s\S]*?setTimeout\(\(\) => \{[\s\S]*?startTelemetry\(\)/);
+  const nav = source.slice(source.indexOf('function RootLayoutNav()'), source.indexOf('function TelemetryLifecycle()'));
+  assert.match(nav, /<TelemetryLifecycle\s*\/>/);
+  const root = source.slice(source.indexOf('export default function RootLayout()'));
+  assert.doesNotMatch(root, /startTelemetry\(\)/);
 });

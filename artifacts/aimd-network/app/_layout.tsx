@@ -366,6 +366,7 @@ function RootLayoutNav() {
   const colors = useColors();
   return (
     <>
+    <TelemetryLifecycle />
     <ErrorBoundary diagnosticStage="NOTIFY" FallbackComponent={NotificationStartupFallback}>
       <NotificationLifecycle />
     </ErrorBoundary>
@@ -406,6 +407,24 @@ function RootLayoutNav() {
   );
 }
 
+/**
+ * Start optional monitoring only after the navigation tree commits. Keep the
+ * SDK import and initialization out of the cold root-layout render path.
+ */
+function TelemetryLifecycle() {
+  useEffect(() => {
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      if (!cancelled) void startTelemetry();
+    }, 1000);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, []);
+  return null;
+}
+
 function ThemedApp() {
   const colors = useColors();
   const { scheme } = useAppearance();
@@ -427,7 +446,6 @@ function ThemedApp() {
 }
 
 export default function RootLayout() {
-  useEffect(() => { startTelemetry(); }, []);
   const [fontsLoaded, fontError] = useFonts({
     DMSans_400Regular,
     DMSans_500Medium,

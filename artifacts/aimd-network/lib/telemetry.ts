@@ -1,4 +1,3 @@
-import PostHog from 'posthog-react-native';
 import { Platform } from 'react-native';
 
 type EventName = 'app_open' | 'daily_check_in_completed' | 'habit_logged' | 'point_reward_claimed' | 'workshop_preview_viewed' | 'app_exception';
@@ -6,7 +5,7 @@ type ErrorSource = 'render' | 'runtime' | 'unhandled_promise';
 type GlobalErrorHandler = (error: Error, isFatal?: boolean) => void;
 
 let client: PostHog | null = null;
-let started = false;
+let startPromise: Promise<void> | null = null;
 const reportedErrors = new WeakSet<object>();
 const allowedEvents = new Set(['app_open', 'daily_check_in_completed', 'habit_logged', 'point_reward_claimed', 'workshop_preview_viewed', 'app_exception']);
 let errorCount = 0;
@@ -18,12 +17,31 @@ const allowedProperties = new Set([
 ]);
 
 /** Explicit events only: no account identification, recordings, URLs or user content. */
-export function startTelemetry(): void {
-  if (started) return;
-  started = true;
+export function startTelemetry(): Promise<void> {
+  if (startPromise) return startPromise;
+  startPromise = (async () => {
+  // Install sanitized crash hooks independently from loading the optional SDK.
+  // A PostHog import/constructor failure must never delay or crash app startup.
+  // Preserve React Native's own crash behavior; reporting must not hide a fatal error.
+  const runtime = globalThis as typeof globalThis & {
+    ErrorUtils?: { getGlobalHandler(): GlobalErrorHandler; setGlobalHandler(handler: GlobalErrorHandler): void };
+  };
+  if (Platform.OS !== 'web' && runtime.ErrorUtils) {
+    const previous = runtime.ErrorUtils.getGlobalHandler();
+    runtime.ErrorUtils.setGlobalHandler((error, isFatal) => {
+      reportException(error, 'runtime', !isFatal);
+      previous(error, isFatal);
+    });
+  }
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    window.addEventListener('error', (event) => reportException(event.error, 'runtime', false));
+    window.addEventListener('unhandledrejection', (event) => reportException(event.reason, 'unhandled_promise', false));
+  }
+
   const token = process.env.EXPO_PUBLIC_POSTHOG_PROJECT_TOKEN;
   if (!__DEV__ && token) {
     try {
+      const { default: PostHog } = await import('posthog-react-native');
       client = new PostHog(token, {
         host: process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
         captureAppLifecycleEvents: false,
@@ -51,22 +69,9 @@ export function startTelemetry(): void {
     console.warn('Creator Studio monitoring is not configured: missing public PostHog project token.');
   }
 
-  // Preserve React Native's own crash behavior; reporting must not hide a fatal error.
-  const runtime = globalThis as typeof globalThis & {
-    ErrorUtils?: { getGlobalHandler(): GlobalErrorHandler; setGlobalHandler(handler: GlobalErrorHandler): void };
-  };
-  if (Platform.OS !== 'web' && runtime.ErrorUtils) {
-    const previous = runtime.ErrorUtils.getGlobalHandler();
-    runtime.ErrorUtils.setGlobalHandler((error, isFatal) => {
-      reportException(error, 'runtime', !isFatal);
-      previous(error, isFatal);
-    });
-  }
-  if (Platform.OS === 'web' && typeof window !== 'undefined') {
-    window.addEventListener('error', (event) => reportException(event.error, 'runtime', false));
-    window.addEventListener('unhandledrejection', (event) => reportException(event.reason, 'unhandled_promise', false));
-  }
   trackEvent('app_open');
+  })();
+  return startPromise;
 }
 
 export function trackEvent(event: EventName, properties?: { reward_type?: 'daily_spin' | 'member_drop'; points_awarded?: number }): void {
