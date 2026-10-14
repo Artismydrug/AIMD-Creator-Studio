@@ -5,7 +5,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const ts = require('typescript');
 
-function loadTelemetry(platform, { development = false, configured = true, throws = false, importThrows = false } = {}) {
+function loadTelemetry(platform, { development = false, configured = true, throws = false, importThrows = false, constructorThrows = false, readyThrows = false, handlerThrows = false } = {}) {
   const events = [], logs = [], listeners = {}, previousErrors = [];
   let options, globalHandler = (...args) => previousErrors.push(args), instances = 0;
   const capture = (event, properties) => {
@@ -17,7 +17,11 @@ function loadTelemetry(platform, { development = false, configured = true, throw
     if (filtered) events.push(filtered);
   };
   class MockNative {
-    constructor(_token, config) { options = config; instances++; }
+    constructor(_token, config) {
+      if (constructorThrows) throw new Error('PRIVATE_INIT_DETAIL');
+      options = config; instances++;
+    }
+    async ready() { if (readyThrows) throw new Error('PRIVATE_INIT_DETAIL'); }
     capture(...args) { capture(...args); }
   }
   const mockWeb = { init: (_token, config) => { options = config; instances++; }, capture };
@@ -36,7 +40,10 @@ function loadTelemetry(platform, { development = false, configured = true, throw
     console: { warn: (...args) => logs.push(args), error: (...args) => logs.push(args) },
     window: { addEventListener: (name, callback) => { listeners[name] = callback; } },
     ErrorUtils: {
-      getGlobalHandler: () => globalHandler,
+      getGlobalHandler: () => {
+        if (handlerThrows) throw new Error('PRIVATE_INIT_DETAIL');
+        return globalHandler;
+      },
       setGlobalHandler: (callback) => { globalHandler = callback; },
     },
     require: (name) => {
@@ -136,6 +143,23 @@ test('native: an SDK import failure is contained and leaves the crash handler in
   assert.equal(app.previousErrors.length, 1);
 });
 
+for (const settings of [{ constructorThrows: true }, { readyThrows: true }]) {
+  test(`native: ${Object.keys(settings)[0]} does not reject or expose initialization details`, async () => {
+    const app = loadTelemetry('native', settings);
+    await assert.doesNotReject(() => app.api.startTelemetry());
+    assert.equal(app.events.length, 0);
+    assert.equal(JSON.stringify(app.logs).includes('PRIVATE_INIT_DETAIL'), false);
+    app.errorHandler(new Error('private'), true);
+    assert.equal(app.previousErrors.length, 1);
+  });
+}
+test('native: optional error-hook setup failure cannot reject startup', async () => {
+  const app = loadTelemetry('native', { handlerThrows: true });
+  await assert.doesNotReject(() => app.api.startTelemetry());
+  assert.equal(JSON.stringify(app.logs).includes('PRIVATE_INIT_DETAIL'), false);
+  assert.equal(app.events.filter(event => event.event === 'app_open').length, 1);
+});
+
 test('root layout schedules telemetry only from the mounted navigation lifecycle', () => {
   const source = readFileSync(resolve(__dirname, '../app/_layout.tsx'), 'utf8');
   assert.match(source, /function TelemetryLifecycle\(\)[\s\S]*?setTimeout\(\(\) => \{[\s\S]*?startTelemetry\(\)/);
@@ -143,4 +167,28 @@ test('root layout schedules telemetry only from the mounted navigation lifecycle
   assert.match(nav, /<TelemetryLifecycle\s*\/>/);
   const root = source.slice(source.indexOf('export default function RootLayout()'));
   assert.doesNotMatch(root, /startTelemetry\(\)/);
+});
+
+test('navigation telemetry effect delays startup and cancels the timer on unmount', () => {
+  const source = readFileSync(resolve(__dirname, '../app/_layout.tsx'), 'utf8');
+  const lifecycle = source.slice(source.indexOf('function TelemetryLifecycle()'), source.indexOf('function ThemedApp()'));
+  let effect, timerCallback, delay, starts = 0, cleared = 0;
+  const sandbox = {
+    useEffect: callback => { effect = callback; },
+    setTimeout: (callback, ms) => { timerCallback = callback; delay = ms; return 1; },
+    clearTimeout: () => { cleared++; },
+    startTelemetry: async () => { starts++; },
+  };
+  vm.runInNewContext(`${lifecycle}\nTelemetryLifecycle();`, sandbox);
+  assert.equal(starts, 0, 'render cannot initialize the SDK');
+  const cleanup = effect();
+  assert.equal(starts, 0, 'the first mount effect must not initialize immediately');
+  assert.equal(delay, 1000);
+  timerCallback();
+  assert.equal(starts, 1);
+  cleanup();
+  assert.equal(cleared, 1);
+  effect()();
+  timerCallback();
+  assert.equal(starts, 1, 'cancelled/Strict Mode mounts must not initialize');
 });

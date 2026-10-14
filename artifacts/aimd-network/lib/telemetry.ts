@@ -1,3 +1,4 @@
+import type PostHog from 'posthog-react-native';
 import { Platform } from 'react-native';
 
 type EventName = 'app_open' | 'daily_check_in_completed' | 'habit_logged' | 'point_reward_claimed' | 'workshop_preview_viewed' | 'app_exception';
@@ -19,30 +20,43 @@ const allowedProperties = new Set([
 /** Explicit events only: no account identification, recordings, URLs or user content. */
 export function startTelemetry(): Promise<void> {
   if (startPromise) return startPromise;
-  startPromise = (async () => {
+  startPromise = initializeTelemetry().catch(() => {
+    console.warn('Creator Studio monitoring could not initialize.');
+  });
+  return startPromise;
+}
+
+async function initializeTelemetry(): Promise<void> {
   // Install sanitized crash hooks independently from loading the optional SDK.
   // A PostHog import/constructor failure must never delay or crash app startup.
   // Preserve React Native's own crash behavior; reporting must not hide a fatal error.
   const runtime = globalThis as typeof globalThis & {
     ErrorUtils?: { getGlobalHandler(): GlobalErrorHandler; setGlobalHandler(handler: GlobalErrorHandler): void };
   };
-  if (Platform.OS !== 'web' && runtime.ErrorUtils) {
-    const previous = runtime.ErrorUtils.getGlobalHandler();
-    runtime.ErrorUtils.setGlobalHandler((error, isFatal) => {
-      reportException(error, 'runtime', !isFatal);
-      previous(error, isFatal);
-    });
-  }
-  if (Platform.OS === 'web' && typeof window !== 'undefined') {
-    window.addEventListener('error', (event) => reportException(event.error, 'runtime', false));
-    window.addEventListener('unhandledrejection', (event) => reportException(event.reason, 'unhandled_promise', false));
+  try {
+    if (Platform.OS !== 'web' && runtime.ErrorUtils) {
+      const previous = runtime.ErrorUtils.getGlobalHandler();
+      runtime.ErrorUtils.setGlobalHandler((error, isFatal) => {
+        try {
+          reportException(error, 'runtime', !isFatal);
+        } finally {
+          previous(error, isFatal);
+        }
+      });
+    }
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.addEventListener('error', (event) => reportException(event.error, 'runtime', false));
+      window.addEventListener('unhandledrejection', (event) => reportException(event.reason, 'unhandled_promise', false));
+    }
+  } catch {
+    console.warn('Creator Studio error monitoring could not initialize.');
   }
 
   const token = process.env.EXPO_PUBLIC_POSTHOG_PROJECT_TOKEN;
   if (!__DEV__ && token) {
     try {
       const { default: PostHog } = await import('posthog-react-native');
-      client = new PostHog(token, {
+      const candidate = new PostHog(token, {
         host: process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
         captureAppLifecycleEvents: false,
         enableSessionReplay: false,
@@ -62,6 +76,8 @@ export function startTelemetry(): Promise<void> {
           return event;
         },
       });
+      await candidate.ready();
+      client = candidate;
     } catch {
       console.warn('Creator Studio monitoring could not initialize.');
     }
@@ -70,8 +86,6 @@ export function startTelemetry(): Promise<void> {
   }
 
   trackEvent('app_open');
-  })();
-  return startPromise;
 }
 
 export function trackEvent(event: EventName, properties?: { reward_type?: 'daily_spin' | 'member_drop'; points_awarded?: number }): void {
