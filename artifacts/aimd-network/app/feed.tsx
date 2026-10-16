@@ -695,6 +695,48 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
       }),
     [colors, insets, topPad, windowHeight],
   );
+  const pageStyle = useMemo(
+    () => [
+      s.page,
+      {
+        height: pageHeight,
+        minHeight: pageHeight,
+        maxHeight: pageHeight,
+      },
+    ],
+    [pageHeight, s.page],
+  );
+  const renderFeedPost = useCallback(
+    ({ item, index }: { item: StudioPost; index: number }) => (
+      <View style={pageStyle}>
+        <PostCard
+          post={item}
+          currentUserId={me?.id}
+          onFollowChanged={refetch}
+          onRefresh={refetch}
+          immersive
+          active={!composing && !navigationOpen && index === activeIndex}
+          preload={!composing && !navigationOpen && !reduceMotion && index === activeIndex + 1}
+          contentTopInset={feedControlsInset(insets.top, Platform.OS === 'web')}
+          reducedMotion={reduceMotion}
+          muted={videosMuted}
+          onMutedChange={handleMutedChange}
+        />
+      </View>
+    ),
+    [
+      activeIndex,
+      composing,
+      handleMutedChange,
+      insets.top,
+      me?.id,
+      navigationOpen,
+      pageStyle,
+      reduceMotion,
+      refetch,
+      videosMuted,
+    ],
+  );
 
   return (
     <View style={[s.container, scope === 'community' && { backgroundColor: colors.ink }]}>
@@ -754,32 +796,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
             key={feedMode}
             data={posts ?? []}
             keyExtractor={(item) => String(item.id)}
-            renderItem={({ item, index }) => (
-              <View
-                style={[
-                  s.page,
-                  {
-                    height: pageHeight,
-                    minHeight: pageHeight,
-                    maxHeight: pageHeight,
-                  },
-                ]}
-              >
-                <PostCard
-                  post={item}
-                  currentUserId={me?.id}
-                  onFollowChanged={refetch}
-                  onRefresh={refetch}
-                  immersive
-                  active={!composing && !navigationOpen && index === activeIndex}
-                  preload={!composing && !navigationOpen && !reduceMotion && index === activeIndex + 1}
-                  contentTopInset={feedControlsInset(insets.top, Platform.OS === 'web')}
-                  reducedMotion={reduceMotion}
-                  muted={videosMuted}
-                  onMutedChange={handleMutedChange}
-                />
-              </View>
-            )}
+            renderItem={renderFeedPost}
             style={s.pager}
             initialNumToRender={2}
             maxToRenderPerBatch={2}
@@ -788,7 +805,6 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
             showsVerticalScrollIndicator={false}
             pagingEnabled={(posts?.length ?? 0) > 0}
             snapToInterval={posts?.length ? pageHeight : undefined}
-            snapToOffsets={(posts ?? []).map((_, index) => index * pageHeight)}
             snapToAlignment="start"
             decelerationRate="fast"
             disableIntervalMomentum

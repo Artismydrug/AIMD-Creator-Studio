@@ -85,6 +85,17 @@ test('dashboard removes the Feed shortcut and keeps membership, Profile, and not
   assert.match(dashboard, /windowWidth < 380/);
 });
 
+test('feed keeps swipe paging without rebuilding offsets and memoizes unchanged post cards', () => {
+  const feed = source('../app/feed.tsx');
+  const postCard = source('../components/PostCard.tsx');
+  assert.match(feed, /const renderFeedPost = useCallback/);
+  assert.match(feed, /const pageStyle = useMemo/);
+  assert.match(feed, /renderItem=\{renderFeedPost\}/);
+  assert.match(feed, /snapToInterval=\{posts\?\.length \? pageHeight : undefined\}/);
+  assert.doesNotMatch(feed, /snapToOffsets=/);
+  assert.match(postCard, /export default React\.memo\(PostCard\)/);
+});
+
 test('route headers hide default development labels and portfolio has exactly one navigation bar', () => {
   const root = source('../app/_layout.tsx');
   assert.match(root, /headerBackButtonDisplayMode: 'minimal'/);

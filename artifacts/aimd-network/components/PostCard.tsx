@@ -706,3 +706,5 @@ export default function PostCard({
     </>
   );
 }
+
+export default React.memo(PostCard);
