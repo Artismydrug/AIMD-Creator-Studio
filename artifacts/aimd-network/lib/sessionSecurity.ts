@@ -24,10 +24,15 @@ function createQueueRunner() {
 
 export function createSessionSecurityStore(storage: SecureKeyValueStore) {
   const serialize = createQueueRunner();
+  const listeners = new Set<(userId: string, enabled: boolean) => void>();
   const accountKey = (userId: string, key: string) =>
     `aimd.auth-security.v1.${encodeURIComponent(userId)}.${key}`;
 
   return {
+    subscribe(listener: (userId: string, enabled: boolean) => void): () => void {
+      listeners.add(listener);
+      return () => { listeners.delete(listener); };
+    },
     getBiometricEnabled(userId: string): Promise<boolean> {
       const key = accountKey(userId, 'settings');
       return serialize(key, async () => (await storage.getItemAsync(key)) === 'true');
@@ -41,12 +46,16 @@ export function createSessionSecurityStore(storage: SecureKeyValueStore) {
         } else {
           await storage.deleteItemAsync(key);
         }
+        listeners.forEach((listener) => listener(userId, enabled));
       });
     },
 
     clearAccount(userId: string): Promise<void> {
       const key = accountKey(userId, 'settings');
-      return serialize(key, async () => storage.deleteItemAsync(key));
+      return serialize(key, async () => {
+        await storage.deleteItemAsync(key);
+        listeners.forEach((listener) => listener(userId, false));
+      });
     },
   };
 }

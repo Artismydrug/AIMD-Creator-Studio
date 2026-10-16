@@ -33,6 +33,7 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
   const { userId, signOut } = useAuth();
   const identity = userId;
   const [gate, setGate] = useState<GateState | null>(null);
+  const [unlockedIdentity, setUnlockedIdentity] = useState<string | null>(null);
   const [retryNonce, setRetryNonce] = useState(0);
   const runningAuth = useRef(false);
   const backgroundedAt = useRef<number | null>(null);
@@ -41,6 +42,7 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
   identityRef.current = identity;
 
   const openGate = useCallback((activeIdentity: string) => {
+    setUnlockedIdentity(activeIdentity);
     setGate({ identity: activeIdentity, phase: 'open' });
   }, []);
 
@@ -79,11 +81,12 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
     } finally {
       runningAuth.current = false;
     }
-  }, [openGate, sessionId, userId]);
+  }, [openGate]);
 
   useEffect(() => {
     if (Platform.OS === 'web' || !userId) {
       biometricEnabled.current = false;
+      setUnlockedIdentity(null);
       setGate(null);
       return;
     }
@@ -101,14 +104,6 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (!(await hasEnrolledBiometrics())) {
-        await sessionSecurityStore.setBiometricEnabled(userId, false);
-        if (!cancelled) {
-          biometricEnabled.current = false;
-          openGate(activeIdentity);
-        }
-        return;
-      }
       if (!cancelled) await lockWithBiometrics(activeIdentity);
     };
 
@@ -128,14 +123,15 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
     };
   }, [lockWithBiometrics, openGate, retryNonce, userId]);
 
+  useEffect(() => sessionSecurityStore.subscribe((accountId, enabled) => {
+    if (accountId === userId) biometricEnabled.current = enabled;
+  }), [userId]);
+
   useEffect(() => {
     if (Platform.OS === 'web' || !userId || gate?.phase !== 'open') return;
-    let previousState = AppState.currentState;
     const subscription = AppState.addEventListener('change', (nextState) => {
-      const wasBackgrounded = previousState === 'background';
       if (nextState === 'background') backgroundedAt.current = Date.now();
-      previousState = nextState;
-      if (nextState !== 'active' || !wasBackgrounded) return;
+      if (nextState !== 'active' || backgroundedAt.current == null) return;
 
       const inactiveForMs = backgroundedAt.current == null ? 0 : Date.now() - backgroundedAt.current;
       backgroundedAt.current = null;
@@ -150,7 +146,7 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
 
   const activeIdentity = userId;
   const currentGate = gate?.identity === activeIdentity ? gate : null;
-  if (currentGate?.phase === 'open') return <>{children}</>;
+  const isOpen = currentGate?.phase === 'open';
 
   const title =
     currentGate?.phase === 'locked'
@@ -165,6 +161,18 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
       : 'Checking your saved sign-in on this device.');
 
   return (
+    <View style={styles.shell}>
+      {(isOpen || unlockedIdentity === activeIdentity) && (
+        <View
+          style={[styles.shell, !isOpen && styles.hidden]}
+          pointerEvents={isOpen ? 'auto' : 'none'}
+          accessibilityElementsHidden={!isOpen}
+          importantForAccessibility={isOpen ? 'auto' : 'no-hide-descendants'}
+        >
+          {children}
+        </View>
+      )}
+      {!isOpen && (
     <SafeAreaView style={[styles.gate, { backgroundColor: colors.background }]}>
       <View style={[styles.gateCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={[styles.iconBadge, { backgroundColor: colors.magentaWash }]}>
@@ -219,6 +227,8 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
         )}
       </View>
     </SafeAreaView>
+      )}
+    </View>
   );
 }
 
@@ -243,10 +253,7 @@ export function BiometricUnlockSettings({ userId }: { userId: number | string | 
     ]).then(([storedEnabled, hasBiometrics]) => {
       if (cancelled) return;
       setAvailable(hasBiometrics);
-      setEnabled(storedEnabled && hasBiometrics);
-      if (storedEnabled && !hasBiometrics) {
-        void sessionSecurityStore.setBiometricEnabled(accountId, false);
-      }
+      setEnabled(storedEnabled);
     }).catch(() => {
       if (!cancelled) Alert.alert('Could not load security settings', 'Please reopen your profile and try again.');
     }).finally(() => {
@@ -306,8 +313,8 @@ export function BiometricUnlockSettings({ userId }: { userId: number | string | 
         <Switch
           accessibilityLabel="Biometric app unlock"
           accessibilityRole="switch"
-          accessibilityState={{ checked: enabled, disabled: loading || saving || !available || Platform.OS === 'web' }}
-          disabled={loading || saving || !available || Platform.OS === 'web'}
+          accessibilityState={{ checked: enabled, disabled: loading || saving || (!available && !enabled) || Platform.OS === 'web' }}
+          disabled={loading || saving || (!available && !enabled) || Platform.OS === 'web'}
           onValueChange={(value) => void onToggle(value)}
           testID="biometric-unlock-toggle"
           value={enabled}
@@ -322,6 +329,8 @@ export function BiometricUnlockSettings({ userId }: { userId: number | string | 
 }
 
 const styles = StyleSheet.create({
+  shell: { flex: 1 },
+  hidden: { display: 'none' },
   gate: { alignItems: 'center', flex: 1, justifyContent: 'center', padding: 24 },
   gateCard: { alignItems: 'center', borderRadius: 18, borderWidth: 1, gap: 14, maxWidth: 420, padding: 24, width: '100%' },
   iconBadge: { alignItems: 'center', borderRadius: 99, height: 48, justifyContent: 'center', width: 48 },

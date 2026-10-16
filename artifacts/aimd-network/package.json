@@ -8,6 +8,7 @@
     "build": "node scripts/build.js",
     "smoke:account-deletion": "node scripts/account-deletion-smoke.js",
     "smoke:auth-handoff": "node scripts/auth-handoff-smoke.js",
+    "smoke:session-security": "node --test scripts/session-security-smoke.js",
     "smoke:dashboard": "node scripts/dashboard-smoke.js",
     "smoke:hq-loading": "node scripts/hq-loading-smoke.js",
     "smoke:request-safety": "node scripts/request-safety-smoke.js",

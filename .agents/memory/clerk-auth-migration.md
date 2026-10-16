@@ -17,6 +17,13 @@ Declared in `artifacts/api-server/src/middlewares/clerkAuth.ts`. Routes use `req
 - Web (aimd-academy): Clerk cookie session. Never add getToken() or Authorization: Bearer to browser API calls.
 - Mobile (aimd-network): No cookie jar. setAuthTokenGetter(() => getToken()) wired in (tabs)/_layout.tsx via useAuth().getToken from @clerk/expo.
 
+## Persistent mobile sessions and local unlock
+Keep Clerk session tokens in its existing secure token cache; local biometric preferences must never duplicate credentials or tokens. Biometrics are an optional device unlock, not a replacement for a valid server session.
+
+**Why:** A local inactivity timer cannot enforce server-side expiration, and copying tokens creates competing persistence and security behavior.
+
+**How to apply:** Configure inactivity/session lifetime in managed Clerk settings when dashboard access permits. Keep biometric settings account-scoped; disabling or removing device biometrics must not silently bypass an enabled lock.
+
 ## Staff workspace access
 Use the same Clerk identity for creators, instructors, and admins, but gate Creator Studio HQ and instructor actions with database-authoritative instructor/admin roles.
 
