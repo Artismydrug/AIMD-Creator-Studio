@@ -36,6 +36,12 @@
         }
       ],
       "@clerk/expo",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow Creator Studio by AIMD to use Face ID to unlock your account."
+        }
+      ],
       "expo-font",
       "expo-web-browser",
       "expo-video",

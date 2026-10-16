@@ -36,6 +36,7 @@ import { AppearanceProvider, useAppearance } from '@/lib/appearance';
 import { useColors } from '@/hooks/useColors';
 import { ClerkLoaded, ClerkLoading, ClerkProvider, useAuth } from '@clerk/expo';
 import { tokenCache } from '@clerk/expo/token-cache';
+import { SessionSecurityGate } from '@/components/SessionSecurity';
 import {
   initializeRevenueCat,
   SubscriptionProvider,
@@ -495,13 +496,15 @@ export default function RootLayout() {
           <SafeAreaProvider>
             <QueryClientProvider client={queryClient}>
               <AppearanceProvider>
-                <ErrorBoundary diagnosticStage="MEMBERSHIP">
-                <SubscriptionProvider>
-                  <ErrorBoundary diagnosticStage="SHELL">
-                    <ThemedApp />
+                <SessionSecurityGate>
+                  <ErrorBoundary diagnosticStage="MEMBERSHIP">
+                    <SubscriptionProvider>
+                      <ErrorBoundary diagnosticStage="SHELL">
+                        <ThemedApp />
+                      </ErrorBoundary>
+                    </SubscriptionProvider>
                   </ErrorBoundary>
-                </SubscriptionProvider>
-                </ErrorBoundary>
+                </SessionSecurityGate>
               </AppearanceProvider>
             </QueryClientProvider>
           </SafeAreaProvider>

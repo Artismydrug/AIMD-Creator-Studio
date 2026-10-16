@@ -41,6 +41,8 @@ import AudioTrackPlayer from '@/components/AudioTrackPlayer';
 import PostOwnerActions from '@/components/PostOwnerActions';
 import AppearanceSettings from '@/components/AppearanceSettings';
 import { unregisterPushDevice } from '@/lib/pushNotifications';
+import { BiometricUnlockSettings } from '@/components/SessionSecurity';
+import { sessionSecurityStore } from '@/lib/sessionSecurity';
 
 type LocalImage = { uri: string; contentType: string } | null;
 const HANDLE_PATTERN = /^[a-zA-Z0-9_]{3,28}$/;
@@ -461,6 +463,8 @@ export default function ProfileScreen() {
       void deleteAccount.mutateAsync(undefined)
         .then(async () => {
           if (userId) {
+            try { await sessionSecurityStore.clearAccount(String(userId)); }
+            catch { showDeletionNotice('Account deleted', 'Local security settings could not be cleared. Remove Creator Studio from this device if you no longer use it.'); }
             try { await clearHabitReminders(userId); }
             catch { showDeletionNotice('Account deleted', 'Local reminder cleanup failed. Turn off Creator Studio alerts in device settings.'); }
           }
@@ -602,6 +606,7 @@ export default function ProfileScreen() {
         </View>
 
         <AppearanceSettings />
+        <BiometricUnlockSettings userId={userId} />
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Notification settings"
