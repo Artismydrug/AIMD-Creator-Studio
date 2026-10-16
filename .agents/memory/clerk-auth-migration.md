@@ -24,6 +24,12 @@ Keep Clerk session tokens in its existing secure token cache; local biometric pr
 
 **How to apply:** Configure inactivity/session lifetime in managed Clerk settings when dashboard access permits. Keep biometric settings account-scoped; disabling or removing device biometrics must not silently bypass an enabled lock.
 
+The native app's inactivity rule is 30 days for a restored authentication session. Fresh credential-based sign-in starts a new inactivity period; account-only history must not immediately expire a new session.
+
+**Why:** Users asked to stay signed in across restarts and re-authenticate after 30 inactive days. A local rule cannot extend Clerk's server lifetime or override revoked sessions.
+
+**How to apply:** Keep local activity history associated with the authentication session, check it before refreshing on resume, and never let paused background heartbeats renew an unvalidated session.
+
 ## Staff workspace access
 Use the same Clerk identity for creators, instructors, and admins, but gate Creator Studio HQ and instructor actions with database-authoritative instructor/admin roles.
 

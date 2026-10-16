@@ -18,7 +18,6 @@ import { useColors } from '@/hooks/useColors';
 import {
   BIOMETRIC_RESUME_GRACE_MS,
   isSessionInactiveExpired,
-  SESSION_INACTIVITY_TIMEOUT_MS,
   sessionSecurityStore,
 } from '@/lib/sessionSecurity';
 
@@ -36,14 +35,15 @@ async function hasEnrolledBiometrics(): Promise<boolean> {
 
 export function SessionSecurityGate({ children }: { children: ReactNode }) {
   const colors = useColors();
-  const { userId, signOut } = useAuth();
-  const identity = userId;
+  const { userId, sessionId, signOut } = useAuth();
+  const identity = userId && sessionId ? `${userId}:${sessionId}` : null;
   const [gate, setGate] = useState<GateState | null>(null);
   const [unlockedIdentity, setUnlockedIdentity] = useState<string | null>(null);
   const [retryNonce, setRetryNonce] = useState(0);
   const runningAuth = useRef(false);
   const backgroundedAt = useRef<number | null>(null);
   const biometricEnabled = useRef(false);
+  const lifecycleGeneration = useRef(0);
   const identityRef = useRef<string | null>(identity);
   identityRef.current = identity;
 
@@ -53,7 +53,15 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
   }, []);
 
   const lockWithBiometrics = useCallback(async (activeIdentity: string) => {
-    if (runningAuth.current) return false;
+    if (!userId || !sessionId || identityRef.current !== activeIdentity) return false;
+    if (runningAuth.current) {
+      setGate({
+        identity: activeIdentity,
+        phase: 'locked',
+        message: 'An unlock is still finishing. Tap Unlock again in a moment.',
+      });
+      return false;
+    }
     runningAuth.current = true;
     setGate({ identity: activeIdentity, phase: 'locked' });
     try {
@@ -66,7 +74,7 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
       });
       if (identityRef.current !== activeIdentity) return false;
       if (result.success) {
-        await sessionSecurityStore.recordActivity(activeIdentity);
+        await sessionSecurityStore.recordActivity(userId, sessionId);
         if (identityRef.current === activeIdentity) openGate(activeIdentity);
         return true;
       }
@@ -88,9 +96,10 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
     } finally {
       runningAuth.current = false;
     }
-  }, [openGate]);
+  }, [openGate, sessionId, userId]);
 
   const signOutExpiredSession = useCallback(async (activeIdentity: string) => {
+    if (!userId || !sessionId || identityRef.current !== activeIdentity) return;
     setGate({
       identity: activeIdentity,
       phase: 'expired',
@@ -98,7 +107,7 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
     });
     try {
       await signOut();
-      await sessionSecurityStore.clearLastActiveAt(activeIdentity);
+      await sessionSecurityStore.clearLastActiveAt(userId, sessionId);
     } catch {
       if (identityRef.current === activeIdentity) {
         setGate({
@@ -108,33 +117,35 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
         });
       }
     }
-  }, [signOut]);
+  }, [sessionId, signOut, userId]);
 
   useEffect(() => {
-    if (Platform.OS === 'web' || !userId) {
+    lifecycleGeneration.current += 1;
+    backgroundedAt.current = null;
+    if (Platform.OS === 'web' || !userId || !sessionId || !identity) {
       biometricEnabled.current = false;
       setUnlockedIdentity(null);
       setGate(null);
       return;
     }
 
-    const activeIdentity = userId;
+    const activeIdentity = identity;
     let cancelled = false;
     setGate({ identity: activeIdentity, phase: 'opening' });
 
     const prepare = async () => {
-      const lastActiveAt = await sessionSecurityStore.getLastActiveAt(activeIdentity);
+      const lastActiveAt = await sessionSecurityStore.getLastActiveAt(userId, sessionId);
       if (cancelled) return;
       if (isSessionInactiveExpired(lastActiveAt)) {
         await signOutExpiredSession(activeIdentity);
         return;
       }
 
-      const enabled = await sessionSecurityStore.getBiometricEnabled(activeIdentity);
+      const enabled = await sessionSecurityStore.getBiometricEnabled(userId);
       if (cancelled) return;
       biometricEnabled.current = enabled;
       if (!enabled) {
-        await sessionSecurityStore.recordActivity(activeIdentity);
+        await sessionSecurityStore.recordActivity(userId, sessionId);
         if (cancelled) return;
         openGate(activeIdentity);
         return;
@@ -156,31 +167,37 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
 
     return () => {
       cancelled = true;
+      lifecycleGeneration.current += 1;
     };
-  }, [lockWithBiometrics, openGate, retryNonce, signOutExpiredSession, userId]);
+  }, [identity, lockWithBiometrics, openGate, retryNonce, sessionId, signOutExpiredSession, userId]);
 
   useEffect(() => sessionSecurityStore.subscribe((accountId, enabled) => {
     if (accountId === userId) biometricEnabled.current = enabled;
   }), [userId]);
 
   useEffect(() => {
-    if (Platform.OS === 'web' || !userId || gate?.phase !== 'open') return;
-    let cancelled = false;
+    if (Platform.OS === 'web' || !userId || !sessionId || !identity || gate?.phase !== 'open') return;
+    const activeIdentity = identity;
+    const generation = lifecycleGeneration.current;
+    let activityAllowed = AppState.currentState === 'active';
     const failClosed = (message: string) => {
-      if (!cancelled && identityRef.current === userId) {
-        setGate({ identity: userId, phase: 'error', message });
+      if (identityRef.current === activeIdentity && lifecycleGeneration.current === generation) {
+        setGate({ identity: activeIdentity, phase: 'error', message });
       }
     };
     const recordActivity = async () => {
       try {
-        await sessionSecurityStore.recordActivity(userId);
+        await sessionSecurityStore.recordActivity(userId, sessionId);
       } catch {
         failClosed('Secure activity could not be saved. Retry to protect your sign-in.');
       }
     };
-    const heartbeat = setInterval(() => { void recordActivity(); }, SESSION_ACTIVITY_HEARTBEAT_MS);
+    const heartbeat = setInterval(() => {
+      if (activityAllowed && AppState.currentState === 'active') void recordActivity();
+    }, SESSION_ACTIVITY_HEARTBEAT_MS);
     const subscription = AppState.addEventListener('change', (nextState) => {
       if (nextState === 'background') {
+        activityAllowed = false;
         backgroundedAt.current = Date.now();
         void recordActivity();
       }
@@ -188,11 +205,11 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
 
       const inactiveForMs = backgroundedAt.current == null ? 0 : Date.now() - backgroundedAt.current;
       backgroundedAt.current = null;
-      const activeIdentity = userId;
+      activityAllowed = false;
       setGate({ identity: activeIdentity, phase: 'opening' });
       void (async () => {
         try {
-          const lastActiveAt = await sessionSecurityStore.getLastActiveAt(activeIdentity);
+          const lastActiveAt = await sessionSecurityStore.getLastActiveAt(userId, sessionId);
           if (identityRef.current !== activeIdentity) return;
           if (isSessionInactiveExpired(lastActiveAt)) {
             await signOutExpiredSession(activeIdentity);
@@ -205,7 +222,7 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
             await lockWithBiometrics(activeIdentity);
             return;
           }
-          await sessionSecurityStore.recordActivity(activeIdentity);
+          await sessionSecurityStore.recordActivity(userId, sessionId);
           if (identityRef.current === activeIdentity) openGate(activeIdentity);
         } catch {
           failClosed('Secure activity could not be checked. Retry to protect your sign-in.');
@@ -213,15 +230,15 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
       })();
     });
     return () => {
-      cancelled = true;
+      activityAllowed = false;
       clearInterval(heartbeat);
       subscription.remove();
     };
-  }, [gate?.phase, lockWithBiometrics, openGate, signOutExpiredSession, userId]);
+  }, [gate?.phase, identity, lockWithBiometrics, openGate, sessionId, signOutExpiredSession, userId]);
 
   if (Platform.OS === 'web' || !userId) return <>{children}</>;
 
-  const activeIdentity = userId;
+  const activeIdentity = identity ?? '';
   const currentGate = gate?.identity === activeIdentity ? gate : null;
   const isOpen = currentGate?.phase === 'open';
 
@@ -311,7 +328,9 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
           <Pressable
             accessibilityRole="button"
             onPress={() => {
-              void signOut().catch(() => {
+              void signOut().then(async () => {
+                if (sessionId) await sessionSecurityStore.clearLastActiveAt(userId, sessionId);
+              }).catch(() => {
                 Alert.alert('Could not sign out', 'Connect to the internet and try again.');
               });
             }}

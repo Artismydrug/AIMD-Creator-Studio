@@ -8,7 +8,7 @@
     "build": "node scripts/build.js",
     "smoke:account-deletion": "node scripts/account-deletion-smoke.js",
     "smoke:auth-handoff": "node scripts/auth-handoff-smoke.js",
-    "smoke:session-security": "node --test scripts/session-security-smoke.js",
+    "smoke:session-security": "node --test scripts/session-security-smoke.js scripts/session-security-lifecycle-smoke.js",
     "smoke:studio-media": "node --test scripts/studio-media-smoke.js",
     "smoke:feed-navigation": "node --test scripts/feed-navigation-smoke.js",
     "smoke:habits-scroll": "node --test scripts/habits-scroll-smoke.js",

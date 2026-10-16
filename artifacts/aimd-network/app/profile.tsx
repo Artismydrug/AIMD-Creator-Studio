@@ -303,7 +303,7 @@ export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { signOut, userId } = useAuth();
+  const { signOut, userId, sessionId } = useAuth();
   const deleteAccount = useDeleteCurrentUser();
   const deletionInFlight = useRef(false);
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
@@ -437,9 +437,9 @@ export default function ProfileScreen() {
           onPress: () => {
             const finish = () => void signOut()
               .then(async () => {
-                if (userId) {
+                if (userId && sessionId) {
                   try {
-                    await sessionSecurityStore.clearLastActiveAt(String(userId));
+                    await sessionSecurityStore.clearLastActiveAt(String(userId), sessionId);
                   } catch {
                     Alert.alert('Signed out', 'Your local inactivity timer could not be cleared. Sign in again to refresh your secure session.');
                   }

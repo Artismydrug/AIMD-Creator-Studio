@@ -87,17 +87,20 @@ test('30-day inactivity cutoff expires at the boundary but preserves new and fut
 
 test('inactivity timestamps persist per account and are cleared on sign-out or account deletion', async () => {
   const { store, data } = fixture();
-  await store.recordActivity('user_one', 1_900_000_000_000);
-  await store.recordActivity('user_two', 1_900_000_500_000);
-  assert.equal(await store.getLastActiveAt('user_one'), 1_900_000_000_000);
-  await store.clearLastActiveAt('user_one');
-  assert.equal(await store.getLastActiveAt('user_one'), null);
-  assert.equal(await store.getLastActiveAt('user_two'), 1_900_000_500_000);
-  await store.recordActivity('user_one', 1_900_001_000_000);
+  await store.recordActivity('user_one', 'session_one', 1_900_000_000_000);
+  await store.recordActivity('user_two', 'session_two', 1_900_000_500_000);
+  assert.equal(await store.getLastActiveAt('user_one', 'session_one'), 1_900_000_000_000);
+  assert.equal(await store.getLastActiveAt('user_one', 'fresh_session'), null);
+  await store.clearLastActiveAt('user_one', 'session_one');
+  assert.equal(await store.getLastActiveAt('user_one', 'session_one'), null);
+  assert.equal(await store.getLastActiveAt('user_two', 'session_two'), 1_900_000_500_000);
+  await store.recordActivity('user_one', 'fresh_session', 1_900_001_000_000);
+  await store.clearLastActiveAt('user_one', 'session_one');
+  assert.equal(await store.getLastActiveAt('user_one', 'fresh_session'), 1_900_001_000_000);
   await store.clearAccount('user_one');
-  assert.equal(await store.getLastActiveAt('user_one'), null);
+  assert.equal(await store.getLastActiveAt('user_one', 'fresh_session'), null);
   assert.equal(data.has('aimd.auth-security.v1.user_one.last-active'), false);
-  assert.equal(await store.getLastActiveAt('user_two'), 1_900_000_500_000);
+  assert.equal(await store.getLastActiveAt('user_two', 'session_two'), 1_900_000_500_000);
 });
 
 test('native security wiring retains Clerk token cache and recoverable lock controls', () => {
@@ -106,8 +109,9 @@ test('native security wiring retains Clerk token cache and recoverable lock cont
   const config = JSON.parse(readFileSync(resolve(__dirname, '../app.json'), 'utf8'));
   assert.ok(layout.includes('tokenCache={tokenCache}'));
   assert.ok(layout.includes('<SessionSecurityGate>'));
-  assert.ok(gate.includes('getLastActiveAt(activeIdentity)'));
+  assert.ok(gate.includes('getLastActiveAt(userId, sessionId)'));
   assert.ok(gate.includes('isSessionInactiveExpired(lastActiveAt)'));
+  assert.ok(gate.includes("activityAllowed && AppState.currentState === 'active'"));
   assert.ok(gate.includes('session-inactivity-sign-in'));
   assert.ok(gate.includes('session-biometric-retry'));
   assert.ok(gate.includes('session-security-sign-out'));

@@ -62,26 +62,44 @@ export function createSessionSecurityStore(storage: SecureKeyValueStore) {
       });
     },
 
-    getLastActiveAt(userId: string): Promise<number | null> {
+    getLastActiveAt(userId: string, sessionId: string): Promise<number | null> {
       const key = accountKey(userId, 'last-active');
       return serialize(accountQueueKey(userId), async () => {
         const value = await storage.getItemAsync(key);
         if (value == null) return null;
-        const timestamp = Number(value);
-        return Number.isFinite(timestamp) ? timestamp : Number.NaN;
+        try {
+          const activity = JSON.parse(value);
+          if (
+            !activity ||
+            typeof activity.sessionId !== 'string' ||
+            typeof activity.timestamp !== 'number' ||
+            !Number.isFinite(activity.timestamp)
+          ) return Number.NaN;
+          return activity.sessionId === sessionId ? activity.timestamp : null;
+        } catch {
+          return Number.NaN;
+        }
       });
     },
 
-    recordActivity(userId: string, timestamp = Date.now()): Promise<void> {
+    recordActivity(userId: string, sessionId: string, timestamp = Date.now()): Promise<void> {
       const key = accountKey(userId, 'last-active');
       return serialize(accountQueueKey(userId), async () => {
-        await storage.setItemAsync(key, String(timestamp));
+        await storage.setItemAsync(key, JSON.stringify({ sessionId, timestamp }));
       });
     },
 
-    clearLastActiveAt(userId: string): Promise<void> {
+    clearLastActiveAt(userId: string, sessionId: string): Promise<void> {
       const key = accountKey(userId, 'last-active');
       return serialize(accountQueueKey(userId), async () => {
+        const value = await storage.getItemAsync(key);
+        if (value != null) {
+          try {
+            if (JSON.parse(value)?.sessionId !== sessionId) return;
+          } catch {
+            // A successful sign-out may clear an unreadable local activity record.
+          }
+        }
         await storage.deleteItemAsync(key);
       });
     },
