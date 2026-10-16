@@ -436,7 +436,16 @@ export default function ProfileScreen() {
           style: 'destructive',
           onPress: () => {
             const finish = () => void signOut()
-              .then(() => router.replace('/(auth)/sign-in'))
+              .then(async () => {
+                if (userId) {
+                  try {
+                    await sessionSecurityStore.clearLastActiveAt(String(userId));
+                  } catch {
+                    Alert.alert('Signed out', 'Your local inactivity timer could not be cleared. Sign in again to refresh your secure session.');
+                  }
+                }
+                router.replace('/(auth)/sign-in');
+              })
               .catch(() => Alert.alert('Could not sign out', 'Please try again.'));
             void (userId ? unregisterPushDevice(userId) : Promise.resolve())
               .then(finish)

@@ -15,10 +15,16 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import { useAuth } from '@clerk/expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
-import { BIOMETRIC_RESUME_GRACE_MS, sessionSecurityStore } from '@/lib/sessionSecurity';
+import {
+  BIOMETRIC_RESUME_GRACE_MS,
+  isSessionInactiveExpired,
+  SESSION_INACTIVITY_TIMEOUT_MS,
+  sessionSecurityStore,
+} from '@/lib/sessionSecurity';
 
-type GatePhase = 'opening' | 'open' | 'locked' | 'error';
+type GatePhase = 'opening' | 'open' | 'locked' | 'expired' | 'error';
 type GateState = { identity: string; phase: GatePhase; message?: string };
+const SESSION_ACTIVITY_HEARTBEAT_MS = 5 * 60 * 1000;
 
 async function hasEnrolledBiometrics(): Promise<boolean> {
   const [hasHardware, isEnrolled] = await Promise.all([
@@ -60,6 +66,7 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
       });
       if (identityRef.current !== activeIdentity) return false;
       if (result.success) {
+        await sessionSecurityStore.recordActivity(activeIdentity);
         if (identityRef.current === activeIdentity) openGate(activeIdentity);
         return true;
       }
@@ -83,6 +90,26 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
     }
   }, [openGate]);
 
+  const signOutExpiredSession = useCallback(async (activeIdentity: string) => {
+    setGate({
+      identity: activeIdentity,
+      phase: 'expired',
+      message: 'You’ve been away for 30 days. Sign in again to keep your account secure.',
+    });
+    try {
+      await signOut();
+      await sessionSecurityStore.clearLastActiveAt(activeIdentity);
+    } catch {
+      if (identityRef.current === activeIdentity) {
+        setGate({
+          identity: activeIdentity,
+          phase: 'expired',
+          message: 'Your sign-in has expired after 30 days without activity. Connect to the internet and tap below to sign in again.',
+        });
+      }
+    }
+  }, [signOut]);
+
   useEffect(() => {
     if (Platform.OS === 'web' || !userId) {
       biometricEnabled.current = false;
@@ -96,10 +123,19 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
     setGate({ identity: activeIdentity, phase: 'opening' });
 
     const prepare = async () => {
-      const enabled = await sessionSecurityStore.getBiometricEnabled(userId);
+      const lastActiveAt = await sessionSecurityStore.getLastActiveAt(activeIdentity);
+      if (cancelled) return;
+      if (isSessionInactiveExpired(lastActiveAt)) {
+        await signOutExpiredSession(activeIdentity);
+        return;
+      }
+
+      const enabled = await sessionSecurityStore.getBiometricEnabled(activeIdentity);
       if (cancelled) return;
       biometricEnabled.current = enabled;
       if (!enabled) {
+        await sessionSecurityStore.recordActivity(activeIdentity);
+        if (cancelled) return;
         openGate(activeIdentity);
         return;
       }
@@ -121,7 +157,7 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [lockWithBiometrics, openGate, retryNonce, userId]);
+  }, [lockWithBiometrics, openGate, retryNonce, signOutExpiredSession, userId]);
 
   useEffect(() => sessionSecurityStore.subscribe((accountId, enabled) => {
     if (accountId === userId) biometricEnabled.current = enabled;
@@ -129,18 +165,59 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (Platform.OS === 'web' || !userId || gate?.phase !== 'open') return;
+    let cancelled = false;
+    const failClosed = (message: string) => {
+      if (!cancelled && identityRef.current === userId) {
+        setGate({ identity: userId, phase: 'error', message });
+      }
+    };
+    const recordActivity = async () => {
+      try {
+        await sessionSecurityStore.recordActivity(userId);
+      } catch {
+        failClosed('Secure activity could not be saved. Retry to protect your sign-in.');
+      }
+    };
+    const heartbeat = setInterval(() => { void recordActivity(); }, SESSION_ACTIVITY_HEARTBEAT_MS);
     const subscription = AppState.addEventListener('change', (nextState) => {
-      if (nextState === 'background') backgroundedAt.current = Date.now();
+      if (nextState === 'background') {
+        backgroundedAt.current = Date.now();
+        void recordActivity();
+      }
       if (nextState !== 'active' || backgroundedAt.current == null) return;
 
       const inactiveForMs = backgroundedAt.current == null ? 0 : Date.now() - backgroundedAt.current;
       backgroundedAt.current = null;
-      if (biometricEnabled.current && inactiveForMs >= BIOMETRIC_RESUME_GRACE_MS) {
-        void lockWithBiometrics(userId);
-      }
+      const activeIdentity = userId;
+      setGate({ identity: activeIdentity, phase: 'opening' });
+      void (async () => {
+        try {
+          const lastActiveAt = await sessionSecurityStore.getLastActiveAt(activeIdentity);
+          if (identityRef.current !== activeIdentity) return;
+          if (isSessionInactiveExpired(lastActiveAt)) {
+            await signOutExpiredSession(activeIdentity);
+            return;
+          }
+          if (
+            biometricEnabled.current &&
+            inactiveForMs >= BIOMETRIC_RESUME_GRACE_MS
+          ) {
+            await lockWithBiometrics(activeIdentity);
+            return;
+          }
+          await sessionSecurityStore.recordActivity(activeIdentity);
+          if (identityRef.current === activeIdentity) openGate(activeIdentity);
+        } catch {
+          failClosed('Secure activity could not be checked. Retry to protect your sign-in.');
+        }
+      })();
     });
-    return () => subscription.remove();
-  }, [gate?.phase, lockWithBiometrics, userId]);
+    return () => {
+      cancelled = true;
+      clearInterval(heartbeat);
+      subscription.remove();
+    };
+  }, [gate?.phase, lockWithBiometrics, openGate, signOutExpiredSession, userId]);
 
   if (Platform.OS === 'web' || !userId) return <>{children}</>;
 
@@ -149,14 +226,18 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
   const isOpen = currentGate?.phase === 'open';
 
   const title =
-    currentGate?.phase === 'locked'
+    currentGate?.phase === 'expired'
+      ? 'Sign in again'
+      : currentGate?.phase === 'locked'
       ? 'Welcome back'
       : currentGate?.phase === 'error'
         ? 'Secure sign-in required'
         : 'Securing your account…';
   const message =
     currentGate?.message ??
-    (currentGate?.phase === 'locked'
+    (currentGate?.phase === 'expired'
+      ? 'You’ve been away for 30 days. Sign in again to keep your account secure.'
+      : currentGate?.phase === 'locked'
       ? 'Use Face ID, Touch ID, or your device passcode to continue.'
       : 'Checking your saved sign-in on this device.');
 
@@ -180,7 +261,22 @@ export function SessionSecurityGate({ children }: { children: ReactNode }) {
         </View>
         <Text style={[styles.title, { color: colors.foreground }]}>{title}</Text>
         <Text style={[styles.description, { color: colors.mutedForeground }]}>{message}</Text>
-        {currentGate?.phase === 'locked' ? (
+        {currentGate?.phase === 'expired' ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Sign in again"
+            onPress={() => void signOutExpiredSession(activeIdentity)}
+            style={({ pressed }) => [
+              styles.primaryButton,
+              { backgroundColor: colors.primary },
+              pressed && styles.pressed,
+            ]}
+            testID="session-inactivity-sign-in"
+          >
+            <Feather name="log-in" size={18} color={colors.primaryForeground} />
+            <Text style={[styles.primaryButtonText, { color: colors.primaryForeground }]}>Sign in again</Text>
+          </Pressable>
+        ) : currentGate?.phase === 'locked' ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Unlock Creator Studio with biometrics"
@@ -305,8 +401,8 @@ export function BiometricUnlockSettings({ userId }: { userId: number | string | 
           <Text style={[styles.description, { color: colors.mutedForeground }]}>
             {Platform.OS === 'web'
               ? 'Available in the iPhone and Android app.'
-              : available
-                ? 'Ask for Face ID, Touch ID, or device biometrics when you open the app or return after a minute away.'
+                : available
+                ? 'Unlock with Face ID, Touch ID, or device biometrics when you open the app or return after a minute away. Sign in again after 30 days without activity.'
                 : 'Set up Face ID, Touch ID, or device biometrics on this device to enable this option.'}
           </Text>
         </View>

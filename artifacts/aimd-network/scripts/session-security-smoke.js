@@ -11,7 +11,11 @@ const compiled = ts.transpileModule(source, {
 }).outputText;
 const sandbox = { exports: {}, require: () => ({}) };
 vm.runInNewContext(compiled, sandbox);
-const { createSessionSecurityStore } = sandbox.exports;
+const {
+  createSessionSecurityStore,
+  isSessionInactiveExpired,
+  SESSION_INACTIVITY_TIMEOUT_MS,
+} = sandbox.exports;
 
 function fixture() {
   const data = new Map();
@@ -72,12 +76,39 @@ test('failed storage writes do not poison retries or publish a successful settin
   assert.equal(changes.length, 1);
 });
 
+test('30-day inactivity cutoff expires at the boundary but preserves new and future activity', () => {
+  const now = 2_000_000_000_000;
+  assert.equal(isSessionInactiveExpired(null, now), false);
+  assert.equal(isSessionInactiveExpired(now - SESSION_INACTIVITY_TIMEOUT_MS + 1, now), false);
+  assert.equal(isSessionInactiveExpired(now - SESSION_INACTIVITY_TIMEOUT_MS, now), true);
+  assert.equal(isSessionInactiveExpired(Number.NaN, now), true);
+  assert.equal(isSessionInactiveExpired(now + 60_000, now), false);
+});
+
+test('inactivity timestamps persist per account and are cleared on sign-out or account deletion', async () => {
+  const { store, data } = fixture();
+  await store.recordActivity('user_one', 1_900_000_000_000);
+  await store.recordActivity('user_two', 1_900_000_500_000);
+  assert.equal(await store.getLastActiveAt('user_one'), 1_900_000_000_000);
+  await store.clearLastActiveAt('user_one');
+  assert.equal(await store.getLastActiveAt('user_one'), null);
+  assert.equal(await store.getLastActiveAt('user_two'), 1_900_000_500_000);
+  await store.recordActivity('user_one', 1_900_001_000_000);
+  await store.clearAccount('user_one');
+  assert.equal(await store.getLastActiveAt('user_one'), null);
+  assert.equal(data.has('aimd.auth-security.v1.user_one.last-active'), false);
+  assert.equal(await store.getLastActiveAt('user_two'), 1_900_000_500_000);
+});
+
 test('native security wiring retains Clerk token cache and recoverable lock controls', () => {
   const layout = readFileSync(resolve(__dirname, '../app/_layout.tsx'), 'utf8');
   const gate = readFileSync(resolve(__dirname, '../components/SessionSecurity.tsx'), 'utf8');
   const config = JSON.parse(readFileSync(resolve(__dirname, '../app.json'), 'utf8'));
   assert.ok(layout.includes('tokenCache={tokenCache}'));
   assert.ok(layout.includes('<SessionSecurityGate>'));
+  assert.ok(gate.includes('getLastActiveAt(activeIdentity)'));
+  assert.ok(gate.includes('isSessionInactiveExpired(lastActiveAt)'));
+  assert.ok(gate.includes('session-inactivity-sign-in'));
   assert.ok(gate.includes('session-biometric-retry'));
   assert.ok(gate.includes('session-security-sign-out'));
   assert.ok(gate.includes('identityRef.current !== activeIdentity'));
