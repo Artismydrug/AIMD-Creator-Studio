@@ -93,6 +93,7 @@ test('feed keeps swipe paging without rebuilding offsets and memoizes unchanged 
   assert.match(feed, /renderItem=\{renderFeedPost\}/);
   assert.match(feed, /snapToInterval=\{posts\?\.length \? pageHeight : undefined\}/);
   assert.doesNotMatch(feed, /snapToOffsets=/);
+  assert.doesNotMatch(feed, /onFollowChanged=\{refetch\}/, 'query invalidation already refetches the active feed after following');
   assert.match(postCard, /export default React\.memo\(PostCard\)/);
 });
 

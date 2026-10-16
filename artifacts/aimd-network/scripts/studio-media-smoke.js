@@ -9,9 +9,9 @@ const compiled = ts.transpileModule(readFileSync(resolve(__dirname, '../lib/stud
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
 }).outputText;
 
-function harness({ platform = 'ios', size = 1000, token = 'fixture-token', status = 200, body = '{"objectPath":"/objects/upload"}', neverFinishes = false } = {}) {
+function harness({ platform = 'ios', size = 1000, token = 'fixture-token', status = 200, body = '{"objectPath":"/objects/upload"}', neverFinishes = false, progressEvents = [{ sent: 5, total: 10 }, { sent: 10, total: 10 }] } = {}) {
   const uploads = [], deleted = [], conversions = [], statuses = [];
-  let timeout, cancels = 0, fetches = 0, rejectTransfer;
+  let timeout, cancels = 0, fetches = 0, rejectTransfer, clock = 1000;
   const fs = {
     FileSystemUploadType: { BINARY_CONTENT: 0 },
     FileSystemSessionType: { FOREGROUND: 1 },
@@ -21,8 +21,10 @@ function harness({ platform = 'ios', size = 1000, token = 'fixture-token', statu
       uploads.push({ url, uri, options });
       return {
         uploadAsync: async () => {
-          onProgress({ totalBytesSent: 5, totalBytesExpectedToSend: 10 });
-          onProgress({ totalBytesSent: 10, totalBytesExpectedToSend: 10 });
+          for (const event of progressEvents) {
+            clock += event.elapsed ?? 0;
+            onProgress({ totalBytesSent: event.sent, totalBytesExpectedToSend: event.total });
+          }
           if (neverFinishes) return new Promise((_, reject) => { rejectTransfer = reject; });
           return { status, body };
         },
@@ -35,6 +37,7 @@ function harness({ platform = 'ios', size = 1000, token = 'fixture-token', statu
   };
   const sandbox = {
     exports: {},
+    Date: { now: () => clock },
     setTimeout: fn => { timeout = fn; return 1; },
     clearTimeout: () => {},
     fetch: async () => { fetches++; return { ok: true, blob: async () => ({ size, blob: true }) }; },
@@ -108,6 +111,20 @@ test('photo conversion changes only a temporary upload derivative and cleans it 
   assert.equal(h.uploads[0].uri, 'file:///optimized.jpg');
   assert.equal(h.uploads[0].options.headers['Content-Type'], 'image/jpeg');
   assert.deepEqual(h.deleted, ['file:///optimized.jpg']);
+});
+
+test('native upload progress bounds UI updates while preserving measured start and completion', async () => {
+  const h = harness({
+    progressEvents: Array.from({ length: 1000 }, (_, index) => ({ sent: index + 1, total: 1000, elapsed: 1 })),
+  });
+  await h.send();
+  const measured = h.statuses.filter(state => state.progress !== null);
+  assert.ok(measured.length <= 13, 'one second of native events should not cause 1000 screen updates');
+  assert.equal(measured[0].progress, 0);
+  assert.equal(measured[1].progress, 0.001, 'first measured progress must be immediate');
+  assert.equal(measured.at(-1).phase, 'processing');
+  assert.equal(measured.at(-1).progress, 1, 'completion must bypass throttling');
+  assert.ok(measured.every((state, index) => index === 0 || state.progress >= measured[index - 1].progress));
 });
 
 test('authentication and size failures cannot upload or delete the original', async () => {

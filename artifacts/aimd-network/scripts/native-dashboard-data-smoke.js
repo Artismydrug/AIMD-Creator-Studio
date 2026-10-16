@@ -58,6 +58,7 @@ function render(responses = {}, overrides = {}) {
         Modal: 'Modal', ActivityIndicator: 'ActivityIndicator', RefreshControl: 'RefreshControl',
         KeyboardAvoidingView: 'KeyboardAvoidingView', Image: 'Image', TextInput: 'TextInput',
         StyleSheet: { create: value => value }, Platform: { OS: 'ios' },
+        useWindowDimensions: () => ({ width: 390, height: 844 }),
         Animated: { Value: class { interpolate() { return 0; } } }, Easing: {},
         Alert: { alert: () => {} }, Linking: {}, AccessibilityInfo: {},
       };

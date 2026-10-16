@@ -712,7 +712,6 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
         <PostCard
           post={item}
           currentUserId={me?.id}
-          onFollowChanged={refetch}
           onRefresh={refetch}
           immersive
           active={!composing && !navigationOpen && index === activeIndex}

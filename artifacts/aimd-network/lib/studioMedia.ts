@@ -7,6 +7,7 @@ export const MAX_STUDIO_VIDEO_BYTES = 50 * 1024 * 1024;
 export const MAX_STUDIO_AUDIO_BYTES = 25 * 1024 * 1024;
 const MAX_STUDIO_IMAGE_BYTES = 20 * 1024 * 1024;
 const UPLOAD_TIMEOUT_MS = 180_000;
+const UPLOAD_PROGRESS_INTERVAL_MS = 100;
 
 export type StudioMedia = {
   uri: string;
@@ -108,6 +109,8 @@ export async function uploadStudioMedia(
     if (!token) throw new Error('Your session needs to reconnect. Please sign in and try again.');
     if (!base) throw new Error('The upload service is not configured.');
     onStatus({ phase: 'uploading', progress: 0 });
+    let lastReportedProgress = -1;
+    let lastProgressUpdateAt = 0;
     task = FileSystem.createUploadTask(`${base}/api/storage/uploads`, uploadUri, {
       httpMethod: 'POST',
       uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
@@ -120,6 +123,13 @@ export async function uploadStudioMedia(
     }, ({ totalBytesSent, totalBytesExpectedToSend }) => {
       if (cancelled || totalBytesExpectedToSend <= 0) return;
       const progress = Math.min(1, Math.max(0, totalBytesSent / totalBytesExpectedToSend));
+      const now = Date.now();
+      // Native transfers can emit many events per frame. Bound React updates,
+      // but always report the first measured progress and transfer completion.
+      if (progress <= lastReportedProgress ||
+        (lastReportedProgress >= 0 && progress < 1 && now - lastProgressUpdateAt < UPLOAD_PROGRESS_INTERVAL_MS)) return;
+      lastReportedProgress = progress;
+      lastProgressUpdateAt = now;
       onStatus({ phase: progress >= 1 ? 'processing' : 'uploading', progress });
     });
     const result = await task.uploadAsync();

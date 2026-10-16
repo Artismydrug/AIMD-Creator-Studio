@@ -82,7 +82,7 @@ interface PostCardProps {
   onMutedChange?: (muted: boolean) => void;
 }
 
-export default function PostCard({
+function PostCard({
   post,
   currentUserId,
   onFollowChanged,
