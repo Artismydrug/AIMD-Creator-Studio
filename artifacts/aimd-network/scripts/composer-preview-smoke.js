@@ -42,11 +42,25 @@ function harness(kind, { failUpload = false, failPost = false, canceled = false 
       if (name === '@/hooks/useColors') return { useColors: () => ({ radius: 12 }) };
       if (name === 'react-native-safe-area-context') return { useSafeAreaInsets: () => ({ top: 59, bottom: 34 }) };
       if (name === '@expo/vector-icons') return { Feather: 'Feather' };
+      if (name === '@/components/FeedNavigation') return { __esModule: true, default: 'FeedNavigation', feedControlsInset: top => top + 68 };
+      if (name === '@clerk/expo') return { useAuth: () => ({ getToken: async () => 'test-token' }) };
+      if (name === '@/lib/studioMedia') return {
+        STUDIO_PORTRAIT_RATIO: 9 / 16,
+        MAX_STUDIO_VIDEO_BYTES: 50 * 1024 * 1024,
+        MAX_STUDIO_AUDIO_BYTES: 25 * 1024 * 1024,
+        uploadStudioMedia: async (media, getToken, onStatus) => {
+          uploads.push({ media });
+          onStatus({ phase: 'uploading', progress: 0.5 });
+          if (failUpload) throw new Error('Upload failed');
+          return '/objects/media';
+        },
+      };
       if (name === 'expo-haptics') return { impactAsync: () => {}, notificationAsync: () => {}, ImpactFeedbackStyle: {}, NotificationFeedbackType: {} };
       if (name === 'expo-image-picker') return {
         requestMediaLibraryPermissionsAsync: async () => ({ status: 'granted' }),
         requestCameraPermissionsAsync: async () => ({ granted: true }),
         launchImageLibraryAsync: picker, launchCameraAsync: picker, UIImagePickerControllerQualityType: { Medium: 1 },
+        VideoExportPreset: { H264_1280x720: 6 },
       };
       if (name === 'expo-document-picker') return { getDocumentAsync: picker };
       if (name === '@/lib/submissionLock') return lockSandbox.exports;
@@ -76,6 +90,7 @@ function harness(kind, { failUpload = false, failPost = false, canceled = false 
         },
       };
       if (name === 'react-native-keyboard-controller') return { KeyboardAvoidingView: 'KeyboardAvoidingView' };
+      if (name === './(tabs)/workshops' || name === './(tabs)/challenges') return { default: 'EmbeddedScreen', __esModule: true };
       if (name === '@/components/KeyboardAwareScrollViewCompat') return { KeyboardAwareScrollViewCompat: 'KeyboardAwareScrollViewCompat' };
       if (name.startsWith('@/components/')) return { default: name.split('/').pop(), __esModule: true };
       throw new Error(`Unexpected dependency ${name}`);

@@ -58,6 +58,14 @@ export default function CommunityScreen() {
     void safeImpact();
   };
 
+  if (section === 'feed') {
+    return (
+      <View style={s.container} testID="community-screen">
+        <FeedScreen embedded onCommunitySectionChange={selectSection} />
+      </View>
+    );
+  }
+
   return (
     <View style={s.container} testID="community-screen">
       <View style={s.header}>
@@ -97,9 +105,7 @@ export default function CommunityScreen() {
         </View>
       </View>
       <View style={s.content}>
-         {section === 'feed' ? (
-           <FeedScreen embedded />
-         ) : section === 'creators' ? (
+         {section === 'creators' ? (
            <DirectoryScreen embedded />
          ) : (
            <EventsScreen embedded />

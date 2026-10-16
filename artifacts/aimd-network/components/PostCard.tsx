@@ -5,8 +5,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
-  Image,
+  useWindowDimensions,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -24,6 +25,8 @@ import StudioVideo from '@/components/StudioVideo';
 import AudioTrackPlayer from '@/components/AudioTrackPlayer';
 import TextPostBody from '@/components/TextPostBody';
 import PostOwnerActions from '@/components/PostOwnerActions';
+import { portraitFrame, STUDIO_PORTRAIT_RATIO } from '@/lib/studioMedia';
+import StudioImage from '@/components/StudioImage';
 
 /** Resolve a relative imageUrl (e.g. /api/storage/objects/…) to an absolute URL for React Native. */
 function resolveImageUrl(url: string | null | undefined): string | null {
@@ -72,6 +75,8 @@ interface PostCardProps {
   onRefresh?: () => void;
   immersive?: boolean;
   active?: boolean;
+  preload?: boolean;
+  contentTopInset?: number;
   reducedMotion?: boolean;
   muted?: boolean;
   onMutedChange?: (muted: boolean) => void;
@@ -84,6 +89,8 @@ export default function PostCard({
   onRefresh,
   immersive = false,
   active = false,
+  preload = false,
+  contentTopInset = 0,
   reducedMotion = false,
   muted = true,
   onMutedChange = () => undefined,
@@ -94,6 +101,9 @@ export default function PostCard({
   const [followedByMe, setFollowedByMe] = useState(post.followedByMe);
   const [followerCount, setFollowerCount] = useState(post.followerCount);
   const [ownerDialogOpen, setOwnerDialogOpen] = useState(false);
+  const window = useWindowDimensions();
+  const [viewport, setViewport] = useState({ width: window.width, height: window.height });
+  const mediaFrame = portraitFrame(viewport.width, viewport.height);
   const frameColors = [colors.primary, colors.sunsetCoral, colors.cyan, colors.gold];
   const frameColor = frameColors[post.id % frameColors.length];
   const isTextOnly = !resolveImageUrl(post.imageUrl);
@@ -164,6 +174,8 @@ export default function PostCard({
       borderRadius: 0,
       overflow: 'hidden',
       backgroundColor: colors.ink,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     mediaSurface: {
       flex: 1,
@@ -384,12 +396,12 @@ export default function PostCard({
     },
     postImage: {
       width: '100%',
-      aspectRatio: 1,
+      aspectRatio: STUDIO_PORTRAIT_RATIO,
       backgroundColor: colors.muted,
     },
     postVideo: {
       width: '100%',
-      aspectRatio: 1,
+      aspectRatio: STUDIO_PORTRAIT_RATIO,
     },
     imageStamp: {
       position: 'absolute',
@@ -426,8 +438,19 @@ export default function PostCard({
   return (
     <>
       {immersive ? (
-        <View style={s.immersiveCard}>
-          <View style={[s.mediaSurface, isTextOnly && s.textPostSurface]}>
+        <View style={s.immersiveCard} onLayout={({ nativeEvent: { layout } }) => {
+          if (layout.width > 0 && layout.height > 0) {
+            setViewport(previous => previous.width === layout.width && previous.height === layout.height
+              ? previous : { width: layout.width, height: layout.height });
+          }
+        }} testID={`feed-post-${post.id}`}>
+          <View
+            testID={`feed-media-frame-${post.id}`}
+            style={[s.mediaSurface,
+              !isTextOnly && post.mediaType !== 'audio' ? { flex: 0, ...mediaFrame } : { width: '100%' },
+              (isTextOnly || post.mediaType === 'audio') && { paddingTop: contentTopInset },
+              isTextOnly && s.textPostSurface]}
+          >
             {resolveImageUrl(post.imageUrl) && post.mediaType === 'audio' ? (
               <View style={s.audioSurface}>
                 <Feather name="music" size={50} color={colors.cyan} />
@@ -437,16 +460,18 @@ export default function PostCard({
               <StudioVideo
                 uri={resolveImageUrl(post.imageUrl)!}
                 active={active && !ownerDialogOpen}
+                preload={preload && !ownerDialogOpen}
                 reducedMotion={reducedMotion}
                 muted={muted}
                 onMutedChange={onMutedChange}
                 style={s.immersiveVideo}
+                controlsTopInset={Math.max(14, contentTopInset - (viewport.height - mediaFrame.height) / 2 + 8)}
               />
             ) : resolveImageUrl(post.imageUrl) ? (
-              <Image
-                source={{ uri: resolveImageUrl(post.imageUrl)! }}
+              <StudioImage
+                uri={resolveImageUrl(post.imageUrl)!}
+                load={active || preload}
                 style={s.immersiveImage}
-                resizeMode="contain"
               />
             ) : (
               <TextPostBody postId={post.id} caption={post.caption} tags={post.tags} />
@@ -634,10 +659,9 @@ export default function PostCard({
                   style={s.postVideo}
                 />
               ) : (
-                <Image
-                  source={{ uri: resolveImageUrl(post.imageUrl)! }}
+                <StudioImage
+                  uri={resolveImageUrl(post.imageUrl)!}
                   style={s.postImage}
-                  resizeMode="contain"
                 />
               )}
               <View style={s.imageStamp}>

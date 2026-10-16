@@ -28,11 +28,22 @@ export default function ChallengeHabitsScreen() {
     switchText: { fontFamily: 'DMSans_600SemiBold', fontSize: 13, color: colors.mutedForeground },
     content: { flex: 1 },
   }), [colors, topPad]);
-  return <View style={styles.container} testID="challenge-habits-screen">
-    <View style={styles.header}>
+  const sectionHeader = (
+    <View style={styles.header} testID="challenge-habits-scroll-header">
       <View style={styles.titleRow}><View style={styles.titleMark}><Feather name="zap" size={19} color={colors.accentForeground} /></View><View style={styles.titleCopy}><Text style={styles.title}>Habits &amp; Challenges</Text><Text style={styles.subtitle}>Build the practice. Share the work.</Text></View></View>
       <View style={styles.switcher} accessibilityRole="tablist">{(['habits', 'challenges'] as const).map(item => <TouchableOpacity key={item} style={[styles.switchButton, section === item && styles.active]} onPress={() => { if (section !== item) { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSection(item); } }} accessibilityRole="tab" accessibilityState={{ selected: section === item }}><Feather name={item === 'challenges' ? 'award' : 'repeat'} size={15} color={section === item ? colors.primary : colors.mutedForeground} /><Text style={[styles.switchText, section === item && { color: colors.primary }]}>{item === 'challenges' ? 'Challenges' : 'Habits'}</Text></TouchableOpacity>)}</View>
     </View>
-    <View style={styles.content}>{section === 'challenges' ? <ChallengesScreen embedded /> : <HabitsScreen embedded />}</View>
+  );
+  return <View style={styles.container} testID="challenge-habits-screen">
+    {section === 'habits' ? (
+      <View style={styles.content}>
+        <HabitsScreen embedded scrollHeader={sectionHeader} />
+      </View>
+    ) : (
+      <>
+        {sectionHeader}
+        <View style={styles.content}><ChallengesScreen embedded /></View>
+      </>
+    )}
   </View>;
 }

@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react';
+import type { ReactNode } from 'react';
 import {
   View,
   Text,
@@ -32,7 +33,10 @@ import RisingPracticeFlame from '@/components/RisingPracticeFlame';
 const CATEGORIES = ['Drawing', 'Painting', 'Sculpture', 'Photography', 'Music', 'Writing', 'Other'];
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
-export default function HabitsScreen({ embedded = false }: { embedded?: boolean }) {
+export default function HabitsScreen({ embedded = false, scrollHeader }: {
+  embedded?: boolean;
+  scrollHeader?: ReactNode;
+}) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [adding, setAdding] = useState(false);
@@ -398,59 +402,14 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
 
   return (
     <View style={s.container}>
-      <View style={s.header}>
-        <View style={s.headerRow}>
-          <Text style={s.headerTitle}>Habits</Text>
-          <TouchableOpacity
-            style={s.addBtn}
-            onPress={() => {
-              setAdding(true);
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            }}
-            testID="add-habit-button"
-            accessibilityLabel="Add habit"
-          >
-            <Feather name="plus" size={20} color={colors.primaryForeground} />
-          </TouchableOpacity>
-        </View>
-        <Text style={s.tagline}>Discipline Eats Talent</Text>
-        <Text style={s.actionHelp} testID="habit-actions-help">{HABIT_ACTION_HELP}</Text>
-        <View style={s.statsRow}>
-          <View style={s.statBox} testID="habits-streak-stat">
-            <Text style={s.statNumber}>{summary?.currentStreakDays ?? 0}</Text>
-            <Text style={s.statLabel}>Day Streak</Text>
-          </View>
-          <View style={s.statBox} testID="habits-today-stat">
-            <Text style={s.statNumber}>{todayCount}/{totalCount}</Text>
-            <Text style={s.statLabel}>Done Today</Text>
-          </View>
-          <View style={s.statBox} testID="habits-rate-stat">
-            <Text style={s.statNumber}>{Math.round(summary?.completionRate ?? 0)}%</Text>
-            <Text style={s.statLabel}>Rate</Text>
-          </View>
-        </View>
-      </View>
-
-      {isLoading ? (
-        <View style={s.centered}>
-          <ActivityIndicator color={colors.primary} size="large" />
-        </View>
-      ) : isError || habitsInvalid ? (
-        <View style={s.centered}>
-          <Feather name="wifi-off" size={40} color={colors.mutedForeground} />
-          <Text style={s.emptyTitle}>Failed to load habits</Text>
-          <TouchableOpacity style={s.retryBtn} onPress={() => refetch()}>
-            <Text style={s.retryText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <FlatList
-          data={habits}
+      <FlatList
+          data={isLoading || isError || habitsInvalid ? [] : habits}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
               <HabitCard habit={item} onLogged={handleHabitLogged} onDeleted={refetch} />
           )}
           contentContainerStyle={s.listContent}
+          testID="habits-scroll-list"
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -460,8 +419,41 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
             />
           }
           ListHeaderComponent={
-            habits && habits.length > 0 ? (
-              <View>
+            <View>
+              {scrollHeader}
+              <View style={s.header} testID="habits-scroll-header">
+                <View style={s.headerRow}>
+                  <Text style={s.headerTitle}>Habits</Text>
+                  <TouchableOpacity
+                    style={s.addBtn}
+                    onPress={() => {
+                      setAdding(true);
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    }}
+                    testID="add-habit-button"
+                    accessibilityLabel="Add habit"
+                  >
+                    <Feather name="plus" size={20} color={colors.primaryForeground} />
+                  </TouchableOpacity>
+                </View>
+                <Text style={s.tagline}>Discipline Eats Talent</Text>
+                <Text style={s.actionHelp} testID="habit-actions-help">{HABIT_ACTION_HELP}</Text>
+                <View style={s.statsRow}>
+                  <View style={s.statBox} testID="habits-streak-stat">
+                    <Text style={s.statNumber}>{summary?.currentStreakDays ?? 0}</Text>
+                    <Text style={s.statLabel}>Day Streak</Text>
+                  </View>
+                  <View style={s.statBox} testID="habits-today-stat">
+                    <Text style={s.statNumber}>{todayCount}/{totalCount}</Text>
+                    <Text style={s.statLabel}>Done Today</Text>
+                  </View>
+                  <View style={s.statBox} testID="habits-rate-stat">
+                    <Text style={s.statNumber}>{Math.round(summary?.completionRate ?? 0)}%</Text>
+                    <Text style={s.statLabel}>Rate</Text>
+                  </View>
+                </View>
+              </View>
+              {!isError && !habitsInvalid && habits.length > 0 ? <View>
                 <View style={s.progressPanel} testID="habit-weekly-progress">
                   <View>
                     <Text style={s.progressHeading}>Practice over time</Text>
@@ -555,18 +547,31 @@ export default function HabitsScreen({ embedded = false }: { embedded?: boolean 
                 <View style={s.sectionHeader}>
                   <Text style={s.sectionTitle}>Today's Practice</Text>
                 </View>
-              </View>
-            ) : null
-          }
-          ListEmptyComponent={
-            <View style={s.centered}>
-              <Feather name="activity" size={48} color={colors.muted} />
-              <Text style={s.emptyTitle}>No habits yet</Text>
-              <Text style={s.emptyText}>Build your creative practice</Text>
+              </View> : null}
             </View>
           }
+          ListEmptyComponent={
+            isLoading ? (
+              <View style={s.centered}>
+                <ActivityIndicator color={colors.primary} size="large" />
+              </View>
+            ) : isError || habitsInvalid ? (
+              <View style={s.centered}>
+                <Feather name="wifi-off" size={40} color={colors.mutedForeground} />
+                <Text style={s.emptyTitle}>Failed to load habits</Text>
+                <TouchableOpacity style={s.retryBtn} onPress={() => refetch()}>
+                  <Text style={s.retryText}>Retry</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={s.centered}>
+                <Feather name="activity" size={48} color={colors.muted} />
+                <Text style={s.emptyTitle}>No habits yet</Text>
+                <Text style={s.emptyText}>Build your creative practice</Text>
+              </View>
+            )
+          }
         />
-      )}
 
       <Modal visible={adding} animationType="slide" transparent>
         <KeyboardAvoidingView

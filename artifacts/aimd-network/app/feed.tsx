@@ -21,6 +21,15 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import { useAuth } from '@clerk/expo';
+import {
+  uploadStudioMedia,
+  MAX_STUDIO_VIDEO_BYTES,
+  MAX_STUDIO_AUDIO_BYTES,
+  STUDIO_PORTRAIT_RATIO,
+  type StudioMedia,
+  type StudioUploadStatus,
+} from '@/lib/studioMedia';
 import { runExclusiveSubmission } from '@/lib/submissionLock';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -30,7 +39,6 @@ import {
   useListStudioPosts,
   useCreateStudioPost,
   useGetCurrentUser,
-  customFetch,
   type StudioPost,
 } from '@workspace/api-client-react';
 import PostCard from '@/components/PostCard';
@@ -38,86 +46,59 @@ import AudioTrackPlayer from '@/components/AudioTrackPlayer';
 import FollowingFeedSuggestions from '@/components/FollowingFeedSuggestions';
 import ComposerVideoPreview from '@/components/ComposerVideoPreview';
 import FeedScopeTabs, { type FeedScope } from '@/components/FeedScopeTabs';
+import FeedNavigation, { feedControlsInset } from '@/components/FeedNavigation';
 import WorkshopsScreen from './(tabs)/workshops';
 import ChallengesScreen from './(tabs)/challenges';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
-const MAX_STUDIO_VIDEO_BYTES = 50 * 1024 * 1024;
 const MAX_STUDIO_VIDEO_DURATION_MS = 60 * 1000;
-const MAX_STUDIO_AUDIO_BYTES = 25 * 1024 * 1024;
 const FEED_MUTED_PREFERENCE_KEY = 'aimd:feed-videos-muted';
 
-type SelectedMedia = {
-  uri: string;
-  contentType: string;
-  fileName: string;
-  fileSize?: number;
-  duration?: number | null;
-  mediaType: 'image' | 'video' | 'audio';
-};
-
-/** Upload creator media directly to the API server. Returns the objectPath. */
-async function uploadMediaToServer(
-  uri: string,
-  contentType: string,
-  mediaType: 'image' | 'video' | 'audio',
-  onProgress: (progress: number) => void,
-): Promise<string> {
-  onProgress(0.1);
-  const fileResponse = await fetch(uri);
-  const arrayBuffer = await fileResponse.arrayBuffer();
-
-  if (mediaType === 'video' && arrayBuffer.byteLength > MAX_STUDIO_VIDEO_BYTES) {
-    throw new Error('Video must be 50 MB or smaller.');
-  }
-  if (mediaType === 'audio' && arrayBuffer.byteLength > MAX_STUDIO_AUDIO_BYTES) {
-    throw new Error('Audio must be 25 MB or smaller.');
-  }
-
-  onProgress(0.35);
-  const result = await customFetch<{ objectPath: string }>('/api/storage/uploads', {
-    method: 'POST',
-    headers: {
-      'Content-Type': contentType,
-      'X-AIMD-UPLOAD-PURPOSE': 'studio_post',
-    },
-    body: arrayBuffer,
-  });
-  onProgress(1);
-  return result.objectPath;
-}
-
-export default function FeedScreen({ embedded = false }: { embedded?: boolean }) {
+export default function FeedScreen({ embedded = false, onCommunitySectionChange }: {
+  embedded?: boolean;
+  onCommunitySectionChange?: (section: 'creators' | 'events') => void;
+}) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { getToken } = useAuth();
   const { compose } = useLocalSearchParams<{ compose?: string }>();
   const queryClient = useQueryClient();
   const feedRef = useRef<FlatList<StudioPost>>(null);
   const [composing, setComposing] = useState(false);
   const [caption, setCaption] = useState('');
   const [tags, setTags] = useState('');
-  const [selectedMedia, setSelectedMedia] = useState<SelectedMedia | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<StudioMedia | null>(null);
   const [uploading, setUploading] = useState(false);
   const submittingRef = useRef(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState<StudioUploadStatus | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [videosMuted, setVideosMuted] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [feedMode, setFeedMode] = useState<'all' | 'following'>('all');
   const [scope, setScope] = useState<FeedScope>('community');
+  const [navigationOpen, setNavigationOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [pagerHeight, setPagerHeight] = useState(0);
   const pagerViewportRef = useRef<View>(null);
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const topPad = embedded ? 0 : Platform.OS === 'web' ? 67 : insets.top + 8;
   const pageHeight = pagerHeight || Math.max(480, windowHeight - topPad - 112);
+  const previousPageHeight = useRef(pageHeight);
   const syncPagerHeight = useCallback((height: number) => {
     const nextHeight = Math.round(height);
     if (!Number.isFinite(nextHeight) || nextHeight <= 0) return;
     setPagerHeight((previous) => previous === nextHeight ? previous : nextHeight);
   }, []);
+
+  useEffect(() => {
+    // A safe-area/rotation/header resize must not leave the feed between rows.
+    if (previousPageHeight.current === pageHeight) return;
+    previousPageHeight.current = pageHeight;
+    feedRef.current?.scrollToOffset({ offset: activeIndex * pageHeight, animated: false });
+  }, [pageHeight, activeIndex]);
 
   useEffect(() => {
     if (!embedded && compose === '1') {
@@ -282,6 +263,8 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
         (mediaType === 'video' ? 'video/mp4' : 'image/jpeg'),
       fileName: asset.fileName ?? `studio-media.${ext}`,
       fileSize: asset.fileSize,
+      width: asset.width,
+      height: asset.height,
       duration: asset.duration,
       mediaType,
     });
@@ -323,6 +306,8 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
       mediaTypes: ['videos'],
       allowsEditing: false,
       quality: 0.7,
+      videoMaxDuration: 60,
+      videoExportPreset: ImagePicker.VideoExportPreset.H264_1280x720,
     });
     if (!result.canceled && result.assets[0]) usePickedMedia(result.assets[0]);
   };
@@ -387,13 +372,17 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
           setUploading(true);
           setUploadProgress(0);
           try {
-            const objectPath = await uploadMediaToServer(
-              selectedMedia.uri,
-              selectedMedia.contentType,
-              selectedMedia.mediaType,
-              setUploadProgress,
+            const objectPath = await uploadStudioMedia(
+              selectedMedia,
+              getToken,
+              (status) => {
+                setUploadStatus(status);
+                setUploadProgress(status.progress ?? 0);
+              },
             );
             imageUrl = `/api/storage${objectPath}`;
+            setUploadStatus(null);
+            setUploadProgress(1);
           } catch (error) {
             Alert.alert(
               'Upload failed',
@@ -416,6 +405,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
         }
       } finally {
         setUploading(false);
+        setUploadStatus(null);
       }
     });
   };
@@ -541,6 +531,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
         },
         centered: {
           flex: 1,
+          backgroundColor: colors.background,
           alignItems: 'center',
           justifyContent: 'center',
           paddingTop: 100,
@@ -619,7 +610,8 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
           borderColor: colors.border,
         },
         composerButtonText: { fontFamily: 'DMSans_700Bold', fontSize: 14, color: colors.foreground },
-        mediaPreview: { width: '100%', height: 240, borderRadius: colors.radius, backgroundColor: colors.muted },
+        mediaPreview: { width: '100%', aspectRatio: STUDIO_PORTRAIT_RATIO, borderRadius: colors.radius, backgroundColor: colors.muted },
+        previewFrame: { width: '100%', maxWidth: Math.min(280, (windowHeight * 0.42) * STUDIO_PORTRAIT_RATIO), alignSelf: 'center' },
         inputLabel: { fontFamily: 'DMSans_600SemiBold', fontSize: 13, color: colors.foreground, marginVertical: 10 },
         captionInput: {
           fontFamily: 'DMSans_400Regular',
@@ -705,8 +697,8 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
   );
 
   return (
-    <View style={s.container}>
-      <View style={s.header}>
+    <View style={[s.container, scope === 'community' && { backgroundColor: colors.ink }]}>
+      {scope !== 'community' && <><View style={s.header}>
          {!embedded && (
            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Back to community"
              onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/community')} hitSlop={12}>
@@ -714,9 +706,9 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
            </TouchableOpacity>
          )}
         <View style={s.headerCopy}>
-          <Text style={s.headerEyebrow}>Creator Studio</Text>
-          <Text style={s.headerTitle}>Studio Feed</Text>
-          <Text style={s.headerHint}>{scope === 'community' ? 'Swipe up to explore' : scope === 'masterclasses' ? 'Learn from working creators' : 'Your creative practice'}</Text>
+          {!embedded && <Text style={s.headerEyebrow}>Creator Studio</Text>}
+          <Text style={s.headerTitle}>{scope === 'masterclasses' ? 'Masterclasses' : 'My challenges'}</Text>
+          {!embedded && <Text style={s.headerHint}>{scope === 'masterclasses' ? 'Learn from working creators' : 'Your creative practice'}</Text>}
         </View>
         <TouchableOpacity
           accessibilityRole="button"
@@ -727,48 +719,15 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
         >
           <Feather name="user" size={18} color={colors.foreground} />
         </TouchableOpacity>
-        {scope === 'community' && <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel="Create a new studio post"
-          style={s.composeBtn}
-          onPress={() => {
-            setComposing(true);
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          }}
-          testID="create-studio-post"
-        >
-          <Feather name="edit-2" size={18} color={colors.primaryForeground} />
-        </TouchableOpacity>}
       </View>
-      <FeedScopeTabs scope={scope} onChange={(next) => { setScope(next); setActiveIndex(0); }} />
+      <FeedScopeTabs scope={scope} onChange={(next) => { setScope(next); setActiveIndex(0); }} /></>}
       {scope === 'masterclasses' ? <WorkshopsScreen embedded /> : scope === 'challenges' ? <ChallengesScreen embedded /> : <>
-      <View style={s.filterBar}>
-        <View style={s.filterGroup}>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="Show all posts"
-            accessibilityState={{ selected: feedMode === 'all' }}
-            onPress={() => handleFeedModeChange('all')}
-            style={[s.filterButton, feedMode === 'all' && { backgroundColor: colors.primary }]}
-            testID="feed-filter-all"
-          >
-            <Text style={[s.filterText, { color: feedMode === 'all' ? colors.primaryForeground : colors.foreground }]}>All</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="Show posts from creators you follow"
-            accessibilityState={{ selected: feedMode === 'following' }}
-            onPress={() => handleFeedModeChange('following')}
-            style={[s.filterButton, feedMode === 'following' && { backgroundColor: colors.primary }]}
-            testID="feed-filter-following"
-          >
-            <Text style={[s.filterText, { color: feedMode === 'following' ? colors.primaryForeground : colors.foreground }]}>Following</Text>
-          </TouchableOpacity>
-        </View>
-        <Text style={s.feedCount}>
-          {posts?.length ? `${Math.min(activeIndex + 1, posts.length)} / ${posts.length}` : 'Ready to create'}
-        </Text>
-      </View>
+      <FeedNavigation mode={feedMode} onModeChange={handleFeedModeChange}
+        menuOpen={navigationOpen} onMenuOpenChange={setNavigationOpen}
+        onScopeChange={(next) => { setScope(next); setActiveIndex(0); }}
+        onCommunitySectionChange={onCommunitySectionChange}
+        onCompose={() => { setComposing(true); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); }}
+        activeIndex={activeIndex} postCount={posts.length} embedded={embedded} />
 
       {isLoading ? (
         <View style={s.centered}>
@@ -812,7 +771,9 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
                   onFollowChanged={refetch}
                   onRefresh={refetch}
                   immersive
-                  active={!composing && index === activeIndex}
+                  active={!composing && !navigationOpen && index === activeIndex}
+                  preload={!composing && !navigationOpen && !reduceMotion && index === activeIndex + 1}
+                  contentTopInset={feedControlsInset(insets.top, Platform.OS === 'web')}
                   reducedMotion={reduceMotion}
                   muted={videosMuted}
                   onMutedChange={handleMutedChange}
@@ -821,8 +782,8 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
             )}
             style={s.pager}
             initialNumToRender={2}
-            maxToRenderPerBatch={3}
-            windowSize={5}
+            maxToRenderPerBatch={2}
+            windowSize={3}
             onLayout={(event) => syncPagerHeight(event.nativeEvent.layout.height)}
             showsVerticalScrollIndicator={false}
             pagingEnabled={(posts?.length ?? 0) > 0}
@@ -860,7 +821,7 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
             }
             ListEmptyComponent={
               feedMode === 'following' ? (
-                <View style={{ minHeight: pageHeight }}>
+                <View style={{ minHeight: pageHeight, paddingTop: feedControlsInset(insets.top, Platform.OS === 'web'), backgroundColor: colors.background }}>
                   <FollowingFeedSuggestions currentUserId={me?.id} />
                 </View>
               ) : (
@@ -890,15 +851,18 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
 
             <KeyboardAwareScrollViewCompat bottomOffset={20} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={{ flexShrink: 1 }}>
             {composing && selectedMedia && (
-              <View testID="compose-media-preview">
+              <View testID="compose-media-preview" style={selectedMedia.mediaType !== 'audio' ? s.previewFrame : undefined}>
                 {selectedMedia.mediaType === 'image' ? (
-                  <Image source={{ uri: selectedMedia.uri }} style={s.mediaPreview} resizeMode="contain" accessibilityLabel="Selected photo preview" />
+                  <Image source={{ uri: selectedMedia.uri }} style={s.mediaPreview} resizeMode="cover" accessibilityLabel="Selected photo in a centered 9 by 16 portrait frame" />
                 ) : selectedMedia.mediaType === 'video' ? (
                   <ComposerVideoPreview key={selectedMedia.uri} uri={selectedMedia.uri} active={composing && !isPending} />
                 ) : (
                   <AudioTrackPlayer key={selectedMedia.uri} uri={selectedMedia.uri} title={selectedMedia.fileName} active={composing && !isPending} />
                 )}
               </View>
+            )}
+            {selectedMedia && selectedMedia.mediaType !== 'audio' && (
+              <Text style={s.mediaHint}>9:16 portrait frame · centered crop. Review the framing before posting.</Text>
             )}
             <Text style={s.inputLabel}>Caption</Text>
             <TextInput
@@ -956,18 +920,20 @@ export default function FeedScreen({ embedded = false }: { embedded?: boolean })
 
             {uploading ? (
               <View style={s.uploadStatus}>
-                <View style={s.uploadTrack}>
+                {uploadStatus?.progress != null && <View style={s.uploadTrack}>
                   <View
                     style={[
                       s.uploadFill,
-                      { width: `${Math.max(8, Math.round(uploadProgress * 100))}%` },
+                      { width: `${Math.round(uploadProgress * 100)}%` },
                     ]}
                   />
-                </View>
+                </View>}
                 <Text style={s.uploadText}>
-                  {uploadProgress >= 1
+                  {!uploadStatus && uploadProgress >= 1
                     ? 'Publishing post…'
-                    : uploadProgress < 0.35 ? 'Preparing media…' : 'Uploading media…'}
+                    : uploadStatus?.phase === 'preparing' ? 'Optimizing media…'
+                      : uploadStatus?.phase === 'processing' ? 'Upload complete. Checking media…'
+                        : uploadStatus?.progress != null ? `Uploading media… ${Math.round(uploadProgress * 100)}%` : 'Uploading media…'}
                 </Text>
               </View>
             ) : null}

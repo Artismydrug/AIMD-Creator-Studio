@@ -20,3 +20,15 @@ Do not assume a wrapper's layout callback has supplied an embedded pager's heigh
 **Why:** Release checks found a correctly sized scroll viewport whose rows still retained a full-window estimate because the wrapper callback was missed. Creator details can remain off-screen even when reading and global header controls appear to work.
 
 **How to apply:** Compare actual row and viewport bounds, and inspect the per-post author footer and Message label above the bottom bar—not just the global profile button. Bottom navigation must reserve its occupied layout space.
+
+Studio Feed photos and videos should share a 9:16 portrait presentation, with the composer showing the same centered crop. Keep writing and audio in their dedicated layouts; do not require creators to delete or overwrite their original files.
+
+**Why:** The owner requested Instagram/TikTok-like portrait media and consistent feed alignment after seeing empty bands and mismatched media framing.
+
+**How to apply:** Fit the portrait stage inside the measured pager and preserve its row snapping when safe areas or viewport dimensions change. Distinguish display framing from the original video file's encoded dimensions.
+
+Keep the Community feed's navigation compact by default: section navigation expands on demand, rather than stacking Community branding, section tabs, a second feed heading, and filters above the posts.
+
+**Why:** The owner specifically requested full-screen posts after feedback showed that the combined headers consumed nearly half the phone screen.
+
+**How to apply:** Overlay the compact controls without reducing pager height. Preserve safe-area spacing, a way to reach every section, and unobstructed text-post reading and media controls.

@@ -141,11 +141,19 @@ test('feed video pauses when backgrounded or blurred and does not load inactive 
   assert.equal(plays, 1);
   listeners.statusChange({ status: 'error' });
   result.render();
-  assert.match(JSON.stringify(result.tree), /Video unavailable/);
+  assert.match(JSON.stringify(result.tree), /Video couldn.t load/);
   blur();
   props.active = false;
   result.render();
   assert.equal(sources.at(-1), null);
+  props.preload = true;
+  focusedCallback();
+  listeners.change('active');
+  result.render();
+  result.effects.forEach(fn => fn());
+  assert.equal(sources.at(-1).uri, props.uri);
+  assert.equal(sources.at(-1).useCaching, true);
+  assert.equal(plays, 1, 'preloading the next video must never play it');
 });
 
 test('four workshop placeholders retain normal-flow badges and explicit preview availability', () => {
