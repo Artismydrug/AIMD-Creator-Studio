@@ -17,7 +17,8 @@ import {
   TextInput,
   Animated,
   Easing,
-  AccessibilityInfo
+  AccessibilityInfo,
+  useWindowDimensions,
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -76,6 +77,7 @@ function deviceTimezone(): string {
 export default function ProgressScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
@@ -332,6 +334,14 @@ export default function ProgressScreen() {
       alignItems: 'center',
       gap: 12,
     },
+    compactHeader: {
+      flexDirection: 'column',
+      alignItems: 'stretch',
+      gap: 8,
+    },
+    compactHeaderActions: {
+      alignSelf: 'flex-end',
+    },
     title: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 28,
@@ -346,20 +356,45 @@ export default function ProgressScreen() {
       textTransform: 'uppercase',
       marginTop: 2,
     },
-    feedBtn: {
+    headerActions: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
-      backgroundColor: colors.primary,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: colors.radius || 4,
+      gap: 8,
+      flexShrink: 0,
     },
-    feedBtnText: {
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 13,
-      color: colors.primaryForeground,
-      textTransform: 'uppercase',
+    memberProfileGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    memberTierButton: {
+      minHeight: 36,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingHorizontal: 8,
+      borderRadius: 18,
+      backgroundColor: colors.muted,
+    },
+    profileButton: {
+      minHeight: 40,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+      paddingHorizontal: 5,
+    },
+    profileButtonText: {
+      fontFamily: 'DMSans_600SemiBold',
+      fontSize: 11,
+      color: colors.primary,
+    },
+    notificationButton: {
+      width: 42,
+      height: 42,
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
     },
     content: {
       paddingBottom: Platform.OS === 'web' ? 100 : 100,
@@ -873,16 +908,16 @@ export default function ProgressScreen() {
 
   return (
     <View style={s.container} testID="progress-screen">
-      <View style={s.header}>
+      <View style={[s.header, windowWidth < 380 && s.compactHeader]}>
         {/* Title block — grows to fill available space */}
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={s.title} numberOfLines={1}>Dashboard</Text>
           <Text style={s.tagline} numberOfLines={1}>Discipline Eats Talent</Text>
         </View>
-        {/* Tier badge + profile link */}
-        <View style={{ alignItems: 'flex-end', gap: 4 }}>
+        <View style={[s.headerActions, windowWidth < 380 && s.compactHeaderActions]}>
+          <View style={s.memberProfileGroup}>
           <TouchableOpacity
-            style={{ alignItems: 'center', flexDirection: 'row', gap: 5, paddingVertical: 2 }}
+            style={s.memberTierButton}
             accessibilityRole="button"
             accessibilityLabel={isFreeCreator
               ? 'View membership options for your free Discovering Artist account'
@@ -896,19 +931,22 @@ export default function ProgressScreen() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
+            style={s.profileButton}
             accessibilityRole="button"
             accessibilityLabel="Open your profile"
             onPress={() => router.push('/profile')}
             testID="dashboard-profile-button"
           >
-            <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.primary }}>My Profile</Text>
+            <Feather name="user" size={15} color={colors.primary} />
+            <Text style={s.profileButtonText}>Profile</Text>
           </TouchableOpacity>
+          </View>
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel={unreadNotifications ? `Open notifications, ${unreadNotifications} unread` : 'Open notifications'}
             onPress={() => router.push('/notifications')}
             testID="dashboard-notifications-button"
-            style={{ position: 'relative', padding: 5 }}
+            style={s.notificationButton}
           >
             <Feather name="bell" size={19} color={colors.foreground} />
             {unreadNotifications > 0 ? (
@@ -918,14 +956,6 @@ export default function ProgressScreen() {
             ) : null}
           </TouchableOpacity>
         </View>
-        {/* Feed shortcut */}
-        <TouchableOpacity style={s.feedBtn} onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          router.push('/feed');
-        }} testID="dashboard-feed-button">
-          <Feather name="image" size={14} color={colors.primaryForeground} />
-          <Text style={s.feedBtnText}>Feed</Text>
-        </TouchableOpacity>
       </View>
 
       {isOfflineMode && (

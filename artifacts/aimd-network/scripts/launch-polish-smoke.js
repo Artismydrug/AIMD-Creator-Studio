@@ -70,6 +70,21 @@ test('all five main routes recover locally with stable whitelisted stages', () =
   }
 });
 
+test('dashboard removes the Feed shortcut and keeps membership, Profile, and notifications accessible', () => {
+  const dashboard = source('../app/(tabs)/index.tsx');
+  assert.doesNotMatch(dashboard, /dashboard-feed-button/);
+  assert.match(dashboard, /dashboard-membership-button/);
+  assert.match(dashboard, /dashboard-profile-button/);
+  assert.match(dashboard, /dashboard-notifications-button/);
+  assert.match(dashboard, /router\.push\(isFreeCreator \? '\/membership' : '\/profile'\)/);
+  assert.match(dashboard, /router\.push\('\/profile'\)/);
+  assert.match(dashboard, /router\.push\('\/notifications'\)/);
+  assert.match(dashboard, /memberProfileGroup/);
+  assert.match(dashboard, /headerActions/);
+  assert.match(dashboard, /compactHeaderActions/);
+  assert.match(dashboard, /windowWidth < 380/);
+});
+
 test('route headers hide default development labels and portfolio has exactly one navigation bar', () => {
   const root = source('../app/_layout.tsx');
   assert.match(root, /headerBackButtonDisplayMode: 'minimal'/);
