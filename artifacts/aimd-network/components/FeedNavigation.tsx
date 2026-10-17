@@ -11,6 +11,33 @@ import type { FeedScope } from '@/components/FeedScopeTabs';
 
 export const feedControlsInset = (safeTop: number, web = false) => (web ? 12 : safeTop + 8) + 60;
 
+export type FeedScrollDirectionTracker = {
+  offset: number;
+  direction: 'up' | 'down' | null;
+  distance: number;
+};
+
+export function updateFeedHeaderFromScroll(
+  tracker: FeedScrollDirectionTracker,
+  nextOffset: number,
+): boolean | null {
+  if (!Number.isFinite(nextOffset)) return null;
+  const offset = Math.max(0, nextOffset);
+  const delta = offset - tracker.offset;
+  tracker.offset = offset;
+  if (Math.abs(delta) < 1) return null;
+
+  const direction = delta > 0 ? 'down' : 'up';
+  if (tracker.direction !== direction) {
+    tracker.direction = direction;
+    tracker.distance = 0;
+  }
+  tracker.distance += Math.abs(delta);
+  if (tracker.distance < 24) return null;
+  tracker.distance = 0;
+  return direction === 'up';
+}
+
 type Props = {
   mode: 'all' | 'following';
   onModeChange: (mode: 'all' | 'following') => void;
@@ -55,14 +82,9 @@ export default function FeedNavigation({
     else router.push(section === 'creators' ? '/(tabs)/directory' : '/(tabs)/events');
   };
   const entries: { key: string; label: string; icon: React.ComponentProps<typeof Feather>['name']; action: () => void }[] = [
-    ...(!embedded ? [{ key: 'back', label: 'Back to Feed', icon: 'arrow-left' as const, action: () => router.canGoBack() ? router.back() : router.replace('/(tabs)/community') }] : []),
-    ...(embedded && !expanded ? [{ key: 'tabs', label: 'Show Feed tabs', icon: 'chevron-down' as const, action: () => onExpandedChange?.(true) }] : []),
     { key: 'community', label: 'Studio Feed', icon: 'image', action: () => onScopeChange('community') },
     { key: 'creators', label: 'Creators', icon: 'users', action: () => openCommunitySection('creators') },
     { key: 'events', label: 'Events', icon: 'calendar', action: () => openCommunitySection('events') },
-    { key: 'masterclasses', label: 'Masterclasses', icon: 'play-circle', action: () => onScopeChange('masterclasses') },
-    { key: 'challenges', label: 'My challenges', icon: 'target', action: () => onScopeChange('challenges') },
-    { key: 'profile', label: 'My profile', icon: 'user', action: () => router.push('/profile') },
   ];
 
   return (

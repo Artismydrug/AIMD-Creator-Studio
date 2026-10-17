@@ -27,8 +27,8 @@ Studio Feed photos and videos should share a 9:16 portrait presentation, with th
 
 **How to apply:** Fit the portrait stage inside the measured pager and preserve its row snapping when safe areas or viewport dimensions change. Distinguish display framing from the original video file's encoded dimensions.
 
-Open the Feed area with the original Feed/Creators/Events section tabs visible, then collapse the expanded header when the user starts browsing posts. Keep the compact feed controls available and provide a way to restore the tabs.
+Open the Feed area with the original Feed/Creators/Events section tabs visible, collapse the expanded header while swiping down through posts, and restore it as the user scrolls back up. Keep the compact feed controls available.
 
 **Why:** The owner requested the original tab presentation back while retaining the larger, unobstructed post experience during scrolling. This supersedes the earlier compact-by-default preference.
 
-**How to apply:** Overlay navigation without changing pager height when it collapses. Preserve safe-area spacing, a way to reach every section, and measured header clearance for writing and media controls.
+**How to apply:** Overlay navigation without changing pager height as its direction state changes. Preserve safe-area spacing, the three Feed/Creators/Events destinations, and measured header clearance for writing and media controls.

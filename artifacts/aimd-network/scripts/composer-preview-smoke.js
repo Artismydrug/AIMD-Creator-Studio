@@ -42,7 +42,7 @@ function harness(kind, { failUpload = false, failPost = false, canceled = false 
       if (name === '@/hooks/useColors') return { useColors: () => ({ radius: 12 }) };
       if (name === 'react-native-safe-area-context') return { useSafeAreaInsets: () => ({ top: 59, bottom: 34 }) };
       if (name === '@expo/vector-icons') return { Feather: 'Feather' };
-      if (name === '@/components/FeedNavigation') return { __esModule: true, default: 'FeedNavigation', feedControlsInset: top => top + 68 };
+      if (name === '@/components/FeedNavigation') return { __esModule: true, default: 'FeedNavigation', feedControlsInset: top => top + 68, updateFeedHeaderFromScroll: () => null };
       if (name === '@clerk/expo') return { useAuth: () => ({ getToken: async () => 'test-token' }) };
       if (name === '@/lib/studioMedia') return {
         STUDIO_PORTRAIT_RATIO: 9 / 16,

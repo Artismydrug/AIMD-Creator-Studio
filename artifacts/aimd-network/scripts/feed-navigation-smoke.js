@@ -40,6 +40,14 @@ function find(node, predicate) {
   }
 }
 const node = (tree, id) => find(tree, item => item.props?.testID === id);
+function findAll(node, predicate, results = []) {
+  if (Array.isArray(node)) node.forEach(child => findAll(child, predicate, results));
+  else if (node && typeof node === 'object') {
+    if (predicate(node)) results.push(node);
+    findAll(node.props?.children, predicate, results);
+  }
+  return results;
+}
 const native = {
   ...Object.fromEntries(['View', 'Text', 'TouchableOpacity', 'Modal', 'Pressable', 'ScrollView'].map(name => [name, name])),
   Platform: { OS: 'ios' }, StyleSheet: { create: value => value, absoluteFill: { position: 'absolute' } },
@@ -74,7 +82,7 @@ test('Feed keeps one stable pager while its navigation owns the restored section
   assert.equal(node(h.tree, 'community-events-tab'), undefined);
 });
 
-test('compact overlay keeps filter, compose and expandable section navigation functional', () => {
+test('compact overlay keeps feed filters, compose and the three requested destinations', () => {
   const calls = [], routes = [];
   const props = {
     mode: 'all', menuOpen: false, embedded: true, activeIndex: 3, postCount: 9,
@@ -102,17 +110,14 @@ test('compact overlay keeps filter, compose and expandable section navigation fu
   props.menuOpen = true;
   h.render();
   assert.equal(find(h.tree, item => item.type === 'Modal').props.visible, true);
+  const menuItems = findAll(h.tree, item => typeof item.props?.testID === 'string' && item.props.testID.startsWith('feed-menu-') && !['feed-menu-toggle', 'feed-menu-close', 'feed-menu-backdrop'].includes(item.props.testID));
+  assert.deepEqual(menuItems.map(item => item.props.testID), ['feed-menu-community', 'feed-menu-creators', 'feed-menu-events']);
   node(h.tree, 'feed-menu-creators').props.onPress();
   node(h.tree, 'feed-menu-events').props.onPress();
-  node(h.tree, 'feed-menu-masterclasses').props.onPress();
-  node(h.tree, 'feed-menu-challenges').props.onPress();
   node(h.tree, 'feed-menu-community').props.onPress();
-  node(h.tree, 'feed-menu-profile').props.onPress();
   assert.ok(calls.some(call => call[0] === 'section' && call[1] === 'creators'));
   assert.ok(calls.some(call => call[0] === 'section' && call[1] === 'events'));
-  assert.ok(calls.some(call => call[0] === 'scope' && call[1] === 'masterclasses'));
-  assert.ok(calls.some(call => call[0] === 'scope' && call[1] === 'challenges'));
-  assert.deepEqual(routes, ['/profile']);
+  assert.deepEqual(routes, []);
   const scopesBefore = calls.filter(call => call[0] === 'scope').length;
   find(h.tree, item => item.type === 'Modal').props.onRequestClose();
   node(h.tree, 'feed-menu-backdrop').props.onPress();
@@ -120,7 +125,21 @@ test('compact overlay keeps filter, compose and expandable section navigation fu
   assert.deepEqual(calls.at(-1), ['menu', false]);
 });
 
-test('original section tabs collapse and can be restored without changing pager bounds', () => {
+test('feed header hides while swiping down through posts and returns after an upward scroll', () => {
+  const h = mount('../components/FeedNavigation.tsx', {
+    ...common,
+    'expo-linear-gradient': { LinearGradient: 'LinearGradient' },
+    'expo-status-bar': { StatusBar: 'StatusBar' },
+    'expo-router': { useFocusEffect() {}, useRouter: () => ({}) },
+  }, { mode: 'all', menuOpen: false, embedded: true, expanded: true, onMenuOpenChange() {}, onExpandedChange() {}, onScopeChange() {}, activeIndex: 0, postCount: 4 });
+  const tracker = { offset: 0, direction: null, distance: 0 };
+  assert.equal(h.exports.updateFeedHeaderFromScroll(tracker, 10), null);
+  assert.equal(h.exports.updateFeedHeaderFromScroll(tracker, 28), false);
+  assert.equal(h.exports.updateFeedHeaderFromScroll(tracker, 45), null);
+  assert.equal(h.exports.updateFeedHeaderFromScroll(tracker, 21), true);
+});
+
+test('original section tabs collapse while the pager keeps its full viewport', () => {
   const calls = [];
   const props = {
     mode: 'all', menuOpen: false, embedded: true, expanded: true, activeIndex: 0, postCount: 3,
@@ -147,32 +166,34 @@ test('original section tabs collapse and can be restored without changing pager 
   h.render();
   assert.equal(node(h.tree, 'feed-expanded-navigation'), undefined);
   assert.equal(node(h.tree, 'feed-navigation-overlay').props.style[0].position, 'absolute');
-  node(h.tree, 'feed-menu-tabs').props.onPress();
-  assert.deepEqual(calls.slice(-2), [['menu', false], ['expanded', true]]);
+  const menuItems = findAll(h.tree, item => typeof item.props?.testID === 'string' && item.props.testID.startsWith('feed-menu-') && !['feed-menu-toggle', 'feed-menu-close', 'feed-menu-backdrop'].includes(item.props.testID));
+  assert.deepEqual(menuItems.map(item => item.props.testID), ['feed-menu-community', 'feed-menu-creators', 'feed-menu-events']);
 });
 
-test('scrolling collapses the expanded header and measured controls protect writing and video buttons', () => {
+test('scroll direction restores the tabs and measured controls protect writing and video buttons', () => {
   const feed = readFileSync(resolve(__dirname, '../app/feed.tsx'), 'utf8');
   const tabs = readFileSync(resolve(__dirname, '../app/(tabs)/_layout.tsx'), 'utf8');
   assert.match(tabs, /name="community"[\s\S]*?title: 'Feed'/);
-  assert.match(feed, /onScrollBeginDrag=\{\(\) => setFeedHeaderExpanded\(false\)\}/);
-  assert.match(feed, /contentOffset\.y > 16\) setFeedHeaderExpanded\(false\)/);
+  assert.match(feed, /updateFeedHeaderFromScroll\(\s*feedScrollTracker\.current/);
+  assert.match(feed, /if \(nextExpanded !== null\) setFeedHeaderExpanded\(nextExpanded\)/);
   assert.match(feed, /onControlsHeightChange=\{syncControlsHeight\}/);
   assert.match(feed, /contentTopInset=\{controlsTopInset\}/);
   assert.match(feed, /snapToInterval=\{posts\?\.length \? pageHeight : undefined\}/);
   assert.match(feed, /maxHeight: pageHeight/);
 });
 
-test('standalone feed menu retains a working back fallback and routes to Creators and Events', () => {
+test('standalone Feed menu offers only the three requested destinations', () => {
   const routes = [];
   const h = mount('../components/FeedNavigation.tsx', {
     ...common,
     'expo-linear-gradient': { LinearGradient: 'LinearGradient' },
     'expo-status-bar': { StatusBar: 'StatusBar' },
-    'expo-router': { useFocusEffect() {}, useRouter: () => ({
-      push: path => routes.push(path), canGoBack: () => false, replace: path => routes.push(path),
-    }) },
+    'expo-router': { useFocusEffect() {}, useRouter: () => ({ push: path => routes.push(path) }) },
   }, { mode: 'all', menuOpen: true, embedded: false, onMenuOpenChange() {}, onScopeChange() {}, activeIndex: 0, postCount: 0 });
-  for (const key of ['back', 'creators', 'events']) node(h.tree, `feed-menu-${key}`).props.onPress();
-  assert.deepEqual(routes, ['/(tabs)/community', '/(tabs)/directory', '/(tabs)/events']);
+  const menuItems = findAll(h.tree, item => typeof item.props?.testID === 'string' && item.props.testID.startsWith('feed-menu-') && !['feed-menu-toggle', 'feed-menu-close', 'feed-menu-backdrop'].includes(item.props.testID));
+  assert.deepEqual(menuItems.map(item => item.props.testID), ['feed-menu-community', 'feed-menu-creators', 'feed-menu-events']);
+  node(h.tree, 'feed-menu-community').props.onPress();
+  node(h.tree, 'feed-menu-creators').props.onPress();
+  node(h.tree, 'feed-menu-events').props.onPress();
+  assert.deepEqual(routes, ['/(tabs)/directory', '/(tabs)/events']);
 });

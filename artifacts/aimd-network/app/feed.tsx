@@ -46,7 +46,11 @@ import AudioTrackPlayer from '@/components/AudioTrackPlayer';
 import FollowingFeedSuggestions from '@/components/FollowingFeedSuggestions';
 import ComposerVideoPreview from '@/components/ComposerVideoPreview';
 import FeedScopeTabs, { type FeedScope } from '@/components/FeedScopeTabs';
-import FeedNavigation, { feedControlsInset } from '@/components/FeedNavigation';
+import FeedNavigation, {
+  feedControlsInset,
+  updateFeedHeaderFromScroll,
+  type FeedScrollDirectionTracker,
+} from '@/components/FeedNavigation';
 import WorkshopsScreen from './(tabs)/workshops';
 import ChallengesScreen from './(tabs)/challenges';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
@@ -82,6 +86,11 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [feedHeaderExpanded, setFeedHeaderExpanded] = useState(embedded);
   const [controlsHeight, setControlsHeight] = useState(0);
+  const feedScrollTracker = useRef<FeedScrollDirectionTracker>({
+    offset: 0,
+    direction: null,
+    distance: 0,
+  });
   const [activeIndex, setActiveIndex] = useState(0);
   const [pagerHeight, setPagerHeight] = useState(0);
   const pagerViewportRef = useRef<View>(null);
@@ -432,6 +441,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
   const handleFeedModeChange = (mode: 'all' | 'following') => {
     setFeedMode(mode);
     setActiveIndex(0);
+    feedScrollTracker.current = { offset: 0, direction: null, distance: 0 };
   };
 
   const s = useMemo(
@@ -825,9 +835,14 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
               offset: pageHeight * index,
               index,
             })}
-             onScrollBeginDrag={() => setFeedHeaderExpanded(false)}
             onScroll={(event) => {
-               if (event.nativeEvent.contentOffset.y > 16) setFeedHeaderExpanded(false);
+               if (embedded) {
+                 const nextExpanded = updateFeedHeaderFromScroll(
+                   feedScrollTracker.current,
+                   event.nativeEvent.contentOffset.y,
+                 );
+                 if (nextExpanded !== null) setFeedHeaderExpanded(nextExpanded);
+               }
               const visibleHeight = Math.round(event.nativeEvent.layoutMeasurement.height);
               syncPagerHeight(visibleHeight);
               const currentPageHeight = Number.isFinite(visibleHeight) && visibleHeight > 0 ? visibleHeight : pageHeight;
