@@ -10,11 +10,8 @@ import {
   ActivityIndicator,
   RefreshControl,
   Platform,
-  KeyboardAvoidingView,
   Image,
   Alert,
-  Linking,
-  TextInput,
   Animated,
   Easing,
   AccessibilityInfo,
@@ -24,27 +21,17 @@ import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
-import ChallengeCameraCapture from '@/components/ChallengeCameraCapture';
 import CreatorAppTour from '@/components/CreatorAppTour';
-import VerificationStatusTag from '@/components/VerificationStatusTag';
 import MonthlyMemberDrops from '@/components/MonthlyMemberDrops';
-import {
-  ChallengeProofAsset,
-  fromImagePickerAsset,
-  uploadChallengeProof,
-} from '@/lib/challengeProof';
+import HabitPracticeSummaryCard from '@/components/HabitPracticeSummaryCard';
 import {
   useGetProgress,
   getGetProgressQueryKey,
   getListBadgesQueryKey,
   useCheckInProgress,
   useSpinDailyReward,
-  useGetCurrentChallenge,
-  getGetCurrentChallengeQueryKey,
-  useSubmitChallengeEntry,
   getGetUserProfileQueryKey,
   useGetUserProfile,
   getBaseUrl,
@@ -107,12 +94,6 @@ export default function ProgressScreen() {
     },
   );
 
-  const {
-    data: challengeData,
-    isLoading: challengeLoading,
-    isError: challengeIsError,
-    refetch: refetchChallenge
-  } = useGetCurrentChallenge();
   const { data: currentUser, refetch: refetchCurrentUser } = useGetCurrentUser();
   const profileUserId = typeof currentUser?.id === 'number' && Number.isFinite(currentUser.id) && currentUser.id > 0
     ? currentUser.id : null;
@@ -135,7 +116,6 @@ export default function ProgressScreen() {
     try {
       await Promise.all([
         refetchProgress(),
-        refetchChallenge(),
         refetchCurrentUser(),
         ...(profileUserId !== null ? [refetchProfileSnapshot()] : []),
         queryClient.invalidateQueries({ queryKey: getGetRewardsQueryKey() }),
@@ -143,7 +123,7 @@ export default function ProgressScreen() {
     } finally {
       setRefreshing(false);
     }
-  }, [refetchProgress, refetchChallenge, refetchCurrentUser, refetchProfileSnapshot, profileUserId, queryClient]);
+  }, [refetchProgress, refetchCurrentUser, refetchProfileSnapshot, profileUserId, queryClient]);
 
   // Mutations
   const checkInMut = useCheckInProgress({
@@ -216,100 +196,7 @@ export default function ProgressScreen() {
     outputRange: ['0deg', '360deg'],
   });
 
-  // Challenge entry state
-  const [composing, setComposing] = useState(false);
-  const [cameraVisible, setCameraVisible] = useState(false);
-  const [caption, setCaption] = useState('');
-  const [tags, setTags] = useState('');
-  const [finalProof, setFinalProof] = useState<ChallengeProofAsset | null>(null);
-  const [processProof, setProcessProof] = useState<ChallengeProofAsset | null>(null);
-  const [uploading, setUploading] = useState(false);
-
-  const submitMut = useSubmitChallengeEntry({
-    mutation: {
-      onSuccess: () => {
-        setUploading(false);
-        setComposing(false);
-        setCaption('');
-        setTags('');
-        setFinalProof(null);
-        setProcessProof(null);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        queryClient.invalidateQueries({ queryKey: getGetCurrentChallengeQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getGetRewardsQueryKey() });
-        void refetchCurrentUser();
-      },
-      onError: () => {
-        setUploading(false);
-        Alert.alert('Submission Failed', 'We could not submit your entry right now. Please try again.');
-      }
-    }
-  });
-
-  const handlePickProcessProof = async () => {
-    if (Platform.OS === 'web') {
-      Alert.alert(
-        'Mobile app required',
-        'Process verification can be attached from the AIMD iOS or Android app.',
-      );
-      return;
-    }
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(
-        'Permission needed',
-        'Allow photo library access to attach optional process verification.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Open settings', onPress: () => Linking.openSettings() },
-        ],
-      );
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images', 'videos'],
-      quality: 0.85,
-      exif: true,
-      videoMaxDuration: 60,
-    });
-    if (!result.canceled && result.assets[0]) {
-      setProcessProof(fromImagePickerAsset(result.assets[0]));
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
-
-  const handleSubmitChallenge = async () => {
-    if (!caption.trim() || !finalProof) return;
-    const tagList = tags.split(',').map((t) => t.trim()).filter(Boolean);
-    setUploading(true);
-    try {
-      const [finalUpload, processUpload] = await Promise.all([
-        uploadChallengeProof(finalProof, 'challenge_final'),
-        processProof
-          ? uploadChallengeProof(processProof, 'challenge_process')
-          : Promise.resolve(null),
-      ]);
-      submitMut.mutate({
-        data: {
-          caption: caption.trim(),
-          tags: tagList,
-          finalMedia: { objectPath: finalUpload.objectPath },
-          processMedia: processUpload
-            ? { objectPath: processUpload.objectPath }
-            : null,
-        },
-      });
-    } catch {
-      setUploading(false);
-      Alert.alert(
-        'Upload failed',
-        'Your proof could not be uploaded. Check your connection and try again.',
-      );
-    }
-  };
-
   const topPad = Platform.OS === 'web' ? 67 : insets.top + 8;
-  const isSubmitting = uploading || submitMut.isPending;
   const isFreeCreator = currentUser?.tier === 'free';
   const membershipTitle = currentUser?.tier === 'pro'
     ? 'Professional Artist'
@@ -325,8 +212,6 @@ export default function ProgressScreen() {
   const profileAvatar = resolveMediaUrl(profileSnapshot?.avatarUrl ?? currentUser?.avatarUrl);
   const recentBadges = Array.isArray(progress?.recentBadges)
     ? progress.recentBadges.filter((badge) => badge && typeof badge.name === 'string') : [];
-  const submissions = Array.isArray(challengeData?.submissions)
-    ? challengeData.submissions.filter((submission) => submission && typeof submission.id === 'number') : [];
   const nextBadge = progress?.nextBadge;
   const nextBadgePercent = typeof nextBadge?.progressPercent === 'number' && Number.isFinite(nextBadge.progressPercent)
     ? Math.max(0, Math.min(100, nextBadge.progressPercent)) : 0;
