@@ -383,16 +383,16 @@ export default function ProgressScreen() {
       paddingHorizontal: 4,
     },
     profileButton: {
-      minHeight: 34,
+      minHeight: 44,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 4,
-      paddingHorizontal: 5,
+      gap: 6,
+      paddingHorizontal: 9,
     },
     profileButtonText: {
       fontFamily: 'DMSans_600SemiBold',
-      fontSize: 11,
+      fontSize: 13,
       color: colors.primary,
     },
     notificationButton: {
@@ -929,7 +929,7 @@ export default function ProgressScreen() {
               onPress={() => router.push('/profile')}
               testID="dashboard-profile-button"
             >
-              <Feather name="user" size={15} color={colors.primary} />
+              <Feather name="user" size={18} color={colors.primary} />
               <Text style={s.profileButtonText}>Profile</Text>
             </TouchableOpacity>
             {membershipTitle ? (
