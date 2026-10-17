@@ -376,11 +376,15 @@ export default function ProgressScreen() {
     },
     memberTierButton: {
       minHeight: 24,
-      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 3,
       paddingHorizontal: 4,
+    },
+    memberTierLabel: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      transform: [{ translateY: -4 }],
     },
     profileButton: {
       minHeight: 44,
@@ -942,13 +946,15 @@ export default function ProgressScreen() {
                 onPress={() => router.push(isFreeCreator ? '/membership' : '/profile')}
                 testID={isFreeCreator ? 'dashboard-membership-button' : 'dashboard-tier-button'}
               >
-                <Feather name="shield" size={10} color={colors.cyan} />
-                <Text
-                  numberOfLines={1}
-                  style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 9, color: colors.mutedForeground }}
-                >
-                  {membershipTitle}
-                </Text>
+                <View style={s.memberTierLabel}>
+                  <Feather name="shield" size={10} color={colors.cyan} />
+                  <Text
+                    numberOfLines={1}
+                    style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 9, color: colors.mutedForeground }}
+                  >
+                    {membershipTitle}
+                  </Text>
+                </View>
               </TouchableOpacity>
             ) : null}
           </View>
