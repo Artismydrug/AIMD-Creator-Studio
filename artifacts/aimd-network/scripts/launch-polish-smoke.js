@@ -80,6 +80,10 @@ test('dashboard removes the Feed shortcut and keeps membership, Profile, and not
   assert.match(dashboard, /router\.push\('\/profile'\)/);
   assert.match(dashboard, /router\.push\('\/notifications'\)/);
   assert.match(dashboard, /memberProfileGroup/);
+  assert.match(dashboard, /'Discovering Artist'/);
+  assert.match(dashboard, /'Dedicated Artist'/);
+  assert.match(dashboard, /'Professional Artist'/);
+  assert.match(dashboard, /memberProfileGroup:\s*\{\s*flexDirection:\s*'column'/);
   assert.match(dashboard, /headerActions/);
   assert.match(dashboard, /compactHeaderActions/);
   assert.match(dashboard, /windowWidth < 380/);
