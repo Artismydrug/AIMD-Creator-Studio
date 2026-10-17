@@ -80,12 +80,21 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
   const [feedMode, setFeedMode] = useState<'all' | 'following'>('all');
   const [scope, setScope] = useState<FeedScope>('community');
   const [navigationOpen, setNavigationOpen] = useState(false);
+  const [feedHeaderExpanded, setFeedHeaderExpanded] = useState(embedded);
+  const [controlsHeight, setControlsHeight] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const [pagerHeight, setPagerHeight] = useState(0);
   const pagerViewportRef = useRef<View>(null);
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const topPad = embedded ? 0 : Platform.OS === 'web' ? 67 : insets.top + 8;
   const pageHeight = pagerHeight || Math.max(480, windowHeight - topPad - 112);
+  const controlsTopInset = controlsHeight || feedControlsInset(insets.top, Platform.OS === 'web');
+  const syncControlsHeight = useCallback((height: number) => {
+    const nextHeight = Math.round(height);
+    if (Number.isFinite(nextHeight) && nextHeight > 0) {
+      setControlsHeight(previous => previous === nextHeight ? previous : nextHeight);
+    }
+  }, []);
   const previousPageHeight = useRef(pageHeight);
   const syncPagerHeight = useCallback((height: number) => {
     const nextHeight = Math.round(height);
@@ -716,7 +725,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
           immersive
           active={!composing && !navigationOpen && index === activeIndex}
           preload={!composing && !navigationOpen && !reduceMotion && index === activeIndex + 1}
-          contentTopInset={feedControlsInset(insets.top, Platform.OS === 'web')}
+           contentTopInset={controlsTopInset}
           reducedMotion={reduceMotion}
           muted={videosMuted}
           onMutedChange={handleMutedChange}
@@ -727,7 +736,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
       activeIndex,
       composing,
       handleMutedChange,
-      insets.top,
+      controlsTopInset,
       me?.id,
       navigationOpen,
       pageStyle,
@@ -768,7 +777,10 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
         onScopeChange={(next) => { setScope(next); setActiveIndex(0); }}
         onCommunitySectionChange={onCommunitySectionChange}
         onCompose={() => { setComposing(true); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); }}
-        activeIndex={activeIndex} postCount={posts.length} embedded={embedded} />
+         activeIndex={activeIndex} postCount={posts.length} embedded={embedded}
+         expanded={embedded && feedHeaderExpanded}
+         onExpandedChange={setFeedHeaderExpanded}
+         onControlsHeightChange={syncControlsHeight} />
 
       {isLoading ? (
         <View style={s.centered}>
@@ -813,7 +825,9 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
               offset: pageHeight * index,
               index,
             })}
+             onScrollBeginDrag={() => setFeedHeaderExpanded(false)}
             onScroll={(event) => {
+               if (event.nativeEvent.contentOffset.y > 16) setFeedHeaderExpanded(false);
               const visibleHeight = Math.round(event.nativeEvent.layoutMeasurement.height);
               syncPagerHeight(visibleHeight);
               const currentPageHeight = Number.isFinite(visibleHeight) && visibleHeight > 0 ? visibleHeight : pageHeight;
@@ -836,7 +850,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
             }
             ListEmptyComponent={
               feedMode === 'following' ? (
-                <View style={{ minHeight: pageHeight, paddingTop: feedControlsInset(insets.top, Platform.OS === 'web'), backgroundColor: colors.background }}>
+                <View style={{ minHeight: pageHeight, paddingTop: controlsTopInset, backgroundColor: colors.background }}>
                   <FollowingFeedSuggestions currentUserId={me?.id} />
                 </View>
               ) : (

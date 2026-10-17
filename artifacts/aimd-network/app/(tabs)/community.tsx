@@ -74,7 +74,7 @@ export default function CommunityScreen() {
             <Feather name="users" size={19} color={colors.primaryForeground} />
           </View>
           <View style={s.titleCopy}>
-            <Text style={s.title}>Community</Text>
+            <Text style={s.title}>Feed</Text>
              <Text style={s.subtitle}>Make · Share · Connect.</Text>
           </View>
         </View>

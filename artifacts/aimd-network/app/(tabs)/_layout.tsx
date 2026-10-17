@@ -47,7 +47,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="community"
         options={{
-          title: 'Community',
+          title: 'Feed',
           tabBarIcon: ({ color, size }) => (
             <Feather name="users" size={size} color={color} />
           ),

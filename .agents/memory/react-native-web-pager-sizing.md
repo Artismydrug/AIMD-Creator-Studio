@@ -27,8 +27,8 @@ Studio Feed photos and videos should share a 9:16 portrait presentation, with th
 
 **How to apply:** Fit the portrait stage inside the measured pager and preserve its row snapping when safe areas or viewport dimensions change. Distinguish display framing from the original video file's encoded dimensions.
 
-Keep the Community feed's navigation compact by default: section navigation expands on demand, rather than stacking Community branding, section tabs, a second feed heading, and filters above the posts.
+Open the Feed area with the original Feed/Creators/Events section tabs visible, then collapse the expanded header when the user starts browsing posts. Keep the compact feed controls available and provide a way to restore the tabs.
 
-**Why:** The owner specifically requested full-screen posts after feedback showed that the combined headers consumed nearly half the phone screen.
+**Why:** The owner requested the original tab presentation back while retaining the larger, unobstructed post experience during scrolling. This supersedes the earlier compact-by-default preference.
 
-**How to apply:** Overlay the compact controls without reducing pager height. Preserve safe-area spacing, a way to reach every section, and unobstructed text-post reading and media controls.
+**How to apply:** Overlay navigation without changing pager height when it collapses. Preserve safe-area spacing, a way to reach every section, and measured header clearance for writing and media controls.

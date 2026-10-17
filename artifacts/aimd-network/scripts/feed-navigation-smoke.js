@@ -50,9 +50,10 @@ const common = {
   '@expo/vector-icons': { Feather: 'Feather' },
   'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 59, bottom: 34 }) },
   '@/hooks/useColors': { useColors: () => ({ radius: 12, card: 'cream', foreground: 'ink' }) },
+  '@/lib/appearance': { useAppearance: () => ({ scheme: 'light' }) },
 };
 
-test('Community opens directly into the feed, without the old stacked headings or section tabs', () => {
+test('Feed keeps one stable pager while its navigation owns the restored section tabs', () => {
   const h = mount('../app/(tabs)/community.tsx', {
     ...common,
     '@/lib/haptics': { safeImpact: async () => {} },
@@ -89,7 +90,7 @@ test('compact overlay keeps filter, compose and expandable section navigation fu
     'expo-status-bar': { StatusBar: 'StatusBar' },
     'expo-router': { useFocusEffect() {}, useRouter: () => ({ push: path => routes.push(path) }) },
   }, props);
-  const overlay = node(h.tree, 'feed-compact-navigation');
+  const overlay = node(h.tree, 'feed-navigation-overlay');
   assert.equal(overlay.props.style[0].position, 'absolute', 'controls must not reduce the pager height');
   assert.equal(overlay.props.style[1].paddingTop, 67);
   assert.equal(h.exports.feedControlsInset(59), 127);
@@ -117,6 +118,49 @@ test('compact overlay keeps filter, compose and expandable section navigation fu
   node(h.tree, 'feed-menu-backdrop').props.onPress();
   assert.equal(calls.filter(call => call[0] === 'scope').length, scopesBefore);
   assert.deepEqual(calls.at(-1), ['menu', false]);
+});
+
+test('original section tabs collapse and can be restored without changing pager bounds', () => {
+  const calls = [];
+  const props = {
+    mode: 'all', menuOpen: false, embedded: true, expanded: true, activeIndex: 0, postCount: 3,
+    onMenuOpenChange: value => calls.push(['menu', value]),
+    onExpandedChange: value => calls.push(['expanded', value]),
+    onControlsHeightChange: value => calls.push(['height', value]),
+    onScopeChange: value => calls.push(['scope', value]),
+    onCommunitySectionChange: value => calls.push(['section', value]),
+  };
+  const h = mount('../components/FeedNavigation.tsx', {
+    ...common,
+    'expo-linear-gradient': { LinearGradient: 'LinearGradient' },
+    'expo-status-bar': { StatusBar: 'StatusBar' },
+    'expo-router': { useFocusEffect() {}, useRouter: () => ({}) },
+  }, props);
+  assert.ok(node(h.tree, 'feed-expanded-navigation'));
+  for (const section of ['feed', 'creators', 'events']) node(h.tree, `community-${section}-tab`).props.onPress();
+  assert.deepEqual(calls, [['scope', 'community'], ['section', 'creators'], ['section', 'events']]);
+  node(h.tree, 'feed-navigation-overlay').props.onLayout({ nativeEvent: { layout: { height: 230 } } });
+  node(h.tree, 'feed-header-collapse').props.onPress();
+  assert.deepEqual(calls.slice(-2), [['height', 230], ['expanded', false]]);
+  props.expanded = false;
+  props.menuOpen = true;
+  h.render();
+  assert.equal(node(h.tree, 'feed-expanded-navigation'), undefined);
+  assert.equal(node(h.tree, 'feed-navigation-overlay').props.style[0].position, 'absolute');
+  node(h.tree, 'feed-menu-tabs').props.onPress();
+  assert.deepEqual(calls.slice(-2), [['menu', false], ['expanded', true]]);
+});
+
+test('scrolling collapses the expanded header and measured controls protect writing and video buttons', () => {
+  const feed = readFileSync(resolve(__dirname, '../app/feed.tsx'), 'utf8');
+  const tabs = readFileSync(resolve(__dirname, '../app/(tabs)/_layout.tsx'), 'utf8');
+  assert.match(tabs, /name="community"[\s\S]*?title: 'Feed'/);
+  assert.match(feed, /onScrollBeginDrag=\{\(\) => setFeedHeaderExpanded\(false\)\}/);
+  assert.match(feed, /contentOffset\.y > 16\) setFeedHeaderExpanded\(false\)/);
+  assert.match(feed, /onControlsHeightChange=\{syncControlsHeight\}/);
+  assert.match(feed, /contentTopInset=\{controlsTopInset\}/);
+  assert.match(feed, /snapToInterval=\{posts\?\.length \? pageHeight : undefined\}/);
+  assert.match(feed, /maxHeight: pageHeight/);
 });
 
 test('standalone feed menu retains a working back fallback and routes to Creators and Events', () => {

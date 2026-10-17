@@ -5,7 +5,7 @@ import { useColors } from '@/hooks/useColors';
 
 export type FeedScope = 'community' | 'masterclasses' | 'challenges';
 const SCOPES = [
-  { value: 'community', label: 'Community', icon: 'users' },
+  { value: 'community', label: 'Feed', icon: 'users' },
   { value: 'masterclasses', label: 'Masterclasses', icon: 'play-circle' },
   { value: 'challenges', label: 'My challenges', icon: 'target' },
 ] as const;
