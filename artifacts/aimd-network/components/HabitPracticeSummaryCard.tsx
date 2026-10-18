@@ -17,6 +17,7 @@ export default function HabitPracticeSummaryCard({ onOpenHabits }: { onOpenHabit
   const colors = useColors();
   const [selectedHabitId, setSelectedHabitId] = useState<number | null>(null);
   const { data: habitsResponse, isLoading: habitsLoading, isError: habitsError } = useListHabits();
+  const habitsInvalid = habitsResponse != null && !Array.isArray(habitsResponse.habits);
   const habits = Array.isArray(habitsResponse?.habits)
     ? habitsResponse.habits.filter(habit => habit && typeof habit.id === 'number')
     : [];
@@ -34,20 +35,19 @@ export default function HabitPracticeSummaryCard({ onOpenHabits }: { onOpenHabit
     },
   });
   const historyInvalid = historyResponse != null && !Array.isArray(historyResponse);
-  const historyLogs = Array.isArray(historyResponse)
-    ? historyResponse.filter(log => log && log.completed && typeof log.date === 'string')
-    : [];
   const weeklyPractice = useMemo(() => {
     const now = new Date();
     const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-    const completedDates = historyLogs.map(log => log.date.slice(0, 10));
+    const completedDates = (Array.isArray(historyResponse) ? historyResponse : [])
+      .filter(log => log && log.completed && typeof log.date === 'string')
+      .map(log => log.date.slice(0, 10));
     return Array.from({ length: 4 }, (_, weeksAgo) => {
       const endDate = new Date(todayUtc - weeksAgo * SEVEN_DAYS_MS).toISOString().slice(0, 10);
       const startDate = new Date(todayUtc - (weeksAgo * 7 + 6) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
       const daysCompleted = new Set(completedDates.filter(date => date >= startDate && date <= endDate)).size;
       return { label: WEEK_LABELS[weeksAgo], daysCompleted };
     });
-  }, [historyLogs]);
+  }, [historyResponse]);
 
   const styles = useMemo(() => StyleSheet.create({
     card: {
@@ -103,6 +103,7 @@ export default function HabitPracticeSummaryCard({ onOpenHabits }: { onOpenHabit
         </TouchableOpacity>
       </View>
 
+      {habits.length === 1 && <Text style={styles.statusText}>{selectedHabit?.name}</Text>}
       {habits.length > 1 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false}
           style={styles.selector} contentContainerStyle={styles.selectorContent} accessibilityRole="tablist">
@@ -127,7 +128,7 @@ export default function HabitPracticeSummaryCard({ onOpenHabits }: { onOpenHabit
 
       {habitsLoading || (!habitsError && habits.length > 0 && historyLoading) ? (
         <View style={styles.status}><ActivityIndicator color={colors.primary} /><Text style={styles.statusText}>Loading practice history</Text></View>
-      ) : habitsError ? (
+      ) : habitsError || habitsInvalid ? (
         <View style={styles.status}>
           <Text style={styles.statusText}>Couldn’t load your habits.</Text>
           <TouchableOpacity onPress={onOpenHabits}><Text style={styles.retry}>Open Habits</Text></TouchableOpacity>

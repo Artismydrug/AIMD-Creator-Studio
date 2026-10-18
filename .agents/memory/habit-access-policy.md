@@ -9,9 +9,9 @@ Habit creation and tracking are unlimited for every membership tier, including t
 
 **How to apply:** Keep habit CRUD and session logging available to free creators. Paid tiers may differentiate on other benefits, but not on the number of habits.
 
-Habits should be the first/default section, with Challenges second.
+Habits should be the first/default section, with Challenges second, and daily habit practice should take priority over featured challenges on the Dashboard.
 
-**Why:** The product owner wants daily habits to be the primary focus, rather than challenges.
+**Why:** The product owner wants daily habits to be the primary focus, rather than challenges, and explicitly chose habit practice history instead of the Dashboard's featured challenge.
 
 **How to apply:** Preserve habits-first ordering and default selection when changing the shared mobile practice screen or its navigation labels.
 

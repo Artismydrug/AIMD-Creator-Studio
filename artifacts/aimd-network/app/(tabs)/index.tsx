@@ -40,6 +40,8 @@ import {
   useGetNotifications,
   getGetNotificationsQueryKey,
   getGetRewardsQueryKey,
+  getListHabitsQueryKey,
+  getListHabitLogsQueryKey,
 } from '@workspace/api-client-react';
 
 function resolveMediaUrl(url: string | null | undefined): string | null {
@@ -119,6 +121,8 @@ export default function ProgressScreen() {
         refetchCurrentUser(),
         ...(profileUserId !== null ? [refetchProfileSnapshot()] : []),
         queryClient.invalidateQueries({ queryKey: getGetRewardsQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getListHabitsQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getListHabitLogsQueryKey() }),
       ]);
     } finally {
       setRefreshing(false);
@@ -798,7 +802,6 @@ export default function ProgressScreen() {
 
   const isOfflineMode =
     (progressIsError && !!progress) ||
-    (challengeIsError && !!challengeData) ||
     (profileIsError && !!profileSnapshot);
 
   return (
@@ -1062,317 +1065,10 @@ export default function ProgressScreen() {
 
           <MonthlyMemberDrops compact />
 
-          {challengeLoading && !challengeData && (
-            <View style={s.challengeBlock}>
-              <ActivityIndicator color={colors.primary} />
-            </View>
-          )}
-
-          {challengeIsError && !challengeData && (
-            <View style={s.challengeBlock}>
-              <Feather name="cloud-off" size={28} color={colors.mutedForeground} />
-              <Text style={s.centeredTitle}>Could not load the featured challenge</Text>
-              <TouchableOpacity
-                style={s.retryBtn}
-                onPress={() => refetchChallenge()}
-                accessibilityRole="button"
-                accessibilityLabel="Retry featured challenge"
-              >
-                <Text style={s.retryBtnText}>Retry Challenge</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {challengeData && challengeData.challenge && (
-            <View style={s.challengeBlock}>
-              <View style={s.challengeHeader}>
-                <Text style={s.challengeTitle}>Featured Challenge</Text>
-                <Feather name="star" size={18} color={colors.primary} />
-              </View>
-              <Text style={s.challengeTheme}>{challengeData.challenge.theme}</Text>
-              <Text style={s.challengePrompt}>{challengeData.challenge.prompt}</Text>
-              <Text style={s.challengePrize}>Prize: {challengeData.challenge.prize}</Text>
-
-              <View style={s.challengeMetaRow}>
-                <Text style={s.challengeMetaText}>
-                  Due: {new Date(challengeData.challenge.deadline).toLocaleDateString()}
-                </Text>
-                <Text style={s.challengeMetaText}>
-                  {challengeData.challenge.totalSubmissions} submissions
-                </Text>
-              </View>
-
-               {challengeData.hasSubmitted ? (
-                <View style={s.challengeSubmitted}>
-                  <Feather name="check-circle" size={16} color={colors.primary} />
-                  <Text style={s.challengeSubmittedText}>Entry Submitted</Text>
-                </View>
-               ) : challengeData.challenge.status === 'active' ? (
-                <TouchableOpacity
-                  style={[s.actionBtn, { borderColor: colors.primary }]}
-                  testID="challenge-submit-button"
-                  accessibilityRole="button"
-                  accessibilityLabel="Submit a featured challenge entry"
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setComposing(true);
-                  }}
-                >
-                  <Feather name="upload" size={18} color={colors.primary} />
-                  <Text style={[s.actionBtnText, { color: colors.primary }]}>Submit Entry</Text>
-                </TouchableOpacity>
-               ) : (
-                 <View style={s.challengeSubmitted}>
-                   <Feather name="calendar" size={16} color={colors.primary} />
-                   <Text style={s.challengeSubmittedText}>
-                     {challengeData.challenge.status === 'upcoming'
-                       ? `Opens ${new Date(challengeData.challenge.startsAt).toLocaleDateString()}`
-                       : 'Challenge closed'}
-                   </Text>
-                 </View>
-               )}
-
-              {submissions.length > 0 && (
-                <View style={s.submissionsSection}>
-                  <Text style={s.submissionsHeading}>Community Submissions</Text>
-                  {submissions.map((submission) => {
-                    const mediaUrl = resolveMediaUrl(
-                      submission.finalMedia?.mediaUrl ?? submission.imageUrl,
-                    );
-                    const isVideo =
-                      submission.finalMedia?.mediaType === 'video';
-                    return (
-                      <View key={submission.id} style={s.submissionCard}>
-                        <View style={s.submissionAuthorRow}>
-                          <Text style={s.submissionAuthor}>
-                            #{submission.rank} · {submission.username}
-                          </Text>
-                          <VerificationStatusTag
-                            status={submission.verificationStatus}
-                          />
-                        </View>
-                        {mediaUrl && !isVideo && (
-                          <Image
-                            source={{ uri: mediaUrl }}
-                            style={s.submissionMedia}
-                            resizeMode="cover"
-                          />
-                        )}
-                        {mediaUrl && isVideo && (
-                          <View style={s.submissionVideo}>
-                            <Feather
-                              name="video"
-                              size={26}
-                              color={colors.primary}
-                            />
-                            <Text style={s.submissionVideoText}>
-                              Proof video captured in AIMD
-                            </Text>
-                          </View>
-                        )}
-                        <Text style={s.submissionCaption}>
-                          {submission.caption}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
-            </View>
-          )}
+          <HabitPracticeSummaryCard onOpenHabits={() => router.push('/(tabs)/challenge-habits')} />
 
         </ScrollView>
       )}
-
-      {/* Challenge Submission Modal */}
-      <Modal visible={composing} animationType={reduceMotion ? 'none' : 'slide'} transparent>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.modalOverlay}>
-          <View style={s.sheet}>
-            <View style={s.sheetHandle} />
-            <View style={s.sheetHeader}>
-              <TouchableOpacity
-                onPress={() => {
-                  setComposing(false);
-                  setFinalProof(null);
-                  setProcessProof(null);
-                  setCaption('');
-                  setTags('');
-                }}
-              >
-                <Feather name="x" size={22} color={colors.mutedForeground} />
-              </TouchableOpacity>
-              <Text style={s.sheetTitle}>Submit Challenge Entry</Text>
-              <TouchableOpacity
-                onPress={handleSubmitChallenge}
-                disabled={!caption.trim() || !finalProof || isSubmitting}
-              >
-                {isSubmitting ? (
-                  <ActivityIndicator size="small" color={colors.primary} />
-                ) : (
-                  <Text
-                    style={[
-                      s.postBtn,
-                      { opacity: caption.trim() && finalProof ? 1 : 0.35 },
-                    ]}
-                  >
-                    Submit
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </View>
-
-            <TextInput
-              style={s.captionInput}
-              value={caption}
-              onChangeText={setCaption}
-              placeholder="Tell us about your entry..."
-              placeholderTextColor={colors.mutedForeground}
-              multiline
-              maxLength={500}
-              autoFocus
-            />
-
-            <View style={s.proofSection}>
-              <View style={s.proofLabelRow}>
-                <Text style={s.proofLabel}>Final proof</Text>
-                <Text style={s.proofRequired}>Required · Live capture</Text>
-              </View>
-              <Text style={s.proofHint}>
-                Take a new photo or video in AIMD. Existing library media cannot
-                be used as the final submission.
-              </Text>
-              {finalProof ? (
-                <View style={s.proofPreview}>
-                  {finalProof.mediaType === 'image' ? (
-                    <Image
-                      source={{ uri: finalProof.uri }}
-                      style={s.proofPreviewImage}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <View style={s.proofPreviewIcon}>
-                      <Feather name="video" size={24} color={colors.primary} />
-                    </View>
-                  )}
-                  <View style={s.proofPreviewCopy}>
-                    <Text style={s.proofPreviewTitle}>
-                      {finalProof.mediaType === 'image'
-                        ? 'Live photo captured'
-                        : 'Live video captured'}
-                    </Text>
-                    <Text style={s.proofPreviewMeta}>
-                      {finalProof.capturedAt
-                        ? new Date(finalProof.capturedAt).toLocaleString()
-                        : 'Captured in AIMD'}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => setFinalProof(null)}
-                    accessibilityLabel="Remove final proof"
-                  >
-                    <Feather
-                      name="x-circle"
-                      size={20}
-                      color={colors.mutedForeground}
-                    />
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <TouchableOpacity
-                  style={s.proofAction}
-                  onPress={() => setCameraVisible(true)}
-                  testID="challenge-open-camera"
-                >
-                  <Feather name="camera" size={18} color={colors.primary} />
-                  <Text style={s.proofActionText}>
-                    Capture final photo or video
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            <View style={s.proofSection}>
-              <View style={s.proofLabelRow}>
-                <Text style={s.proofLabel}>Process verification</Text>
-                <Text style={s.proofHint}>Optional</Text>
-              </View>
-              <Text style={s.proofHint}>
-                Add a progress photo or clip from your library to show how the
-                work developed.
-              </Text>
-              {processProof ? (
-                <View style={s.proofPreview}>
-                  {processProof.mediaType === 'image' ? (
-                    <Image
-                      source={{ uri: processProof.uri }}
-                      style={s.proofPreviewImage}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <View style={s.proofPreviewIcon}>
-                      <Feather name="video" size={24} color={colors.primary} />
-                    </View>
-                  )}
-                  <View style={s.proofPreviewCopy}>
-                    <Text style={s.proofPreviewTitle}>
-                      Process {processProof.mediaType}
-                    </Text>
-                    <Text style={s.proofPreviewMeta}>
-                      {processProof.exifTimestamp
-                        ? `EXIF: ${new Date(processProof.exifTimestamp).toLocaleString()}`
-                        : 'Library origin recorded'}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => setProcessProof(null)}
-                    accessibilityLabel="Remove process verification"
-                  >
-                    <Feather
-                      name="x-circle"
-                      size={20}
-                      color={colors.mutedForeground}
-                    />
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <TouchableOpacity
-                  style={[s.proofAction, s.proofActionSecondary]}
-                  onPress={handlePickProcessProof}
-                >
-                  <Feather
-                    name="image"
-                    size={18}
-                    color={colors.mutedForeground}
-                  />
-                  <Text
-                    style={[
-                      s.proofActionText,
-                      s.proofActionTextSecondary,
-                    ]}
-                  >
-                    Add process photo or video
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            <TextInput
-              style={s.tagsInput}
-              value={tags}
-              onChangeText={setTags}
-              placeholder="Tags: painting, study, challenge"
-              placeholderTextColor={colors.mutedForeground}
-              returnKeyType="done"
-            />
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-
-      <ChallengeCameraCapture
-        visible={cameraVisible}
-        onClose={() => setCameraVisible(false)}
-        onCaptured={setFinalProof}
-      />
 
       {/* Spin Result / Interaction Modal */}
       <Modal visible={spinModalVisible} animationType={reduceMotion ? 'none' : 'fade'} transparent>
