@@ -32,3 +32,11 @@ An early school reviewer highlighted digital portfolios and creative pathways as
 **Why:** This feedback identifies useful topics for school-facing conversations, but one review does not establish general demand or an agreed integration roadmap.
 
 **How to apply:** Treat Canvas workflows, interactive lesson checks, curriculum alignment, and CTE reporting as opportunities to validate with partner schools. Do not imply integrations, CTE funding gains, or credit recognition already exist.
+
+## Instructor recruitment and artist resort vision
+
+The general partner pitch should explicitly invite instructors and describe intended percentage-based royalties without inventing a percentage or revenue basis. The artist resort and creative retreats are part of a larger project AIMD wants to build for its community and professional artists.
+
+**Why:** The owner explicitly requested both themes for the general overview, not only the investor presentation.
+
+**How to apply:** Present royalties as planned with individually agreed terms. Present the resort as a long-term concept, not an operating location, a guaranteed member benefit, or a dated launch commitment.

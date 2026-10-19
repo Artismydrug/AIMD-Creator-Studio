@@ -52,7 +52,6 @@ body {
   background: linear-gradient(120deg, #f4f2ef, #eeebe6);
   color: var(--slide-text);
 }
-.deck h1, .deck h2, .deck p { margin: 0; }
 .deck h1, .deck h2 { font-family: var(--font-display-family); font-weight: 700; line-height: 1.08; text-wrap: balance; }
 .deck p, .deck li { text-wrap: pretty; }
 .deck-title { font-size: 4.2vw; max-width: 85vw; }
@@ -76,3 +75,4 @@ body {
 }
 .deck-split-title { font-size: 4.2vw; }
 .deck-accent { background: #c4786e; color: #211916; }
+.deck-name { font-family: var(--font-display-family); font-size: 2.4vw; font-weight: 700; line-height: 1.2; }
