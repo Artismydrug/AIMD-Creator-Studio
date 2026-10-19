@@ -40,3 +40,11 @@ The general partner pitch should explicitly invite instructors and describe inte
 **Why:** The owner explicitly requested both themes for the general overview, not only the investor presentation.
 
 **How to apply:** Present royalties as planned with individually agreed terms. Present the resort as a long-term concept, not an operating location, a guaranteed member benefit, or a dated launch commitment.
+
+## Instructor experience and disciplines
+
+AIMD is looking for instructors with 5+ years of experience in their specific medium, including music, fitness, painting, fashion design, and other disciplines. Invite instructors to bring their communities and help build the program together.
+
+**Why:** The owner specified this experience requirement and the broad recruitment scope for instructor partnerships.
+
+**How to apply:** Use the 5+ year requirement in recruitment messaging without limiting instructors to visual art or implying an existing audience-size requirement.

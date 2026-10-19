@@ -9,10 +9,10 @@ export default function CreatorValue() {
         <div className="grid grid-cols-3 gap-[2.5vw] mt-[10vh]">
           <div className="deck-rule pt-[2vh]">
             <img
-              src={`${base}creative-workspace.jpg`}
+              src={`${base}daily-sketching.jpg`}
               crossOrigin="anonymous"
-              alt="Sketchbook and artist tools arranged in a creative workspace"
-              className="w-full h-[24vh] object-cover"
+              alt="Illustrative image of an artist actively practicing pencil sketching"
+              className="w-full h-[24vh] object-cover object-[center_62%]"
             />
             <h3 className="deck-name mt-[2vh]">Daily practice</h3>
             <p className="text-[1.65vw] leading-[1.35] mt-[1.2vh]">Creative routines, shared work &amp; private Learning Portfolio reflections.</p>
@@ -21,12 +21,12 @@ export default function CreatorValue() {
           <div className="deck-rule pt-[2vh]">
             <figure className="relative">
               <img
-                src={`${base}artist-mentorship.jpg`}
+                src={`${base}online-art-teaching.jpg`}
                 crossOrigin="anonymous"
-                alt="Artists gathered around a table during a collaborative mentorship session"
+                alt="Illustrative image of an art teacher demonstrating painting to students over a group video call"
                 className="w-full h-[24vh] object-cover"
               />
-              <figcaption className="absolute right-[0.6vw] bottom-[0.6vh] bg-black/65 px-[0.45vw] py-[0.25vh] text-[0.7vw] text-white">Community photo: ARTogether</figcaption>
+              <figcaption className="absolute right-[0.6vw] bottom-[0.6vh] bg-black/65 px-[0.45vw] py-[0.25vh] text-[0.7vw] text-white">Illustrative online lesson</figcaption>
             </figure>
             <h3 className="deck-name mt-[2vh]">Future opportunities</h3>
             <p className="text-[1.65vw] leading-[1.35] mt-[1.2vh]">Mentorship, exhibitions &amp; professional growth as programs develop.</p>
