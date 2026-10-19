@@ -225,7 +225,7 @@ export default function ProgressScreen() {
     container: { flex: 1, backgroundColor: colors.background },
     header: {
       paddingTop: topPad,
-      paddingHorizontal: 20,
+      paddingHorizontal: 16,
       paddingBottom: 16,
       flexDirection: 'row',
       alignItems: 'center',
@@ -239,25 +239,43 @@ export default function ProgressScreen() {
     compactHeaderActions: {
       alignSelf: 'flex-end',
     },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      flex: 1,
+      minWidth: 0,
+    },
+    titleMark: {
+      width: 38,
+      height: 38,
+      borderRadius: 12,
+      backgroundColor: colors.gold,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    titleCopy: {
+      flex: 1,
+      minWidth: 0,
+    },
     title: {
       fontFamily: 'DMSans_700Bold',
-      fontSize: 28,
+      fontSize: 26,
       color: colors.foreground,
-      letterSpacing: -0.5,
+      letterSpacing: -0.6,
     },
     tagline: {
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 10,
+      fontFamily: 'DMSans_500Medium',
+      fontSize: 12,
       color: colors.sunsetCoral,
-      letterSpacing: 1.8,
-      textTransform: 'uppercase',
-      marginTop: 2,
+      letterSpacing: 0.4,
     },
     headerActions: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
       flexShrink: 0,
+      transform: [{ translateY: -8 }],
     },
     memberProfileGroup: {
       flexDirection: 'column',
@@ -807,13 +825,17 @@ export default function ProgressScreen() {
 
   return (
     <View style={s.container} testID="progress-screen">
-      <View style={[s.header, windowWidth < 380 && s.compactHeader]}>
-        {/* Title block — grows to fill available space */}
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={s.title} numberOfLines={1}>Dashboard</Text>
-          <Text style={s.tagline} numberOfLines={1}>Discipline Eats Talent</Text>
+      <View style={[s.header, windowWidth < 360 && s.compactHeader]}>
+        <View style={s.titleRow}>
+          <View style={s.titleMark}>
+            <Feather name="grid" size={19} color={colors.accentForeground} />
+          </View>
+          <View style={s.titleCopy}>
+            <Text style={s.title} numberOfLines={1}>Dashboard</Text>
+            <Text style={s.tagline} numberOfLines={1}>Discipline Eats Talent</Text>
+          </View>
         </View>
-        <View style={[s.headerActions, windowWidth < 380 && s.compactHeaderActions]}>
+        <View style={[s.headerActions, windowWidth < 360 && s.compactHeaderActions]}>
           <View style={s.memberProfileGroup}>
             <TouchableOpacity
               style={s.profileButton}

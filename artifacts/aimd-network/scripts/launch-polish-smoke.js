@@ -87,9 +87,13 @@ test('dashboard removes the Feed shortcut and keeps membership, Profile, and not
   assert.match(dashboard, /profileButton:\s*\{\s*minHeight:\s*44/);
   assert.match(dashboard, /fontSize:\s*13,\s*color:\s*colors\.primary/);
   assert.match(dashboard, /memberTierLabel:\s*\{[\s\S]*?translateY:\s*-4/);
-  assert.match(dashboard, /headerActions/);
+  assert.match(dashboard, /headerActions:\s*\{[\s\S]*?translateY:\s*-8/);
   assert.match(dashboard, /compactHeaderActions/);
-  assert.match(dashboard, /windowWidth < 380/);
+  assert.match(dashboard, /windowWidth < 360/);
+  assert.match(dashboard, /titleRow:\s*\{[\s\S]*?alignItems:\s*'center'/);
+  assert.match(dashboard, /titleMark:\s*\{[\s\S]*?width:\s*38[\s\S]*?height:\s*38[\s\S]*?backgroundColor:\s*colors\.gold/);
+  assert.match(dashboard, /<Feather name="grid" size=\{19\} color=\{colors\.accentForeground\}/);
+  assert.match(dashboard, /title:\s*\{\s*fontFamily:\s*'DMSans_700Bold',\s*fontSize:\s*26/);
 });
 
 test('feed keeps swipe paging without rebuilding offsets and memoizes unchanged post cards', () => {

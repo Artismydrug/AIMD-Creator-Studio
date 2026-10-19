@@ -9,7 +9,8 @@ import { useColors } from '@/hooks/useColors';
 import { useAppearance } from '@/lib/appearance';
 import type { FeedScope } from '@/components/FeedScopeTabs';
 
-export const feedControlsInset = (safeTop: number, web = false) => (web ? 12 : safeTop + 8) + 60;
+export const feedNavigationTopInset = (safeTop: number, web = false) => (web ? 67 : safeTop + 8);
+export const feedControlsInset = (safeTop: number, web = false) => feedNavigationTopInset(safeTop, web) + 60;
 
 export type FeedScrollDirectionTracker = {
   offset: number;
@@ -74,7 +75,7 @@ export default function FeedNavigation({
       onMenuOpenChange(false);
     };
   }, [embedded, onExpandedChange, onMenuOpenChange]));
-  const top = Platform.OS === 'web' ? 12 : insets.top + 8;
+  const top = feedNavigationTopInset(insets.top, Platform.OS === 'web');
   const close = () => onMenuOpenChange(false);
   const select = (action: () => void) => { close(); action(); };
   const openCommunitySection = (section: 'creators' | 'events') => {
@@ -101,7 +102,7 @@ export default function FeedNavigation({
           <View style={styles.expandedHeader} testID="feed-expanded-navigation">
             <View style={styles.headingRow}>
               <View style={[styles.titleMark, { backgroundColor: colors.primary }]}>
-                <Feather name="users" size={21} color={colors.primaryForeground} />
+                <Feather name="users" size={19} color={colors.primaryForeground} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.title, { color: colors.foreground }]}>Feed</Text>
@@ -190,10 +191,10 @@ export default function FeedNavigation({
 }
 
 const styles = StyleSheet.create({
-  overlay: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, paddingHorizontal: 12, paddingBottom: 16 },
-  expandedHeader: { gap: 12, paddingHorizontal: 4, paddingBottom: 8 },
+  overlay: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, paddingHorizontal: 16, paddingBottom: 16 },
+  expandedHeader: { gap: 12, paddingHorizontal: 0, paddingBottom: 8 },
   headingRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  titleMark: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  titleMark: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   title: { fontFamily: 'DMSans_700Bold', fontSize: 26, letterSpacing: -0.6 },
   subtitle: { fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', marginTop: 2 },
   sectionTabs: { flexDirection: 'row', padding: 4, gap: 3, borderRadius: 14 },

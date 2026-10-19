@@ -170,6 +170,22 @@ test('original section tabs collapse while the pager keeps its full viewport', (
   assert.deepEqual(menuItems.map(item => item.props.testID), ['feed-menu-community', 'feed-menu-creators', 'feed-menu-events']);
 });
 
+test('Feed title and icon stay below the web status area and align to the app header inset', () => {
+  const webNative = { ...native, Platform: { OS: 'web' } };
+  const h = mount('../components/FeedNavigation.tsx', {
+    ...common,
+    'react-native': webNative,
+    'expo-linear-gradient': { LinearGradient: 'LinearGradient' },
+    'expo-status-bar': { StatusBar: 'StatusBar' },
+    'expo-router': { useFocusEffect() {}, useRouter: () => ({}) },
+  }, { mode: 'all', menuOpen: false, embedded: true, expanded: true, activeIndex: 0, postCount: 3 });
+  const overlay = node(h.tree, 'feed-navigation-overlay');
+  assert.equal(overlay.props.style[1].paddingTop, 67);
+  assert.equal(overlay.props.style[0].paddingHorizontal, 16);
+  assert.equal(h.exports.feedNavigationTopInset(0, true), 67);
+  assert.equal(h.exports.feedControlsInset(0, true), 127);
+});
+
 test('scroll direction restores the tabs and measured controls protect writing and video buttons', () => {
   const feed = readFileSync(resolve(__dirname, '../app/feed.tsx'), 'utf8');
   const tabs = readFileSync(resolve(__dirname, '../app/(tabs)/_layout.tsx'), 'utf8');

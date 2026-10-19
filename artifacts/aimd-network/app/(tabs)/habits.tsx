@@ -141,13 +141,7 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: 12,
-    },
-    headerTitle: {
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 26,
-      color: colors.foreground,
-      letterSpacing: -0.6,
+      marginBottom: 10,
     },
     addBtn: {
       width: 36,
@@ -163,7 +157,6 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
       color: colors.sunsetCoral,
       letterSpacing: 2,
       textTransform: 'uppercase',
-      marginBottom: 10,
     },
     actionHelp: {
       fontFamily: 'DMSans_400Regular',
@@ -423,7 +416,7 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
               {scrollHeader}
               <View style={s.header} testID="habits-scroll-header">
                 <View style={s.headerRow}>
-                  <Text style={s.headerTitle}>Habits</Text>
+                  <Text style={s.tagline}>Discipline Eats Talent</Text>
                   <TouchableOpacity
                     style={s.addBtn}
                     onPress={() => {
@@ -436,7 +429,6 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
                     <Feather name="plus" size={20} color={colors.primaryForeground} />
                   </TouchableOpacity>
                 </View>
-                <Text style={s.tagline}>Discipline Eats Talent</Text>
                 <Text style={s.actionHelp} testID="habit-actions-help">{HABIT_ACTION_HELP}</Text>
                 <View style={s.statsRow}>
                   <View style={s.statBox} testID="habits-streak-stat">
