@@ -45,8 +45,11 @@ function harness({ platform = 'ios', size = 1000, token = 'fixture-token', statu
       if (name === 'react-native') return { Platform: { OS: platform } };
       if (name === 'expo-file-system/legacy') return fs;
       if (name === 'expo-image-manipulator') return {
-        SaveFormat: { JPEG: 'jpeg' },
-        manipulateAsync: async (...args) => { conversions.push(args); return { uri: 'file:///optimized.jpg' }; },
+        SaveFormat: { JPEG: 'jpeg', PNG: 'png' },
+        manipulateAsync: async (...args) => {
+          conversions.push(args);
+          return { uri: `file:///optimized.${args[2].format === 'png' ? 'png' : 'jpg'}` };
+        },
       };
       if (name === '@workspace/api-client-react') return {
         getBaseUrl: () => 'https://example.invalid',
@@ -108,9 +111,23 @@ test('photo conversion changes only a temporary upload derivative and cleans it 
   const h = harness();
   await h.send('image');
   assert.equal(h.conversions.length, 1);
+  assert.equal(h.conversions[0][2].format, 'jpeg');
   assert.equal(h.uploads[0].uri, 'file:///optimized.jpg');
   assert.equal(h.uploads[0].options.headers['Content-Type'], 'image/jpeg');
   assert.deepEqual(h.deleted, ['file:///optimized.jpg']);
+});
+
+test('PNG posts preserve transparency through native and web upload conversions', async () => {
+  for (const platform of ['ios', 'web']) {
+    const h = harness({ platform });
+    await h.send('image', { contentType: 'image/png', fileName: 'artwork.png' });
+    assert.equal(h.conversions[0][2].format, 'png');
+    assert.equal(h.uploads[0].options.headers['Content-Type'], 'image/png');
+    if (platform === 'ios') {
+      assert.equal(h.uploads[0].uri, 'file:///optimized.png');
+      assert.deepEqual(h.deleted, ['file:///optimized.png']);
+    }
+  }
 });
 
 test('three photo formats crop centrally, remain inside source bounds, and recover from saved dimensions', async () => {

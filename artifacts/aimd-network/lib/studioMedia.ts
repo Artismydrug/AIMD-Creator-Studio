@@ -113,18 +113,23 @@ export async function uploadStudioMedia(
   const work = async () => {
     if (media.mediaType === 'image') {
       const { manipulateAsync, SaveFormat } = await import('expo-image-manipulator');
+      const sourceContentType = media.contentType.split(';')[0].trim().toLowerCase();
+      const preserveAlpha = sourceContentType === 'image/png' ||
+        /\.png(?:[?#]|$)/i.test(media.fileName) ||
+        /\.png(?:[?#]|$)/i.test(media.uri);
+      const outputContentType = preserveAlpha ? 'image/png' : 'image/jpeg';
       const crop = photoCrop(media.width ?? 0, media.height ?? 0, media.photoFormat);
       const size = optimizedImageSize(crop.width, crop.height);
       const actions: import('expo-image-manipulator').Action[] = [{ crop }];
       if (size) actions.push({ resize: size });
       const result = await manipulateAsync(media.uri, actions, {
-        compress: 0.78,
-        format: SaveFormat.JPEG,
+        compress: preserveAlpha ? 1 : 0.78,
+        format: preserveAlpha ? SaveFormat.PNG : SaveFormat.JPEG,
       });
       // Never delete the creator's original file.
       if (result.uri !== media.uri) temporaryUri = result.uri;
       uploadUri = result.uri;
-      contentType = 'image/jpeg';
+      contentType = outputContentType;
     }
     if (cancelled) throw new Error('Upload timed out. Your draft is still here.');
 
