@@ -27,9 +27,9 @@ export default function Movement() {
         <p className="text-[2vw] leading-[1.4] mt-[3vh]">Habits, learning &amp; community connect daily practice with real-world opportunity.</p>
         <div className="grid grid-cols-2 gap-[2.4vw] mt-[5vh] pt-[3vh] deck-rule">
           <div>
-            <p className="font-display font-bold text-[6.5vw] leading-none text-accent">$250B</p>
-            <p className="deck-label mt-[2vh]">2023 creator-economy estimate; $480B projected by 2027.</p>
-            <a className="deck-label text-muted underline block mt-[3vh]" href="https://www.goldmansachs.com/insights/articles/the-creator-economy-could-approach-half-a-trillion-dollars-by-2027" target="_blank" rel="noopener noreferrer">Goldman Sachs · April 2023</a>
+            <p className="font-display font-bold text-[6.5vw] leading-none text-accent">$37B</p>
+            <p className="deck-label mt-[2vh]">U.S. creator advertising spend in 2025.</p>
+            <a className="deck-label text-muted underline block mt-[3vh]" href="https://www.iab.com/news/digital-ad-revenue-climbs-to-nearly-300b-as-iab-celebrates-30-year-anniversary/" target="_blank" rel="noopener noreferrer">IAB + PwC · April 2026</a>
           </div>
           <div>
             <p className="font-display font-bold text-[6.5vw] leading-none text-accent">40%+</p>
@@ -37,7 +37,7 @@ export default function Movement() {
             <a className="deck-label text-muted underline block mt-[3vh]" href="https://creativeclass.com/reports/The-Creator-Revolution.pdf" target="_blank" rel="noopener noreferrer">Creative Class · 20-country survey · December 2024</a>
           </div>
         </div>
-        <p className="deck-label text-muted mt-[3vh]">Historical research—not current market sizing or AIMD results.</p>
+        <p className="deck-label text-muted mt-[3vh]">These industry measures use different scopes; the IAB figure is U.S. creator advertising, not the total creator economy. Neither represents AIMD results.</p>
       </div>
     </div>
   );
