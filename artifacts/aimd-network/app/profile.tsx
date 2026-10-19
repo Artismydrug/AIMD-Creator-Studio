@@ -36,6 +36,7 @@ import {
 import { useColors } from '@/hooks/useColors';
 import LegalHelpLinks from '@/components/LegalHelpLinks';
 import { clearHabitReminders } from '@/lib/habitReminders';
+import { miniHabitSketchbook } from '@/lib/miniHabitSketchbookStorage';
 import StudioVideo from '@/components/StudioVideo';
 import AudioTrackPlayer from '@/components/AudioTrackPlayer';
 import PostOwnerActions from '@/components/PostOwnerActions';
@@ -474,6 +475,8 @@ export default function ProfileScreen() {
           if (userId) {
             try { await sessionSecurityStore.clearAccount(String(userId)); }
             catch { showDeletionNotice('Account deleted', 'Local security settings could not be cleared. Remove Creator Studio from this device if you no longer use it.'); }
+            try { await miniHabitSketchbook.clearAccount(userId); }
+            catch { showDeletionNotice('Account deleted', 'Locally saved sketches could not be cleared. Remove Creator Studio from this device if you no longer use it.'); }
             try { await clearHabitReminders(userId); }
             catch { showDeletionNotice('Account deleted', 'Local reminder cleanup failed. Turn off Creator Studio alerts in device settings.'); }
           }

@@ -389,6 +389,7 @@ function RootLayoutNav() {
        <Stack.Screen name="rewards" options={{ headerShown: false }} />
        <Stack.Screen name="notification-settings" options={{ headerShown: false }} />
       <Stack.Screen name="membership" options={{ headerShown: false }} />
+      <Stack.Screen name="mini-habit-studio" options={{ headerShown: false }} />
       <Stack.Screen
         name="learning-portfolio"
         options={{
