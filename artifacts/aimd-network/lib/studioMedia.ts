@@ -3,6 +3,48 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { customFetch, getBaseUrl } from '@workspace/api-client-react';
 
 export const STUDIO_PORTRAIT_RATIO = 9 / 16;
+export const STUDIO_PHOTO_FORMATS = [
+  { id: 'portrait', label: 'Portrait 4:5', ratio: 4 / 5 },
+  { id: 'square', label: 'Square 1:1', ratio: 1 },
+  { id: 'landscape', label: 'Wide 1.91:1', ratio: 1080 / 566 },
+] as const;
+export type StudioPhotoFormat = typeof STUDIO_PHOTO_FORMATS[number]['id'];
+
+export function studioPhotoFormat(format?: StudioPhotoFormat) {
+  return STUDIO_PHOTO_FORMATS.find(option => option.id === format) ?? STUDIO_PHOTO_FORMATS[0];
+}
+
+/** Recover framing from the saved derivative; legacy photos use the closest supported format. */
+export function studioPhotoRatio(width: number, height: number) {
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return 4 / 5;
+  const ratio = width / height;
+  return STUDIO_PHOTO_FORMATS.reduce((best, option) =>
+    Math.abs(Math.log(option.ratio / ratio)) < Math.abs(Math.log(best.ratio / ratio)) ? option : best,
+  ).ratio;
+}
+
+export function photoCrop(width: number, height: number, format?: StudioPhotoFormat) {
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width < 1 || height < 1) {
+    throw new Error('Could not read this photo’s dimensions. Please select the photo again.');
+  }
+  const ratio = studioPhotoFormat(format).ratio;
+  const cropWidth = Math.min(Math.floor(width), Math.max(1, Math.round(height * ratio)));
+  const cropHeight = Math.min(Math.floor(height), Math.max(1, Math.round(width / ratio)));
+  return {
+    originX: Math.floor((width - cropWidth) / 2),
+    originY: Math.floor((height - cropHeight) / 2),
+    width: cropWidth,
+    height: cropHeight,
+  };
+}
+
+export function fitMediaFrame(width: number, height: number, ratio: number) {
+  const safeWidth = Number.isFinite(width) ? Math.max(1, width) : 1;
+  const safeHeight = Number.isFinite(height) ? Math.max(1, height) : 1;
+  const safeRatio = Number.isFinite(ratio) && ratio > 0 ? ratio : 4 / 5;
+  const frameHeight = Math.min(safeHeight, safeWidth / safeRatio);
+  return { width: frameHeight * safeRatio, height: frameHeight };
+}
 export const MAX_STUDIO_VIDEO_BYTES = 50 * 1024 * 1024;
 export const MAX_STUDIO_AUDIO_BYTES = 25 * 1024 * 1024;
 const MAX_STUDIO_IMAGE_BYTES = 20 * 1024 * 1024;
@@ -18,6 +60,7 @@ export type StudioMedia = {
   height?: number;
   duration?: number | null;
   mediaType: 'image' | 'video' | 'audio';
+  photoFormat?: StudioPhotoFormat;
 };
 
 export type StudioUploadStatus = {
@@ -28,13 +71,10 @@ export type StudioUploadStatus = {
 
 /** Fit a real 9:16 frame inside the available pager, never beneath its footer. */
 export function portraitFrame(width: number, height: number) {
-  const safeWidth = Number.isFinite(width) ? Math.max(1, width) : 1;
-  const safeHeight = Number.isFinite(height) ? Math.max(1, height) : 1;
-  const frameHeight = Math.min(safeHeight, safeWidth / STUDIO_PORTRAIT_RATIO);
-  return { width: frameHeight * STUDIO_PORTRAIT_RATIO, height: frameHeight };
+  return fitMediaFrame(width, height, STUDIO_PORTRAIT_RATIO);
 }
 
-/** Preserve the original framing while limiting photos to a 1080 × 1920 envelope. */
+/** Downsize without upscaling. Cropped feed formats fit inside this envelope. */
 export function optimizedImageSize(width: number, height: number) {
   if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
     return null;
@@ -73,8 +113,11 @@ export async function uploadStudioMedia(
   const work = async () => {
     if (media.mediaType === 'image') {
       const { manipulateAsync, SaveFormat } = await import('expo-image-manipulator');
-      const size = optimizedImageSize(media.width ?? 0, media.height ?? 0);
-      const result = await manipulateAsync(media.uri, size ? [{ resize: size }] : [], {
+      const crop = photoCrop(media.width ?? 0, media.height ?? 0, media.photoFormat);
+      const size = optimizedImageSize(crop.width, crop.height);
+      const actions: import('expo-image-manipulator').Action[] = [{ crop }];
+      if (size) actions.push({ resize: size });
+      const result = await manipulateAsync(media.uri, actions, {
         compress: 0.78,
         format: SaveFormat.JPEG,
       });

@@ -4,8 +4,9 @@ import { Image } from 'expo-image';
 import { useColors } from '@/hooks/useColors';
 
 /** A cached, center-cropped photo, with an explicit loading/error state. */
-export default function StudioImage({ uri, load = true, style }: {
+export default function StudioImage({ uri, load = true, style, onLoadDimensions }: {
   uri: string; load?: boolean; style?: StyleProp<ViewStyle>;
+  onLoadDimensions?: (width: number, height: number) => void;
 }) {
   const colors = useColors();
   const [loadedUri, setLoadedUri] = useState<string | null>(null);
@@ -17,7 +18,11 @@ export default function StudioImage({ uri, load = true, style }: {
       {load && <Image key={`${uri}:${attempt}`}
         source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover"
         cachePolicy="memory-disk" recyclingKey={uri} accessibilityLabel="Creator's studio photo"
-        onLoad={() => { setLoadedUri(uri); setFailedUri(null); }}
+        onLoad={({ source }) => {
+          setLoadedUri(uri);
+          setFailedUri(null);
+          onLoadDimensions?.(source.width, source.height);
+        }}
         onError={() => setFailedUri(uri)}
       />}
       {load && !failed && loadedUri !== uri && (

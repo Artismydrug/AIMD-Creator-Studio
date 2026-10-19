@@ -27,6 +27,8 @@ import {
   MAX_STUDIO_VIDEO_BYTES,
   MAX_STUDIO_AUDIO_BYTES,
   STUDIO_PORTRAIT_RATIO,
+  STUDIO_PHOTO_FORMATS,
+  studioPhotoFormat,
   type StudioMedia,
   type StudioUploadStatus,
 } from '@/lib/studioMedia';
@@ -293,6 +295,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
       height: asset.height,
       duration: asset.duration,
       mediaType,
+      ...(mediaType === 'image' ? { photoFormat: 'portrait' as const } : {}),
     });
     setComposing(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -437,6 +440,8 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
   };
 
   const isPending = uploading || createMutation.isPending;
+  const selectedPhotoFormat = studioPhotoFormat(selectedMedia?.photoFormat);
+  const previewRatio = selectedMedia?.mediaType === 'image' ? selectedPhotoFormat.ratio : STUDIO_PORTRAIT_RATIO;
   const cancelComposer = () => {
     if (submittingRef.current || isPending) return;
     setComposing(false);
@@ -638,7 +643,9 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
         },
         composerButtonText: { fontFamily: 'DMSans_700Bold', fontSize: 14, color: colors.foreground },
         mediaPreview: { width: '100%', aspectRatio: STUDIO_PORTRAIT_RATIO, borderRadius: colors.radius, backgroundColor: colors.muted },
-        previewFrame: { width: '100%', maxWidth: Math.min(280, (windowHeight * 0.42) * STUDIO_PORTRAIT_RATIO), alignSelf: 'center' },
+        previewFrame: { width: '100%', maxWidth: Math.min(280, (windowHeight * 0.42) * previewRatio), alignSelf: 'center' },
+        photoFormats: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+        photoFormat: { minHeight: 44, borderWidth: 1, borderRadius: colors.radius, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' },
         inputLabel: { fontFamily: 'DMSans_600SemiBold', fontSize: 13, color: colors.foreground, marginVertical: 10 },
         captionInput: {
           fontFamily: 'DMSans_400Regular',
@@ -720,7 +727,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
           paddingTop: 12,
         },
       }),
-    [colors, insets, topPad, windowHeight],
+    [colors, insets, topPad, windowHeight, previewRatio],
   );
   const pageStyle = useMemo(
     () => [
@@ -906,7 +913,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
             {composing && selectedMedia && (
               <View testID="compose-media-preview" style={selectedMedia.mediaType !== 'audio' ? s.previewFrame : undefined}>
                 {selectedMedia.mediaType === 'image' ? (
-                  <Image source={{ uri: selectedMedia.uri }} style={s.mediaPreview} resizeMode="cover" accessibilityLabel="Selected photo in a centered 9 by 16 portrait frame" />
+                  <Image source={{ uri: selectedMedia.uri }} style={[s.mediaPreview, { aspectRatio: previewRatio }]} resizeMode="cover" accessibilityLabel={`Selected photo, centered ${selectedPhotoFormat.label} crop`} />
                 ) : selectedMedia.mediaType === 'video' ? (
                   <ComposerVideoPreview key={selectedMedia.uri} uri={selectedMedia.uri} active={composing && !isPending} />
                 ) : (
@@ -914,7 +921,27 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
                 )}
               </View>
             )}
-            {selectedMedia && selectedMedia.mediaType !== 'audio' && (
+            {selectedMedia?.mediaType === 'image' && (
+              <>
+                <View style={s.photoFormats} accessibilityLabel="Photo framing">
+                  {STUDIO_PHOTO_FORMATS.map(format => (
+                    <TouchableOpacity key={format.id} testID={`compose-format-${format.id}`}
+                      accessibilityRole="button" accessibilityLabel={format.label}
+                      accessibilityState={{ selected: selectedPhotoFormat.id === format.id, disabled: isPending }}
+                      disabled={isPending}
+                      style={[s.photoFormat, {
+                        borderColor: selectedPhotoFormat.id === format.id ? colors.primary : colors.border,
+                        backgroundColor: selectedPhotoFormat.id === format.id ? colors.muted : colors.card,
+                      }]}
+                      onPress={() => setSelectedMedia(current => current?.mediaType === 'image' ? { ...current, photoFormat: format.id } : current)}>
+                      <Text style={s.imagePickerText}>{format.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <Text style={s.mediaHint}>Centered crop · your original photo stays unchanged. Review the framing before posting.</Text>
+              </>
+            )}
+            {selectedMedia?.mediaType === 'video' && (
               <Text style={s.mediaHint}>9:16 portrait frame · centered crop. Review the framing before posting.</Text>
             )}
             <Text style={s.inputLabel}>Caption</Text>

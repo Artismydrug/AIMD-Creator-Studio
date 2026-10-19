@@ -4,6 +4,11 @@ const vm = require('node:vm');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const ts = require('typescript');
+const photoFormats = [
+  { id: 'portrait', label: 'Portrait 4:5', ratio: 4 / 5 },
+  { id: 'square', label: 'Square 1:1', ratio: 1 },
+  { id: 'landscape', label: 'Wide 1.91:1', ratio: 1080 / 566 },
+];
 
 function compile(path) {
   return ts.transpileModule(readFileSync(resolve(__dirname, path), 'utf8'), {
@@ -46,6 +51,8 @@ function harness(kind, { failUpload = false, failPost = false, canceled = false 
       if (name === '@clerk/expo') return { useAuth: () => ({ getToken: async () => 'test-token' }) };
       if (name === '@/lib/studioMedia') return {
         STUDIO_PORTRAIT_RATIO: 9 / 16,
+        STUDIO_PHOTO_FORMATS: photoFormats,
+        studioPhotoFormat: id => photoFormats.find(format => format.id === id) ?? photoFormats[0],
         MAX_STUDIO_VIDEO_BYTES: 50 * 1024 * 1024,
         MAX_STUDIO_AUDIO_BYTES: 25 * 1024 * 1024,
         uploadStudioMedia: async (media, getToken, onStatus) => {
@@ -65,7 +72,7 @@ function harness(kind, { failUpload = false, failPost = false, canceled = false 
       if (name === 'expo-document-picker') return { getDocumentAsync: picker };
       if (name === '@/lib/submissionLock') return lockSandbox.exports;
       if (name === '@react-native-async-storage/async-storage') return {};
-      if (name === 'expo-router') return { useRouter: () => ({ back() {} }), useLocalSearchParams: () => ({}) };
+      if (name === 'expo-router') return { useRouter: () => ({ back() {} }), useLocalSearchParams: () => ({}), useFocusEffect() {} };
       if (name === '@tanstack/react-query') return { useQueryClient: () => ({ setQueryData() {}, invalidateQueries() {} }) };
       if (name === '@workspace/api-client-react') return {
         getListStudioPostsQueryKey: () => [],
@@ -124,6 +131,41 @@ function harness(kind, { failUpload = false, failPost = false, canceled = false 
     previewTypes: () => nodes(node('compose-media-preview'), () => true).map(n => n.type),
   };
 }
+
+test('photo framing defaults to portrait; changing format previews locally and confirmation keeps the choice', async () => {
+  const h = harness('image');
+  await h.pick();
+  assert.equal(h.node('compose-format-portrait').props.accessibilityState.selected, true);
+  h.node('compose-format-square').props.onPress();
+  h.render();
+  assert.equal(h.node('compose-format-square').props.accessibilityState.selected, true);
+  h.node('compose-format-landscape').props.onPress();
+  h.render();
+  assert.equal(h.node('compose-format-landscape').props.accessibilityState.selected, true);
+  assert.equal(h.uploads.length + h.posts.length, 0);
+  h.node('compose-caption').props.onChangeText('Wide artwork');
+  h.render();
+  await h.node('compose-confirm').props.onPress();
+  assert.equal(h.uploads.length, 1);
+  assert.equal(h.uploads[0].media.photoFormat, 'landscape');
+});
+
+test('photo crop selection is discarded on Cancel and never appears for video or audio', async () => {
+  const h = harness('image');
+  await h.pick();
+  h.node('compose-format-square').props.onPress();
+  h.render();
+  h.node('compose-cancel').props.onPress();
+  h.render();
+  await h.pick();
+  assert.equal(h.node('compose-format-portrait').props.accessibilityState.selected, true);
+  assert.equal(h.uploads.length + h.posts.length, 0);
+  for (const kind of ['video', 'audio']) {
+    const other = harness(kind);
+    await other.pick();
+    assert.equal(other.node('compose-format-portrait'), undefined);
+  }
+});
 
 for (const kind of ['image', 'video', 'audio']) {
   test(`${kind}: selection opens local preview; only confirmation uploads and publishes edited fields`, async () => {

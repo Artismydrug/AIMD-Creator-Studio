@@ -113,6 +113,53 @@ test('photo conversion changes only a temporary upload derivative and cleans it 
   assert.deepEqual(h.deleted, ['file:///optimized.jpg']);
 });
 
+test('three photo formats crop centrally, remain inside source bounds, and recover from saved dimensions', async () => {
+  for (const [format, expectedWidth, expectedHeight] of [
+    ['portrait', 1080, 1350], ['square', 1080, 1080], ['landscape', 1080, 566],
+  ]) {
+    const h = harness();
+    for (const [width, height] of [[4032, 3024], [3024, 4032], [1080, 1080], [100, 200]]) {
+      const crop = h.photoCrop(width, height, format);
+      assert.ok(crop.width > 0 && crop.height > 0);
+      assert.ok(crop.originX >= 0 && crop.originY >= 0);
+      assert.ok(crop.originX + crop.width <= width && crop.originY + crop.height <= height);
+      assert.ok(Math.abs(crop.originX - (width - crop.width) / 2) < 1);
+      assert.ok(Math.abs(crop.originY - (height - crop.height) / 2) < 1);
+      assert.ok(Math.abs(crop.width / crop.height - expectedWidth / expectedHeight) < 0.025);
+    }
+    await h.send('image', { width: 4032, height: 3024, photoFormat: format });
+    const actions = h.conversions[0][1];
+    assert.ok(actions[0].crop);
+    assert.equal(actions[1].resize.width, expectedWidth);
+    assert.equal(actions[1].resize.height, expectedHeight);
+    assert.equal(h.studioPhotoRatio(expectedWidth, expectedHeight), expectedWidth / expectedHeight);
+    assert.deepEqual(h.deleted, ['file:///optimized.jpg']);
+  }
+});
+
+test('invalid photo dimensions fail before uploading; small photos are never enlarged', async () => {
+  const h = harness();
+  await assert.rejects(h.send('image', { width: 0, height: 0 }), /dimensions/);
+  assert.equal(h.uploads.length, 0);
+  assert.equal(h.conversions.length, 0);
+  const crop = h.photoCrop(200, 150, 'portrait');
+  const size = h.optimizedImageSize(crop.width, crop.height);
+  assert.ok(size.width <= crop.width && size.height <= crop.height);
+});
+
+test('photo frames fit short and tall viewports without affecting 9:16 video framing', () => {
+  const h = harness();
+  for (const ratio of [4 / 5, 1, 1080 / 566]) {
+    for (const [width, height] of [[390, 500], [390, 200], [1024, 600]]) {
+      const frame = h.fitMediaFrame(width, height, ratio);
+      assert.ok(frame.width > 0 && frame.width <= width + 0.001);
+      assert.ok(frame.height > 0 && frame.height <= height + 0.001);
+      assert.ok(Math.abs(frame.width / frame.height - ratio) < 0.0001);
+    }
+  }
+  assert.equal(h.portraitFrame(390, 600).width / h.portraitFrame(390, 600).height, 9 / 16);
+});
+
 test('native upload progress bounds UI updates while preserving measured start and completion', async () => {
   const h = harness({
     progressEvents: Array.from({ length: 1000 }, (_, index) => ({ sent: index + 1, total: 1000, elapsed: 1 })),

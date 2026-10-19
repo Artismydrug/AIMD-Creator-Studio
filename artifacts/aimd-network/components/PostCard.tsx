@@ -25,7 +25,7 @@ import StudioVideo from '@/components/StudioVideo';
 import AudioTrackPlayer from '@/components/AudioTrackPlayer';
 import TextPostBody from '@/components/TextPostBody';
 import PostOwnerActions from '@/components/PostOwnerActions';
-import { portraitFrame, STUDIO_PORTRAIT_RATIO } from '@/lib/studioMedia';
+import { fitMediaFrame, portraitFrame, studioPhotoRatio, STUDIO_PORTRAIT_RATIO } from '@/lib/studioMedia';
 import StudioImage from '@/components/StudioImage';
 
 /** Resolve a relative imageUrl (e.g. /api/storage/objects/…) to an absolute URL for React Native. */
@@ -103,6 +103,18 @@ function PostCard({
   const [ownerDialogOpen, setOwnerDialogOpen] = useState(false);
   const window = useWindowDimensions();
   const [viewport, setViewport] = useState({ width: window.width, height: window.height });
+  const [photoMetadata, setPhotoMetadata] = useState<{ uri: string; ratio: number } | null>(null);
+  const [photoFooterHeight, setPhotoFooterHeight] = useState(150);
+  const mediaUri = resolveImageUrl(post.imageUrl);
+  const isPhoto = !!mediaUri && post.mediaType !== 'video' && post.mediaType !== 'audio';
+  const photoRatio = photoMetadata?.uri === mediaUri ? photoMetadata.ratio : 4 / 5;
+  const photoAreaHeight = Math.max(1, viewport.height - contentTopInset - photoFooterHeight - 40);
+  const photoFrame = fitMediaFrame(viewport.width, photoAreaHeight, photoRatio);
+  const handlePhotoDimensions = (width: number, height: number) => {
+    const ratio = studioPhotoRatio(width, height);
+    setPhotoMetadata(previous => previous?.uri === mediaUri && previous.ratio === ratio
+      ? previous : { uri: mediaUri!, ratio });
+  };
   const mediaFrame = portraitFrame(viewport.width, viewport.height);
   const frameColors = [colors.primary, colors.sunsetCoral, colors.cyan, colors.gold];
   const frameColor = frameColors[post.id % frameColors.length];
@@ -454,7 +466,7 @@ function PostCard({
           <View
             testID={`feed-media-frame-${post.id}`}
             style={[s.mediaSurface,
-              !isTextOnly && post.mediaType !== 'audio' ? [s.portraitSurface, mediaFrame] : { width: '100%' },
+              !isTextOnly && post.mediaType === 'video' ? [s.portraitSurface, mediaFrame] : { width: '100%' },
               (isTextOnly || post.mediaType === 'audio') && { paddingTop: contentTopInset },
               isTextOnly && s.textPostSurface]}
           >
@@ -478,13 +490,20 @@ function PostCard({
               <StudioImage
                 uri={resolveImageUrl(post.imageUrl)!}
                 load={active || preload}
-                style={s.immersiveImage}
+                onLoadDimensions={handlePhotoDimensions}
+                style={{
+                  position: 'absolute',
+                  width: photoFrame.width,
+                  height: photoFrame.height,
+                  left: (viewport.width - photoFrame.width) / 2,
+                  top: contentTopInset + (photoAreaHeight - photoFrame.height) / 2,
+                }}
               />
             ) : (
               <TextPostBody postId={post.id} caption={post.caption} tags={post.tags} />
             )}
 
-            {!isTextOnly && (
+            {!isTextOnly && !isPhoto && (
             <>
             <LinearGradient
               pointerEvents="none"
@@ -499,7 +518,9 @@ function PostCard({
             </>
             )}
 
-            <View style={[
+            <View onLayout={isPhoto ? ({ nativeEvent: { layout } }) => {
+              setPhotoFooterHeight(previous => Math.abs(previous - layout.height) > 1 ? layout.height : previous);
+            } : undefined} style={[
               s.immersiveContent,
               isTextOnly && s.textPostFooter,
               isOwnPost && (isTextOnly ? { paddingRight: 16 } : { right: 16 }),
@@ -668,7 +689,8 @@ function PostCard({
               ) : (
                 <StudioImage
                   uri={resolveImageUrl(post.imageUrl)!}
-                  style={s.postImage}
+                  style={[s.postImage, { aspectRatio: photoRatio }]}
+                  onLoadDimensions={handlePhotoDimensions}
                 />
               )}
               <View style={s.imageStamp}>

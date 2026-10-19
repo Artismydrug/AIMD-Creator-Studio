@@ -21,11 +21,11 @@ Do not assume a wrapper's layout callback has supplied an embedded pager's heigh
 
 **How to apply:** Compare actual row and viewport bounds, and inspect the per-post author footer and Message label above the bottom bar—not just the global profile button. Bottom navigation must reserve its occupied layout space.
 
-Studio Feed photos and videos should share a 9:16 portrait presentation, with the composer showing the same centered crop. Keep writing and audio in their dedicated layouts; do not require creators to delete or overwrite their original files.
+Studio Feed photos use Instagram-style 4:5 portrait by default, with square 1:1 and landscape 1.91:1 choices. Video keeps the 9:16 portrait presentation. The composer must show the chosen centered crop. Keep writing and audio in their dedicated layouts, and never overwrite creators' original files.
 
-**Why:** The owner requested Instagram/TikTok-like portrait media and consistent feed alignment after seeing empty bands and mismatched media framing.
+**Why:** The owner accepted familiar Instagram photo formats while retaining 9:16 video. This supersedes the earlier direction to use 9:16 for both photos and video.
 
-**How to apply:** Fit the portrait stage inside the measured pager and preserve its row snapping when safe areas or viewport dimensions change. Distinguish display framing from the original video file's encoded dimensions.
+**How to apply:** Fit each media frame inside the measured pager and preserve row snapping when safe areas or viewport dimensions change. Keep creator details clear of photo artwork. Distinguish display framing from the original video file's encoded dimensions.
 
 Fixed-size media frames must use explicit flex longhands with an automatic basis rather than `flex: 0`.
 
