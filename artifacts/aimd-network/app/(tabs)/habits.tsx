@@ -272,7 +272,7 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
       color: colors.mutedForeground,
     },
     listContent: {
-      paddingTop: 12,
+      paddingTop: embedded ? 0 : 12,
       paddingBottom: Platform.OS === 'web' ? 100 : 100,
     },
     centered: {

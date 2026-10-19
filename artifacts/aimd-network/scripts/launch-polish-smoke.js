@@ -87,8 +87,9 @@ test('dashboard removes the Feed shortcut and keeps membership, Profile, and not
   assert.match(dashboard, /profileButton:\s*\{\s*minHeight:\s*44/);
   assert.match(dashboard, /fontSize:\s*13,\s*color:\s*colors\.primary/);
   assert.match(dashboard, /memberTierLabel:\s*\{[\s\S]*?translateY:\s*-10/);
-  assert.match(dashboard, /headerActions:\s*\{[\s\S]*?translateY:\s*-4/);
+  assert.match(dashboard, /headerActions:\s*\{[\s\S]*?gap:\s*0,[\s\S]*?translateY:\s*-4/);
   assert.match(dashboard, /header:\s*\{\s*paddingTop:\s*topPad,[\s\S]*?flexDirection:\s*'row',\s*alignItems:\s*'flex-start'/);
+  assert.match(dashboard, /header:\s*\{\s*paddingTop:\s*topPad,\s*paddingHorizontal:\s*16,\s*paddingBottom:\s*8/);
   assert.match(dashboard, /notificationButton:\s*\{[\s\S]*?alignSelf:\s*'flex-start'/);
   assert.match(dashboard, /compactHeaderActions/);
   assert.match(dashboard, /windowWidth < 360/);
@@ -96,6 +97,14 @@ test('dashboard removes the Feed shortcut and keeps membership, Profile, and not
   assert.match(dashboard, /titleMark:\s*\{[\s\S]*?width:\s*38[\s\S]*?height:\s*38[\s\S]*?backgroundColor:\s*colors\.gold/);
   assert.match(dashboard, /<Feather name="grid" size=\{19\} color=\{colors\.accentForeground\}/);
   assert.match(dashboard, /title:\s*\{\s*fontFamily:\s*'DMSans_700Bold',\s*fontSize:\s*26/);
+});
+
+test('Habits header aligns with the primary tabs without changing its type size', () => {
+  const habits = source('../app/(tabs)/habits.tsx');
+  const challengeHabits = source('../app/(tabs)/challenge-habits.tsx');
+  assert.match(habits, /listContent:\s*\{\s*paddingTop:\s*embedded\s*\?\s*0\s*:\s*12/);
+  assert.match(challengeHabits, /titleMark:\s*\{\s*width:\s*38,\s*height:\s*38/);
+  assert.match(challengeHabits, /title:\s*\{\s*fontFamily:\s*'DMSans_700Bold',\s*fontSize:\s*26/);
 });
 
 test('feed keeps swipe paging without rebuilding offsets and memoizes unchanged post cards', () => {

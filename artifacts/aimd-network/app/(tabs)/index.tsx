@@ -226,7 +226,7 @@ export default function ProgressScreen() {
     header: {
       paddingTop: topPad,
       paddingHorizontal: 16,
-      paddingBottom: 16,
+      paddingBottom: 8,
       flexDirection: 'row',
       alignItems: 'flex-start',
       gap: 12,
@@ -273,7 +273,7 @@ export default function ProgressScreen() {
     headerActions: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
+      gap: 0,
       flexShrink: 0,
       transform: [{ translateY: -4 }],
     },
