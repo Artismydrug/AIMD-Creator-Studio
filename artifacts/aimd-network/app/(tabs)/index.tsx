@@ -292,7 +292,7 @@ export default function ProgressScreen() {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 3,
-      transform: [{ translateY: -4 }],
+      transform: [{ translateY: -10 }],
     },
     profileButton: {
       minHeight: 44,
