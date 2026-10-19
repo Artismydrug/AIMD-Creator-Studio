@@ -12,7 +12,7 @@ export default function PartnerValue() {
           </div>
           <div className="deck-accent p-[3vw]">
             <p className="deck-label font-bold">PROPOSED GIVING MODEL</p>
-            <h3 className="font-display font-bold text-[3.3vw] leading-[1.1] mt-[3vh]">A defined share of future proceeds for nonprofit partners.</h3>
+            <h3 className="font-display font-bold text-[3.3vw] leading-[1.1] mt-[3vh]">A planned share of future proceeds for nonprofit partners.</h3>
             <p className="text-[2vw] leading-[1.4] mt-[3vh]">Supporting retreats, mentorship &amp; emerging artists.</p>
             <p className="deck-label mt-[4vh]">Donation percentage, basis, nonprofit partners &amp; reporting are not yet set.</p>
           </div>
