@@ -48,3 +48,11 @@ AIMD is looking for instructors with 5+ years of experience in their specific me
 **Why:** The owner specified this experience requirement and the broad recruitment scope for instructor partnerships.
 
 **How to apply:** Use the 5+ year requirement in recruitment messaging without limiting instructors to visual art or implying an existing audience-size requirement.
+
+## Mission and access
+
+Creator Studio’s mission is to bridge raw artistic talent and sustainable professional independence through daily practice, worldwide creator connection, and a physical/digital ecosystem. The long-term vision is lasting support beyond one-off events; sponsorships and endorsements are intended to reduce financial barriers.
+
+**Why:** The owner supplied this mission and vision as the source for the general overview deck.
+
+**How to apply:** Preserve the global, multidisciplinary scope and accessibility goal. Describe sponsorship access as an aim dependent on partners and resources, not guaranteed financial support.
