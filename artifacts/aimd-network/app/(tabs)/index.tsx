@@ -228,7 +228,7 @@ export default function ProgressScreen() {
       paddingHorizontal: 16,
       paddingBottom: 16,
       flexDirection: 'row',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       gap: 12,
     },
     compactHeader: {
@@ -275,7 +275,7 @@ export default function ProgressScreen() {
       alignItems: 'center',
       gap: 8,
       flexShrink: 0,
-      transform: [{ translateY: -8 }],
+      transform: [{ translateY: -4 }],
     },
     memberProfileGroup: {
       flexDirection: 'column',
@@ -310,6 +310,7 @@ export default function ProgressScreen() {
     notificationButton: {
       width: 42,
       height: 42,
+      alignSelf: 'flex-start',
       alignItems: 'center',
       justifyContent: 'center',
       position: 'relative',
