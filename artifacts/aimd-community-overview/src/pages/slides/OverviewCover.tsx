@@ -7,8 +7,8 @@ export default function OverviewCover() {
       <div className="deck-cover-card deck-paper">
         <div className="deck-cover-number" aria-hidden="true">01</div>
         <div className="relative z-10">
-          <div className="flex items-center gap-[0.8vw] mb-[5vh]">
-            <span className="w-[0.8vw] h-[0.8vw] rounded-full bg-accent" />
+          <div className="flex items-center gap-[1.2vw] mb-[5vh]">
+            <img src={`${base}aimd-app-icon.png`} crossOrigin="anonymous" alt="AIMD Creator Studio app icon" className="w-[5.2vw] h-[5.2vw] object-contain shadow-md" />
             <p className="deck-label font-bold">CREATOR STUDIO</p>
           </div>
           <h1 className="text-[4.3vw] mb-[3vh]">Creator Studio by AIMD</h1>
