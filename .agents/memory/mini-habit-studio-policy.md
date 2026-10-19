@@ -13,6 +13,6 @@ The user chose a Dashboard entry plus the 60-second Flash Sketch as the first re
 
 Creator Arcade's purpose is to warm up creative thinking, spark motivation, and reduce the friction of starting, as a bridge toward long-term practice under “Discipline Eats Talent.”
 
-**Why:** The owner supplied this core philosophy for the partner deck and proposed Legend Quizzes about the daily discipline behind figures such as Kobe Bryant and master artists.
+**Why:** The owner supplied this core philosophy for the partner deck and proposed Legend Quizzes about the daily discipline behind excellence across sports and creative practice.
 
 **How to apply:** Describe these as intended benefits, not proven retention or learning outcomes. Treat Legend Quizzes and additional medium-specific activities as planned until implemented. Include music, movement/fitness, fashion, writing, and visual art in the broader creative scope.

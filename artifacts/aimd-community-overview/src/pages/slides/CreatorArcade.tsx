@@ -16,7 +16,7 @@ export default function CreatorArcade() {
             <p className="text-[2vw] leading-[1.3] mt-[1.2vh]">60-second drawing prompts. Save privately on your device.</p>
             <div className="deck-rule mt-[2.5vh] pt-[2vh]">
               <h3 className="deck-name">Planned: Legend Quizzes</h3>
-              <p className="text-[2vw] leading-[1.3] mt-[1.2vh]">Explore Kobe Bryant and master artists through the daily practice behind exceptional work.</p>
+              <p className="text-[2vw] leading-[1.3] mt-[1.2vh]">Explore the discipline and daily practice behind excellence in sports and art.</p>
             </div>
             <div className="deck-rule mt-[2.5vh] pt-[2vh]">
               <h3 className="deck-name">Planned across disciplines</h3>
