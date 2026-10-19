@@ -41,7 +41,7 @@ function sketch(id, prompt = `Prompt ${id}`) {
   return { id, createdAt: '2026-10-18T20:00:00.000Z', prompt, paths: ['M10 10 L20 20'] };
 }
 
-test('Dashboard links to Mini Habit Studio after Your Habits, with a 60-second Flash Sketch', () => {
+test('Dashboard links to Creator Arcade after Your Habits, with a 60-second Flash Sketch', () => {
   const dashboard = fs.readFileSync(path.resolve(__dirname, '../app/(tabs)/index.tsx'), 'utf8');
   const card = fs.readFileSync(path.resolve(__dirname, '../components/MiniHabitStudioCard.tsx'), 'utf8');
   const route = fs.readFileSync(path.resolve(__dirname, '../app/mini-habit-studio.tsx'), 'utf8');
@@ -49,11 +49,20 @@ test('Dashboard links to Mini Habit Studio after Your Habits, with a 60-second F
   const studioIndex = dashboard.indexOf('<MiniHabitStudioCard');
   assert.ok(habitsIndex >= 0 && studioIndex > habitsIndex);
   assert.match(dashboard, /router\.push\('\/mini-habit-studio'\)/);
-  assert.match(card, /MINI HABIT STUDIO/);
+  assert.match(card, /CREATOR ARCADE/);
+  assert.match(route, />Creator Arcade</);
   assert.match(route, /const GAME_SECONDS = 60/);
+  assert.match(route, /Math\.floor\(secondsLeft \/ 60\)/);
   assert.match(route, /PanResponder\.create/);
   assert.match(route, /miniHabitSketchbook\.save/);
   assert.match(route, /Sketches stay on this device/);
+  assert.match(route, /testID="mini-habit-sketch-done"/);
+  assert.match(route, /onPress=\{\(\) => finishSketch\(true\)\}/);
+  assert.match(route, /finishSketch\(\);/);
+  assert.match(route, /setCompletionReason\(early \? 'early' : 'timeout'\)/);
+  assert.match(route, /testID="mini-habit-sketch-next"/);
+  assert.match(route, /Move to the next sketch idea/);
+  assert.match(route, /Next sketch idea/);
   assert.doesNotMatch(route, /useSpinDailyReward|useCheckInProgress|trackEvent/);
 });
 

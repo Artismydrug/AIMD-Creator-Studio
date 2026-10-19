@@ -6,16 +6,17 @@ export default function CreatorValue() {
       <div className="absolute left-0 top-0 w-full h-[28vh] deck-accent" />
       <div className="deck-content">
         <h2 className="text-[5vw]">The creator journey</h2>
-        <div className="grid grid-cols-3 gap-[2.5vw] mt-[10vh]">
+        <p className="text-[2vw] leading-[1.35] mt-[2vh]">Build a routine → deepen your craft → explore future opportunities.</p>
+        <div className="grid grid-cols-3 gap-[2.5vw] mt-[5vh]">
           <div className="deck-rule pt-[2vh]">
             <img
               src={`${base}daily-sketching.jpg`}
               crossOrigin="anonymous"
               alt="Illustrative image of an artist actively practicing pencil sketching"
-              className="w-full h-[24vh] object-cover object-[center_62%]"
+              className="w-full h-[22vh] object-cover object-[center_62%]"
             />
             <h3 className="deck-name mt-[2vh]">Daily practice</h3>
-            <p className="text-[1.65vw] leading-[1.35] mt-[1.2vh]">Creative routines, shared work &amp; private Learning Portfolio reflections.</p>
+            <p className="text-[2vw] leading-[1.35] mt-[1.2vh]">Habits, Creator Arcade, shared work &amp; private learning reflections.</p>
             <p className="deck-label text-muted mt-[1.6vh]">Available in the app</p>
           </div>
           <div className="deck-rule pt-[2vh]">
@@ -24,12 +25,12 @@ export default function CreatorValue() {
                 src={`${base}online-art-teaching.jpg`}
                 crossOrigin="anonymous"
                 alt="Illustrative image of an art teacher demonstrating painting to students over a group video call"
-                className="w-full h-[24vh] object-cover"
+                className="w-full h-[22vh] object-cover"
               />
-              <figcaption className="absolute right-[0.6vw] bottom-[0.6vh] bg-black/65 px-[0.45vw] py-[0.25vh] text-[0.7vw] text-white">Illustrative online lesson</figcaption>
+              <figcaption className="absolute right-[0.6vw] bottom-[0.6vh] bg-black/65 px-[0.6vw] py-[0.3vh] text-[1.5vw] text-white">Illustrative lesson</figcaption>
             </figure>
             <h3 className="deck-name mt-[2vh]">Future opportunities</h3>
-            <p className="text-[1.65vw] leading-[1.35] mt-[1.2vh]">Mentorship, exhibitions &amp; professional growth as programs develop.</p>
+            <p className="text-[2vw] leading-[1.35] mt-[1.2vh]">Mentorship, exhibitions &amp; professional pathways as programs develop.</p>
             <p className="deck-label text-muted mt-[1.6vh]">Planned—not current benefits</p>
           </div>
           <div className="deck-rule pt-[2vh]">
@@ -37,11 +38,11 @@ export default function CreatorValue() {
               src={`${base}artist-resort-retreats.jpeg`}
               crossOrigin="anonymous"
               alt="Concept image of an artist retreat among the Joshua Tree desert landscape"
-              className="w-full h-[24vh] object-cover"
+              className="w-full h-[22vh] object-cover"
             />
             <h3 className="deck-name mt-[2vh]">Artist resort &amp; retreats</h3>
-            <p className="text-[1.65vw] leading-[1.35] mt-[1.2vh]">A larger project for community &amp; professional artists: collaboration, retreats &amp; mentorship.</p>
-            <p className="deck-label text-muted mt-[1.6vh]">Long-term concept—not operating or a guaranteed member benefit</p>
+            <p className="text-[2vw] leading-[1.35] mt-[1.2vh]">Long-term spaces for community, collaboration &amp; professional artist retreats.</p>
+            <p className="deck-label text-muted mt-[1.6vh]">Concept only—not operating or a guaranteed member benefit</p>
           </div>
         </div>
       </div>

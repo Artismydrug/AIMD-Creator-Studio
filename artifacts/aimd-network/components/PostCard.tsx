@@ -182,6 +182,13 @@ function PostCard({
       backgroundColor: colors.ink,
       overflow: 'hidden',
     },
+    portraitSurface: {
+      // CSS `flex: 0` uses a zero flex-basis on web and overrides the frame's
+      // explicit height, clipping both the media and its creator controls.
+      flexGrow: 0,
+      flexShrink: 0,
+      flexBasis: 'auto',
+    },
     immersiveImage: {
       ...StyleSheet.absoluteFillObject,
       width: undefined,
@@ -447,7 +454,7 @@ function PostCard({
           <View
             testID={`feed-media-frame-${post.id}`}
             style={[s.mediaSurface,
-              !isTextOnly && post.mediaType !== 'audio' ? { flex: 0, ...mediaFrame } : { width: '100%' },
+              !isTextOnly && post.mediaType !== 'audio' ? [s.portraitSurface, mediaFrame] : { width: '100%' },
               (isTextOnly || post.mediaType === 'audio') && { paddingTop: contentTopInset },
               isTextOnly && s.textPostSurface]}
           >

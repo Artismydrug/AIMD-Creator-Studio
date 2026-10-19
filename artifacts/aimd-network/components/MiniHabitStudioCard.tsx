@@ -25,18 +25,18 @@ export default function MiniHabitStudioCard({ onPress }: { onPress: () => void }
       letterSpacing: 1.2,
     },
     duration: {
-      color: colors.card,
+      color: colors.primaryForeground,
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 11,
     },
     title: {
-      color: colors.card,
+      color: colors.primaryForeground,
       fontFamily: 'DMSans_700Bold',
       fontSize: 20,
       letterSpacing: -0.3,
     },
     description: {
-      color: colors.card,
+      color: colors.primaryForeground,
       opacity: 0.82,
       fontFamily: 'DMSans_400Regular',
       fontSize: 13,
@@ -58,7 +58,7 @@ export default function MiniHabitStudioCard({ onPress }: { onPress: () => void }
       fontSize: 14,
     },
     privacyNote: {
-      color: colors.card,
+      color: colors.primaryForeground,
       opacity: 0.68,
       fontFamily: 'DMSans_400Regular',
       fontSize: 11,
@@ -70,7 +70,7 @@ export default function MiniHabitStudioCard({ onPress }: { onPress: () => void }
     <View style={styles.card} testID="dashboard-mini-habit-studio">
       <View style={styles.eyebrowRow}>
         <Feather name="edit-3" size={15} color={colors.cyan} />
-        <Text style={styles.eyebrow}>MINI HABIT STUDIO</Text>
+        <Text style={styles.eyebrow}>CREATOR ARCADE</Text>
         <Text style={styles.duration}>60 SEC</Text>
       </View>
       <Text style={styles.title}>Flash Sketch</Text>

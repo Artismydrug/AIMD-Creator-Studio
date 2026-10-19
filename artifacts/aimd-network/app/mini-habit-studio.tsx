@@ -109,6 +109,7 @@ export default function MiniHabitStudioScreen() {
   const [secondsLeft, setSecondsLeft] = useState(GAME_SECONDS);
   const deadlineRef = useRef(0);
   const [prompt, setPrompt] = useState(() => PROMPTS[0] ?? 'Draw whatever comes to mind.');
+  const [completionReason, setCompletionReason] = useState<'early' | 'timeout' | null>(null);
   const [strokes, setStrokes] = useState<string[]>([]);
   const [activePath, setActivePath] = useState('');
   const activePathRef = useRef('');
@@ -119,6 +120,8 @@ export default function MiniHabitStudioScreen() {
   const [sketchesLoading, setSketchesLoading] = useState(true);
   const [sketchbookError, setSketchbookError] = useState(false);
   const [saving, setSaving] = useState(false);
+  const saveInFlightRef = useRef<string | null>(null);
+  const currentSketchIdRef = useRef('');
   const [savedCurrentSketch, setSavedCurrentSketch] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -126,6 +129,20 @@ export default function MiniHabitStudioScreen() {
     statusRef.current = next;
     setStatus(next);
   }, []);
+
+  const finishSketch = useCallback((early = false) => {
+    if (statusRef.current !== 'playing') return;
+    const finalPath = activePathRef.current;
+    if (finalPath && strokeCountRef.current < MAX_STROKES) {
+      setStrokes((current) => [...current, finalPath]);
+      strokeCountRef.current += 1;
+    }
+    activePathRef.current = '';
+    setActivePath('');
+    setCompletionReason(early ? 'early' : 'timeout');
+    updateStatus('complete');
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
+  }, [updateStatus]);
 
   const loadSketchbook = useCallback(async () => {
     if (!ownerId) {
@@ -151,13 +168,18 @@ export default function MiniHabitStudioScreen() {
   }, [loadSketchbook]);
 
   useEffect(() => {
+    setSavedSketches([]);
     setStrokes([]);
     setActivePath('');
     activePathRef.current = '';
     strokeCountRef.current = 0;
     pointCountRef.current = 0;
+    currentSketchIdRef.current = '';
+    saveInFlightRef.current = null;
+    setSaving(false);
     setSavedCurrentSketch(false);
     setSaveError(null);
+    setCompletionReason(null);
     updateStatus('idle');
   }, [ownerId, updateStatus]);
 
@@ -167,19 +189,11 @@ export default function MiniHabitStudioScreen() {
       const remaining = Math.max(0, Math.ceil((deadlineRef.current - Date.now()) / 1000));
       setSecondsLeft(remaining);
       if (remaining === 0 && statusRef.current === 'playing') {
-        const finalPath = activePathRef.current;
-        if (finalPath && strokeCountRef.current < MAX_STROKES) {
-          setStrokes((current) => [...current, finalPath]);
-          strokeCountRef.current += 1;
-        }
-        activePathRef.current = '';
-        setActivePath('');
-        updateStatus('complete');
-        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
+        finishSketch();
       }
     }, 200);
     return () => clearInterval(timer);
-  }, [status, updateStatus]);
+  }, [finishSketch, status]);
 
   const drawingEnabledRef = useRef(false);
   drawingEnabledRef.current = statusRef.current === 'playing';
@@ -233,6 +247,7 @@ export default function MiniHabitStudioScreen() {
 
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
+    scrollViewport: { flex: 1, overflow: 'hidden' },
     scroll: { flexGrow: 1, paddingBottom: insets.bottom + 28 },
     header: {
       paddingTop: Platform.OS === 'web' ? 67 : insets.top + 8,
@@ -243,6 +258,8 @@ export default function MiniHabitStudioScreen() {
       gap: 10,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
+      backgroundColor: colors.background,
+      zIndex: 1,
     },
     backButton: { minWidth: 44, minHeight: 44, justifyContent: 'center' },
     headerTitle: { color: colors.foreground, fontFamily: 'DMSans_700Bold', fontSize: 20 },
@@ -332,6 +349,10 @@ export default function MiniHabitStudioScreen() {
     secondaryButtonText: { color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 13 },
     actionRow: { flexDirection: 'row', gap: 10 },
     actionFlex: { flex: 1 },
+    toolbarActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    toolbarNote: { flex: 1, textAlign: 'left' },
+    savedBlock: { gap: 12 },
+    savedMessage: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
     note: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 11, lineHeight: 17, textAlign: 'center' },
     feedback: { color: colors.primary, fontFamily: 'DMSans_600SemiBold', fontSize: 12, textAlign: 'center' },
     error: { color: colors.destructive, fontFamily: 'DMSans_500Medium', fontSize: 12, lineHeight: 18 },
@@ -381,7 +402,9 @@ export default function MiniHabitStudioScreen() {
     activePathRef.current = '';
     strokeCountRef.current = 0;
     pointCountRef.current = 0;
+    currentSketchIdRef.current = createSketchId();
     setSecondsLeft(GAME_SECONDS);
+    setCompletionReason(null);
     setSavedCurrentSketch(false);
     setSaveError(null);
     deadlineRef.current = Date.now() + GAME_SECONDS * 1000;
@@ -398,38 +421,46 @@ export default function MiniHabitStudioScreen() {
   }, []);
 
   const saveSketch = useCallback(async () => {
-    if (!ownerId || statusRef.current !== 'complete' || saving || savedCurrentSketch) return;
+    const sketchId = currentSketchIdRef.current;
+    if (!ownerId || !sketchId || statusRef.current !== 'complete' || saveInFlightRef.current || savedCurrentSketch) return;
     if (strokes.length === 0) {
       setSaveError('Add at least one mark before saving your sketch.');
       return;
     }
     const sketch: MiniHabitSketch = {
-      id: createSketchId(),
+      id: sketchId,
       createdAt: new Date().toISOString(),
       prompt,
       paths: strokes,
     };
+    const saveIdentity = `${ownerId}:${sketchId}`;
+    saveInFlightRef.current = saveIdentity;
     setSaving(true);
     setSaveError(null);
     try {
       const saved = await miniHabitSketchbook.save(ownerId, sketch);
-      if (ownerIdRef.current === ownerId) {
+      if (ownerIdRef.current === ownerId && currentSketchIdRef.current === sketchId) {
         setSavedSketches(saved);
+        setSketchbookError(false);
         setSavedCurrentSketch(true);
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
       }
     } catch (error) {
-      if (ownerIdRef.current === ownerId) {
+      if (ownerIdRef.current === ownerId && currentSketchIdRef.current === sketchId) {
         setSaveError(error instanceof Error && error.message === MINI_HABIT_SKETCHBOOK_FULL
           ? `Your sketchbook holds up to ${MAX_MINI_HABIT_SKETCHES} sketches. Delete one before saving another.`
           : 'Could not save this sketch on your device. Your drawing is still here—please try again.');
       }
     } finally {
-      if (ownerIdRef.current === ownerId) setSaving(false);
+      if (saveInFlightRef.current === saveIdentity) {
+        saveInFlightRef.current = null;
+        if (ownerIdRef.current === ownerId) setSaving(false);
+      }
     }
-  }, [ownerId, prompt, savedCurrentSketch, saving, strokes]);
+  }, [ownerId, prompt, savedCurrentSketch, strokes]);
 
   const requestRestart = useCallback(() => {
+    if (saveInFlightRef.current) return;
     if (statusRef.current !== 'complete' || savedCurrentSketch || strokes.length === 0) {
       startSketch();
       return;
@@ -475,9 +506,14 @@ export default function MiniHabitStudioScreen() {
     else router.replace('/(tabs)');
   };
 
-  const timerText = `0:${String(secondsLeft).padStart(2, '0')}`;
+  const timerText = `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')}`;
   const allPaths = activePath ? [...strokes, activePath] : strokes;
   const canSave = !!ownerId && status === 'complete' && strokes.length > 0 && !saving && !savedCurrentSketch;
+  const timerLabel = status === 'playing'
+    ? 'Keep creating'
+    : status === 'complete'
+      ? completionReason === 'early' ? 'Finished early' : 'Time is up'
+      : 'Ready when you are';
 
   return (
     <View style={styles.container} testID="mini-habit-studio-screen">
@@ -491,9 +527,10 @@ export default function MiniHabitStudioScreen() {
         >
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mini Habit Studio</Text>
+        <Text style={styles.headerTitle}>Creator Arcade</Text>
       </View>
       <ScrollView
+        style={styles.scrollViewport}
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -508,7 +545,7 @@ export default function MiniHabitStudioScreen() {
           <View style={styles.promptCard}>
             <Text style={styles.promptLabel}>YOUR PROMPT</Text>
             <Text style={styles.prompt}>{prompt}</Text>
-            {status !== 'playing' && (
+            {status === 'idle' && (
               <TouchableOpacity
                 style={styles.promptAction}
                 onPress={() => setPrompt((current) => nextPrompt(current))}
@@ -522,13 +559,13 @@ export default function MiniHabitStudioScreen() {
           </View>
 
           <View style={styles.timerRow}>
-            <Text style={styles.timerLabel}>
-              {status === 'playing' ? 'Keep creating' : status === 'complete' ? 'Time is up' : 'Ready when you are'}
-            </Text>
+            <Text style={styles.timerLabel}>{timerLabel}</Text>
             <Text
               style={styles.timer}
               accessibilityRole="timer"
-              accessibilityLabel={`${secondsLeft} seconds remaining`}
+              accessibilityLabel={completionReason === 'early'
+                ? `${secondsLeft} seconds left on the timer`
+                : completionReason === 'timeout' ? 'Time is up' : `${secondsLeft} seconds remaining`}
               testID="mini-habit-sketch-timer"
             >
               {timerText}
@@ -550,7 +587,7 @@ export default function MiniHabitStudioScreen() {
                   key={`current-${index}`}
                   d={path}
                   fill="none"
-                  stroke={colors.ink}
+                  stroke={colors.foreground}
                   strokeWidth={4}
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -569,18 +606,30 @@ export default function MiniHabitStudioScreen() {
 
           {status === 'playing' ? (
             <View style={styles.toolbar}>
-              <Text style={styles.note}>Draw directly on the canvas.</Text>
-              <TouchableOpacity
-                style={styles.toolButton}
-                onPress={undoStroke}
-                disabled={strokes.length === 0}
-                accessibilityRole="button"
-                accessibilityLabel="Undo last mark"
-                testID="mini-habit-sketch-undo"
-              >
-                <Feather name="corner-up-left" size={15} color={strokes.length ? colors.foreground : colors.mutedForeground} />
-                <Text style={[styles.toolButtonText, !strokes.length && { color: colors.mutedForeground }]}>Undo</Text>
-              </TouchableOpacity>
+              <Text style={[styles.note, styles.toolbarNote]}>Draw directly on the canvas.</Text>
+              <View style={styles.toolbarActions}>
+                <TouchableOpacity
+                  style={styles.toolButton}
+                  onPress={undoStroke}
+                  disabled={strokes.length === 0}
+                  accessibilityRole="button"
+                  accessibilityLabel="Undo last mark"
+                  testID="mini-habit-sketch-undo"
+                >
+                  <Feather name="corner-up-left" size={15} color={strokes.length ? colors.foreground : colors.mutedForeground} />
+                  <Text style={[styles.toolButtonText, !strokes.length && { color: colors.mutedForeground }]}>Undo</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.primaryButton}
+                  onPress={() => finishSketch(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Finish this sketch early"
+                  testID="mini-habit-sketch-done"
+                >
+                  <Feather name="check" size={15} color={colors.primaryForeground} />
+                  <Text style={styles.primaryButtonText}>Done</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           ) : status === 'idle' ? (
             <TouchableOpacity
@@ -594,31 +643,34 @@ export default function MiniHabitStudioScreen() {
               <Text style={styles.primaryButtonText}>Start 60-second sketch</Text>
             </TouchableOpacity>
           ) : savedCurrentSketch ? (
-            <View style={styles.actionRow}>
-              <View style={styles.actionFlex}>
-                <Text style={styles.feedback}>Saved to your on-device sketchbook.</Text>
+            <View style={styles.savedBlock}>
+              <View style={styles.savedMessage}>
+                <Feather name="check-circle" size={17} color={colors.primary} />
+                <Text style={styles.feedback}>Saved to this device</Text>
               </View>
               <TouchableOpacity
                 style={styles.secondaryButton}
                 onPress={startSketch}
                 accessibilityRole="button"
-                accessibilityLabel="Start another Flash Sketch"
+                accessibilityLabel="Move to the next sketch idea"
                 testID="mini-habit-sketch-again"
               >
-                <Feather name="rotate-cw" size={15} color={colors.foreground} />
-                <Text style={styles.secondaryButtonText}>Again</Text>
+                <Feather name="arrow-right" size={15} color={colors.foreground} />
+                <Text style={styles.secondaryButtonText}>Next sketch idea</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <View style={styles.actionRow}>
               <TouchableOpacity
-                style={[styles.secondaryButton, styles.actionFlex]}
+                style={[styles.secondaryButton, styles.actionFlex, saving && { opacity: 0.55 }]}
                 onPress={requestRestart}
+                disabled={saving}
                 accessibilityRole="button"
-                accessibilityLabel="Discard this unsaved sketch and start another Flash Sketch"
+                accessibilityLabel="Move to the next sketch idea"
+                testID="mini-habit-sketch-next"
               >
-                <Feather name="rotate-cw" size={15} color={colors.foreground} />
-                <Text style={styles.secondaryButtonText}>New sketch</Text>
+                <Feather name="arrow-right" size={15} color={colors.foreground} />
+                <Text style={styles.secondaryButtonText}>Next sketch idea</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.primaryButton, styles.actionFlex, !canSave && { opacity: 0.55 }]}
@@ -667,7 +719,7 @@ export default function MiniHabitStudioScreen() {
                 {[...savedSketches].reverse().map((sketch) => (
                   <View key={sketch.id} style={styles.sketchCard}>
                     <View style={styles.thumbnail}>
-                      <SketchThumbnail sketch={sketch} color={colors.ink} backgroundColor={colors.card} />
+                      <SketchThumbnail sketch={sketch} color={colors.foreground} backgroundColor={colors.card} />
                     </View>
                     <View style={styles.sketchInfo}>
                       <Text style={styles.sketchPrompt} numberOfLines={2}>{sketch.prompt}</Text>

@@ -2,19 +2,28 @@ export default function PartnerValue() {
   return (
     <div className="w-screen h-screen overflow-hidden relative deck">
       <div className="deck-content">
-        <h2 className="deck-title">Partnership &amp; community reinvestment</h2>
-        <div className="grid grid-cols-[0.9fr_1.1fr] gap-[5vw] mt-[7vh]">
-          <div className="pt-[3vh]">
-            <h3 className="deck-name">Create with us</h3>
-            <p className="deck-body deck-row mt-[3vh]">Events, tools, supplies &amp; creative activations.</p>
-            <p className="deck-body deck-row">Community workshops, youth programs, artist sponsorships &amp; grants.</p>
-            <p className="deck-label text-muted mt-[4vh]">Programs depend on partners &amp; resources.</p>
+        <h2 className="deck-title">Brand &amp; Sponsor Collaboration</h2>
+        <p className="text-[2vw] leading-[1.35] mt-[2vh]">Proposed sponsor funding supports operations and community access.</p>
+        <div className="grid grid-cols-[1.15fr_0.85fr] gap-[4vw] mt-[5vh]">
+          <div>
+            <div className="deck-row">
+              <h3 className="deck-name">Fund access</h3>
+              <p className="text-[2vw] leading-[1.35] mt-[1vh]">Sponsor Dedicated &amp; Professional memberships when paid plans launch.</p>
+            </div>
+            <div className="deck-row">
+              <h3 className="deck-name">Back emerging talent</h3>
+              <p className="text-[2vw] leading-[1.35] mt-[1vh]">Community grants, workshops &amp; youth programs.</p>
+            </div>
+            <div className="deck-row">
+              <h3 className="deck-name">Supply creative gear</h3>
+              <p className="text-[2vw] leading-[1.35] mt-[1vh]">Stock-limited member drops: all tiers, no points required.</p>
+            </div>
           </div>
-          <div className="deck-accent p-[3vw]">
-            <p className="deck-label font-bold">PROPOSED GIVING MODEL</p>
-            <h3 className="font-display font-bold text-[3.3vw] leading-[1.1] mt-[3vh]">A planned share of future proceeds for nonprofit partners.</h3>
-            <p className="text-[2vw] leading-[1.4] mt-[3vh]">Supporting retreats, mentorship &amp; emerging artists.</p>
-            <p className="deck-label mt-[4vh]">Donation percentage, basis, nonprofit partners &amp; reporting are not yet set.</p>
+          <div className="deck-accent p-[2.5vw]">
+            <p className="deck-label font-bold">PLANNED REINVESTMENT</p>
+            <h3 className="font-display font-bold text-[3vw] leading-[1.15] mt-[3vh]">A share of future proceeds for nonprofit partners.</h3>
+            <p className="deck-label mt-[4vh]">Percentage, basis, partners &amp; reporting are not yet set.</p>
+            <p className="deck-label mt-[4vh]">Programs and support depend on agreements &amp; resources.</p>
           </div>
         </div>
       </div>

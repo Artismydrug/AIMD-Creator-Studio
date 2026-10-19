@@ -32,7 +32,7 @@ import {
 } from '@/lib/studioMedia';
 import { runExclusiveSubmission } from '@/lib/submissionLock';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getListStudioPostsQueryKey,
@@ -162,6 +162,14 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
   const postsInvalid = postsResponse != null && !Array.isArray(postsResponse);
   const posts = useMemo(() => Array.isArray(postsResponse) ? postsResponse.filter(post => post != null && typeof post.id === 'number') : [], [postsResponse]);
   const { data: me } = useGetCurrentUser();
+
+  useFocusEffect(useCallback(() => {
+    if (scope === 'community') {
+      // Reopening the Feed should include newly published community posts.
+      // Reuse any request already running instead of cancelling/restarting it.
+      void refetch({ cancelRefetch: false });
+    }
+  }, [scope, refetch]));
 
   useEffect(() => {
     if (posts && activeIndex >= posts.length && activeIndex > 0) {
@@ -814,6 +822,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
         >
           <FlatList
             ref={feedRef}
+            testID="studio-feed-pager"
             key={feedMode}
             data={posts ?? []}
             keyExtractor={(item) => String(item.id)}

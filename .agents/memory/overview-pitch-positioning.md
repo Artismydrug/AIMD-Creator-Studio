@@ -56,3 +56,11 @@ Creator Studio’s mission is to bridge raw artistic talent and sustainable prof
 **Why:** The owner supplied this mission and vision as the source for the general overview deck.
 
 **How to apply:** Preserve the global, multidisciplinary scope and accessibility goal. Describe sponsorship access as an aim dependent on partners and resources, not guaranteed financial support.
+
+## Brand and sponsor collaboration
+
+The partner overview should explicitly describe proposed sponsor funding for operations, community grants, future Dedicated/Professional membership subsidies, and gear for member drops. Sponsored drops remain open across membership tiers and independent of points.
+
+**Why:** The owner requested a clearer brand/sponsor model and explicitly confirmed that drops must retain their existing all-tier, points-independent eligibility.
+
+**How to apply:** Present sponsorships as opportunities, not secured funding. Keep future paid access contingent on rollout readiness, product drops stock-limited, and the nonprofit reinvestment rate unspecified.

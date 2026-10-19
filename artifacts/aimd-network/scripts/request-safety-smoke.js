@@ -303,6 +303,21 @@ test('embedded feed rows use the actual scroll viewport instead of a screen esti
   assert(source.includes('setPagerHeight((previous) => previous === nextHeight ? previous : nextHeight)'));
 });
 
+test('portrait media keeps its measured height instead of collapsing to a zero CSS flex basis', () => {
+  const source = fs.readFileSync(path.resolve(__dirname, '../components/PostCard.tsx'), 'utf8');
+  assert.match(source, /portraitSurface:\s*\{\s*(?:\/\/[^\n]*\n\s*)*flexGrow: 0,\s*flexShrink: 0,\s*flexBasis: 'auto'/);
+  assert(source.includes('[s.portraitSurface, mediaFrame]'));
+  assert.equal(source.includes('{ flex: 0, ...mediaFrame }'), false);
+});
+
+test('All feed defaults to community-wide posts and refreshes on focus without cancelling in-flight reads', () => {
+  const source = fs.readFileSync(path.resolve(__dirname, '../app/feed.tsx'), 'utf8');
+  assert(source.includes("useState<'all' | 'following'>('all')"));
+  assert(source.includes("followingOnly: feedMode === 'following' ? 'true' : 'false'"));
+  assert(source.includes('useFocusEffect(useCallback'));
+  assert(source.includes('void refetch({ cancelRefetch: false })'));
+});
+
 test('a confirmed message clears only the unchanged sent draft', () => {
   assert.equal(draftAfterConfirmedSend('Hey there', 'Hey there'), '');
   assert.equal(draftAfterConfirmedSend('A new message', 'Hey there'), 'A new message');

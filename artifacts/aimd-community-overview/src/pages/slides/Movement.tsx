@@ -4,22 +4,22 @@ export default function Movement() {
   return (
     <div className="w-screen h-screen overflow-hidden relative deck">
       <div className="absolute left-0 top-0 w-[39vw] h-full deck-accent">
-        <img src={`${base}aimd-logo-transparent.png`} crossOrigin="anonymous" alt="Original white AIMD logo with transparent background" className="absolute left-[6vw] top-[10vh] w-[27vw] object-contain" />
-        <div className="absolute left-[6vw] top-[39vh] w-[27vw]">
+        <img src={`${base}aimd-logo-transparent.png`} crossOrigin="anonymous" alt="Original white AIMD logo with transparent background" className="absolute left-[6vw] top-[8vh] w-[23vw] object-contain" />
+        <div className="absolute left-[6vw] top-[35vh] w-[27vw]">
           <h2 className="text-[2.6vw]">Rooted in Los Angeles</h2>
-          <p className="text-[1.75vw] leading-[1.3] mt-[1.8vh]">Founded by Edward “Poncho” Davila, @ponchotheartist</p>
-          <p className="text-[1.75vw] leading-[1.3] mt-[1.8vh]">Live art, community gatherings &amp; collaborative pop-ups.</p>
+          <p className="text-[2vw] leading-[1.3] mt-[1.8vh]">Founded by Edward “Poncho” Davila.</p>
+          <p className="text-[2vw] leading-[1.3] mt-[1.8vh]">Live art, community &amp; collaborative pop-ups.</p>
           <div className="grid grid-cols-2 gap-[1.2vw] mt-[1.8vh] pt-[1.5vh] deck-rule">
             <div>
               <p className="font-display font-bold text-[2.8vw] leading-none text-[#fffaf2]">48.6K</p>
-              <p className="deck-label mt-[0.6vh]">@ponchotheartist<br />followers</p>
+              <p className="deck-label mt-[0.6vh]"><span className="block">@ponchotheartist</span><span className="block">followers</span></p>
             </div>
             <div>
               <p className="font-display font-bold text-[2.8vw] leading-none text-[#fffaf2]">6,195</p>
-              <p className="deck-label mt-[0.6vh]">@artismydrug<br />followers</p>
+              <p className="deck-label mt-[0.6vh]"><span className="block">@artismydrug</span><span className="block">followers</span></p>
             </div>
           </div>
-          <p className="text-[0.85vw] leading-[1.2] text-muted mt-[1vh]">Instagram profile snapshots · October 18, 2026. Account audiences may overlap; these are not unique-reach figures.</p>
+          <p className="text-[1.5vw] leading-[1.2] text-muted mt-[1vh]">Instagram · Oct 18, 2026. Audiences may overlap; not unique reach.</p>
         </div>
       </div>
       <div className="absolute left-[44vw] right-[6vw] top-[8vh] bottom-[8vh]">

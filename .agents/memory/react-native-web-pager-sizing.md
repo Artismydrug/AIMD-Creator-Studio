@@ -27,6 +27,12 @@ Studio Feed photos and videos should share a 9:16 portrait presentation, with th
 
 **How to apply:** Fit the portrait stage inside the measured pager and preserve its row snapping when safe areas or viewport dimensions change. Distinguish display framing from the original video file's encoded dimensions.
 
+Fixed-size media frames must use explicit flex longhands with an automatic basis rather than `flex: 0`.
+
+**Why:** React Native Web passes `flex: 0` through to CSS, where it means a zero-percent basis. In a column layout this overrides an explicit frame height, clips all absolutely positioned media/creator controls, and makes a populated feed look empty. Native and browser flex shorthand behavior differs.
+
+**How to apply:** Use `flexGrow: 0`, `flexShrink: 0`, and `flexBasis: 'auto'` alongside measured frame dimensions. A successful API response or TypeScript check does not establish that the frame has nonzero rendered bounds.
+
 Open the Feed area with the original Feed/Creators/Events section tabs visible, collapse the expanded header while swiping down through posts, and restore it as the user scrolls back up. Keep the compact feed controls available.
 
 **Why:** The owner requested the original tab presentation back while retaining the larger, unobstructed post experience during scrolling. This supersedes the earlier compact-by-default preference.
