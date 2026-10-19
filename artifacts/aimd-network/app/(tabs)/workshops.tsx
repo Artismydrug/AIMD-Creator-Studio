@@ -50,6 +50,7 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const topPad = embedded ? 16 : Platform.OS === 'web' ? 67 : insets.top + 8;
   const scrollRef = useRef<ScrollView>(null);
   const pendingDetailsScroll = useRef(false);
   const detailsTopY = useRef<number | null>(null);
@@ -229,9 +230,19 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
   const s = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     content: { paddingBottom: Platform.OS === 'web' ? 120 : insets.bottom + 110 },
-    header: { paddingTop: embedded ? 16 : Platform.OS === 'web' ? 77 : insets.top + 16, paddingHorizontal: 20, paddingBottom: 22, gap: 6 },
+    header: {
+      paddingTop: topPad,
+      paddingHorizontal: embedded ? 20 : 16,
+      paddingBottom: embedded ? 22 : 16,
+      gap: embedded ? 6 : 12,
+    },
+    titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    titleMark: { width: 38, height: 38, borderRadius: 12, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+    titleCopy: { flex: 1, minWidth: 0 },
     eyebrow: { fontFamily: 'DMSans_700Bold', fontSize: 11, letterSpacing: 1.8, textTransform: 'uppercase', color: colors.sunsetCoral },
-    title: { fontFamily: 'DMSans_700Bold', fontSize: 30, letterSpacing: -0.8, color: colors.foreground },
+    title: { fontFamily: 'DMSans_700Bold', fontSize: 26, letterSpacing: -0.6, color: colors.foreground },
+    subtitle: { fontFamily: 'DMSans_500Medium', fontSize: 12, letterSpacing: 0.4, color: colors.sunsetCoral },
+    embeddedTitle: { fontFamily: 'DMSans_700Bold', fontSize: 30, letterSpacing: -0.8, color: colors.foreground },
     intro: { fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21, color: colors.mutedForeground },
     previewGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 20, paddingBottom: 10 },
     previewCard: { width: '48%', minHeight: 228, padding: 12, borderRadius: colors.radius, backgroundColor: colors.ink, borderWidth: 1, gap: 8 },
@@ -291,7 +302,7 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
     workshopOpenHint: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 9, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
     workshopOpenHintText: { fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.primary },
     ...{},
-  }), [colors, insets, embedded]);
+  }), [colors, insets, embedded, topPad]);
 
   const upgrade = () => { void safeImpact(); router.push('/membership'); };
   const selectedWorkshop = workshops?.find((w) => w.id === selectedWorkshopId);
@@ -305,8 +316,22 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
         <View style={s.header}>
-          <Text style={s.eyebrow}>AIMD Workshops</Text>
-          <Text style={s.title}>One craft. One apprenticeship.</Text>
+          {embedded ? (
+            <>
+              <Text style={s.eyebrow}>AIMD Workshops</Text>
+              <Text style={s.embeddedTitle}>One craft. One apprenticeship.</Text>
+            </>
+          ) : (
+            <View style={s.titleRow} testID="workshops-page-heading">
+              <View style={s.titleMark}>
+                <Feather name="play-circle" size={19} color={colors.primaryForeground} />
+              </View>
+              <View style={s.titleCopy}>
+                <Text style={s.title} numberOfLines={1}>Workshops</Text>
+                <Text style={s.subtitle} numberOfLines={1}>One craft. One apprenticeship.</Text>
+              </View>
+            </View>
+          )}
           <Text style={s.intro}>Watch the teasers free. Full lessons need membership or instructor enrollment.</Text>
           <TouchableOpacity
             accessibilityRole="button"

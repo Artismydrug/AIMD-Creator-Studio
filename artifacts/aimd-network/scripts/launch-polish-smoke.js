@@ -196,10 +196,16 @@ test('feed video pauses when backgrounded or blurred and does not load inactive 
 
 test('four workshop placeholders retain normal-flow badges and explicit preview availability', () => {
   const placeholder = source('../components/WorkshopPreviewPlaceholder.tsx');
+  const workshops = source('../app/(tabs)/workshops.tsx');
   assert.match(placeholder, /PREVIEW COMING SOON/);
   const badge = placeholder.match(/badge: \{([^\n]*)/)[1];
   assert.doesNotMatch(badge, /position: 'absolute'/);
   assert.match(badge, /maxWidth: '100%'/);
-  assert.match(source('../app/(tabs)/workshops.tsx'), /workshops\.slice\(0, 4\)/);
+  assert.match(workshops, /workshops\.slice\(0, 4\)/);
+  assert.match(workshops, /testID="workshops-page-heading"/);
+  assert.match(workshops, /<Text style=\{s\.title\} numberOfLines=\{1\}>Workshops<\/Text>/);
+  assert.match(workshops, /<Text style=\{s\.subtitle\} numberOfLines=\{1\}>One craft\. One apprenticeship\.<\/Text>/);
+  assert.match(workshops, /<Text style=\{s\.intro\}>Watch the teasers free\. Full lessons need membership or instructor enrollment\.<\/Text>/);
+  assert.match(workshops, /embedded \? 16 : Platform\.OS === 'web' \? 67 : insets\.top \+ 8/);
   assert.match(source('../components/WorkshopLessonPlayer.tsx'), /workshop-preview-error/);
 });
