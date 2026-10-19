@@ -1,0 +1,28 @@
+kind = "slides"
+previewPath = "/aimd-community-overview/"
+title = "Creator Studio by AIMD — Community & Partner Overview"
+description = "A 10-slide general overview of Creator Studio by AIMD for creators, instructors and community partners, distinguishing current app features from planned offerings."
+version = "1.0.0"
+id = "artifacts/aimd-community-overview"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/aimd-community-overview/" ]
+localPort = 25761
+
+[services.development]
+run = "pnpm --filter @workspace/aimd-community-overview run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aimd-community-overview", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/aimd-community-overview/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25761"
+BASE_PATH = "/aimd-community-overview/"

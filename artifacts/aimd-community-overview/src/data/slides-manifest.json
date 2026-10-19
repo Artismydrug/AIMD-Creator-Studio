@@ -1,0 +1,12 @@
+[
+  {"id":"94040ef1-d643-4cb5-a21f-f399fb9a0001","position":1,"filepath":"src/pages/slides/OverviewCover.tsx","title":"Creator Studio by AIMD","description":"Mission and introduction.","speakerNotes":""},
+  {"id":"94040ef1-d643-4cb5-a21f-f399fb9a0002","position":2,"filepath":"src/pages/slides/Movement.tsx","title":"More Than an App — A Proven Movement in Los Angeles","description":"AIMD’s physical community roots.","speakerNotes":""},
+  {"id":"94040ef1-d643-4cb5-a21f-f399fb9a0003","position":3,"filepath":"src/pages/slides/IndependentCreator.tsx","title":"Empowering the Independent Creator","description":"Habits, learning and community.","speakerNotes":""},
+  {"id":"94040ef1-d643-4cb5-a21f-f399fb9a0004","position":4,"filepath":"src/pages/slides/DailyExecution.tsx","title":"Built for Daily Execution & Growth","description":"Current app capabilities.","speakerNotes":""},
+  {"id":"94040ef1-d643-4cb5-a21f-f399fb9a0005","position":5,"filepath":"src/pages/slides/MembershipPath.tsx","title":"A Path for Every Stage of the Artist’s Journey","description":"Free access and planned memberships.","speakerNotes":""},
+  {"id":"94040ef1-d643-4cb5-a21f-f399fb9a0006","position":6,"filepath":"src/pages/slides/CreatorValue.tsx","title":"Turn Craft Into Sustainable Independence","description":"Value for creators.","speakerNotes":""},
+  {"id":"94040ef1-d643-4cb5-a21f-f399fb9a0007","position":7,"filepath":"src/pages/slides/InstructorValue.tsx","title":"Teach, Scale, and Earn With Industry Leaders","description":"Instructor collaboration opportunities.","speakerNotes":""},
+  {"id":"94040ef1-d643-4cb5-a21f-f399fb9a0008","position":8,"filepath":"src/pages/slides/PartnerValue.tsx","title":"Brand Alignment With the Next Wave of Creatives","description":"Partner and community possibilities.","speakerNotes":""},
+  {"id":"94040ef1-d643-4cb5-a21f-f399fb9a0009","position":9,"filepath":"src/pages/slides/Momentum.tsx","title":"Built on Momentum & Execution","description":"Testing and measured expansion.","speakerNotes":""},
+  {"id":"94040ef1-d643-4cb5-a21f-f399fb9a0010","position":10,"filepath":"src/pages/slides/JoinMovement.tsx","title":"Let’s Build the Future of Independent Art Together","description":"Invitation and contact links.","speakerNotes":""}
+]

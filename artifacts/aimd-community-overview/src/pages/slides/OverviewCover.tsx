@@ -1,0 +1,23 @@
+const base = import.meta.env.BASE_URL;
+
+export default function OverviewCover() {
+  return (
+    <div className="w-screen h-screen overflow-hidden relative deck">
+      <img src={`${base}creative-workspace.jpg`} crossOrigin="anonymous" alt="Art-making workspace with sketchbook, brushes and color swatches" className="absolute inset-0 w-full h-full object-cover" />
+      <div className="deck-cover-card deck-paper">
+        <div className="deck-cover-number" aria-hidden="true">01</div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-[0.8vw] mb-[5vh]">
+            <span className="w-[0.8vw] h-[0.8vw] rounded-full bg-accent" />
+            <p className="deck-label font-bold">CREATOR STUDIO</p>
+          </div>
+          <h1 className="text-[4.3vw] mb-[3vh]">Creator Studio by AIMD</h1>
+          <p className="deck-body text-muted">Raw talent deserves a real-world path. Discipline Eats Talent.</p>
+          <div className="deck-rule mt-[5vh] pt-[2vh]">
+            <p className="deck-label">artismydrug.com</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
