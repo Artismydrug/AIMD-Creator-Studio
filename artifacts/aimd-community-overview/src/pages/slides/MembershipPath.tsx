@@ -2,7 +2,7 @@ export default function MembershipPath() {
   return (
     <div className="w-screen h-screen overflow-hidden relative deck">
       <div className="deck-content">
-        <h2 className="deck-title mb-[5vh]">Proposed membership model</h2>
+        <h2 className="text-[4.8vw] mb-[5vh]">Membership for every stage</h2>
         <div className="grid grid-cols-3 gap-[2vw]">
           <div className="bg-accent p-[2.4vw] h-[53vh]">
             <h3 className="deck-name">Discovering Artist</h3>
@@ -23,7 +23,7 @@ export default function MembershipPath() {
             <p className="deck-body mt-[4vh]">Business modules, client pipelines, planned mentoring.</p>
           </div>
         </div>
-        <p className="deck-label mt-[3vh] text-muted">Proposed pricing and benefits. Paid checkout is not live; residency access is planned.</p>
+        <p className="deck-label mt-[3vh] text-muted">Free access is available. Paid pricing and benefits are proposed; paid checkout is not live.</p>
       </div>
     </div>
   );

@@ -7,12 +7,16 @@ export default function JoinMovement() {
       <div className="absolute inset-y-[8vh] right-[7vw] w-[68vw] deck-paper px-[4vw] py-[5vh] rotate-[1deg] flex flex-col justify-center deck-compact-rows">
         <div className="flex items-center gap-[1.5vw] mb-[4vh]">
           <img src={`${base}aimd-app-icon.png`} crossOrigin="anonymous" alt="AIMD Creator Studio app icon" className="w-[5.5vw] h-[5.5vw] object-contain shadow-md shrink-0" />
-          <h2 className="text-[3.8vw]">Let’s Build the Future of Independent Art Together</h2>
+          <h2 className="text-[5vw]">Build with AIMD</h2>
         </div>
-        <p className="deck-body deck-row">Join the testing community and start your daily habit streak</p>
-        <p className="deck-body deck-row">Collaborate as a creator, instructor, or community partner</p>
-        <p className="deck-body deck-row">Connect: @artismydrug · @ponchotheartist</p>
-        <p className="deck-body deck-row">Explore AIMD: <a href="https://www.artismydrug.com" target="_blank" rel="noopener noreferrer" className="underline">www.artismydrug.com</a></p>
+        <p className="deck-body mb-[3vh]">A working app shaped through hands-on testing.</p>
+        <p className="deck-body deck-row">Soft launch: reliable access &amp; daily creative practice.</p>
+        <p className="deck-body deck-row">Learn from feedback before expanding paid offerings.</p>
+        <p className="deck-body deck-row">Join as a creator, instructor or community partner.</p>
+        <div className="mt-[4vh]">
+          <p className="text-[2vw] leading-[1.4] font-bold">@artismydrug · @ponchotheartist</p>
+          <a href="https://www.artismydrug.com" target="_blank" rel="noopener noreferrer" className="text-[2vw] leading-[1.4] underline">www.artismydrug.com</a>
+        </div>
       </div>
     </div>
   );

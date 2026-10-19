@@ -1,14 +1,21 @@
 export default function PartnerValue() {
   return (
     <div className="w-screen h-screen overflow-hidden relative deck">
-      <div className="absolute left-0 top-0 w-full h-[40vh] deck-accent" />
-      <div className="deck-content flex flex-col justify-between">
-        <h2 className="text-[4.8vw] max-w-[83vw]">Brand Alignment With the Next Wave of Creatives</h2>
-        <div className="grid grid-cols-2 gap-x-[6.4vw] gap-y-[3vh]">
-          <p className="deck-body deck-row">Collaborate on events, tools, supplies, and creative activations</p>
-          <p className="deck-body deck-row">Explore community workshops, mentorship, and youth programming</p>
-          <p className="deck-body deck-row">Discuss artist sponsorships and creative-grant support</p>
-          <p className="deck-body deck-row">Program availability depends on partners and resources</p>
+      <div className="deck-content">
+        <h2 className="deck-title">Partnership &amp; community reinvestment</h2>
+        <div className="grid grid-cols-[0.9fr_1.1fr] gap-[5vw] mt-[7vh]">
+          <div className="pt-[3vh]">
+            <h3 className="deck-name">Create with us</h3>
+            <p className="deck-body deck-row mt-[3vh]">Events, tools, supplies &amp; creative activations.</p>
+            <p className="deck-body deck-row">Community workshops, youth programs, artist sponsorships &amp; grants.</p>
+            <p className="deck-label text-muted mt-[4vh]">Programs depend on partners &amp; resources.</p>
+          </div>
+          <div className="deck-accent p-[3vw]">
+            <p className="deck-label font-bold">PROPOSED GIVING MODEL</p>
+            <h3 className="font-display font-bold text-[3.3vw] leading-[1.1] mt-[3vh]">A defined share of future proceeds for nonprofit partners.</h3>
+            <p className="text-[2vw] leading-[1.4] mt-[3vh]">Supporting retreats, mentorship &amp; emerging artists.</p>
+            <p className="deck-label mt-[4vh]">Donation percentage, basis, nonprofit partners &amp; reporting are not yet set.</p>
+          </div>
         </div>
       </div>
     </div>
