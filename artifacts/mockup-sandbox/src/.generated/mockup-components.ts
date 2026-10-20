@@ -2,8 +2,13 @@
 type ModuleMap = Record<string, () => Promise<Record<string, unknown>>>;
 export const modules: ModuleMap = {
   "./components/mockups/canvas-board-art/DailyCanvas.tsx": () => import("../components/mockups/canvas-board-art/DailyCanvas.tsx"),
+  "./components/mockups/canvas-board-art/FormeStudio.tsx": () => import("../components/mockups/canvas-board-art/FormeStudio.tsx"),
+  "./components/mockups/canvas-board-art/MidnightGallery.tsx": () => import("../components/mockups/canvas-board-art/MidnightGallery.tsx"),
   "./components/mockups/canvas-board-art/NeonTwilight.tsx": () => import("../components/mockups/canvas-board-art/NeonTwilight.tsx"),
   "./components/mockups/canvas-board-art/OpenSketchbook.tsx": () => import("../components/mockups/canvas-board-art/OpenSketchbook.tsx"),
+  "./components/mockups/canvas-board-art/PixelPractice.tsx": () => import("../components/mockups/canvas-board-art/PixelPractice.tsx"),
+  "./components/mockups/canvas-board-art/StickerJam.tsx": () => import("../components/mockups/canvas-board-art/StickerJam.tsx"),
   "./components/mockups/canvas-board-art/StreakOrbit.tsx": () => import("../components/mockups/canvas-board-art/StreakOrbit.tsx"),
+  "./components/mockups/canvas-board-art/StudioFrequency.tsx": () => import("../components/mockups/canvas-board-art/StudioFrequency.tsx"),
   "./components/mockups/canvas-board-art/WorkshopAtelier.tsx": () => import("../components/mockups/canvas-board-art/WorkshopAtelier.tsx")
 };
