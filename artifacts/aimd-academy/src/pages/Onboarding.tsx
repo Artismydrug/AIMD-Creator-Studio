@@ -21,7 +21,7 @@ const SLIDES = [
     iconColor: 'text-primary',
     accent: '#C85A32',
     title: 'Every creator belongs here.',
-    body: 'A digital studio for the way you make. Find your lane, practice your craft, and keep moving.',
+    body: 'Find your lane. Keep creating.',
     tags: ['Painters', 'Musicians', 'Athletes', 'Tattoo artists'],
   },
   {
@@ -31,7 +31,7 @@ const SLIDES = [
     iconColor: 'text-secondary',
     accent: '#E09F3E',
     title: 'Show up. Make something.',
-    body: 'Check in, build a streak, and turn small creative moves into real momentum.',
+    body: 'Start small. Build a daily streak.',
   },
   {
     badge: 'SHARE YOUR WORK',
@@ -40,7 +40,7 @@ const SLIDES = [
     iconColor: 'text-fuchsia-500',
     accent: '#D946EF',
     title: 'Let the work speak.',
-    body: 'Post your progress, find other creators, and build a portfolio that feels like you.',
+    body: 'Share your progress. Meet other creators.',
   },
   {
     badge: 'CHALLENGES & HABITS',
@@ -49,7 +49,7 @@ const SLIDES = [
     iconColor: 'text-yellow-500',
     accent: '#EAB308',
     title: 'Practice with purpose.',
-    body: 'Use habits for the daily work. Jump into featured challenges when you want a creative push.',
+    body: 'Build daily habits. Take on challenges.',
   },
   {
     badge: 'LEARN YOUR WAY',
@@ -58,7 +58,7 @@ const SLIDES = [
     iconColor: 'text-primary',
     accent: '#C85A32',
     title: 'Keep growing.',
-    body: 'Explore creator workshops, focused drills, and new paths as they open.',
+    body: 'Explore creative workshops and craft topics.',
   },
 ] as const;
 

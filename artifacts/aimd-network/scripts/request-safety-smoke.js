@@ -253,7 +253,8 @@ test('empty workshop catalog renders coming-soon artwork without enrollable card
   const emptyBranch = source.split('!workshops?.length ? (')[1].split(') : workshops.slice(0, 4)')[0];
   assert(emptyBranch.includes('COMING_SOON_WORKSHOP_PREVIEWS.map'));
   assert(emptyBranch.includes('WorkshopPreviewPlaceholder'));
-  assert(emptyBranch.includes('Preview available — full access coming soon'));
+  assert(emptyBranch.includes('Video previews and full lessons aren’t available yet.'));
+  assert.equal(emptyBranch.includes('Preview available — full access coming soon'), false);
   assert.equal(emptyBranch.includes('TouchableOpacity'), false);
   assert.equal(emptyBranch.includes('openLesson('), false);
 });

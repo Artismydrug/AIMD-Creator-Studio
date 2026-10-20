@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import * as AuthSession from 'expo-auth-session';
 import { type Href, Link, Redirect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LegalHelpLinks from '@/components/LegalHelpLinks';
+import { useColors } from '@/hooks/useColors';
 
 // Handle any pending authentication sessions on Android
 WebBrowser.maybeCompleteAuthSession();
@@ -33,6 +34,8 @@ function useWarmUpBrowser() {
 }
 
 export default function SignUpScreen() {
+  const colors = useColors();
+  const s = useMemo(() => createStyles(colors), [colors]);
   useWarmUpBrowser();
 
   const { signUp, errors, fetchStatus } = useSignUp();
@@ -151,7 +154,7 @@ export default function SignUpScreen() {
           style={s.input}
           value={code}
           placeholder="Verification code"
-          placeholderTextColor="#555"
+          placeholderTextColor={colors.mutedForeground}
           onChangeText={setCode}
           keyboardType="numeric"
           autoFocus
@@ -165,7 +168,7 @@ export default function SignUpScreen() {
           disabled={fetchStatus === 'fetching' || !code}
         >
           {fetchStatus === 'fetching'
-            ? <ActivityIndicator color="#fff" />
+            ? <ActivityIndicator color={colors.primaryForeground} />
             : <Text style={s.btnText}>Verify Email</Text>}
         </Pressable>
 
@@ -200,7 +203,7 @@ export default function SignUpScreen() {
           disabled={oauthLoading !== null}
         >
           {oauthLoading === 'google'
-            ? <ActivityIndicator color="#e8e3d5" />
+            ? <ActivityIndicator color={colors.foreground} />
             : (
               <View style={s.oauthBtnInner}>
                 <Text style={s.oauthIcon}>G</Text>
@@ -216,7 +219,7 @@ export default function SignUpScreen() {
             disabled={oauthLoading !== null}
           >
             {oauthLoading === 'apple'
-              ? <ActivityIndicator color="#e8e3d5" />
+              ? <ActivityIndicator color={colors.foreground} />
               : (
                 <View style={s.oauthBtnInner}>
                   <Text style={s.oauthIcon}></Text>
@@ -239,7 +242,7 @@ export default function SignUpScreen() {
           style={s.input}
           value={email}
           placeholder="you@example.com"
-          placeholderTextColor="#555"
+          placeholderTextColor={colors.mutedForeground}
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
@@ -252,7 +255,7 @@ export default function SignUpScreen() {
           style={s.input}
           value={password}
           placeholder="••••••••"
-          placeholderTextColor="#555"
+          placeholderTextColor={colors.mutedForeground}
           onChangeText={setPassword}
           secureTextEntry
         />
@@ -269,7 +272,7 @@ export default function SignUpScreen() {
           disabled={!email || !password || fetchStatus === 'fetching'}
         >
           {fetchStatus === 'fetching'
-            ? <ActivityIndicator color="#fff" />
+            ? <ActivityIndicator color={colors.primaryForeground} />
             : <Text style={s.btnText}>Create Account</Text>}
         </Pressable>
 
@@ -282,23 +285,23 @@ export default function SignUpScreen() {
 
         {/* Required by Clerk for bot-protection */}
         <View nativeID="clerk-captcha" />
-        <LegalHelpLinks color="#bdb4a8" />
+        <LegalHelpLinks color={colors.mutedForeground} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-const s = StyleSheet.create({
+const createStyles = (colors: ReturnType<typeof useColors>) => StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: colors.background,
     paddingHorizontal: 28,
     gap: 8,
   },
   title: {
     fontFamily: 'DMSans_700Bold',
     fontSize: 32,
-    color: '#e8e3d5',
+    color: colors.foreground,
     letterSpacing: 4,
     textAlign: 'center',
     marginBottom: 2,
@@ -306,7 +309,7 @@ const s = StyleSheet.create({
   appSubtitle: {
     fontFamily: 'DMSans_400Regular',
     fontSize: 13,
-    color: '#555',
+    color: colors.mutedForeground,
     textAlign: 'center',
     letterSpacing: 2,
     marginBottom: 8,
@@ -314,7 +317,7 @@ const s = StyleSheet.create({
   tagline: {
     fontFamily: 'DMSans_700Bold',
     fontSize: 15,
-    color: '#b8532d',
+    color: colors.mutedForeground,
     textAlign: 'center',
     letterSpacing: 2,
     textTransform: 'uppercase',
@@ -323,15 +326,15 @@ const s = StyleSheet.create({
   subtitle: {
     fontFamily: 'DMSans_400Regular',
     fontSize: 14,
-    color: '#888',
+    color: colors.mutedForeground,
     textAlign: 'center',
     marginBottom: 16,
   },
   oauthBtn: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: '#2a2a2a',
-    borderRadius: 10,
+    borderColor: colors.border,
+    borderRadius: colors.radius,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 8,
@@ -343,7 +346,7 @@ const s = StyleSheet.create({
   },
   oauthIcon: {
     fontSize: 16,
-    color: '#e8e3d5',
+    color: colors.foreground,
     fontFamily: 'DMSans_700Bold',
     width: 20,
     textAlign: 'center',
@@ -351,13 +354,13 @@ const s = StyleSheet.create({
   oauthBtnText: {
     fontFamily: 'DMSans_600SemiBold',
     fontSize: 15,
-    color: '#e8e3d5',
+    color: colors.foreground,
   },
   oauthError: {
     fontFamily: 'DMSans_400Regular',
     fontSize: 12,
     lineHeight: 18,
-    color: '#e05c5c',
+    color: colors.destructive,
     textAlign: 'center',
     marginTop: 4,
   },
@@ -370,40 +373,40 @@ const s = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#2a2a2a',
+    backgroundColor: colors.border,
   },
   dividerText: {
     fontFamily: 'DMSans_400Regular',
     fontSize: 12,
-    color: '#555',
+    color: colors.mutedForeground,
   },
   label: {
     fontFamily: 'DMSans_600SemiBold',
     fontSize: 13,
-    color: '#aaa',
+    color: colors.foreground,
     marginBottom: 4,
     marginTop: 8,
   },
   input: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: '#2a2a2a',
-    borderRadius: 10,
+    borderColor: colors.border,
+    borderRadius: colors.radius,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontFamily: 'DMSans_400Regular',
     fontSize: 15,
-    color: '#e8e3d5',
+    color: colors.foreground,
   },
   error: {
     fontFamily: 'DMSans_400Regular',
     fontSize: 12,
-    color: '#e05c5c',
+    color: colors.destructive,
     marginTop: 4,
   },
   btn: {
-    backgroundColor: '#b8532d',
-    borderRadius: 10,
+    backgroundColor: colors.primary,
+    borderRadius: colors.radius,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 16,
@@ -413,7 +416,7 @@ const s = StyleSheet.create({
   btnText: {
     fontFamily: 'DMSans_700Bold',
     fontSize: 15,
-    color: '#fff',
+    color: colors.primaryForeground,
     letterSpacing: 1,
   },
   secondary: {
@@ -423,7 +426,8 @@ const s = StyleSheet.create({
   secondaryText: {
     fontFamily: 'DMSans_400Regular',
     fontSize: 13,
-    color: '#b8532d',
+    color: colors.foreground,
+    textDecorationLine: 'underline',
   },
   footer: {
     flexDirection: 'row',
@@ -433,11 +437,12 @@ const s = StyleSheet.create({
   footerText: {
     fontFamily: 'DMSans_400Regular',
     fontSize: 14,
-    color: '#888',
+    color: colors.mutedForeground,
   },
   footerLink: {
     fontFamily: 'DMSans_600SemiBold',
     fontSize: 14,
-    color: '#b8532d',
+    color: colors.foreground,
+    textDecorationLine: 'underline',
   },
 });

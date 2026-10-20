@@ -216,10 +216,37 @@ test('workshop placeholders clearly distinguish sample artwork from unavailable 
   assert.match(workshops, /testID="workshops-page-heading"/);
   assert.match(workshops, /<Text style=\{s\.title\} numberOfLines=\{1\}>Workshops<\/Text>/);
   assert.match(workshops, /<Text style=\{s\.subtitle\} numberOfLines=\{1\}>One craft\. One apprenticeship\.<\/Text>/);
-  assert.match(workshops, /<Text style=\{s\.intro\}>Watch the teasers free\. Full lessons need membership or instructor enrollment\.<\/Text>/);
-  assert.match(workshops, /Video previews and full lessons are not available yet\./);
+  assert.match(workshops, /<Text style=\{s\.intro\}>Full lessons require membership or instructor enrollment\.<\/Text>/);
+  assert.equal((workshops.match(/Video previews and full lessons aren’t available yet\./g) || []).length, 1);
   assert.doesNotMatch(workshops, /Preview available — full access coming soon/);
   assert.doesNotMatch(workshops, /Example workshops below\. Preview videos and lesson details are coming soon\./);
   assert.match(workshops, /embedded \? 16 : Platform\.OS === 'web' \? 67 : insets\.top \+ 8/);
   assert.match(source('../components/WorkshopLessonPlayer.tsx'), /workshop-preview-error/);
+});
+
+test('high-traffic cards keep short summaries while preserving action and storage guidance', () => {
+  const tour = source('../components/CreatorAppTour.tsx');
+  const summaries = [...tour.matchAll(/body: '([^']+)'/g)].map(match => match[1]);
+  assert.equal(summaries.length, 5);
+  for (const summary of summaries) assert.ok(summary.split(/\s+/).length <= 8);
+  const habits = source('../components/HabitCard.tsx');
+  assert.match(habits, /Camera or Photos adds proof; ✓ logs it/);
+  assert.match(habits, /Delete also removes history/);
+  assert.match(habits, /Free on every plan/);
+  const arcade = source('../components/MiniHabitStudioCard.tsx');
+  assert.match(arcade, /backgroundColor: colors\.card/);
+  assert.match(arcade, /Saved on this device/);
+  assert.match(arcade, /accessibilityLabel="Start a 60-second Flash Sketch"/);
+});
+
+test('authentication entry screens follow the app theme instead of a fixed dark palette', () => {
+  for (const screen of ['sign-in', 'sign-up']) {
+    const auth = source(`../app/(auth)/${screen}.tsx`);
+    assert.match(auth, /const colors = useColors\(\)/);
+    assert.match(auth, /backgroundColor: colors\.background/);
+    assert.match(auth, /backgroundColor: colors\.card/);
+    assert.match(auth, /placeholderTextColor=\{colors\.mutedForeground\}/);
+    assert.doesNotMatch(auth, /#[0-9a-fA-F]{3,8}\b/);
+  }
+  assert.match(source('../app/(auth)/_layout.tsx'), /backgroundColor: colors\.background/);
 });
