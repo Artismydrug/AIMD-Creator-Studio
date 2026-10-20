@@ -48,3 +48,4 @@
 - [Startup service isolation](startup-service-isolation.md) — optional notification failures warn without blocking core navigation; sign-in and content access remain fail-closed.
 - [Native Web API compatibility](native-web-api-compatibility.md) — browser/Node globals can hide missing React Native polyfill methods; test the actual native implementation.
 - [Creator Arcade policy](mini-habit-studio-policy.md) — renamed from Mini Habit Studio; first activity is local-only Flash Sketch, separate from points, habit completion, and streaks.
+- [Metro multi-artifact startup](metro-multi-artifact-startup.md) — healthy Expo dependencies do not rule out watcher timeouts caused by unrelated sibling artifacts.
