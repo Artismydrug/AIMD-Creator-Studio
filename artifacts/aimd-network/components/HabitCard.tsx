@@ -26,7 +26,7 @@ interface HabitCardProps {
 }
 
 export const HABIT_ACTION_HELP =
-  'Tap Camera or Photos to add practice proof, then ✓ to log. Delete removes the habit and its history. Habit tracking and proof are free on every plan.';
+  'Camera or Photos adds proof; ✓ logs it. Delete also removes history. Free on every plan.';
 
 export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps) {
   const colors = useColors();

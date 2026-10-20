@@ -332,7 +332,7 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
               </View>
             </View>
           )}
-          <Text style={s.intro}>Watch the teasers free. Full lessons need membership or instructor enrollment.</Text>
+          <Text style={s.intro}>Full lessons require membership or instructor enrollment.</Text>
           <TouchableOpacity
             accessibilityRole="button"
             testID="open-learning-portfolio"
@@ -357,6 +357,7 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
             </View>
           ) : !workshops?.length ? (
             <View style={{ gap: 10 }} testID="workshops-coming-soon">
+              <Text style={s.intro}>Video previews and full lessons aren’t available yet.</Text>
               {COMING_SOON_WORKSHOP_PREVIEWS.map((preview) => (
                 <View key={preview.title} style={s.workshopCard}>
                   <View style={s.workshopPreview}>
@@ -366,7 +367,6 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
                     <Text style={s.category}>{preview.category}</Text>
                     <Text style={s.cardTitle}>{preview.title}</Text>
                     <Text style={s.cardBody}>{preview.description}</Text>
-                    <Text style={s.meta}>Video previews and full lessons are not available yet.</Text>
                   </View>
                 </View>
               ))}

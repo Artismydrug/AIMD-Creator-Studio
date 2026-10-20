@@ -11,33 +11,32 @@ export default function MiniHabitStudioCard({ onPress }: { onPress: () => void }
       marginTop: 12,
       padding: 18,
       gap: 12,
-      backgroundColor: colors.ink,
-      borderColor: colors.cyan,
+      backgroundColor: colors.card,
+      borderColor: colors.border,
       borderWidth: 1,
       borderRadius: colors.radius + 4,
     },
     eyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     eyebrow: {
       flex: 1,
-      color: colors.cyan,
+      color: colors.primary,
       fontFamily: 'DMSans_700Bold',
       fontSize: 11,
       letterSpacing: 1.2,
     },
     duration: {
-      color: colors.primaryForeground,
+      color: colors.mutedForeground,
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 11,
     },
     title: {
-      color: colors.primaryForeground,
+      color: colors.foreground,
       fontFamily: 'DMSans_700Bold',
       fontSize: 20,
       letterSpacing: -0.3,
     },
     description: {
-      color: colors.primaryForeground,
-      opacity: 0.82,
+      color: colors.mutedForeground,
       fontFamily: 'DMSans_400Regular',
       fontSize: 13,
       lineHeight: 19,
@@ -58,8 +57,7 @@ export default function MiniHabitStudioCard({ onPress }: { onPress: () => void }
       fontSize: 14,
     },
     privacyNote: {
-      color: colors.primaryForeground,
-      opacity: 0.68,
+      color: colors.mutedForeground,
       fontFamily: 'DMSans_400Regular',
       fontSize: 11,
       textAlign: 'center',
@@ -69,14 +67,12 @@ export default function MiniHabitStudioCard({ onPress }: { onPress: () => void }
   return (
     <View style={styles.card} testID="dashboard-mini-habit-studio">
       <View style={styles.eyebrowRow}>
-        <Feather name="edit-3" size={15} color={colors.cyan} />
+        <Feather name="edit-3" size={15} color={colors.primary} />
         <Text style={styles.eyebrow}>CREATOR ARCADE</Text>
         <Text style={styles.duration}>60 SEC</Text>
       </View>
       <Text style={styles.title}>Flash Sketch</Text>
-      <Text style={styles.description}>
-        A short creative practice break. Pick a prompt and keep your hand moving for one minute.
-      </Text>
+      <Text style={styles.description}>Pick a prompt. Sketch for one minute.</Text>
       <TouchableOpacity
         style={styles.button}
         onPress={onPress}
@@ -84,10 +80,10 @@ export default function MiniHabitStudioCard({ onPress }: { onPress: () => void }
         accessibilityLabel="Start a 60-second Flash Sketch"
         testID="dashboard-mini-habit-studio-open"
       >
-        <Text style={styles.buttonText}>Start a sketch</Text>
+        <Text style={styles.buttonText}>Start sketch</Text>
         <Feather name="arrow-right" size={16} color={colors.primaryForeground} />
       </TouchableOpacity>
-      <Text style={styles.privacyNote}>Your sketches stay on this device.</Text>
+      <Text style={styles.privacyNote}>Saved on this device.</Text>
     </View>
   );
 }

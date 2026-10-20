@@ -3,21 +3,21 @@ export const COMING_SOON_WORKSHOP_PREVIEWS = [
   {
     category: 'Visual Art',
     title: 'Visual Art',
-    description: 'Explore drawing, visual techniques, and a consistent creative practice.',
+    description: 'Drawing, technique, creative practice.',
   },
   {
     category: 'Tattooing',
     title: 'Tattoo Artistry',
-    description: 'Explore design, artistic fundamentals, and the creative side of tattooing.',
+    description: 'Design, fundamentals, tattoo artistry.',
   },
   {
     category: 'Music',
     title: 'Music & Vocal Artistry',
-    description: 'Explore vocal practice, musical expression, and developing your sound.',
+    description: 'Vocal practice, expression, sound.',
   },
   {
     category: 'Creative Business',
     title: 'Creative Pathways',
-    description: 'Explore portfolios, professional readiness, and opportunities as a creator.',
+    description: 'Portfolios, professional readiness, opportunities.',
   },
 ] as const;

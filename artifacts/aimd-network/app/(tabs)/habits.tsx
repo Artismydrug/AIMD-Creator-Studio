@@ -449,7 +449,7 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
                 <View style={s.progressPanel} testID="habit-weekly-progress">
                   <View>
                     <Text style={s.progressHeading}>Practice over time</Text>
-                  <Text style={s.progressSubtitle}>The 🔥 rises with each completed practice day (0–7) in each of four rolling weeks.</Text>
+                    <Text style={s.progressSubtitle}>Completed practice days per week · up to 7.</Text>
                   </View>
 
                   {habits.length > 1 && (

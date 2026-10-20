@@ -119,15 +119,15 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
     eyebrow: { alignSelf: 'flex-start', fontFamily: 'DMSans_700Bold', fontSize: 11, letterSpacing: 1.7, color: colors.accentForeground, textTransform: 'uppercase', backgroundColor: colors.gold, borderRadius: 99, overflow: 'hidden', paddingHorizontal: 10, paddingVertical: 5 },
     title: { fontFamily: 'DMSans_700Bold', fontSize: 30, color: colors.foreground, letterSpacing: -0.9 },
     intro: { fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21, color: colors.mutedForeground },
-    challengeCard: { marginHorizontal: 20, padding: 19, backgroundColor: colors.ink, borderRadius: colors.radius + 4, gap: 12, borderWidth: 2, borderColor: colors.primary },
+    challengeCard: { marginHorizontal: 20, padding: 19, backgroundColor: colors.card, borderRadius: colors.radius + 4, gap: 12, borderWidth: 1, borderColor: colors.border },
     challengeTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    challengeLabel: { fontFamily: 'DMSans_700Bold', color: colors.cyan, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase' },
+    challengeLabel: { fontFamily: 'DMSans_700Bold', color: colors.foreground, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase' },
     challengeStatus: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-    challengeStatusText: { fontFamily: 'DMSans_600SemiBold', color: colors.primaryForeground, fontSize: 11 },
-    challengeTitle: { fontFamily: 'DMSans_700Bold', color: colors.primaryForeground, fontSize: 24, letterSpacing: -0.5 },
-    challengePrompt: { fontFamily: 'DMSans_400Regular', color: colors.primaryForeground, opacity: 0.82, fontSize: 14, lineHeight: 21 },
+    challengeStatusText: { fontFamily: 'DMSans_600SemiBold', color: colors.foreground, fontSize: 11 },
+    challengeTitle: { fontFamily: 'DMSans_700Bold', color: colors.foreground, fontSize: 24, letterSpacing: -0.5 },
+    challengePrompt: { fontFamily: 'DMSans_400Regular', color: colors.mutedForeground, fontSize: 14, lineHeight: 21 },
     challengeMeta: { flexDirection: 'row', gap: 14, flexWrap: 'wrap' },
-    meta: { fontFamily: 'DMSans_500Medium', color: colors.primaryForeground, opacity: 0.7, fontSize: 12 },
+    meta: { fontFamily: 'DMSans_500Medium', color: colors.mutedForeground, fontSize: 12 },
     primaryButton: { minHeight: 48, borderRadius: 12, backgroundColor: colors.electricMagenta, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
     primaryButtonText: { fontFamily: 'DMSans_700Bold', color: colors.primaryForeground, fontSize: 14 },
     submitted: { minHeight: 46, borderWidth: 1, borderColor: colors.cyan, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
@@ -165,7 +165,7 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
           <View style={s.header}>
             <Text style={s.eyebrow}>Featured challenge</Text>
             <Text style={s.title}>Challenges & Habits</Text>
-            <Text style={s.intro}>Make the work visible. Capture your challenge proof live, then keep your daily practice moving.</Text>
+            <Text style={s.intro}>Daily practice. Featured challenges.</Text>
           </View>
         )}
 
@@ -175,7 +175,7 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
           <View style={[s.empty, { marginHorizontal: 20 }]}>
             <Feather name="calendar" size={28} color={colors.primary} />
             <Text style={s.emptyTitle}>No active challenge right now</Text>
-            <Text style={s.emptyBody}>Your habit practice is still here. Check back when the next featured challenge unlocks.</Text>
+            <Text style={s.emptyBody}>Daily practice stays available below.</Text>
           </View>
         ) : (
           <View style={s.challengeCard}>
@@ -184,7 +184,7 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
                   {challenge.status === 'upcoming' ? 'Coming next' : challenge.status === 'active' ? 'Active challenge' : 'Challenge closed'}
                 </Text>
               <View style={s.challengeStatus}>
-                <Feather name="zap" size={13} color={colors.cyan} />
+                  <Feather name="zap" size={13} color={colors.primary} />
                 <Text style={s.challengeStatusText}>+{challenge.submissionPoints} points</Text>
               </View>
             </View>
@@ -201,7 +201,7 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
             </View>
             {challengeData.hasSubmitted ? (
               <View style={s.submitted}>
-                <Feather name="check-circle" size={17} color={colors.cyan} />
+                <Feather name="check-circle" size={17} color={colors.primary} />
                 <Text style={s.submittedText}>Entry submitted for review</Text>
               </View>
             ) : challenge.status === 'active' ? (
@@ -211,7 +211,7 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
               </TouchableOpacity>
             ) : (
               <View style={s.submitted}>
-                <Feather name="calendar" size={17} color={colors.cyan} />
+                <Feather name="calendar" size={17} color={colors.primary} />
                 <Text style={s.submittedText}>
                   {challenge.status === 'upcoming'
                     ? `Opens ${new Date(challenge.startsAt).toLocaleDateString(undefined, { timeZone: 'America/Los_Angeles' })}`
