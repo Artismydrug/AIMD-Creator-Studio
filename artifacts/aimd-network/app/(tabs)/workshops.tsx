@@ -357,7 +357,6 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
             </View>
           ) : !workshops?.length ? (
             <View style={{ gap: 10 }} testID="workshops-coming-soon">
-              <Text style={s.intro}>Example workshops below. Preview videos and lesson details are coming soon.</Text>
               {COMING_SOON_WORKSHOP_PREVIEWS.map((preview) => (
                 <View key={preview.title} style={s.workshopCard}>
                   <View style={s.workshopPreview}>
@@ -367,7 +366,7 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
                     <Text style={s.category}>{preview.category}</Text>
                     <Text style={s.cardTitle}>{preview.title}</Text>
                     <Text style={s.cardBody}>{preview.description}</Text>
-                    <Text style={s.meta}>Preview available — full access coming soon</Text>
+                    <Text style={s.meta}>Video previews and full lessons are not available yet.</Text>
                   </View>
                 </View>
               ))}
