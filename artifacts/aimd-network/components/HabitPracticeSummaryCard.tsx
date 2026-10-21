@@ -54,23 +54,28 @@ export default function HabitPracticeSummaryCard({ onOpenHabits }: { onOpenHabit
       marginHorizontal: 16,
       marginTop: 16,
       padding: 16,
-      backgroundColor: colors.card,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: colors.radius + 2,
+      backgroundColor: colors.studioPaper,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      borderRadius: 22,
       gap: 14,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 3, height: 3 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 3,
     },
     header: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    title: { flex: 1, fontFamily: 'DMSans_700Bold', fontSize: 18, color: colors.foreground },
+    title: { flex: 1, fontFamily: 'DMSans_700Bold', fontSize: 18, color: colors.studioInk },
     viewAll: { minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 5 },
-    viewAllText: { fontFamily: 'DMSans_600SemiBold', fontSize: 12, color: colors.primary },
+    viewAllText: { fontFamily: 'DMSans_600SemiBold', fontSize: 12, color: colors.studioVioletText },
     selector: { flexGrow: 0, marginHorizontal: -3 },
     selectorContent: { gap: 6, paddingHorizontal: 3 },
     habitChip: {
       minHeight: 32,
       maxWidth: 150,
       paddingHorizontal: 10,
-      borderRadius: 99,
+      borderRadius: 13,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
@@ -78,18 +83,18 @@ export default function HabitPracticeSummaryCard({ onOpenHabits }: { onOpenHabit
     habitChipText: { fontFamily: 'DMSans_600SemiBold', fontSize: 11 },
     chart: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', gap: 8 },
     column: { flex: 1, alignItems: 'center', gap: 5 },
-    count: { fontFamily: 'DMSans_700Bold', fontSize: 13, color: colors.primary },
+    count: { fontFamily: 'DMSans_700Bold', fontSize: 13, color: colors.studioOrangeText },
     flameTrack: { width: '100%', alignItems: 'center' },
-    weekLabel: { minHeight: 28, fontFamily: 'DMSans_500Medium', fontSize: 9, color: colors.mutedForeground, textAlign: 'center' },
+    weekLabel: { minHeight: 28, fontFamily: 'DMSans_500Medium', fontSize: 9, color: colors.studioMuted, textAlign: 'center' },
     status: { minHeight: 72, alignItems: 'center', justifyContent: 'center', gap: 8 },
-    statusText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.mutedForeground, textAlign: 'center' },
-    retry: { fontFamily: 'DMSans_600SemiBold', color: colors.primary, fontSize: 13 },
+    statusText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.studioMuted, textAlign: 'center' },
+    retry: { fontFamily: 'DMSans_600SemiBold', color: colors.studioVioletText, fontSize: 13 },
   }), [colors]);
 
   return (
     <View style={styles.card} testID="dashboard-your-habits">
       <View style={styles.header}>
-        <Feather name="activity" size={18} color={colors.primary} />
+        <Feather name="activity" size={18} color={colors.studioOrange} />
         <Text style={styles.title}>Your Habits</Text>
         <TouchableOpacity
           style={styles.viewAll}
@@ -99,7 +104,7 @@ export default function HabitPracticeSummaryCard({ onOpenHabits }: { onOpenHabit
           testID="dashboard-your-habits-open"
         >
           <Text style={styles.viewAllText}>View all</Text>
-          <Feather name="chevron-right" size={15} color={colors.primary} />
+          <Feather name="chevron-right" size={15} color={colors.studioViolet} />
         </TouchableOpacity>
       </View>
 
@@ -112,14 +117,14 @@ export default function HabitPracticeSummaryCard({ onOpenHabits }: { onOpenHabit
             return (
               <TouchableOpacity
                 key={habit.id}
-                style={[styles.habitChip, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.primary : colors.background }]}
+                style={[styles.habitChip, { borderColor: selected ? colors.studioInk : colors.studioLine, backgroundColor: selected ? colors.studioVioletText : colors.studioPaperAlt }]}
                 onPress={() => setSelectedHabitId(habit.id)}
                 accessibilityRole="tab"
                 accessibilityState={{ selected }}
                 accessibilityLabel={`${habit.name} practice history`}
                 testID={`dashboard-habit-${habit.id}`}
               >
-                <Text numberOfLines={1} style={[styles.habitChipText, { color: selected ? colors.primaryForeground : colors.foreground }]}>{habit.name}</Text>
+                <Text numberOfLines={1} style={[styles.habitChipText, { color: selected ? colors.studioPaper : colors.studioInk }]}>{habit.name}</Text>
               </TouchableOpacity>
             );
           })}
@@ -127,7 +132,7 @@ export default function HabitPracticeSummaryCard({ onOpenHabits }: { onOpenHabit
       )}
 
       {habitsLoading || (!habitsError && habits.length > 0 && historyLoading) ? (
-        <View style={styles.status}><ActivityIndicator color={colors.primary} /><Text style={styles.statusText}>Loading practice history</Text></View>
+        <View style={styles.status}><ActivityIndicator color={colors.studioViolet} /><Text style={styles.statusText}>Loading practice history</Text></View>
       ) : habitsError || habitsInvalid ? (
         <View style={styles.status}>
           <Text style={styles.statusText}>Couldn’t load your habits.</Text>
@@ -156,7 +161,7 @@ export default function HabitPracticeSummaryCard({ onOpenHabits }: { onOpenHabit
             >
               <Text style={styles.count}>{week.daysCompleted}</Text>
               <View style={styles.flameTrack} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                <RisingPracticeFlame daysCompleted={week.daysCompleted} trackColor={colors.muted} railColor={colors.border} />
+                <RisingPracticeFlame daysCompleted={week.daysCompleted} trackColor={colors.studioLavender} railColor={colors.studioLine} />
               </View>
               <Text style={styles.weekLabel}>{week.label}</Text>
             </View>

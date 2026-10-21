@@ -222,11 +222,11 @@ export default function ProgressScreen() {
     ? Math.max(0, Math.min(100, nextBadge.progressPercent)) : 0;
 
   const s = useMemo(() => StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
+    container: { flex: 1, backgroundColor: colors.studioBackground },
     header: {
       paddingTop: topPad,
-      paddingHorizontal: 16,
-      paddingBottom: 8,
+      paddingHorizontal: 18,
+      paddingBottom: 10,
       flexDirection: 'row',
       alignItems: 'flex-start',
       gap: 12,
@@ -250,9 +250,16 @@ export default function ProgressScreen() {
       width: 38,
       height: 38,
       borderRadius: 12,
-      backgroundColor: colors.gold,
+      backgroundColor: colors.studioLavender,
+      borderWidth: 2,
+      borderColor: colors.studioInk,
       alignItems: 'center',
       justifyContent: 'center',
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
     },
     titleCopy: {
       flex: 1,
@@ -261,13 +268,13 @@ export default function ProgressScreen() {
     title: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 26,
-      color: colors.foreground,
-      letterSpacing: -0.6,
+      color: colors.studioInk,
+      letterSpacing: -0.7,
     },
     tagline: {
       fontFamily: 'DMSans_500Medium',
       fontSize: 12,
-      color: colors.sunsetCoral,
+      color: colors.studioOrangeText,
       letterSpacing: 0.4,
     },
     headerActions: {
@@ -305,7 +312,7 @@ export default function ProgressScreen() {
     profileButtonText: {
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 13,
-      color: colors.primary,
+      color: colors.studioVioletText,
     },
     notificationButton: {
       width: 42,
@@ -319,7 +326,7 @@ export default function ProgressScreen() {
       paddingBottom: Platform.OS === 'web' ? 100 : 100,
     },
     offlineWarning: {
-      backgroundColor: colors.muted,
+      backgroundColor: colors.studioPaperAlt,
       paddingVertical: 8,
       paddingHorizontal: 16,
       flexDirection: 'row',
@@ -330,7 +337,7 @@ export default function ProgressScreen() {
     offlineText: {
       fontFamily: 'DMSans_500Medium',
       fontSize: 12,
-      color: colors.mutedForeground,
+      color: colors.studioMuted,
     },
     centered: {
       flex: 1,
@@ -342,20 +349,20 @@ export default function ProgressScreen() {
     centeredTitle: {
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 16,
-      color: colors.foreground,
+      color: colors.studioInk,
     },
     retryBtn: {
       marginTop: 8,
       paddingHorizontal: 16,
       paddingVertical: 8,
       borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: colors.radius || 4,
+      borderColor: colors.studioInk,
+      borderRadius: 16,
     },
     retryBtnText: {
       fontFamily: 'DMSans_500Medium',
       fontSize: 14,
-      color: colors.foreground,
+      color: colors.studioInk,
     },
     loadingCard: {
       marginHorizontal: 16,
@@ -365,16 +372,21 @@ export default function ProgressScreen() {
       alignItems: 'center',
       justifyContent: 'center',
       gap: 12,
-      backgroundColor: colors.ink,
-      borderRadius: colors.radius + 4,
-      borderWidth: 1,
-      borderColor: colors.border,
+      backgroundColor: colors.studioLavender,
+      borderRadius: 24,
+      borderWidth: 2,
+      borderColor: colors.studioInk,
       overflow: 'hidden',
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 3, height: 3 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 3,
     },
     profileSnapshot: {
-      backgroundColor: colors.background,
+      backgroundColor: colors.studioBackground,
       paddingHorizontal: 16,
-      paddingTop: 14,
+      paddingTop: 10,
     },
     profileSnapshotCard: {
       flexDirection: 'row',
@@ -382,9 +394,14 @@ export default function ProgressScreen() {
       gap: 12,
       padding: 14,
       borderWidth: 2,
-      borderColor: colors.cyan,
-      borderRadius: colors.radius + 2,
-      backgroundColor: colors.cyanWash,
+      borderColor: colors.studioViolet,
+      borderRadius: 22,
+      backgroundColor: colors.studioLavender,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 3, height: 3 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 3,
     },
     profileSnapshotAvatar: {
       width: 54,
@@ -392,13 +409,13 @@ export default function ProgressScreen() {
       borderRadius: 27,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.muted,
+      backgroundColor: colors.studioPaper,
       overflow: 'hidden',
     },
     profileSnapshotAvatarText: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 18,
-      color: colors.primary,
+      color: colors.studioInk,
     },
     profileSnapshotContent: {
       flex: 1,
@@ -408,14 +425,14 @@ export default function ProgressScreen() {
     profileSnapshotEyebrow: {
       fontFamily: 'DMSans_500Medium',
       fontSize: 10,
-      color: colors.primary,
+      color: colors.studioVioletText,
       letterSpacing: 1.2,
       textTransform: 'uppercase',
     },
     profileSnapshotName: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 17,
-      color: colors.foreground,
+      color: colors.studioInk,
     },
     profileSnapshotStats: {
       flexDirection: 'row',
@@ -425,25 +442,25 @@ export default function ProgressScreen() {
     profileSnapshotStat: {
       fontFamily: 'DMSans_400Regular',
       fontSize: 12,
-      color: colors.mutedForeground,
+      color: colors.studioMuted,
     },
     loadingText: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 10,
-      color: colors.cyan,
+      color: colors.studioOrangeText,
       textTransform: 'uppercase',
       letterSpacing: 1.5,
     },
     progressBarContainer: {
       width: '100%',
       height: 6,
-      backgroundColor: 'rgba(250,248,245,0.22)',
+      backgroundColor: colors.studioPaperAlt,
       borderRadius: 3,
       overflow: 'hidden',
     },
     progressBarFill: {
       height: '100%',
-      backgroundColor: colors.cyan,
+      backgroundColor: colors.studioOrange,
     },
     // Stats grid
     statsGrid: {
@@ -456,13 +473,18 @@ export default function ProgressScreen() {
       flex: 1,
       paddingVertical: 14,
       alignItems: 'center',
-      backgroundColor: colors.card,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: colors.radius,
+      backgroundColor: colors.studioPaper,
+      borderWidth: 1.5,
+      borderColor: colors.studioLine,
+      borderRadius: 18,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
     },
     statCellNoBorder: {
-      borderWidth: 1,
+      borderWidth: 1.5,
     },
     statIcon: {
       marginBottom: 5,
@@ -470,13 +492,13 @@ export default function ProgressScreen() {
     statValue: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 22,
-      color: colors.primary,
+      color: colors.studioOrangeText,
       marginBottom: 2,
     },
     statLabel: {
       fontFamily: 'DMSans_500Medium',
       fontSize: 11,
-      color: colors.mutedForeground,
+      color: colors.studioMuted,
       textTransform: 'uppercase',
     },
     // Badges block
@@ -484,15 +506,20 @@ export default function ProgressScreen() {
       marginHorizontal: 16,
       marginTop: 16,
       padding: 18,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: colors.radius + 2,
-      backgroundColor: colors.goldWash,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      borderRadius: 22,
+      backgroundColor: colors.studioLavender,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 3, height: 3 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 3,
     },
     blockTitle: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 16,
-      color: colors.foreground,
+      color: colors.studioInk,
     },
     blockTitleRow: {
       flexDirection: 'row',
@@ -501,15 +528,17 @@ export default function ProgressScreen() {
       marginBottom: 16,
     },
     nextBadgeBox: {
-      backgroundColor: colors.muted,
+      backgroundColor: colors.studioPaper,
       padding: 16,
-      borderRadius: colors.radius || 4,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.studioLine,
       marginBottom: 16,
     },
     nextBadgeName: {
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 15,
-      color: colors.foreground,
+      color: colors.studioInk,
       marginBottom: 8,
     },
     nextBadgeMeta: {
@@ -520,7 +549,7 @@ export default function ProgressScreen() {
     nextBadgeText: {
       fontFamily: 'DMSans_400Regular',
       fontSize: 12,
-      color: colors.mutedForeground,
+      color: colors.studioMuted,
     },
     recentBadgesList: {
       gap: 12,
@@ -534,12 +563,12 @@ export default function ProgressScreen() {
     recentBadgeName: {
       fontFamily: 'DMSans_500Medium',
       fontSize: 15,
-      color: colors.foreground,
+      color: colors.studioInk,
     },
     recentBadgeDate: {
       fontFamily: 'DMSans_400Regular',
       fontSize: 12,
-      color: colors.mutedForeground,
+      color: colors.studioMuted,
       marginLeft: 'auto',
     },
     // Actions block
@@ -554,22 +583,27 @@ export default function ProgressScreen() {
       justifyContent: 'center',
       gap: 10,
       paddingVertical: 14,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.card,
-      borderRadius: colors.radius + 2,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      backgroundColor: colors.studioPaper,
+      borderRadius: 18,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
     },
     actionBtnPrimary: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
+      backgroundColor: colors.studioOrange,
+      borderColor: colors.studioInk,
     },
     actionBtnText: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 15,
-      color: colors.foreground,
+      color: colors.studioInk,
     },
     actionBtnTextPrimary: {
-      color: colors.primaryForeground,
+      color: colors.studioInk,
     },
     // Challenge block
     challengeBlock: {
@@ -577,9 +611,14 @@ export default function ProgressScreen() {
       marginTop: 16,
       padding: 20,
       borderWidth: 2,
-      borderColor: colors.sunsetCoral,
-      borderRadius: colors.radius + 4,
-      backgroundColor: colors.coralWash,
+      borderColor: colors.studioInk,
+      borderRadius: 24,
+      backgroundColor: colors.studioOrange,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 3, height: 3 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 3,
     },
     challengeHeader: {
       flexDirection: 'row',
@@ -590,12 +629,12 @@ export default function ProgressScreen() {
     challengeTitle: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 18,
-      color: colors.foreground,
+      color: colors.studioInk,
     },
     challengeTheme: {
       fontFamily: 'DMSans_400Regular',
       fontSize: 14,
-      color: colors.primary,
+      color: colors.studioVioletText,
       marginBottom: 8,
       textTransform: 'uppercase',
       letterSpacing: 1,
@@ -603,14 +642,14 @@ export default function ProgressScreen() {
     challengePrompt: {
       fontFamily: 'DMSans_400Regular',
       fontSize: 15,
-      color: colors.foreground,
+      color: colors.studioInk,
       lineHeight: 22,
       marginBottom: 16,
     },
     challengePrize: {
       fontFamily: 'DMSans_500Medium',
       fontSize: 13,
-      color: colors.foreground,
+      color: colors.studioInk,
       marginBottom: 8,
     },
     challengeMetaRow: {
@@ -622,38 +661,38 @@ export default function ProgressScreen() {
     challengeMetaText: {
       fontFamily: 'DMSans_400Regular',
       fontSize: 12,
-      color: colors.mutedForeground,
+      color: colors.studioMuted,
     },
     challengeSubmitted: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
       padding: 12,
-      backgroundColor: colors.muted,
-      borderRadius: colors.radius || 4,
+      backgroundColor: colors.studioPaper,
+      borderRadius: 15,
       justifyContent: 'center',
     },
     challengeSubmittedText: {
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 14,
-      color: colors.foreground,
+      color: colors.studioInk,
     },
     submissionsSection: {
       marginTop: 24,
       borderTopWidth: 1,
-      borderTopColor: colors.border,
+      borderTopColor: colors.studioLine,
       paddingTop: 18,
       gap: 12,
     },
     submissionsHeading: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 16,
-      color: colors.foreground,
+      color: colors.studioInk,
     },
     submissionCard: {
       borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.background,
+      borderColor: colors.studioInk,
+      backgroundColor: colors.studioPaper,
       padding: 12,
       gap: 10,
     },
@@ -667,36 +706,36 @@ export default function ProgressScreen() {
       flex: 1,
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 13,
-      color: colors.foreground,
+      color: colors.studioInk,
     },
     submissionMedia: {
       width: '100%',
       height: 190,
-      backgroundColor: colors.muted,
+      backgroundColor: colors.studioPaperAlt,
     },
     submissionVideo: {
       height: 150,
       alignItems: 'center',
       justifyContent: 'center',
       gap: 8,
-      backgroundColor: colors.muted,
+      backgroundColor: colors.studioPaperAlt,
     },
     submissionVideoText: {
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 13,
-      color: colors.mutedForeground,
+      color: colors.studioMuted,
     },
     submissionCaption: {
       fontFamily: 'DMSans_400Regular',
       fontSize: 14,
       lineHeight: 20,
-      color: colors.foreground,
+      color: colors.studioInk,
     },
     proofSection: {
       gap: 9,
       marginBottom: 14,
       borderTopWidth: 1,
-      borderTopColor: colors.border,
+      borderTopColor: colors.studioLine,
       paddingTop: 14,
     },
     proofLabelRow: {
@@ -708,12 +747,12 @@ export default function ProgressScreen() {
     proofLabel: {
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 14,
-      color: colors.foreground,
+      color: colors.studioInk,
     },
     proofRequired: {
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 11,
-      color: colors.primary,
+      color: colors.studioVioletText,
       textTransform: 'uppercase',
       letterSpacing: 0.8,
     },
@@ -721,7 +760,7 @@ export default function ProgressScreen() {
       fontFamily: 'DMSans_400Regular',
       fontSize: 12,
       lineHeight: 17,
-      color: colors.mutedForeground,
+      color: colors.studioMuted,
     },
     proofAction: {
       minHeight: 48,
@@ -730,86 +769,86 @@ export default function ProgressScreen() {
       justifyContent: 'center',
       gap: 8,
       borderWidth: 1,
-      borderColor: colors.primary,
+      borderColor: colors.studioViolet,
       paddingHorizontal: 12,
       paddingVertical: 10,
     },
     proofActionSecondary: {
-      borderColor: colors.border,
+      borderColor: colors.studioLine,
     },
     proofActionText: {
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 13,
-      color: colors.primary,
+      color: colors.studioViolet,
     },
     proofActionTextSecondary: {
-      color: colors.mutedForeground,
+      color: colors.studioMuted,
     },
     proofPreview: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-      backgroundColor: colors.muted,
+      backgroundColor: colors.studioPaperAlt,
       padding: 10,
     },
     proofPreviewImage: {
       width: 64,
       height: 64,
-      backgroundColor: colors.background,
+      backgroundColor: colors.studioPaper,
     },
     proofPreviewIcon: {
       width: 64,
       height: 64,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.background,
+      backgroundColor: colors.studioPaper,
     },
     proofPreviewCopy: { flex: 1, gap: 3 },
     proofPreviewTitle: {
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 13,
-      color: colors.foreground,
+      color: colors.studioInk,
     },
     proofPreviewMeta: {
       fontFamily: 'DMSans_400Regular',
       fontSize: 11,
-      color: colors.mutedForeground,
+      color: colors.studioMuted,
     },
     // Modal
     modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.75)' },
     modalOverlayCenter: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.85)', padding: 20 },
-    sheet: { backgroundColor: colors.card, paddingTop: 16, paddingHorizontal: 16, paddingBottom: Platform.OS === 'web' ? 40 : insets.bottom + 20 },
-    sheetHandle: { width: 36, height: 4, backgroundColor: colors.border, borderRadius: 2, alignSelf: 'center', marginBottom: 16 },
+    sheet: { backgroundColor: colors.studioPaper, paddingTop: 16, paddingHorizontal: 16, paddingBottom: Platform.OS === 'web' ? 40 : insets.bottom + 20 },
+    sheetHandle: { width: 36, height: 4, backgroundColor: colors.studioLine, borderRadius: 2, alignSelf: 'center', marginBottom: 16 },
     sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-    sheetTitle: { fontFamily: 'DMSans_600SemiBold', fontSize: 16, color: colors.foreground },
-    postBtn: { fontFamily: 'DMSans_700Bold', fontSize: 15, color: colors.primary },
-    captionInput: { fontFamily: 'DMSans_400Regular', fontSize: 16, color: colors.foreground, minHeight: 100, textAlignVertical: 'top', marginBottom: 12 },
-    tagsInput: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: colors.foreground, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12 },
+    sheetTitle: { fontFamily: 'DMSans_600SemiBold', fontSize: 16, color: colors.studioInk },
+    postBtn: { fontFamily: 'DMSans_700Bold', fontSize: 15, color: colors.studioViolet },
+    captionInput: { fontFamily: 'DMSans_400Regular', fontSize: 16, color: colors.studioInk, minHeight: 100, textAlignVertical: 'top', marginBottom: 12 },
+    tagsInput: { fontFamily: 'DMSans_400Regular', fontSize: 14, color: colors.studioInk, borderTopWidth: 1, borderTopColor: colors.studioLine, paddingTop: 12 },
     // Spin modal
     spinModalContent: {
       width: '100%',
-      backgroundColor: colors.card,
+      backgroundColor: colors.studioPaper,
       borderRadius: 16,
       padding: 32,
       alignItems: 'center',
       gap: 24,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: colors.studioInk,
     },
     spinTitle: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 24,
-      color: colors.foreground,
+      color: colors.studioInk,
     },
     spinPoints: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 48,
-      color: colors.primary,
+      color: colors.studioOrangeText,
     },
     spinText: {
       fontFamily: 'DMSans_400Regular',
       fontSize: 16,
-      color: colors.mutedForeground,
+      color: colors.studioMuted,
       textAlign: 'center',
     },
     spinWheelContainer: {
@@ -829,7 +868,7 @@ export default function ProgressScreen() {
       <View style={[s.header, windowWidth < 360 && s.compactHeader]}>
         <View style={s.titleRow}>
           <View style={s.titleMark}>
-            <Feather name="grid" size={19} color={colors.accentForeground} />
+            <Feather name="grid" size={19} color={colors.studioInk} />
           </View>
           <View style={s.titleCopy}>
             <Text style={s.title} numberOfLines={1}>Dashboard</Text>
@@ -845,7 +884,7 @@ export default function ProgressScreen() {
               onPress={() => router.push('/profile')}
               testID="dashboard-profile-button"
             >
-              <Feather name="user" size={18} color={colors.primary} />
+              <Feather name="user" size={18} color={colors.studioViolet} />
               <Text style={s.profileButtonText}>Profile</Text>
             </TouchableOpacity>
             {membershipTitle ? (
@@ -859,10 +898,10 @@ export default function ProgressScreen() {
                 testID={isFreeCreator ? 'dashboard-membership-button' : 'dashboard-tier-button'}
               >
                 <View style={s.memberTierLabel}>
-                  <Feather name="shield" size={10} color={colors.cyan} />
+                  <Feather name="shield" size={10} color={colors.studioOrange} />
                   <Text
                     numberOfLines={1}
-                    style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 9, color: colors.mutedForeground }}
+                    style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 9, color: colors.studioMuted }}
                   >
                     {membershipTitle}
                   </Text>
@@ -877,10 +916,10 @@ export default function ProgressScreen() {
             testID="dashboard-notifications-button"
             style={s.notificationButton}
           >
-            <Feather name="bell" size={19} color={colors.foreground} />
+            <Feather name="bell" size={19} color={colors.studioInk} />
             {unreadNotifications > 0 ? (
               <View style={{ alignItems: 'center', backgroundColor: colors.destructive, borderRadius: 10, justifyContent: 'center', minWidth: 18, paddingHorizontal: 4, position: 'absolute', right: -5, top: -3 }}>
-                <Text style={{ color: colors.primaryForeground, fontFamily: 'DMSans_700Bold', fontSize: 10 }}>{unreadNotifications > 99 ? '99+' : unreadNotifications}</Text>
+                <Text style={{ color: colors.studioPaper, fontFamily: 'DMSans_700Bold', fontSize: 10 }}>{unreadNotifications > 99 ? '99+' : unreadNotifications}</Text>
               </View>
             ) : null}
           </TouchableOpacity>
@@ -889,14 +928,14 @@ export default function ProgressScreen() {
 
       {isOfflineMode && (
         <View style={s.offlineWarning}>
-          <Feather name="wifi-off" size={14} color={colors.mutedForeground} />
+          <Feather name="wifi-off" size={14} color={colors.studioMuted} />
           <Text style={s.offlineText}>Viewing offline cached data</Text>
         </View>
       )}
 
       {progressIsError && !progress ? (
         <View style={s.centered}>
-          <Feather name="cloud-off" size={48} color={colors.mutedForeground} />
+          <Feather name="cloud-off" size={48} color={colors.studioMuted} />
           <Text style={s.centeredTitle}>Could not load your progress</Text>
           <TouchableOpacity style={s.retryBtn} onPress={() => handleRefresh()}>
             <Text style={s.retryBtnText}>Retry</Text>
@@ -907,7 +946,7 @@ export default function ProgressScreen() {
           contentContainerStyle={s.content}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.studioViolet} />
           }
         >
           <CreatorAppTour />
@@ -917,7 +956,7 @@ export default function ProgressScreen() {
               style={s.loadingCard}
               testID="dashboard-loading-state"
             >
-              <ActivityIndicator size="large" color={colors.primary} />
+              <ActivityIndicator size="large" color={colors.studioViolet} />
               <Text style={s.loadingText}>Loading your dashboard…</Text>
             </View>
           )}
@@ -966,24 +1005,24 @@ export default function ProgressScreen() {
                         </Text>
                       </View>
                     </View>
-                    <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+                    <Feather name="chevron-right" size={18} color={colors.studioMuted} />
                   </TouchableOpacity>
                 </View>
               )}
 
               <View style={s.statsGrid}>
                 <View style={s.statCell}>
-                  <Feather name="zap" size={15} color={colors.cyan} style={s.statIcon} />
+                  <Feather name="zap" size={15} color={colors.studioOrange} style={s.statIcon} />
                   <Text style={s.statValue}>{displayCount(progress?.currentStreak)}</Text>
                   <Text style={s.statLabel}>Day Streak</Text>
                 </View>
                 <View style={s.statCell}>
-                  <Feather name="check-circle" size={15} color={colors.cyan} style={s.statIcon} />
+                  <Feather name="check-circle" size={15} color={colors.studioViolet} style={s.statIcon} />
                   <Text style={s.statValue}>{displayCount(progress?.todayHabitsCompleted)}/{displayCount(progress?.totalHabits)}</Text>
                   <Text style={s.statLabel}>Habits Today</Text>
                 </View>
                 <View style={[s.statCell, s.statCellNoBorder]}>
-                  <Feather name="award" size={15} color={colors.cyan} style={s.statIcon} />
+                  <Feather name="award" size={15} color={colors.studioYellow} style={s.statIcon} />
                   <Text style={s.statValue}>{Array.isArray(progress?.recentBadges) ? recentBadges.length : '—'}</Text>
                   <Text style={s.statLabel}>Recent Badges</Text>
                 </View>
@@ -1003,10 +1042,10 @@ export default function ProgressScreen() {
                     disabled={checkInMut.isPending}
                   >
                     {checkInMut.isPending ? (
-                      <ActivityIndicator color={colors.primaryForeground} />
+                      <ActivityIndicator color={colors.studioPaper} />
                     ) : (
                       <>
-                        <Feather name="check-circle" size={18} color={colors.primaryForeground} />
+                        <Feather name="check-circle" size={18} color={colors.studioPaper} />
                         <Text style={[s.actionBtnText, s.actionBtnTextPrimary]}>Check In Today</Text>
                       </>
                     )}
@@ -1023,14 +1062,14 @@ export default function ProgressScreen() {
                       handleOpenSpin();
                     }}
                   >
-                    <Feather name="gift" size={18} color={colors.primary} />
+                    <Feather name="gift" size={18} color={colors.studioViolet} />
                     <Text style={s.actionBtnText}>Spin Daily Reward</Text>
                   </TouchableOpacity>
                 )}
                 {progress?.checkedInToday === true && progress?.spinAvailableToday === false && (
                   <View style={[s.actionBtn, { opacity: 0.5, borderColor: 'transparent' }]}>
-                    <Feather name="check" size={18} color={colors.mutedForeground} />
-                    <Text style={[s.actionBtnText, { color: colors.mutedForeground }]}>Checked in today</Text>
+                    <Feather name="check" size={18} color={colors.studioMuted} />
+                    <Text style={[s.actionBtnText, { color: colors.studioMuted }]}>Checked in today</Text>
                   </View>
                 )}
               </View>
@@ -1038,7 +1077,7 @@ export default function ProgressScreen() {
               {(nextBadge || recentBadges.length > 0) && (
                 <View style={s.badgesBlock}>
                   <View style={s.blockTitleRow}>
-                    <Feather name="award" size={17} color={colors.primary} />
+                    <Feather name="award" size={17} color={colors.studioViolet} />
                     <Text style={s.blockTitle}>Milestones</Text>
                      <TouchableOpacity
                        accessibilityRole="button"
@@ -1047,7 +1086,7 @@ export default function ProgressScreen() {
                        onPress={() => router.push('/accomplishments')}
                        style={{ marginLeft: 'auto', padding: 8 }}
                      >
-                       <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 12, color: colors.foreground }}>View all</Text>
+                       <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 12, color: colors.studioInk }}>View all</Text>
                      </TouchableOpacity>
                   </View>
 
@@ -1071,7 +1110,7 @@ export default function ProgressScreen() {
                           {badge.imageUrl ? (
                             <Image source={{ uri: badge.imageUrl }} style={{ width: 24, height: 24 }} />
                           ) : (
-                            <Feather name="award" size={20} color={colors.primary} />
+                            <Feather name="award" size={20} color={colors.studioViolet} />
                           )}
                           <Text style={s.recentBadgeName}>{badge.name}</Text>
                           <Text style={s.recentBadgeDate}>
@@ -1104,10 +1143,10 @@ export default function ProgressScreen() {
                 <Text style={s.spinTitle}>Daily Reward</Text>
                 <View style={s.spinWheelContainer}>
                   {reduceMotion && spinMut.isPending ? (
-                    <ActivityIndicator size="large" color={colors.primary} />
+                    <ActivityIndicator size="large" color={colors.studioViolet} />
                   ) : (
                     <Animated.View style={{ transform: [{ rotate: reduceMotion ? '0deg' : spinRotation }] }}>
-                      <Feather name="aperture" size={80} color={colors.primary} />
+                      <Feather name="aperture" size={80} color={colors.studioViolet} />
                     </Animated.View>
                   )}
                 </View>
@@ -1125,13 +1164,13 @@ export default function ProgressScreen() {
                 </TouchableOpacity>
                 {!spinMut.isPending && (
                   <TouchableOpacity style={{ marginTop: 8 }} onPress={handleCloseSpin}>
-                    <Text style={{ fontFamily: 'DMSans_500Medium', color: colors.mutedForeground, fontSize: 14 }}>Close</Text>
+                    <Text style={{ fontFamily: 'DMSans_500Medium', color: colors.studioMuted, fontSize: 14 }}>Close</Text>
                   </TouchableOpacity>
                 )}
               </>
             ) : (
               <>
-                <Feather name="gift" size={48} color={colors.primary} />
+                <Feather name="gift" size={48} color={colors.studioOrange} />
                 <Text style={s.spinTitle}>You Won!</Text>
                 <Text style={s.spinPoints}>+{spinResult.pointsAwarded}</Text>
                 <Text style={s.spinText}>Your new balance is {spinResult.newBalance} points.</Text>

@@ -28,15 +28,31 @@ export default function MonthlyMemberDrops({ compact = false }: { compact?: bool
   const [error, setError] = useState<string | null>(null);
   useFocusEffect(useCallback(() => { void refetch(); }, [refetch]));
   const s = useMemo(() => StyleSheet.create({
-    card: { marginHorizontal: compact ? 20 : 0, marginTop: compact ? 20 : 0, padding: 20, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, gap: 14 },
+    card: {
+      marginHorizontal: compact ? 20 : 0,
+      marginTop: compact ? 20 : 0,
+      padding: 20,
+      borderRadius: compact ? 22 : colors.radius,
+      borderWidth: compact ? 1.5 : 1,
+      borderColor: compact ? colors.studioInk : colors.border,
+      backgroundColor: compact ? colors.studioPaper : colors.card,
+      gap: 14,
+      ...(compact ? {
+        shadowColor: colors.studioShadow,
+        shadowOffset: { width: 3, height: 3 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 3,
+      } : {}),
+    },
     header: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    title: { fontFamily: 'DMSans_700Bold', fontSize: 19, lineHeight: 26, color: colors.foreground, flex: 1 },
-    total: { fontFamily: 'DMSans_700Bold', fontSize: compact ? 28 : 38, color: colors.primary },
+    title: { fontFamily: 'DMSans_700Bold', fontSize: 19, lineHeight: 26, color: compact ? colors.studioInk : colors.foreground, flex: 1 },
+    total: { fontFamily: 'DMSans_700Bold', fontSize: compact ? 28 : 38, color: compact ? colors.studioOrange : colors.primary },
     compactCard: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 16 },
-    compactIcon: { width: 42, height: 42, borderRadius: colors.radius, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.secondary },
+    compactIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.studioLavender },
     compactBody: { flex: 1, gap: 2 },
-    compactTitle: { fontFamily: 'DMSans_700Bold', fontSize: 15, lineHeight: 20, color: colors.foreground },
-    compactTotal: { fontFamily: 'DMSans_700Bold', fontSize: 23, lineHeight: 29, color: colors.primary },
+    compactTitle: { fontFamily: 'DMSans_700Bold', fontSize: 15, lineHeight: 20, color: colors.studioInk },
+    compactTotal: { fontFamily: 'DMSans_700Bold', fontSize: 23, lineHeight: 29, color: colors.studioOrangeText },
     detail: { fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21, color: colors.mutedForeground },
     label: { fontFamily: 'DMSans_600SemiBold', fontSize: 12, color: colors.mutedForeground, textTransform: 'uppercase', letterSpacing: 1 },
     link: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -86,7 +102,7 @@ export default function MonthlyMemberDrops({ compact = false }: { compact?: bool
           testID="open-monthly-member-drops"
         >
           <View style={s.compactIcon}>
-            <Feather name="gift" size={20} color={colors.primary} />
+            <Feather name="gift" size={20} color={colors.studioViolet} />
           </View>
           <View style={s.compactBody}>
             <Text style={s.compactTitle}>Points & member drops</Text>
@@ -100,7 +116,7 @@ export default function MonthlyMemberDrops({ compact = false }: { compact?: bool
   return (
     <View style={s.card} testID="monthly-member-drops">
       <View style={s.header}>
-        <Feather name="gift" size={20} color={colors.primary} />
+        <Feather name="gift" size={20} color={compact ? colors.studioViolet : colors.primary} />
         <Text style={s.title}>Points & member drops</Text>
       </View>
       {!data ? (

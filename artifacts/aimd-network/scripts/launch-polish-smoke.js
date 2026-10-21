@@ -85,17 +85,17 @@ test('dashboard removes the Feed shortcut and keeps membership, Profile, and not
   assert.match(dashboard, /'Professional Artist'/);
   assert.match(dashboard, /memberProfileGroup:\s*\{\s*flexDirection:\s*'column'/);
   assert.match(dashboard, /profileButton:\s*\{\s*minHeight:\s*44/);
-  assert.match(dashboard, /fontSize:\s*13,\s*color:\s*colors\.primary/);
+  assert.match(dashboard, /fontSize:\s*13,\s*color:\s*colors\.studioVioletText/);
   assert.match(dashboard, /memberTierLabel:\s*\{[\s\S]*?translateY:\s*-10/);
   assert.match(dashboard, /headerActions:\s*\{[\s\S]*?gap:\s*0,[\s\S]*?translateY:\s*-4/);
   assert.match(dashboard, /header:\s*\{\s*paddingTop:\s*topPad,[\s\S]*?flexDirection:\s*'row',\s*alignItems:\s*'flex-start'/);
-  assert.match(dashboard, /header:\s*\{\s*paddingTop:\s*topPad,\s*paddingHorizontal:\s*16,\s*paddingBottom:\s*8/);
+  assert.match(dashboard, /header:\s*\{\s*paddingTop:\s*topPad,\s*paddingHorizontal:\s*18,\s*paddingBottom:\s*10/);
   assert.match(dashboard, /notificationButton:\s*\{[\s\S]*?alignSelf:\s*'flex-start'/);
   assert.match(dashboard, /compactHeaderActions/);
   assert.match(dashboard, /windowWidth < 360/);
   assert.match(dashboard, /titleRow:\s*\{[\s\S]*?alignItems:\s*'center'/);
-  assert.match(dashboard, /titleMark:\s*\{[\s\S]*?width:\s*38[\s\S]*?height:\s*38[\s\S]*?backgroundColor:\s*colors\.gold/);
-  assert.match(dashboard, /<Feather name="grid" size=\{19\} color=\{colors\.accentForeground\}/);
+  assert.match(dashboard, /titleMark:\s*\{[\s\S]*?width:\s*38[\s\S]*?height:\s*38[\s\S]*?backgroundColor:\s*colors\.studioLavender/);
+  assert.match(dashboard, /<Feather name="grid" size=\{19\} color=\{colors\.studioInk\}/);
   assert.match(dashboard, /title:\s*\{\s*fontFamily:\s*'DMSans_700Bold',\s*fontSize:\s*26/);
 });
 
@@ -234,7 +234,7 @@ test('high-traffic cards keep short summaries while preserving action and storag
   assert.match(habits, /Delete also removes history/);
   assert.match(habits, /Free on every plan/);
   const arcade = source('../components/MiniHabitStudioCard.tsx');
-  assert.match(arcade, /backgroundColor: colors\.card/);
+  assert.match(arcade, /backgroundColor: colors\.studioLavender/);
   assert.match(arcade, /Saved on this device/);
   assert.match(arcade, /accessibilityLabel="Start a 60-second Flash Sketch"/);
 });

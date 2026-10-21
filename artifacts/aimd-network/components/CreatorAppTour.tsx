@@ -69,10 +69,16 @@ export default function CreatorAppTour() {
   const slideWidth = Math.max(width - 32, 280);
 
   const accentColors = {
-    coral: colors.sunsetCoral,
-    cyan: colors.cyan,
-    magenta: colors.electricMagenta,
-    gold: colors.gold,
+    coral: colors.studioOrange,
+    cyan: colors.studioMint,
+    magenta: colors.studioViolet,
+    gold: colors.studioYellow,
+  };
+  const accentTextColors = {
+    coral: colors.studioOrangeText,
+    cyan: colors.studioVioletText,
+    magenta: colors.studioVioletText,
+    gold: colors.studioOrangeText,
   };
 
   const goToSlide = useCallback((index: number) => {
@@ -86,24 +92,27 @@ export default function CreatorAppTour() {
     setActiveIndex(Math.max(0, Math.min(SLIDES.length - 1, nextIndex)));
   };
 
-  const activeSlide = SLIDES[activeIndex];
-  const activeAccent = accentColors[activeSlide.accent as keyof typeof accentColors];
-
   const styles = StyleSheet.create({
     wrapper: {
-      marginHorizontal: 16,
+      marginHorizontal: 18,
       marginBottom: 4,
-      borderRadius: 16,
+      borderRadius: 24,
       overflow: 'hidden',
-      backgroundColor: colors.ink,
-      borderWidth: 1,
-      borderColor: `${activeAccent}66`,
+      backgroundColor: colors.studioPaper,
+      borderWidth: 2,
+      borderColor: colors.studioInk,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 3, height: 3 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 3,
     },
     slide: {
       width: slideWidth,
       minHeight: 246,
       padding: 20,
       justifyContent: 'space-between',
+      backgroundColor: colors.studioPaper,
     },
     topRow: {
       flexDirection: 'row',
@@ -132,8 +141,10 @@ export default function CreatorAppTour() {
     artStage: {
       height: 72,
       marginTop: 14,
-      borderRadius: 14,
+      borderRadius: 16,
       overflow: 'hidden',
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
     },
     artCanvas: {
       flex: 1,
@@ -172,8 +183,8 @@ export default function CreatorAppTour() {
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
-      borderColor: 'rgba(250,248,245,0.25)',
-      backgroundColor: 'rgba(0,0,0,0.22)',
+      borderColor: colors.studioInk,
+      backgroundColor: colors.studioPaper,
     },
     artTileTall: {
       width: 54,
@@ -191,14 +202,14 @@ export default function CreatorAppTour() {
       right: 12,
       bottom: 16,
       transform: [{ rotate: '-16deg' }],
-      backgroundColor: 'rgba(250,248,245,0.62)',
+      backgroundColor: colors.studioInk,
     },
     artLabel: {
       marginLeft: 'auto',
       fontFamily: 'DMSans_700Bold',
       fontSize: 9,
       letterSpacing: 1.2,
-      color: colors.primaryForeground,
+      color: colors.studioInk,
       textTransform: 'uppercase',
     },
     title: {
@@ -207,14 +218,14 @@ export default function CreatorAppTour() {
       fontSize: 27,
       lineHeight: 30,
       letterSpacing: -0.7,
-      color: colors.primaryForeground,
+      color: colors.studioInk,
     },
     body: {
       maxWidth: '94%',
       fontFamily: 'DMSans_400Regular',
       fontSize: 14,
       lineHeight: 20,
-      color: 'rgba(250,248,245,0.72)',
+      color: colors.studioMuted,
     },
     tags: {
       flexDirection: 'row',
@@ -227,12 +238,12 @@ export default function CreatorAppTour() {
       paddingVertical: 6,
       borderRadius: 99,
       borderWidth: 1,
-      backgroundColor: 'rgba(250,248,245,0.07)',
+      backgroundColor: colors.studioPaper,
     },
     tagText: {
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 10,
-      color: colors.primaryForeground,
+      color: colors.studioInk,
     },
     controls: {
       minHeight: 58,
@@ -241,8 +252,8 @@ export default function CreatorAppTour() {
       alignItems: 'center',
       gap: 10,
       borderTopWidth: 1,
-      borderTopColor: 'rgba(250,248,245,0.13)',
-      backgroundColor: 'rgba(0,0,0,0.18)',
+      borderTopColor: colors.studioLine,
+      backgroundColor: colors.studioInk,
     },
     control: {
       width: 38,
@@ -251,8 +262,8 @@ export default function CreatorAppTour() {
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
-      borderColor: 'rgba(250,248,245,0.28)',
-      backgroundColor: 'rgba(0,0,0,0.26)',
+      borderColor: colors.studioPaper,
+      backgroundColor: 'transparent',
     },
     dots: {
       flex: 1,
@@ -265,17 +276,17 @@ export default function CreatorAppTour() {
       width: 7,
       height: 7,
       borderRadius: 4,
-      backgroundColor: 'rgba(250,248,245,0.35)',
+      backgroundColor: colors.studioMuted,
     },
     activeDot: {
       width: 25,
-      backgroundColor: colors.background,
+      backgroundColor: colors.studioOrange,
     },
     counter: {
       minWidth: 38,
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 10,
-      color: 'rgba(250,248,245,0.62)',
+      color: colors.studioPaper,
       textAlign: 'right',
     },
   });
@@ -297,14 +308,14 @@ export default function CreatorAppTour() {
           return (
             <View key={slide.title} style={styles.slide}>
               <View style={styles.topRow}>
-                <Text style={[styles.eyebrow, { color: accent }]}>{slide.eyebrow}</Text>
+                <Text style={[styles.eyebrow, { color: accentTextColors[slide.accent as keyof typeof accentTextColors] }]}>{slide.eyebrow}</Text>
                 <View style={[styles.icon, { backgroundColor: `${accent}28` }]}>
                   <Feather name={slide.icon} size={22} color={accent} />
                 </View>
               </View>
               <View style={styles.artStage} accessibilityElementsHidden>
                 <LinearGradient
-                  colors={[`${accent}40`, `${colors.foreground}22`, `${accent}18`]}
+                  colors={[colors.studioPaperAlt, colors.studioLavender, colors.studioPaper]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.artCanvas}
@@ -313,7 +324,7 @@ export default function CreatorAppTour() {
                   <View style={[styles.artGlowSmall, { backgroundColor: accent }]} />
                   <View style={styles.artGrid}>
                     <View style={[styles.artTile, styles.artTileTall, { borderColor: `${accent}99` }]}>
-                      <Feather name={slide.icon} size={22} color={colors.primaryForeground} />
+                      <Feather name={slide.icon} size={22} color={colors.studioInk} />
                     </View>
                     <View style={[styles.artTile, { backgroundColor: `${accent}36` }]}>
                       <Feather
@@ -322,7 +333,7 @@ export default function CreatorAppTour() {
                         color={accent}
                       />
                     </View>
-                    <View style={[styles.artTile, styles.artTileOffset, { backgroundColor: 'rgba(250,248,245,0.12)' }]}>
+                    <View style={[styles.artTile, styles.artTileOffset, { backgroundColor: colors.studioPaperAlt }]}>
                       <Feather name={index % 2 === 0 ? 'plus' : 'arrow-up-right'} size={18} color={accent} />
                     </View>
                     {index === 0 && <Text style={styles.artLabel}>Make room for your lane</Text>}
@@ -360,7 +371,7 @@ export default function CreatorAppTour() {
           accessibilityLabel="Previous Creator Studio tour slide"
           testID="creator-tour-previous"
         >
-          <Feather name="chevron-left" size={19} color={colors.primaryForeground} />
+          <Feather name="chevron-left" size={19} color={colors.studioPaper} />
         </TouchableOpacity>
         <View style={styles.dots} accessibilityRole="tablist" accessibilityLabel="Creator Studio tour slides">
           {SLIDES.map((slide, index) => (
@@ -382,7 +393,7 @@ export default function CreatorAppTour() {
           accessibilityLabel="Next Creator Studio tour slide"
           testID="creator-tour-next"
         >
-          <Feather name="chevron-right" size={19} color={colors.primaryForeground} />
+          <Feather name="chevron-right" size={19} color={colors.studioPaper} />
         </TouchableOpacity>
         <Text style={styles.counter}>{activeIndex + 1}/{SLIDES.length}</Text>
       </View>

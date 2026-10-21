@@ -11,26 +11,31 @@ export default function MiniHabitStudioCard({ onPress }: { onPress: () => void }
       marginTop: 12,
       padding: 18,
       gap: 12,
-      backgroundColor: colors.card,
-      borderColor: colors.border,
-      borderWidth: 1,
-      borderRadius: colors.radius + 4,
+      backgroundColor: colors.studioLavender,
+      borderColor: colors.studioInk,
+      borderWidth: 2,
+      borderRadius: 22,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 3, height: 3 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 3,
     },
     eyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     eyebrow: {
       flex: 1,
-      color: colors.primary,
+      color: colors.studioVioletText,
       fontFamily: 'DMSans_700Bold',
       fontSize: 11,
       letterSpacing: 1.2,
     },
     duration: {
-      color: colors.mutedForeground,
+      color: colors.studioMuted,
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 11,
     },
     title: {
-      color: colors.foreground,
+      color: colors.studioInk,
       fontFamily: 'DMSans_700Bold',
       fontSize: 20,
       letterSpacing: -0.3,
@@ -44,20 +49,22 @@ export default function MiniHabitStudioCard({ onPress }: { onPress: () => void }
     button: {
       minHeight: 46,
       paddingHorizontal: 16,
-      borderRadius: colors.radius,
-      backgroundColor: colors.primary,
+      borderRadius: 15,
+      backgroundColor: colors.studioOrange,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 8,
     },
     buttonText: {
-      color: colors.primaryForeground,
+      color: colors.studioInk,
       fontFamily: 'DMSans_700Bold',
       fontSize: 14,
     },
     privacyNote: {
-      color: colors.mutedForeground,
+      color: colors.studioMuted,
       fontFamily: 'DMSans_400Regular',
       fontSize: 11,
       textAlign: 'center',
@@ -67,7 +74,7 @@ export default function MiniHabitStudioCard({ onPress }: { onPress: () => void }
   return (
     <View style={styles.card} testID="dashboard-mini-habit-studio">
       <View style={styles.eyebrowRow}>
-        <Feather name="edit-3" size={15} color={colors.primary} />
+        <Feather name="edit-3" size={15} color={colors.studioViolet} />
         <Text style={styles.eyebrow}>CREATOR ARCADE</Text>
         <Text style={styles.duration}>60 SEC</Text>
       </View>
@@ -81,7 +88,7 @@ export default function MiniHabitStudioCard({ onPress }: { onPress: () => void }
         testID="dashboard-mini-habit-studio-open"
       >
         <Text style={styles.buttonText}>Start sketch</Text>
-        <Feather name="arrow-right" size={16} color={colors.primaryForeground} />
+        <Feather name="arrow-right" size={16} color={colors.studioInk} />
       </TouchableOpacity>
       <Text style={styles.privacyNote}>Saved on this device.</Text>
     </View>
