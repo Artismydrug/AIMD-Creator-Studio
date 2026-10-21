@@ -14,7 +14,8 @@ export default function StudioImage({ uri, load = true, style, onLoadDimensions 
   const [attempt, setAttempt] = useState(0);
   const failed = failedUri === uri;
   return (
-    <View style={[{ backgroundColor: colors.mediaPaper }, style]}>
+    // Artwork backing must win over themed backgrounds supplied by callers.
+    <View style={[style, { backgroundColor: colors.mediaPaper }]}>
       {load && <Image key={`${uri}:${attempt}`}
         source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover"
         cachePolicy="memory-disk" recyclingKey={uri} accessibilityLabel="Creator's studio photo"

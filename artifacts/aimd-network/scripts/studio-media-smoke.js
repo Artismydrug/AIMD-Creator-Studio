@@ -27,6 +27,44 @@ test('transparent PNG artwork keeps a light backing and readable status in both 
   const image = readFileSync(resolve(__dirname, '../components/StudioImage.tsx'), 'utf8');
   assert.match(image, /backgroundColor: colors\.mediaPaper\b/);
   assert.match(image, /ActivityIndicator color=\{colors\.mediaPaperForeground\}/);
+  const imageModule = { exports: {} };
+  const react = {
+    createElement: (type, props, ...children) => ({ type, props: { ...props, children } }),
+    useState: initial => [initial, () => {}],
+  };
+  let activePalette = palettes.light;
+  const imageJs = ts.transpileModule(image, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2020,
+      jsx: ts.JsxEmit.React,
+      esModuleInterop: true,
+    },
+  }).outputText;
+  vm.runInNewContext(imageJs, {
+    exports: imageModule.exports,
+    require(name) {
+      if (name === 'react') return react;
+      if (name === 'react-native') return {
+        View: 'View', Text: 'Text', Pressable: 'Pressable', ActivityIndicator: 'ActivityIndicator',
+        StyleSheet: { create: value => value, absoluteFill: {}, absoluteFillObject: {} },
+      };
+      if (name === 'expo-image') return { Image: 'Image' };
+      if (name === '@/hooks/useColors') return { useColors: () => activePalette };
+      throw new Error(`Unexpected dependency: ${name}`);
+    },
+  });
+  for (const palette of [palettes.light, palettes.dark]) {
+    activePalette = palette;
+    const rendered = imageModule.exports.default({
+      uri: 'https://example.test/artwork.png',
+      style: [{ width: 200, backgroundColor: palette.muted }, { backgroundColor: '#000000' }],
+    });
+    const effectiveStyle = Object.assign({}, ...rendered.props.style.flat(Infinity));
+    assert.equal(effectiveStyle.backgroundColor, palette.mediaPaper,
+      'feed and portfolio caller styles must not override the artwork backing');
+    assert.equal(effectiveStyle.width, 200, 'caller sizing must remain intact');
+  }
 });
 
 const compiled = ts.transpileModule(readFileSync(resolve(__dirname, '../lib/studioMedia.ts'), 'utf8'), {

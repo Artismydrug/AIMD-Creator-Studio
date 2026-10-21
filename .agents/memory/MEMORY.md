@@ -51,3 +51,4 @@
 - [Metro multi-artifact startup](metro-multi-artifact-startup.md) — healthy Expo dependencies do not rule out watcher timeouts caused by unrelated sibling artifacts.
 - [Sticker Jam visual direction](design-exploration-isolation.md) — approved app-wide; preserve each route’s content and interactions while applying the shared design system.
 - [Your Studio profile policy](poncho-portfolio.md) — public work profiles for owners and visitors; keep profile editing, inquiry controls, and account settings separate.
+- [Artwork integrity verification](artwork-integrity-verification.md) — distinguish display problems from damaged stored pixels before claiming black artwork is restored.
