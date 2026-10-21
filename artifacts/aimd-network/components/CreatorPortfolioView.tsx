@@ -152,6 +152,13 @@ export default function CreatorPortfolioView({
       shadowOpacity: 1, shadowRadius: 0, elevation: 2,
     },
     headerActionText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 11 },
+    headerAddAction: {
+      width: 44, height: 44, borderRadius: 99, borderWidth: 1.5,
+      borderColor: colors.studioInk, backgroundColor: colors.studioOrange,
+      alignItems: 'center', justifyContent: 'center',
+      shadowColor: colors.studioInk, shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1, shadowRadius: 0, elevation: 2,
+    },
     inquiryPill: {
       minHeight: 44, paddingHorizontal: 10, borderRadius: 99, borderWidth: 1.5,
       borderColor: colors.studioInk, backgroundColor: colors.studioInquiry,
@@ -180,16 +187,22 @@ export default function CreatorPortfolioView({
     name: { color: colors.studioInk, fontFamily: portfolioSerif, fontWeight: '700', fontSize: 27, lineHeight: 29, letterSpacing: -0.8 },
     bio: { color: colors.studioMuted, fontFamily: 'DMSans_400Regular', fontSize: 12, lineHeight: 18 },
     linkRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 4 },
+    ownerLinkRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 2 },
     link: {
       minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10,
       borderRadius: 99, borderWidth: 1.5, borderColor: colors.studioInk, backgroundColor: colors.studioPaper,
       shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2,
     },
     linkText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 11 },
+    editProfileLink: { backgroundColor: colors.studioYellow },
     stats: {
-      flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 7, paddingBottom: 2,
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around',
+      paddingVertical: 13, borderTopWidth: 1, borderBottomWidth: 1,
+      borderColor: colors.border, marginTop: 2,
     },
-    statLabel: { color: colors.studioMuted, fontFamily: 'DMSans_500Medium', fontSize: 11 },
+    statItem: { alignItems: 'center', gap: 2, minWidth: 70 },
+    statValue: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 14 },
+    statLabel: { color: colors.studioMuted, fontFamily: 'DMSans_700Bold', fontSize: 9, letterSpacing: 0.5 },
     actions: { flexDirection: 'row', gap: 9, flexWrap: 'wrap' },
     action: {
       minHeight: 44, paddingHorizontal: 12,
@@ -202,14 +215,7 @@ export default function CreatorPortfolioView({
     actionText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 12 },
     primaryActionText: { color: colors.primaryForeground },
     workSection: { borderTopWidth: 1.5, borderTopColor: colors.studioInk, paddingTop: 20, gap: 14 },
-    workToolbar: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    addWorkTarget: { minHeight: 44, justifyContent: 'center', flexShrink: 0 },
-    addWorkPill: {
-      minHeight: 30, paddingHorizontal: 9, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
-      borderRadius: 99, borderWidth: 1, borderColor: colors.studioInk, backgroundColor: colors.studioPaper,
-    },
-    addWorkText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 10 },
-    categoryScroll: { flex: 1 },
+    categoryScroll: { width: '100%' },
     categoryRow: { flexDirection: 'row', alignItems: 'center', paddingRight: 4, paddingBottom: 4, gap: 8 },
     category: {
       minHeight: 44, flexShrink: 0, justifyContent: 'center', borderRadius: 99,
@@ -310,12 +316,12 @@ export default function CreatorPortfolioView({
         {isOwner ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Edit profile"
-            onPress={onEdit}
-            style={styles.headerAction}
-            testID="edit-profile-navigation"
+            accessibilityLabel="Add new work"
+            onPress={() => onAddWork?.(selectedCategory)}
+            style={styles.headerAddAction}
+            testID="creator-profile-add-work"
           >
-            <Feather name="edit-2" size={14} color={colors.studioInk} />
+            <Feather name="plus" size={19} color={colors.studioInk} />
           </Pressable>
         ) : (
           <SafetyActions userId={creator.id} username={creator.username} />
@@ -345,7 +351,7 @@ export default function CreatorPortfolioView({
               {!!profileLabel && <Text style={styles.eyebrow} testID="creator-profile-label">{profileLabel}</Text>}
               <Text style={styles.name} accessibilityRole="header">{displayName}</Text>
               {creator.bio?.trim() ? <Text style={styles.bio}>{creator.bio.trim()}</Text> : null}
-              {(website || isPoncho) && (
+              {(website || (isPoncho && !isOwner)) && (
                 <View style={styles.linkRow}>
                   {website && (
                     <Pressable accessibilityRole="link" accessibilityLabel="Visit artist website" onPress={() => openLink(website)} style={styles.link} testID="creator-website-link">
@@ -353,7 +359,7 @@ export default function CreatorPortfolioView({
                       <Feather name="arrow-up-right" size={13} color={colors.studioInk} />
                     </Pressable>
                   )}
-                  {isPoncho && (
+                  {isPoncho && !isOwner && (
                     <Pressable accessibilityRole="link" accessibilityLabel="Visit Poncho on Instagram" onPress={() => openLink('https://www.instagram.com/ponchotheartist/')} style={styles.link} testID="creator-instagram-link">
                       <Feather name="instagram" size={13} color={colors.studioInk} />
                       <Text style={styles.linkText}>Instagram</Text>
@@ -361,15 +367,27 @@ export default function CreatorPortfolioView({
                   )}
                 </View>
               )}
+              {isOwner && (
+                <View style={styles.ownerLinkRow} testID="creator-profile-owner-links">
+                  {isPoncho && (
+                    <Pressable accessibilityRole="link" accessibilityLabel="Visit Poncho on Instagram" onPress={() => openLink('https://www.instagram.com/ponchotheartist/')} style={styles.link} testID="creator-instagram-link">
+                      <Feather name="instagram" size={13} color={colors.studioInk} />
+                      <Text style={styles.linkText}>Instagram</Text>
+                    </Pressable>
+                  )}
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Edit profile"
+                    onPress={onEdit}
+                    style={[styles.link, styles.editProfileLink]}
+                    testID="edit-profile-navigation"
+                  >
+                    <Feather name="edit-2" size={13} color={colors.studioInk} />
+                    <Text style={styles.linkText}>Edit Profile</Text>
+                  </Pressable>
+                </View>
+              )}
             </View>
-          </View>
-
-          <View style={styles.stats}>
-            <Text style={styles.statLabel}>{creator.postCount ?? posts.length} works</Text>
-            <Text style={styles.statLabel}>·</Text>
-            <Text style={styles.statLabel}>{creator.followerCount ?? 0} followers</Text>
-            <Text style={styles.statLabel}>·</Text>
-            <Text style={styles.statLabel}>{creator.followingCount ?? 0} following</Text>
           </View>
 
           {!isOwner && (
@@ -404,7 +422,6 @@ export default function CreatorPortfolioView({
           )}
 
           <View style={styles.workSection}>
-            <View style={styles.workToolbar}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll} testID="creator-work-tabs">
               <View style={styles.categoryRow}>
                 {[{ value: 'all', label: 'All work' }, ...workCategories].map((category) => {
@@ -424,21 +441,6 @@ export default function CreatorPortfolioView({
                 })}
               </View>
             </ScrollView>
-              {isOwner && (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Add new work"
-                  onPress={() => onAddWork?.(selectedCategory)}
-                  style={styles.addWorkTarget}
-                  testID="creator-profile-add-work"
-                >
-                  <View style={styles.addWorkPill}>
-                    <Feather name="plus" size={12} color={colors.studioInk} />
-                    <Text style={styles.addWorkText}>New work</Text>
-                  </View>
-                </Pressable>
-              )}
-            </View>
 
           {isLoading ? (
             <View style={styles.empty}><ActivityIndicator color={colors.primary} /><Text style={styles.emptyText}>Loading artwork…</Text></View>
@@ -495,6 +497,21 @@ export default function CreatorPortfolioView({
               })}
             </View>
           )}
+          </View>
+
+          <View style={styles.stats} testID="creator-profile-stats">
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{creator.postCount ?? posts.length}</Text>
+              <Text style={styles.statLabel}>WORKS</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{creator.followerCount ?? 0}</Text>
+              <Text style={styles.statLabel}>FOLLOWERS</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{creator.followingCount ?? 0}</Text>
+              <Text style={styles.statLabel}>FOLLOWING</Text>
+            </View>
           </View>
 
           {inquiryAvailable && (

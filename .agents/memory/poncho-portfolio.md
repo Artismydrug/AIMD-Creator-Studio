@@ -20,3 +20,9 @@ Use the approved artist-portfolio mockup as the visual reference for Your Studio
 **Why:** The owner repeatedly requested the reference's gallery layout and button placement, while clarifying that it should represent each member's own work.
 
 **How to apply:** Match the reference's layout using real member data and existing inquiry actions, not its decorative copy. The owner explicitly removed “Selected Work” and “Made to stay with you”; keep the gallery focused on artwork and category controls. Keep owner editing available without exposing account settings in the public presentation; never populate member galleries with the mockup's sample artwork.
+
+For the owner-facing portfolio, keep the main surface work-first: the header's icon-only add control starts new work, Edit Profile sits beside the social link, and work/follower/following counts sit below the gallery.
+
+**Why:** The owner asked to make new work immediately accessible while moving account editing out of the header and reducing profile-metric clutter above the artwork.
+
+**How to apply:** Keep posting mapped to the currently selected work category. Keep Edit Profile in the profile-link area and preserve the counts below the work grid unless the owner requests another layout.

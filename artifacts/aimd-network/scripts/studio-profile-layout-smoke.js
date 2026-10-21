@@ -147,18 +147,30 @@ test('Poncho retains his known website without a saved URL; other members do not
   assert.equal(get(member, 'creator-direct-booking'), undefined);
 });
 
-test('studio combines discipline and location, omits gallery filler, and keeps a compact accessible add control', () => {
+test('studio combines discipline and location, moves owner controls, and relocates profile counts below artwork', () => {
   const h = harness({ creator: { id: 16, username: 'ponchotheartist', discipline: 'Tattooing', location: 'Los Angeles' } });
   const tree = h.render();
   assert.equal(get(tree, 'creator-profile-label').props.children[0], 'TATTOOING · Los Angeles');
   const text = allNodes(tree).filter(node => node.type === 'Text').flatMap(node => node.props.children).join(' ');
   assert.doesNotMatch(text, /SELECTED WORK|Made to stay with you\./);
   const add = get(tree, 'creator-profile-add-work');
-  assert.equal(flattenStyle(add.props.style).minHeight, 44, 'smaller visual treatment retains an easy tap target');
-  const pill = allNodes(add).find(node => node.type === 'View');
-  assert.equal(flattenStyle(pill.props.style).minHeight, 30);
+  assert.equal(flattenStyle(add.props.style).width, 44, 'icon-only control retains a 44px touch target');
+  assert.equal(flattenStyle(add.props.style).height, 44);
+  assert.equal(allNodes(add).find(node => node.type === 'Feather').props.name, 'plus');
   add.props.onPress();
   assert.deepEqual(h.calls.add, ['all']);
+
+  const ownerLinks = allNodes(get(tree, 'creator-profile-owner-links'));
+  const instagramIndex = ownerLinks.findIndex(node => node.props?.testID === 'creator-instagram-link');
+  const editIndex = ownerLinks.findIndex(node => node.props?.testID === 'edit-profile-navigation');
+  assert.ok(instagramIndex >= 0 && editIndex > instagramIndex, 'Edit Profile follows Instagram in the same link row');
+  get(tree, 'edit-profile-navigation').props.onPress();
+  assert.equal(h.calls.edit, 1);
+  const nodes = allNodes(tree);
+  const gridIndex = nodes.findIndex(node => node.props?.testID === 'creator-work-grid');
+  const statsIndex = nodes.findIndex(node => node.props?.testID === 'creator-profile-stats');
+  assert.ok(statsIndex > gridIndex, 'work, follower, and following counts sit below the gallery');
+
   const locationOnly = harness({ creator: { id: 99, username: 'member', location: 'Los Angeles' } }).render();
   assert.equal(get(locationOnly, 'creator-profile-label').props.children[0], 'Los Angeles');
 });
