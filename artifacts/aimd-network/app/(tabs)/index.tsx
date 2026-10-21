@@ -201,14 +201,6 @@ export default function ProgressScreen() {
   });
 
   const topPad = Platform.OS === 'web' ? 67 : insets.top + 8;
-  const isFreeCreator = currentUser?.tier === 'free';
-  const membershipTitle = currentUser?.tier === 'pro'
-    ? 'Professional Artist'
-    : currentUser?.tier === 'academy' || currentUser?.tier === 'workshop'
-      ? 'Dedicated Artist'
-      : currentUser?.tier === 'free'
-        ? 'Discovering Artist'
-        : null;
   const unreadNotifications = notifications?.unreadCount ?? 0;
   const profileUsername = [profileSnapshot?.username, currentUser?.username]
     .find((value) => typeof value === 'string' && value.trim().length > 0);
@@ -287,18 +279,6 @@ export default function ProgressScreen() {
       flexDirection: 'column',
       alignItems: 'center',
       gap: 0,
-    },
-    memberTierButton: {
-      minHeight: 24,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 4,
-    },
-    memberTierLabel: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 3,
-      transform: [{ translateY: -10 }],
     },
     profileButton: {
       width: 44,
@@ -799,27 +779,6 @@ export default function ProgressScreen() {
                 <Text style={s.profileButtonInitials}>{profileInitials}</Text>
               )}
             </TouchableOpacity>
-            {membershipTitle ? (
-              <TouchableOpacity
-                style={s.memberTierButton}
-                accessibilityRole="button"
-                accessibilityLabel={isFreeCreator
-                  ? 'View membership options for your Discovering Artist account'
-                  : `View your ${membershipTitle} membership`}
-                onPress={() => router.push(isFreeCreator ? '/membership' : '/profile')}
-                testID={isFreeCreator ? 'dashboard-membership-button' : 'dashboard-tier-button'}
-              >
-                <View style={s.memberTierLabel}>
-                  <Feather name="shield" size={10} color={colors.studioOrange} />
-                  <Text
-                    numberOfLines={1}
-                    style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 9, color: colors.studioMuted }}
-                  >
-                    {membershipTitle}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ) : null}
           </View>
           <TouchableOpacity
             accessibilityRole="button"

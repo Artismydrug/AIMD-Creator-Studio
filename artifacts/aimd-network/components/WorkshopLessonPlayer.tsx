@@ -116,7 +116,7 @@ export function TeaserVideo({ uri }: { uri: string }) {
   if (failed) {
     return (
       <View style={{ padding: 20, gap: 12, alignItems: 'center' }} testID="workshop-preview-error">
-        <Text style={{ color: colors.primaryForeground, textAlign: 'center', fontFamily: 'DMSans_500Medium' }}>Preview unavailable. Check your connection and retry.</Text>
+        <Text style={{ color: colors.inkForeground, textAlign: 'center', fontFamily: 'DMSans_500Medium' }}>Preview unavailable. Check your connection and retry.</Text>
         <TouchableOpacity accessibilityRole="button" accessibilityLabel="Retry workshop preview"
           onPress={() => { setFailed(false); setAttempt(value => value + 1); }}
           style={{ padding: 12, backgroundColor: colors.gold, borderRadius: colors.radius }}>
@@ -171,15 +171,15 @@ function ProtectedLesson({ workshopId, moduleId, onGate }: { workshopId: number;
   if (error && !url) {
     return (
       <View style={{ alignItems: 'center', gap: 10, padding: 24 }} testID="lesson-playback-error">
-        <Feather name="alert-triangle" size={28} color={colors.gold} />
-        <Text style={{ color: colors.primaryForeground, fontFamily: 'DMSans_500Medium', textAlign: 'center' }}>{error}</Text>
+        <Feather name="alert-triangle" size={28} color={colors.sunsetCoral} />
+        <Text style={{ color: colors.inkForeground, fontFamily: 'DMSans_500Medium', textAlign: 'center' }}>{error}</Text>
         <TouchableOpacity onPress={() => void load(false)} style={{ paddingHorizontal: 16, paddingVertical: 9, borderRadius: 8, backgroundColor: colors.gold }} testID="lesson-playback-retry">
-          <Text style={{ color: colors.primaryForeground, fontFamily: 'DMSans_700Bold' }}>Retry</Text>
+          <Text style={{ color: colors.ink, fontFamily: 'DMSans_700Bold' }}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
   }
-  if (loading || !url) return <ActivityIndicator color={colors.gold} />;
+  if (loading || !url) return <ActivityIndicator color={colors.primary} />;
   if (Platform.OS === 'web') {
     return (
       <video
@@ -262,7 +262,7 @@ export default function WorkshopLessonPlayer({
         video: { width: '100%', height: '100%' },
         mediaEmpty: { alignItems: 'center', gap: 10, paddingHorizontal: 30 },
         mediaTitle: {
-          color: colors.primaryForeground,
+          color: colors.inkForeground,
           fontFamily: 'DMSans_700Bold',
           fontSize: 16,
           textAlign: 'center',

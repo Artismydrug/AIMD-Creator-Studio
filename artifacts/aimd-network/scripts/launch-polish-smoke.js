@@ -70,23 +70,17 @@ test('all five main routes recover locally with stable whitelisted stages', () =
   }
 });
 
-test('dashboard removes the Feed shortcut and keeps membership, Profile, and notifications accessible', () => {
+test('dashboard hides the membership tier label and keeps Profile and notifications accessible', () => {
   const dashboard = source('../app/(tabs)/index.tsx');
   assert.doesNotMatch(dashboard, /dashboard-feed-button/);
-  assert.match(dashboard, /dashboard-membership-button/);
   assert.match(dashboard, /dashboard-profile-button/);
   assert.match(dashboard, /dashboard-notifications-button/);
-  assert.match(dashboard, /router\.push\(isFreeCreator \? '\/membership' : '\/profile'\)/);
   assert.match(dashboard, /router\.push\('\/profile'\)/);
   assert.match(dashboard, /router\.push\('\/notifications'\)/);
-  assert.match(dashboard, /memberProfileGroup/);
-  assert.match(dashboard, /'Discovering Artist'/);
-  assert.match(dashboard, /'Dedicated Artist'/);
-  assert.match(dashboard, /'Professional Artist'/);
-  assert.match(dashboard, /memberProfileGroup:\s*\{\s*flexDirection:\s*'column'/);
+  assert.doesNotMatch(dashboard, /Discovering Artist|Dedicated Artist|Professional Artist/);
+  assert.doesNotMatch(dashboard, /memberTierButton|memberTierLabel/);
   assert.match(dashboard, /profileButton:\s*\{\s*width:\s*44,\s*height:\s*44,\s*minHeight:\s*44/);
   assert.match(dashboard, /profileButtonAvatar:\s*\{\s*width:\s*38,\s*height:\s*38/);
-  assert.match(dashboard, /memberTierLabel:\s*\{[\s\S]*?translateY:\s*-10/);
   assert.match(dashboard, /headerActions:\s*\{[\s\S]*?gap:\s*0,[\s\S]*?translateY:\s*-4/);
   assert.match(dashboard, /header:\s*\{\s*paddingTop:\s*topPad,[\s\S]*?flexDirection:\s*'row',\s*alignItems:\s*'flex-start'/);
   assert.match(dashboard, /header:\s*\{\s*paddingTop:\s*topPad,\s*paddingHorizontal:\s*18,\s*paddingBottom:\s*10/);

@@ -245,16 +245,30 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
     embeddedTitle: { fontFamily: 'DMSans_700Bold', fontSize: 30, letterSpacing: -0.8, color: colors.foreground },
     intro: { fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21, color: colors.mutedForeground },
     previewGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 20, paddingBottom: 10 },
-    previewCard: { width: '48%', minHeight: 228, padding: 12, borderRadius: colors.radius, backgroundColor: colors.ink, borderWidth: 1, gap: 8 },
+    previewCard: {
+      width: '48%',
+      minHeight: 228,
+      padding: 12,
+      borderRadius: colors.radius + 4,
+      backgroundColor: colors.ink,
+      borderWidth: 1.5,
+      borderColor: colors.inkForeground,
+      gap: 8,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 3 },
+      shadowOpacity: 0.14,
+      shadowRadius: 0,
+      elevation: 2,
+    },
     previewTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
     previewBadge: { borderRadius: 99, borderWidth: 1, paddingHorizontal: 7, paddingVertical: 4 },
-    previewBadgeText: { fontFamily: 'DMSans_700Bold', fontSize: 8, color: colors.primaryForeground, letterSpacing: 0.7 },
+    previewBadgeText: { fontFamily: 'DMSans_700Bold', fontSize: 8, color: colors.inkForeground, letterSpacing: 0.7 },
     previewIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
     previewEyebrow: { fontFamily: 'DMSans_700Bold', fontSize: 8, letterSpacing: 1, textTransform: 'uppercase' },
-    previewTitle: { fontFamily: 'DMSans_700Bold', fontSize: 15, lineHeight: 18, color: colors.primaryForeground },
+    previewTitle: { fontFamily: 'DMSans_700Bold', fontSize: 15, lineHeight: 18, color: colors.inkForeground },
     previewBody: { fontFamily: 'DMSans_400Regular', fontSize: 11, lineHeight: 15, color: 'rgba(250,248,245,0.7)' },
     previewChips: { gap: 4, marginTop: 'auto' },
-    previewChip: { fontFamily: 'DMSans_500Medium', fontSize: 9, color: colors.primaryForeground },
+    previewChip: { fontFamily: 'DMSans_500Medium', fontSize: 9, color: colors.inkForeground },
     previewFooter: { borderTopWidth: 1, borderTopColor: 'rgba(250,248,245,0.16)', paddingTop: 7, marginTop: 3 },
     previewTier: { fontFamily: 'DMSans_700Bold', fontSize: 8, color: colors.cyan, letterSpacing: 0.5 },
     previewPrice: { fontFamily: 'DMSans_400Regular', fontSize: 9, lineHeight: 12, color: 'rgba(250,248,245,0.68)', marginTop: 2 },
@@ -274,12 +288,12 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
     chipActive: { backgroundColor: colors.cyan, borderColor: colors.cyan },
      chipText: { fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.foreground },
     chipTextActive: { color: colors.accentForeground },
-     detailNotice: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 9, backgroundColor: 'rgba(255,255,255,0.09)' },
-     detailNoticeText: { flex: 1, fontFamily: 'DMSans_400Regular', color: colors.primaryForeground, opacity: 0.82, fontSize: 12, lineHeight: 18 },
+      detailNotice: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card },
+      detailNoticeText: { flex: 1, fontFamily: 'DMSans_400Regular', color: colors.foreground, fontSize: 12, lineHeight: 18 },
      detailRetry: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingVertical: 9, paddingHorizontal: 13, borderRadius: 8, backgroundColor: colors.gold },
-     detailRetryText: { fontFamily: 'DMSans_700Bold', color: colors.primaryForeground, fontSize: 12 },
+      detailRetryText: { fontFamily: 'DMSans_700Bold', color: colors.ink, fontSize: 12 },
     picker: { padding: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.gold, borderRadius: 10, alignItems: 'center', gap: 6 },
-    pickerText: { fontFamily: 'DMSans_700Bold', color: colors.gold, fontSize: 13 },
+     pickerText: { fontFamily: 'DMSans_700Bold', color: colors.sunsetCoral, fontSize: 13 },
      note: { minHeight: 80, padding: 12, borderRadius: 9, backgroundColor: colors.background, color: colors.foreground, fontFamily: 'DMSans_400Regular', textAlignVertical: 'top' },
     submit: { paddingVertical: 13, borderRadius: 9, backgroundColor: colors.electricMagenta, alignItems: 'center' },
     submitText: { fontFamily: 'DMSans_700Bold', color: colors.primaryForeground },
@@ -437,7 +451,7 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
               <View style={{ alignSelf: 'stretch', gap: 8 }}>
                 {accessUnavailable && (
                   <TouchableOpacity style={s.detailRetry} onPress={() => void refetchWorkshopDetail()} testID="access-retry">
-                    <Feather name="refresh-cw" size={15} color={colors.primaryForeground} />
+                    <Feather name="refresh-cw" size={15} color={colors.ink} />
                     <Text style={s.detailRetryText}>Unable to verify your access. Retry</Text>
                   </TouchableOpacity>
                 )}
@@ -512,7 +526,7 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
                 </View>
               ) : workshopDetail && modules.length === 0 ? (
                 <View style={s.detailNotice} testID="workshop-empty-modules">
-                  <Feather name="info" size={17} color={colors.gold} />
+                  <Feather name="info" size={17} color={colors.sunsetCoral} />
                   <Text style={s.detailNoticeText}>
                     Drills are temporarily unavailable for this workshop. Please check back soon.
                   </Text>

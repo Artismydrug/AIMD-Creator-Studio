@@ -97,8 +97,8 @@ export default function FrostedTabBar({
               }}
             >
               {focused && (
-                <View style={[styles.activeLabel, { backgroundColor: colors.ink }]}>
-                  <Text style={[styles.activeLabelText, { color: colors.primaryForeground }]}>
+                <View style={[styles.activeLabel, { backgroundColor: colors.studioYellow, borderColor: colors.foreground }]}>
+                  <Text style={[styles.activeLabelText, { color: colors.ink }]}>
                     {label}
                   </Text>
                 </View>
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   row: {
-    minHeight: 70,
+    minHeight: 76,
     paddingTop: 9,
     borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
@@ -148,7 +148,8 @@ const styles = StyleSheet.create({
   activeLabel: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 8,
+    borderWidth: 1,
+    borderRadius: 9,
     maxWidth: '100%',
   },
   activeLabelText: {

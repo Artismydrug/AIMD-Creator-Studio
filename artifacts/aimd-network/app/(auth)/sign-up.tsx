@@ -168,7 +168,7 @@ export default function SignUpScreen() {
           disabled={fetchStatus === 'fetching' || !code}
         >
           {fetchStatus === 'fetching'
-            ? <ActivityIndicator color={colors.primaryForeground} />
+            ? <ActivityIndicator color={colors.ink} />
             : <Text style={s.btnText}>Verify Email</Text>}
         </Pressable>
 
@@ -272,7 +272,7 @@ export default function SignUpScreen() {
           disabled={!email || !password || fetchStatus === 'fetching'}
         >
           {fetchStatus === 'fetching'
-            ? <ActivityIndicator color={colors.primaryForeground} />
+            ? <ActivityIndicator color={colors.ink} />
             : <Text style={s.btnText}>Create Account</Text>}
         </Pressable>
 
@@ -295,8 +295,8 @@ const createStyles = (colors: ReturnType<typeof useColors>) => StyleSheet.create
   container: {
     flexGrow: 1,
     backgroundColor: colors.background,
-    paddingHorizontal: 28,
-    gap: 8,
+    paddingHorizontal: 24,
+    gap: 9,
   },
   title: {
     fontFamily: 'DMSans_700Bold',
@@ -334,8 +334,8 @@ const createStyles = (colors: ReturnType<typeof useColors>) => StyleSheet.create
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: colors.radius,
-    paddingVertical: 14,
+    borderRadius: colors.radius + 2,
+    paddingVertical: 15,
     alignItems: 'center',
     marginTop: 8,
   },
@@ -389,9 +389,9 @@ const createStyles = (colors: ReturnType<typeof useColors>) => StyleSheet.create
   },
   input: {
     backgroundColor: colors.card,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
-    borderRadius: colors.radius,
+    borderRadius: colors.radius + 2,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontFamily: 'DMSans_400Regular',
@@ -405,8 +405,10 @@ const createStyles = (colors: ReturnType<typeof useColors>) => StyleSheet.create
     marginTop: 4,
   },
   btn: {
-    backgroundColor: colors.primary,
-    borderRadius: colors.radius,
+    backgroundColor: colors.studioOrange,
+    borderWidth: 1.5,
+    borderColor: colors.foreground,
+    borderRadius: colors.radius + 3,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 16,
@@ -416,8 +418,8 @@ const createStyles = (colors: ReturnType<typeof useColors>) => StyleSheet.create
   btnText: {
     fontFamily: 'DMSans_700Bold',
     fontSize: 15,
-    color: colors.primaryForeground,
-    letterSpacing: 1,
+    color: colors.ink,
+    letterSpacing: 0.2,
   },
   secondary: {
     alignItems: 'center',

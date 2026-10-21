@@ -31,7 +31,7 @@ export default function StudioImage({ uri, load = true, style, onLoadDimensions 
         </View>
       )}
       {load && failed && <View style={styles.center}>
-        <Text style={[styles.label, { color: colors.primaryForeground }]}>Photo couldn’t load.</Text>
+        <Text style={[styles.label, { color: colors.inkForeground }]}>Photo couldn’t load.</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Retry loading photo"
           onPress={() => { setFailedUri(null); setLoadedUri(null); setAttempt(value => value + 1); }}
           style={[styles.retry, { backgroundColor: colors.primary }]}>

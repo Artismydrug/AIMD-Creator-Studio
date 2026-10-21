@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUpdateCurrentUser } from '@workspace/api-client-react';
+import { useColors } from '@/hooks/useColors';
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,28}$/;
 
@@ -26,6 +27,7 @@ function validateUsername(value: string): string | null {
 export default function OnboardingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const colors = useColors();
 
   const [username, setUsername] = useState('');
   const [clientError, setClientError] = useState<string | null>(null);
@@ -73,28 +75,29 @@ export default function OnboardingScreen() {
       <ScrollView
         contentContainerStyle={[
           s.container,
+          { backgroundColor: colors.background },
           { paddingTop: insets.top + 48, paddingBottom: insets.bottom + 24 },
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={s.logo}>Creator Studio</Text>
-        <Text style={s.logoSub}>by AIMD</Text>
-        <Text style={s.tagline}>Discipline Eats Talent</Text>
+        <Text style={[s.logo, { color: colors.foreground }]}>Creator Studio</Text>
+        <Text style={[s.logoSub, { color: colors.mutedForeground }]}>by AIMD</Text>
+        <Text style={[s.tagline, { color: colors.primary }]}>Discipline Eats Talent</Text>
 
-        <Text style={s.heading}>Choose your username</Text>
-        <Text style={s.subheading}>
+        <Text style={[s.heading, { color: colors.foreground }]}>Choose your username</Text>
+        <Text style={[s.subheading, { color: colors.mutedForeground }]}>
           This is how other creators will find and know you. You can change it later.
         </Text>
 
-        <Text style={s.label}>Username</Text>
-        <View style={s.inputWrapper}>
-          <Text style={s.prefix}>@</Text>
+        <Text style={[s.label, { color: colors.mutedForeground }]}>Username</Text>
+        <View style={[s.inputWrapper, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[s.prefix, { color: colors.mutedForeground }]}>@</Text>
           <TextInput
-            style={s.input}
+            style={[s.input, { color: colors.foreground }]}
             value={username}
             onChangeText={handleChangeText}
             placeholder="your_name"
-            placeholderTextColor="#555"
+            placeholderTextColor={colors.mutedForeground}
             autoCapitalize="none"
             autoCorrect={false}
             autoFocus
@@ -107,16 +110,17 @@ export default function OnboardingScreen() {
         {displayError ? (
           <Text style={s.error}>{displayError}</Text>
         ) : username.length > 0 && isValid ? (
-          <Text style={s.hint}>Looks good!</Text>
+          <Text style={[s.hint, { color: colors.studioVioletText }]}>Looks good!</Text>
         ) : username.length > 0 ? (
-          <Text style={s.hint}>3–28 chars • letters, numbers, underscores</Text>
+          <Text style={[s.hint, { color: colors.mutedForeground }]}>3–28 chars • letters, numbers, underscores</Text>
         ) : (
-          <Text style={s.hint}>3–28 chars • letters, numbers, underscores</Text>
+          <Text style={[s.hint, { color: colors.mutedForeground }]}>3–28 chars • letters, numbers, underscores</Text>
         )}
 
         <Pressable
           style={({ pressed }) => [
             s.btn,
+            { backgroundColor: colors.studioOrange, borderColor: colors.ink, borderWidth: 1.5, borderRadius: colors.radius + 3 },
             (!isValid || isPending) && s.btnDisabled,
             pressed && s.btnPressed,
           ]}
@@ -124,9 +128,9 @@ export default function OnboardingScreen() {
           disabled={!isValid || isPending}
         >
           {isPending ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.ink} />
           ) : (
-            <Text style={s.btnText}>Continue</Text>
+            <Text style={[s.btnText, { color: colors.ink }]}>Continue</Text>
           )}
         </Pressable>
       </ScrollView>

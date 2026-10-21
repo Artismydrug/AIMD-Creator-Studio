@@ -147,14 +147,14 @@ export default function MembershipScreen() {
       fontSize: 31,
       lineHeight: 34,
       letterSpacing: -0.9,
-      color: colors.primaryForeground,
+      color: colors.inkForeground,
     },
     heroBody: {
       maxWidth: 440,
       fontFamily: 'DMSans_400Regular',
       fontSize: 14,
       lineHeight: 21,
-      color: colors.primaryForeground,
+      color: colors.inkForeground,
       opacity: 0.78,
     },
     status: {

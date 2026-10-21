@@ -358,7 +358,7 @@ export default function ProfileScreen() {
     headerButton: { padding: 6 },
     notificationButton: { padding: 6, position: 'relative' },
     notificationBadge: { alignItems: 'center', backgroundColor: colors.destructive, borderRadius: 10, justifyContent: 'center', minWidth: 18, paddingHorizontal: 4, position: 'absolute', right: -2, top: -2 },
-    notificationBadgeText: { color: colors.primaryForeground, fontFamily: 'DMSans_700Bold', fontSize: 10 },
+    notificationBadgeText: { color: colors.destructiveForeground, fontFamily: 'DMSans_700Bold', fontSize: 10 },
     content: { gap: 16, padding: 16, paddingBottom: Platform.OS === 'web' ? 100 : insets.bottom + 36 },
     accountActions: { borderTopWidth: 1, paddingTop: 16 },
     deleteAccountSection: { gap: 8, paddingTop: 8 },
@@ -745,7 +745,7 @@ export default function ProfileScreen() {
                     performDeletion();
                   }}
                 >
-                  <Text style={[s.signOutText, { color: colors.primaryForeground }]}>Delete permanently</Text>
+                  <Text style={[s.signOutText, { color: colors.destructiveForeground }]}>Delete permanently</Text>
                 </Pressable>
               </View>
             </View>

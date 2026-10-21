@@ -49,4 +49,4 @@
 - [Native Web API compatibility](native-web-api-compatibility.md) — browser/Node globals can hide missing React Native polyfill methods; test the actual native implementation.
 - [Creator Arcade policy](mini-habit-studio-policy.md) — renamed from Mini Habit Studio; first activity is local-only Flash Sketch, separate from points, habit completion, and streaks.
 - [Metro multi-artifact startup](metro-multi-artifact-startup.md) — healthy Expo dependencies do not rule out watcher timeouts caused by unrelated sibling artifacts.
-- [Design exploration isolation](design-exploration-isolation.md) — keep visual experiments separate from the existing app until the user approves integration.
+- [Sticker Jam visual direction](design-exploration-isolation.md) — approved app-wide; preserve each route’s content and interactions while applying the shared design system.

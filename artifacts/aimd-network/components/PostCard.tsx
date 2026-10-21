@@ -170,12 +170,17 @@ function PostCard({
   const s = useMemo(() => StyleSheet.create({
     card: {
       backgroundColor: colors.card,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: colors.radius + 2,
+      borderWidth: 1.5,
+      borderColor: colors.foreground,
+      borderRadius: colors.radius + 5,
       padding: 14,
       marginHorizontal: 12,
       marginTop: 12,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 3, height: 4 },
+      shadowOpacity: 0.14,
+      shadowRadius: 0,
+      elevation: 3,
     },
     immersiveCard: {
       flex: 1,

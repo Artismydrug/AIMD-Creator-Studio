@@ -55,11 +55,17 @@ export default function EventCard({ event, onRsvpChange }: EventCardProps) {
   const s = useMemo(() => StyleSheet.create({
     card: {
       backgroundColor: colors.card,
-      borderWidth: 1,
-      borderColor: colors.border,
+      borderWidth: 1.5,
+      borderColor: colors.foreground,
+      borderRadius: colors.radius + 3,
       marginHorizontal: 16,
       marginBottom: 10,
       padding: 14,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 3 },
+      shadowOpacity: 0.14,
+      shadowRadius: 0,
+      elevation: 2,
     },
     featuredBorder: {
       borderColor: colors.primary,
@@ -73,7 +79,10 @@ export default function EventCard({ event, onRsvpChange }: EventCardProps) {
     iconBox: {
       width: 42,
       height: 42,
-      backgroundColor: colors.muted,
+      backgroundColor: colors.studioLavender,
+      borderWidth: 1,
+      borderColor: colors.foreground,
+      borderRadius: 13,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -136,6 +145,7 @@ export default function EventCard({ event, onRsvpChange }: EventCardProps) {
       paddingHorizontal: 16,
       paddingVertical: 7,
       borderWidth: 1,
+      borderRadius: 14,
     },
     rsvpBtnText: {
       fontFamily: 'DMSans_600SemiBold',

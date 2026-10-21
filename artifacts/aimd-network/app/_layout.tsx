@@ -124,6 +124,48 @@ function SessionPreparationScreen({
   error: string | null;
   onRetry: () => void;
 }) {
+  const colors = useColors();
+  const sessionStyles = StyleSheet.create({
+    container: {
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      flex: 1,
+      gap: 14,
+      justifyContent: 'center',
+      paddingHorizontal: 32,
+    },
+    title: {
+      color: colors.foreground,
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 22,
+      textAlign: 'center',
+    },
+    body: {
+      color: colors.mutedForeground,
+      fontFamily: 'DMSans_400Regular',
+      fontSize: 15,
+      lineHeight: 22,
+      maxWidth: 420,
+      textAlign: 'center',
+    },
+    retryButton: {
+      backgroundColor: colors.studioOrange,
+      borderColor: colors.ink,
+      borderRadius: colors.radius + 3,
+      borderWidth: 1.5,
+      marginTop: 8,
+      paddingHorizontal: 24,
+      paddingVertical: 14,
+    },
+    retryButtonPressed: {
+      opacity: 0.8,
+    },
+    retryText: {
+      color: colors.ink,
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 15,
+    },
+  });
   return (
     <View style={sessionStyles.container} testID="session-preparation-screen">
       {error ? (
@@ -147,7 +189,7 @@ function SessionPreparationScreen({
         </>
       ) : (
         <>
-          <ActivityIndicator color="#B8532D" size="large" />
+          <ActivityIndicator color={colors.primary} size="large" />
           <Text style={sessionStyles.title}>Opening Creator Studio…</Text>
           <Text style={sessionStyles.body}>Preparing your secure account session.</Text>
         </>
@@ -323,46 +365,6 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
 
   return children;
 }
-
-const sessionStyles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    backgroundColor: '#F1E7DA',
-    flex: 1,
-    gap: 14,
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-  },
-  title: {
-    color: '#2C2623',
-    fontFamily: 'DMSans_700Bold',
-    fontSize: 22,
-    textAlign: 'center',
-  },
-  body: {
-    color: '#6E6660',
-    fontFamily: 'DMSans_400Regular',
-    fontSize: 15,
-    lineHeight: 22,
-    maxWidth: 420,
-    textAlign: 'center',
-  },
-  retryButton: {
-    backgroundColor: '#B8532D',
-    borderRadius: 10,
-    marginTop: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-  },
-  retryButtonPressed: {
-    opacity: 0.8,
-  },
-  retryText: {
-    color: '#FFFFFF',
-    fontFamily: 'DMSans_700Bold',
-    fontSize: 15,
-  },
-});
 
 function RootLayoutNav() {
   const colors = useColors();
