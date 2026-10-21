@@ -14,3 +14,9 @@ Inquiry actions belong to each member and appear on their public profile only wh
 **Why:** The owner wants clients to send a commission request without leaving the app, while each artist still controls whether inquiries are open and private references stay out of public artwork feeds.
 
 **How to apply:** Keep each member's inquiry open/closed setting. Use the existing private booking API, admin queue, and email notification for Poncho's in-app form; do not expose reference attachments as portfolio posts. Leave other members' saved inquiry destinations unchanged unless they request app-based forms.
+
+Use the approved artist-portfolio mockup as the visual reference for Your Studio, rather than creating another separate portfolio or an approximate restyle.
+
+**Why:** The owner repeatedly requested the reference's gallery layout and button placement, while clarifying that it should represent each member's own work.
+
+**How to apply:** Match the reference layout using real member data and existing inquiry actions. Keep owner editing available without exposing account settings in the public presentation; never populate member galleries with the mockup's sample artwork.

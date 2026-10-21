@@ -43,6 +43,8 @@ const warmCanvas = {
   studioLavender: '#DCCBFF',
   studioYellow: '#F3D44F',
   studioMint: '#B9E7DA',
+  studioInquiry: '#DF006C',
+  studioInquiryForeground: '#FFFAF1',
   studioMuted: '#776A7D',
   studioShadow: '#21162C',
 };

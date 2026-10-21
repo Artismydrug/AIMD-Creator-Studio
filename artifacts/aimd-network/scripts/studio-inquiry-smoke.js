@@ -60,7 +60,7 @@ test('inquiry settings are editable and creator cards link to the member portfol
   assert.match(studio, /value: 'murals'/);
   assert.match(studio, /testID="creator-work-tabs"/);
   assert.match(studio, /accessibilityRole="tab"/);
-  assert.doesNotMatch(studio, />Selected work</);
+  assert.match(studio, /testID="creator-profile-inquiry-bottom"/);
   assert.match(ownerStudio, /limit: 100/);
   assert.match(creatorStudio, /limit: 100/);
   assert.match(ownerStudio, /router\.push\('\/commission-inquiry'\)/);

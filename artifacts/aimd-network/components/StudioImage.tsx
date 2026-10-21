@@ -3,9 +3,10 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, t
 import { Image } from 'expo-image';
 import { useColors } from '@/hooks/useColors';
 
-/** A cached, center-cropped photo, with an explicit loading/error state. */
-export default function StudioImage({ uri, load = true, style, onLoadDimensions }: {
+/** A cached photo with an explicit loading/error state and a light artwork backing. */
+export default function StudioImage({ uri, load = true, style, onLoadDimensions, contentFit = 'cover' }: {
   uri: string; load?: boolean; style?: StyleProp<ViewStyle>;
+  contentFit?: 'cover' | 'contain';
   onLoadDimensions?: (width: number, height: number) => void;
 }) {
   const colors = useColors();
@@ -17,7 +18,7 @@ export default function StudioImage({ uri, load = true, style, onLoadDimensions 
     // Artwork backing must win over themed backgrounds supplied by callers.
     <View style={[style, { backgroundColor: colors.mediaPaper }]}>
       {load && <Image key={`${uri}:${attempt}`}
-        source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover"
+        source={{ uri }} style={StyleSheet.absoluteFill} contentFit={contentFit}
         cachePolicy="memory-disk" recyclingKey={uri} accessibilityLabel="Creator's studio photo"
         onLoad={({ source }) => {
           setLoadedUri(uri);
