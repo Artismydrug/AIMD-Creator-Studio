@@ -12,7 +12,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import { KeyboardAwareScrollViewCompat as KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollViewCompat';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -35,6 +35,7 @@ import {
 } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import LegalHelpLinks from '@/components/LegalHelpLinks';
+import StudioInquirySettings from '@/components/StudioInquirySettings';
 import { clearHabitReminders } from '@/lib/habitReminders';
 import { miniHabitSketchbook } from '@/lib/miniHabitSketchbookStorage';
 import StudioVideo from '@/components/StudioVideo';
@@ -308,6 +309,8 @@ export default function ProfileScreen() {
   const deleteAccount = useDeleteCurrentUser();
   const deletionInFlight = useRef(false);
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [profileEditorOpen, setProfileEditorOpen] = useState(false);
+  const [studioToolsOpen, setStudioToolsOpen] = useState(false);
   const {
     data: me,
     isLoading: meLoading,
@@ -319,7 +322,12 @@ export default function ProfileScreen() {
     query: { queryKey: getGetNotificationsQueryKey(), refetchInterval: 60_000 },
   });
   const { data: badges, isError: badgesError, refetch: refetchBadges } = useListBadges();
-  const { data: posts, isLoading: postsLoading } = useListStudioPosts(
+  const {
+    data: posts,
+    isLoading: postsLoading,
+    isError: postsError,
+    refetch: refetchPosts,
+  } = useListStudioPosts(
     { userId: me?.id, limit: 10 },
     {
       query: {
@@ -345,25 +353,16 @@ export default function ProfileScreen() {
   const topPadding = Platform.OS === 'web' ? 67 : insets.top + 10;
 
   const s = useMemo(() => StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.background },
-    header: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      gap: 12,
-      paddingBottom: 12,
-      paddingHorizontal: 16,
-      paddingTop: topPadding,
-      backgroundColor: colors.studioPaper,
-      borderBottomWidth: 2,
-      borderBottomColor: colors.studioInk,
-    },
-    headerTitle: { color: colors.foreground, flex: 1, fontFamily: 'DMSans_700Bold', fontSize: 20 },
-    headerButton: { padding: 6 },
+    screen: { flex: 1, backgroundColor: colors.studioBackground },
+    header: { alignItems: 'center', flexDirection: 'row', gap: 10, minHeight: 64, paddingBottom: 10, paddingHorizontal: 18, paddingTop: topPadding, backgroundColor: colors.studioPaper, borderBottomWidth: 2, borderBottomColor: colors.studioInk },
+    headerTitle: { color: colors.studioInk, flex: 1, fontFamily: 'DMSans_700Bold', fontSize: 11, letterSpacing: 1 },
+    headerButton: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
+    brandMark: { alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 12, borderWidth: 2, borderColor: colors.studioInk, backgroundColor: colors.studioOrange, transform: [{ rotate: '-6deg' }] },
     notificationButton: { padding: 6, position: 'relative' },
-    notificationBadge: { alignItems: 'center', backgroundColor: colors.destructive, borderRadius: 10, justifyContent: 'center', minWidth: 18, paddingHorizontal: 4, position: 'absolute', right: -2, top: -2 },
-    notificationBadgeText: { color: colors.destructiveForeground, fontFamily: 'DMSans_700Bold', fontSize: 10 },
-    content: { gap: 16, padding: 16, paddingBottom: Platform.OS === 'web' ? 100 : insets.bottom + 36 },
-    accountActions: { borderTopWidth: 1, paddingTop: 16 },
+    notificationBadge: { alignItems: 'center', backgroundColor: colors.studioOrange, borderColor: colors.studioInk, borderWidth: 1, borderRadius: 10, justifyContent: 'center', minWidth: 18, paddingHorizontal: 4, position: 'absolute', right: -2, top: -2 },
+    notificationBadgeText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 10 },
+    content: { gap: 22, paddingHorizontal: 18, paddingTop: 8, paddingBottom: Platform.OS === 'web' ? 100 : insets.bottom + 36, width: '100%', maxWidth: 920, alignSelf: 'center' },
+    accountActions: { borderTopWidth: 1, paddingTop: 16, gap: 14 },
     deleteAccountSection: { gap: 8, paddingTop: 8 },
     deleteAccountTitle: { color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 15 },
     deleteAccountDescription: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 13, lineHeight: 19 },
@@ -375,40 +374,63 @@ export default function ProfileScreen() {
     state: { alignItems: 'center', gap: 12, justifyContent: 'center', minHeight: 320, padding: 24 },
     stateTitle: { color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 17 },
     stateText: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 14, textAlign: 'center' },
-    overview: { alignItems: 'center', gap: 10, padding: 20, borderRadius: 24, borderWidth: 1.5, borderColor: colors.studioInk, backgroundColor: colors.studioLavender, shadowColor: colors.studioShadow, shadowOffset: { width: 3, height: 4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 },
-    username: { color: colors.foreground, fontFamily: 'DMSans_700Bold', fontSize: 22 },
-     bio: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 20, textAlign: 'center' },
-    tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
-    tag: { backgroundColor: colors.card, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 5 },
-    tagText: { color: colors.mutedForeground, fontFamily: 'DMSans_500Medium', fontSize: 12 },
-    metrics: { backgroundColor: colors.studioPaper, borderColor: colors.studioInk, borderRadius: 18, borderWidth: 1.5, flexDirection: 'row', overflow: 'hidden', shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
-     metric: { alignItems: 'center', flex: 1, gap: 3, paddingVertical: 12 },
-     metricPressed: { opacity: 0.65 },
-     metricIcon: { marginBottom: 2 },
+    overview: { alignItems: 'flex-start', flexDirection: 'row', gap: 17, paddingVertical: 23, borderBottomWidth: 2, borderBottomColor: colors.studioInk },
+    overviewCopy: { flex: 1, minWidth: 0, gap: 8 },
+    eyebrow: { alignSelf: 'flex-start', backgroundColor: colors.studioMint, borderColor: colors.studioInk, borderRadius: 99, borderWidth: 1.5, paddingHorizontal: 9, paddingVertical: 5, color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 8, letterSpacing: 1 },
+    username: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 34, letterSpacing: -1.7, lineHeight: 39 },
+    bio: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21 },
+    tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginTop: 2 },
+    tag: { backgroundColor: colors.studioPaper, borderColor: colors.studioInk, borderRadius: 99, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6 },
+    tagText: { color: colors.studioInk, fontFamily: 'DMSans_600SemiBold', fontSize: 11 },
+    heroActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
+    outlineAction: { alignItems: 'center', backgroundColor: colors.studioPaper, borderColor: colors.studioInk, borderRadius: 99, borderWidth: 1.5, flexDirection: 'row', gap: 6, justifyContent: 'center', minHeight: 36, paddingHorizontal: 12 },
+    outlineActionText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 11 },
+    metrics: { backgroundColor: colors.studioPaper, borderColor: colors.studioInk, borderRadius: 16, borderWidth: 1.5, flexDirection: 'row', overflow: 'hidden', shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
+    metric: { alignItems: 'center', flex: 1, gap: 3, paddingVertical: 10 },
+    metricPressed: { opacity: 0.65 },
+    metricIcon: { marginBottom: 2 },
     metricDivider: { backgroundColor: colors.border, width: 1 },
-    metricValue: { color: colors.foreground, fontFamily: 'DMSans_700Bold', fontSize: 17 },
-    metricLabel: { color: colors.mutedForeground, fontFamily: 'DMSans_500Medium', fontSize: 10, textTransform: 'uppercase' },
-      statusCard: { borderColor: colors.studioInk, borderRadius: 18, borderWidth: 1.5, gap: 6, padding: 14, shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
-     statusCardHeader: { alignItems: 'center', flexDirection: 'row', gap: 10, justifyContent: 'space-between' },
+    metricValue: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 16 },
+    metricLabel: { color: colors.mutedForeground, fontFamily: 'DMSans_500Medium', fontSize: 9, textTransform: 'uppercase' },
+    statusCard: { borderColor: colors.studioInk, borderRadius: 16, borderWidth: 1.5, gap: 6, padding: 14, shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
+    statusCardHeader: { alignItems: 'center', flexDirection: 'row', gap: 10, justifyContent: 'space-between' },
     statusTitle: { color: colors.foreground, flex: 1, fontFamily: 'DMSans_600SemiBold', fontSize: 15 },
     statusText: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 13, lineHeight: 19 },
     badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     badge: { alignItems: 'center', backgroundColor: colors.muted, borderRadius: colors.radius, flexDirection: 'row', gap: 6, paddingHorizontal: 10, paddingVertical: 7 },
     badgeText: { color: colors.foreground, fontFamily: 'DMSans_500Medium', fontSize: 12 },
-     portfolio: { gap: 10 },
-     portfolioHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-     portfolioTitle: { color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 16 },
-     portfolioCount: { color: colors.mutedForeground, fontFamily: 'DMSans_500Medium', fontSize: 12 },
-      portfolioPost: { backgroundColor: colors.studioPaper, borderColor: colors.studioInk, borderRadius: 19, borderWidth: 1.5, overflow: 'hidden', shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
-     portfolioMedia: { height: 220, width: '100%' },
-     portfolioImage: { backgroundColor: colors.muted, height: 220, width: '100%' },
-     portfolioCaption: { color: colors.foreground, fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 20, padding: 14 },
-     portfolioMeta: { alignItems: 'center', justifyContent: 'space-between', borderTopColor: colors.border, borderTopWidth: 1, flexDirection: 'row', gap: 6, paddingHorizontal: 14, paddingVertical: 4 },
-     portfolioMetaText: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 11 },
+    portfolio: { gap: 14, borderTopWidth: 2, borderTopColor: colors.studioInk, paddingTop: 23 },
+    portfolioGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+    portfolioHeader: { alignItems: 'flex-end', flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
+    portfolioTitle: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 28, letterSpacing: -1 },
+    portfolioCount: { color: colors.mutedForeground, fontFamily: 'DMSans_600SemiBold', fontSize: 11, paddingBottom: 4 },
+    portfolioPost: { backgroundColor: colors.studioPaper, borderColor: colors.studioInk, borderRadius: 18, borderWidth: 1.5, overflow: 'hidden', shadowColor: colors.studioShadow, shadowOffset: { width: 3, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
+    portfolioFeature: { width: '100%' },
+    portfolioTile: { width: '47%' },
+    portfolioMedia: { height: 310, width: '100%' },
+    portfolioMediaCompact: { height: 220, width: '100%' },
+    portfolioImage: { backgroundColor: colors.mediaPaper, height: 330, width: '100%' },
+    portfolioImageCompact: { backgroundColor: colors.mediaPaper, height: 230, width: '100%' },
+    portfolioCaption: { color: colors.studioInk, fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21, paddingHorizontal: 15, paddingTop: 13, paddingBottom: 10 },
+    portfolioMeta: { alignItems: 'center', justifyContent: 'space-between', borderTopColor: colors.border, borderTopWidth: 1, flexDirection: 'row', gap: 6, paddingHorizontal: 14, paddingVertical: 8 },
+    portfolioMetaText: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 11 },
+    sectionEyebrow: { color: colors.studioMuted, fontFamily: 'DMSans_700Bold', fontSize: 9, letterSpacing: 1.3, marginBottom: 5 },
+    accordion: { borderColor: colors.studioInk, borderRadius: 15, borderWidth: 1.5, backgroundColor: colors.studioPaper, overflow: 'hidden' },
+    accordionHeader: { minHeight: 55, alignItems: 'center', flexDirection: 'row', gap: 11, paddingHorizontal: 15 },
+    accordionTitle: { color: colors.studioInk, flex: 1, fontFamily: 'DMSans_700Bold', fontSize: 14 },
+    accordionBody: { borderTopColor: colors.border, borderTopWidth: 1, gap: 14, padding: 14 },
   }), [colors, insets.bottom, topPadding]);
 
   if (meLoading) {
-    return <View style={[s.screen, s.state]}><ActivityIndicator color={colors.primary} size="large" /></View>;
+    return (
+      <View style={[s.screen, s.state]} accessibilityLabel="Loading your studio">
+        <View style={{ width: '100%', maxWidth: 620, gap: 14 }}>
+          <View style={{ height: 126, borderRadius: 18, backgroundColor: colors.studioPaperAlt }} />
+          <View style={{ height: 48, borderRadius: 14, backgroundColor: colors.studioPaperAlt }} />
+          <View style={{ height: 280, borderRadius: 18, backgroundColor: colors.studioPaperAlt }} />
+        </View>
+      </View>
+    );
   }
 
   if (meError || !me) {
@@ -520,9 +542,12 @@ export default function ProfileScreen() {
     <View style={s.screen}>
       <View style={s.header}>
         <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={() => router.back()} style={s.headerButton}>
-          <Feather name="arrow-left" size={22} color={colors.foreground} />
+          <Feather name="arrow-left" size={20} color={colors.studioInk} />
         </Pressable>
-        <Text style={s.headerTitle}>Your studio</Text>
+        <View style={s.brandMark} accessibilityElementsHidden>
+          <Feather name="aperture" size={19} color={colors.studioInk} />
+        </View>
+        <Text style={s.headerTitle}>CREATOR STUDIO  ·  BY AIMD</Text>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={unreadNotifications ? `Open notifications, ${unreadNotifications} unread` : 'Open notifications'}
@@ -539,56 +564,140 @@ export default function ProfileScreen() {
         </Pressable>
       </View>
 
-      <KeyboardAwareScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
-          <View style={[s.overview, { backgroundColor: colors.magentaWash }]}>
-          <Avatar username={me.username} avatarUrl={me.avatarUrl} size={94} />
-          <Text style={s.username}>{me.username}</Text>
-           {me.bio ? <Text style={s.bio} numberOfLines={2}>{me.bio}</Text> : <Text style={s.bio}>Add a bio.</Text>}
-          {mediumTags.length > 0 && (
-            <View style={s.tags}>
-              {mediumTags.map((tag) => <View key={tag} style={s.tag}><Text style={s.tagText}>{tag}</Text></View>)}
+      <KeyboardAwareScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false} bottomOffset={24}>
+        <View style={s.overview}>
+          <Avatar username={me.username} avatarUrl={me.avatarUrl} size={88} />
+          <View style={s.overviewCopy}>
+            <Text style={s.eyebrow}>YOUR PRACTICE</Text>
+            <Text style={s.username} accessibilityRole="header">{me.username}</Text>
+            <Text style={s.bio}>{me.bio || 'Your studio is taking shape. Add a few words about what you make.'}</Text>
+            {mediumTags.length > 0 && (
+              <View style={s.tags}>
+                {mediumTags.map((tag) => <View key={tag} style={s.tag}><Text style={s.tagText}>{tag}</Text></View>)}
+              </View>
+            )}
+            <View style={s.heroActions}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={profileEditorOpen ? 'Close profile editor' : 'Edit studio profile'}
+                accessibilityState={{ expanded: profileEditorOpen }}
+                onPress={() => setProfileEditorOpen((open) => !open)}
+                style={s.outlineAction}
+                testID="toggle-profile-editor"
+              >
+                <Feather name={profileEditorOpen ? 'x' : 'edit-2'} size={13} color={colors.studioInk} />
+                <Text style={s.outlineActionText}>{profileEditorOpen ? 'Close editor' : 'Edit profile'}</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Create a new studio post"
+                onPress={() => router.push({ pathname: '/feed', params: { compose: '1' } })}
+                style={s.outlineAction}
+                testID="profile-posts-button"
+              >
+                <Feather name="plus" size={14} color={colors.studioInk} />
+                <Text style={s.outlineActionText}>New work</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+
+        {profileEditorOpen ? (
+          <View style={s.accordionBody}>
+            <ProfileEditor
+              key={`${me.id}-${me.username}-${me.avatarUrl ?? ''}-${me.bio ?? ''}-${me.discipline ?? ''}-${me.location ?? ''}`}
+              id={me.id}
+              username={me.username}
+              bio={me.bio}
+              discipline={me.discipline}
+              location={me.location}
+              avatarUrl={me.avatarUrl}
+              onSaved={handleSaved}
+            />
+          </View>
+        ) : null}
+
+        <View style={s.metrics}>
+          <View style={s.metric}><Feather name="grid" size={14} color={colors.studioOrangeText} style={s.metricIcon} /><Text style={s.metricValue}>{publicProfile?.postCount ?? 0}</Text><Text style={s.metricLabel}>Posts</Text></View>
+          <View style={s.metricDivider} />
+          <View style={s.metric}><Feather name="users" size={14} color={colors.studioOrangeText} style={s.metricIcon} /><Text style={s.metricValue}>{publicProfile?.followerCount ?? '—'}</Text><Text style={s.metricLabel}>Followers</Text></View>
+          <View style={s.metricDivider} />
+          <View style={s.metric}><Feather name="user-plus" size={14} color={colors.studioOrangeText} style={s.metricIcon} /><Text style={s.metricValue}>{publicProfile?.followingCount ?? '—'}</Text><Text style={s.metricLabel}>Following</Text></View>
+          <View style={s.metricDivider} />
+          <View style={s.metric}><Feather name="zap" size={14} color={colors.studioOrangeText} style={s.metricIcon} /><Text style={s.metricValue}>{progress?.currentStreak ?? 0}</Text><Text style={s.metricLabel}>Day streak</Text></View>
+        </View>
+
+        <StudioInquirySettings
+          key={me.id}
+          user={{ id: me.id, portfolioUrl: me.portfolioUrl, bookingOpen: me.bookingOpen }}
+          onSaved={handleSaved}
+        />
+
+        <View style={s.portfolio}>
+          <View style={s.portfolioHeader}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={s.sectionEyebrow}>SELECTED WORK</Text>
+              <Text style={s.portfolioTitle} accessibilityRole="header">Made to stay with you.</Text>
+            </View>
+            <Text style={s.portfolioCount}>{posts?.length ?? 0} posts</Text>
+          </View>
+          {postsLoading ? (
+            <View style={[s.portfolioPost, { padding: 12, gap: 10 }]} accessibilityLabel="Loading your published work">
+              <View style={{ width: '100%', height: 250, borderRadius: 12, backgroundColor: colors.studioPaperAlt }} />
+              <View style={{ width: '58%', height: 14, borderRadius: 7, backgroundColor: colors.studioPaperAlt }} />
+              <View style={{ width: '32%', height: 10, borderRadius: 7, backgroundColor: colors.studioPaperAlt }} />
+            </View>
+          ) : postsError ? (
+            <View style={s.accordionBody}>
+              <Text style={[s.statusText, { color: colors.destructive }]}>Your work could not load just now.</Text>
+              <Pressable accessibilityRole="button" onPress={() => refetchPosts()} style={s.outlineAction}>
+                <Feather name="refresh-cw" size={14} color={colors.studioInk} />
+                <Text style={s.outlineActionText}>Try again</Text>
+              </Pressable>
+            </View>
+          ) : (posts ?? []).length === 0 ? (
+            <View style={[s.portfolioPost, { padding: 22, gap: 9 }]}>
+              <Feather name="image" size={23} color={colors.studioOrangeText} />
+              <Text style={s.statusTitle}>Your first piece is waiting.</Text>
+              <Text style={s.statusText}>Published work will live here, ready to be revisited.</Text>
+              <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/feed', params: { compose: '1' } })} style={s.outlineAction}>
+                <Feather name="plus" size={14} color={colors.studioInk} />
+                <Text style={s.outlineActionText}>Share your work</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={s.portfolioGrid}>
+              {(posts ?? []).map((post, index) => (
+              <View key={post.id} style={[s.portfolioPost, index === 0 ? s.portfolioFeature : s.portfolioTile]}>
+                {post.imageUrl && post.mediaType === 'audio' ? (
+                  <AudioTrackPlayer uri={resolveImageUrl(post.imageUrl) ?? post.imageUrl} />
+                ) : post.imageUrl && post.mediaType === 'video' ? (
+                  <StudioVideo
+                    uri={resolveImageUrl(post.imageUrl) ?? post.imageUrl}
+                    active={false}
+                    reducedMotion
+                    muted={videosMuted}
+                    onMutedChange={setVideosMuted}
+                    style={index === 0 ? s.portfolioMedia : s.portfolioMediaCompact}
+                  />
+                ) : post.imageUrl ? (
+                  <Image
+                    source={{ uri: resolveImageUrl(post.imageUrl) ?? post.imageUrl }}
+                    style={index === 0 ? s.portfolioImage : s.portfolioImageCompact}
+                    resizeMode="contain"
+                    accessibilityLabel={post.caption || `Published artwork ${index + 1}`}
+                  />
+                ) : null}
+                {post.caption ? <Text style={s.portfolioCaption}>{post.caption}</Text> : null}
+                <View style={s.portfolioMeta}>
+                  <Text style={s.portfolioMetaText}>{new Date(post.createdAt).toLocaleDateString()}</Text>
+                  <PostOwnerActions post={post} currentUserId={me.id} />
+                </View>
+              </View>
+              ))}
             </View>
           )}
         </View>
-
-        <View style={s.metrics}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Create a new studio post"
-            onPress={() => router.push({ pathname: '/feed', params: { compose: '1' } })}
-            style={({ pressed }) => [s.metric, pressed && s.metricPressed]}
-            testID="profile-posts-button"
-          >
-            <Feather name="grid" size={14} color={colors.cyan} style={s.metricIcon} />
-            <Text style={s.metricValue}>{publicProfile?.postCount ?? 0}</Text>
-            <Text style={s.metricLabel}>Posts</Text>
-          </Pressable>
-          <View style={s.metricDivider} />
-          <View style={s.metric}><Feather name="users" size={14} color={colors.cyan} style={s.metricIcon} /><Text style={s.metricValue}>{publicProfile?.followerCount ?? '—'}</Text><Text style={s.metricLabel}>Followers</Text></View>
-          <View style={s.metricDivider} />
-          <View style={s.metric}><Feather name="user-plus" size={14} color={colors.cyan} style={s.metricIcon} /><Text style={s.metricValue}>{publicProfile?.followingCount ?? '—'}</Text><Text style={s.metricLabel}>Following</Text></View>
-          <View style={s.metricDivider} />
-          <View style={s.metric}><Feather name="zap" size={14} color={colors.cyan} style={s.metricIcon} /><Text style={s.metricValue}>{progress?.currentStreak ?? 0}</Text><Text style={s.metricLabel}>Day streak</Text></View>
-        </View>
-
-        <Pressable
-          style={[s.statusCard, { backgroundColor: colors.goldWash }]}
-          accessibilityRole="button"
-          accessibilityLabel={me.tier === 'free' ? 'View membership options' : 'Manage your AIMD membership'}
-          onPress={() => router.push('/membership')}
-          testID="profile-membership-button"
-        >
-          <View style={s.statusCardHeader}>
-            <Text style={s.statusTitle}><Feather name="shield" size={14} color={colors.primary} />  {progress?.phase?.phase ?? 'Discovering'} · {me.tier === 'free' ? 'Free' : me.tier}</Text>
-            <Feather name="chevron-right" size={18} color={colors.primary} />
-          </View>
-          <Text style={s.statusText}>
-            {me.tier === 'free'
-               ? 'Free access. See what’s coming next.'
-               : 'Membership active. Manage your access.'}
-          </Text>
-          {progressError && <Text style={[s.statusText, { color: colors.destructive }]}>Progress details are temporarily unavailable.</Text>}
-        </Pressable>
 
         <View>
           <Pressable
@@ -598,7 +707,10 @@ export default function ProfileScreen() {
             style={[s.portfolioHeader, { marginBottom: 10, minHeight: 44 }]}
             testID="profile-accomplishments"
           >
-            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Accomplishments</Text>
+            <View>
+              <Text style={s.sectionEyebrow}>MILESTONES</Text>
+              <Text style={s.portfolioTitle}>Accomplishments</Text>
+            </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Text style={[s.badgeText, { color: colors.foreground }]}>View all</Text>
               <Feather name="chevron-right" size={18} color={colors.primary} />
@@ -620,73 +732,52 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        <AppearanceSettings />
-        <BiometricUnlockSettings userId={userId} />
         <Pressable
+          style={[s.statusCard, { backgroundColor: colors.goldWash }]}
           accessibilityRole="button"
-          accessibilityLabel="Notification settings"
-          testID="profile-notification-settings"
-          onPress={() => router.push('/notification-settings')}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, minHeight: 60,
-            borderWidth: 1, borderRadius: 12, borderColor: colors.border, backgroundColor: colors.card }}
+          accessibilityLabel={me.tier === 'free' ? 'View membership options' : 'Manage your AIMD membership'}
+          onPress={() => router.push('/membership')}
+          testID="profile-membership-button"
         >
-          <Feather name="bell" size={22} color={colors.primary} />
-          <Text style={{ flex: 1, color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 16 }}>Notification settings</Text>
-          <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+          <View style={s.statusCardHeader}>
+            <Text style={s.statusTitle}><Feather name="shield" size={14} color={colors.primary} />  {progress?.phase?.phase ?? 'Discovering'} · {me.tier === 'free' ? 'Free' : me.tier}</Text>
+            <Feather name="chevron-right" size={18} color={colors.primary} />
+          </View>
+          <Text style={s.statusText}>
+            {me.tier === 'free' ? 'Free access. See what’s coming next.' : 'Membership active. Manage your access.'}
+          </Text>
+          {progressError && <Text style={[s.statusText, { color: colors.destructive }]}>Progress details are temporarily unavailable.</Text>}
         </Pressable>
 
-         <View style={s.portfolio}>
-           <View style={s.portfolioHeader}>
-             <Text style={s.portfolioTitle}>Studio work</Text>
-             <Text style={s.portfolioCount}>{posts?.length ?? 0} posts</Text>
-           </View>
-           {postsLoading ? (
-             <ActivityIndicator color={colors.primary} style={{ paddingVertical: 20 }} />
-           ) : (posts ?? []).length === 0 ? (
-            <Text style={s.statusText}>Your published posts will appear here.</Text>
-           ) : (
-             (posts ?? []).map((post) => (
-               <View key={post.id} style={s.portfolioPost}>
-                 {post.imageUrl && post.mediaType === 'audio' ? (
-                   <AudioTrackPlayer uri={resolveImageUrl(post.imageUrl) ?? post.imageUrl} />
-                 ) : post.imageUrl && post.mediaType === 'video' ? (
-                   <StudioVideo
-                     uri={resolveImageUrl(post.imageUrl) ?? post.imageUrl}
-                     active={false}
-                     reducedMotion
-                     muted={videosMuted}
-                     onMutedChange={setVideosMuted}
-                     style={s.portfolioMedia}
-                   />
-                 ) : post.imageUrl ? (
-                   <Image
-                     source={{ uri: resolveImageUrl(post.imageUrl) ?? post.imageUrl }}
-                     style={s.portfolioImage}
-                      resizeMode="contain"
-                   />
-                 ) : null}
-                 {post.caption ? <Text style={s.portfolioCaption}>{post.caption}</Text> : null}
-                 <View style={s.portfolioMeta}>
-                   <Text style={s.portfolioMetaText}>{new Date(post.createdAt).toLocaleDateString()}</Text>
-                    <PostOwnerActions post={post} currentUserId={me.id} />
-                 </View>
-               </View>
-             ))
-           )}
-         </View>
-
-        <ProfileEditor
-          key={`${me.id}-${me.username}-${me.avatarUrl ?? ''}-${me.bio ?? ''}-${me.discipline ?? ''}-${me.location ?? ''}`}
-          id={me.id}
-          username={me.username}
-          bio={me.bio}
-          discipline={me.discipline}
-          location={me.location}
-          avatarUrl={me.avatarUrl}
-          onSaved={handleSaved}
-        />
-
-        <View style={[s.accountActions, { borderTopColor: colors.border }]}>
+        <View style={s.accordion}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={studioToolsOpen ? 'Hide studio and account settings' : 'Open studio and account settings'}
+            accessibilityState={{ expanded: studioToolsOpen }}
+            onPress={() => setStudioToolsOpen((open) => !open)}
+            style={s.accordionHeader}
+            testID="toggle-studio-settings"
+          >
+            <Feather name="sliders" size={18} color={colors.studioOrangeText} />
+            <Text style={s.accordionTitle}>Studio settings & account</Text>
+            <Feather name={studioToolsOpen ? 'chevron-up' : 'chevron-down'} size={18} color={colors.mutedForeground} />
+          </Pressable>
+          {studioToolsOpen ? (
+            <View style={s.accordionBody}>
+              <AppearanceSettings />
+              <BiometricUnlockSettings userId={userId} />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Notification settings"
+                testID="profile-notification-settings"
+                onPress={() => router.push('/notification-settings')}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, minHeight: 56, borderWidth: 1, borderRadius: 12, borderColor: colors.border, backgroundColor: colors.card }}
+              >
+                <Feather name="bell" size={20} color={colors.primary} />
+                <Text style={{ flex: 1, color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 15 }}>Notification settings</Text>
+                <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+              </Pressable>
+              <View style={[s.accountActions, { borderTopColor: colors.border }]}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Sign out of Creator Studio"
@@ -716,6 +807,9 @@ export default function ProfileScreen() {
               <Text style={[s.signOutText, { color: colors.destructive }]}>Delete my account</Text>
             </Pressable>
           </View>
+              </View>
+            </View>
+          ) : null}
         </View>
       {Platform.OS === 'web' && (
         <Modal

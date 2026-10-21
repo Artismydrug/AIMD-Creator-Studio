@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert, Linking, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import type { DirectoryCreator } from '@workspace/api-client-react';
+import { getStudioInquiryLink } from '@/lib/studioInquiry';
 
 interface CreatorCardProps {
   creator: DirectoryCreator;
@@ -14,6 +15,12 @@ export default function CreatorCard({ creator, onMessage, messagingLoading }: Cr
   const colors = useColors();
   const initials = creator.username.slice(0, 2).toUpperCase();
   const details = [creator.discipline, creator.location].filter(Boolean).join(' · ');
+  const inquiryLink = getStudioInquiryLink(creator);
+  const openInquiry = async () => {
+    if (!inquiryLink) return;
+    try { await Linking.openURL(inquiryLink); }
+    catch { Alert.alert('Could not open inquiry link', 'Try messaging this creator instead.'); }
+  };
 
   const s = useMemo(() => StyleSheet.create({
     card: {
@@ -49,7 +56,7 @@ export default function CreatorCard({ creator, onMessage, messagingLoading }: Cr
       <View style={s.info}>
         <View style={s.nameRow}>
           <Text style={s.username} numberOfLines={1} ellipsizeMode="tail">{creator.username}</Text>
-          {creator.bookingOpen && <View style={s.openDot} accessibilityLabel="Open for bookings" />}
+          {inquiryLink && <View style={s.openDot} accessibilityLabel="Open for inquiries" />}
         </View>
         {details ? <Text style={s.details} numberOfLines={1}>{details}</Text> : null}
         {creator.badgeCount > 0 && (
@@ -57,6 +64,17 @@ export default function CreatorCard({ creator, onMessage, messagingLoading }: Cr
             <Feather name="award" size={11} color={colors.mutedForeground} /> {creator.badgeCount} {creator.badgeCount === 1 ? 'badge' : 'badges'}
           </Text>
         )}
+        {inquiryLink ? (
+          <TouchableOpacity onPress={openInquiry}
+            style={{ minHeight: 44, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 5 }}
+            testID={`inquire-creator-${creator.id}`}
+            accessibilityRole="link"
+            accessibilityLabel={`Open ${creator.username}'s external inquiry link`}
+            activeOpacity={0.7}>
+            <Text style={[s.details, { color: colors.foreground, fontFamily: 'DMSans_700Bold' }]}>Inquire</Text>
+            <Feather name="arrow-up-right" size={14} color={colors.foreground} />
+          </TouchableOpacity>
+        ) : null}
       </View>
       {onMessage ? (
         <TouchableOpacity
