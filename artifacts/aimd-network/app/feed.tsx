@@ -602,9 +602,14 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
           paddingTop: 16,
           paddingHorizontal: 16,
           paddingBottom: Platform.OS === 'web' ? 40 : insets.bottom + 20,
-          borderTopLeftRadius: colors.radius,
-          borderTopRightRadius: colors.radius,
+          borderTopLeftRadius: 26,
+          borderTopRightRadius: 26,
+          borderWidth: 1.5,
+          borderBottomWidth: 0,
+          borderColor: colors.studioInk,
         },
+        sheetMark: { width: 40, height: 40, borderRadius: 13, borderWidth: 1.5, borderColor: colors.studioInk, backgroundColor: colors.studioOrange, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-5deg' }] },
+        sheetHint: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: colors.mutedForeground, marginTop: 1 },
         sheetHandle: {
           width: 36,
           height: 4,
@@ -616,43 +621,49 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
         sheetHeader: {
           flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 16,
+          gap: 12,
+          marginBottom: 14,
         },
         sheetTitle: {
-          fontFamily: 'DMSans_600SemiBold',
-          fontSize: 16,
+          fontFamily: 'DMSans_700Bold',
+          fontSize: 20,
           color: colors.foreground,
         },
         composerFooter: {
           flexDirection: 'row',
-          gap: 12,
-          paddingTop: 16,
+          gap: 10,
+          paddingTop: 14,
           borderTopWidth: 1,
           borderTopColor: colors.border,
         },
         composerButton: {
           flex: 1,
           minHeight: 48,
-          padding: 12,
-          borderRadius: colors.radius,
+          paddingHorizontal: 16,
+          borderRadius: 99,
           alignItems: 'center',
           justifyContent: 'center',
-          borderWidth: 1,
-          borderColor: colors.border,
+          borderWidth: 1.5,
+          borderColor: colors.studioInk,
+          backgroundColor: colors.card,
         },
         composerButtonText: { fontFamily: 'DMSans_700Bold', fontSize: 14, color: colors.foreground },
         mediaPreview: { width: '100%', aspectRatio: STUDIO_PORTRAIT_RATIO, borderRadius: colors.radius, backgroundColor: colors.muted },
         previewFrame: { width: '100%', maxWidth: Math.min(280, (windowHeight * 0.42) * previewRatio), alignSelf: 'center' },
         photoFormats: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
-        photoFormat: { minHeight: 44, borderWidth: 1, borderRadius: colors.radius, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' },
-        inputLabel: { fontFamily: 'DMSans_600SemiBold', fontSize: 13, color: colors.foreground, marginVertical: 10 },
+        photoFormat: { minHeight: 44, borderWidth: 1.5, borderRadius: 99, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' },
+        inputLabel: { fontFamily: 'DMSans_700Bold', fontSize: 13, color: colors.foreground, marginTop: 14, marginBottom: 8 },
         captionInput: {
           fontFamily: 'DMSans_400Regular',
           fontSize: 16,
           color: colors.foreground,
-          minHeight: 100,
+          minHeight: 104,
           textAlignVertical: 'top',
+          backgroundColor: colors.input,
+          borderWidth: 1.5,
+          borderColor: colors.border,
+          borderRadius: 16,
+          padding: 12,
           marginBottom: 12,
         },
         imageRow: {
@@ -668,15 +679,17 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
           flexDirection: 'row',
           alignItems: 'center',
           gap: 6,
-          paddingVertical: 6,
-          paddingHorizontal: 10,
-          borderWidth: 1,
-          borderColor: colors.border,
+          minHeight: 44,
+          paddingHorizontal: 14,
+          borderWidth: 1.5,
+          borderColor: colors.studioInk,
+          borderRadius: 99,
+          backgroundColor: colors.studioPaperAlt,
         },
         imagePickerText: {
           fontFamily: 'DMSans_500Medium',
           fontSize: 13,
-          color: colors.mutedForeground,
+          color: colors.foreground,
         },
         mediaActions: {
           flexDirection: 'row',
@@ -716,15 +729,21 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
           color: colors.mutedForeground,
         },
         removeImgBtn: {
-          padding: 4,
+          width: 44,
+          height: 44,
+          alignItems: 'center',
+          justifyContent: 'center',
         },
         tagsInput: {
           fontFamily: 'DMSans_400Regular',
           fontSize: 14,
           color: colors.foreground,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
-          paddingTop: 12,
+          minHeight: 48,
+          backgroundColor: colors.input,
+          borderWidth: 1.5,
+          borderColor: colors.border,
+          borderRadius: 99,
+          paddingHorizontal: 16,
         },
       }),
     [colors, insets, topPad, windowHeight, previewRatio],
@@ -906,7 +925,11 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
           <View style={s.sheet}>
             <View style={s.sheetHandle} />
             <View style={s.sheetHeader}>
-              <Text style={s.sheetTitle}>{selectedMedia ? 'Preview your post' : 'Studio Post'}</Text>
+              <View style={s.sheetMark}><Feather name="edit-3" size={18} color={colors.ink} /></View>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={s.sheetTitle} accessibilityRole="header">{selectedMedia ? 'Preview your post' : 'New studio post'}</Text>
+                <Text style={s.sheetHint} numberOfLines={1}>Show the work, the mess, the progress.</Text>
+              </View>
             </View>
 
             <KeyboardAwareScrollViewCompat bottomOffset={20} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={{ flexShrink: 1 }}>
@@ -958,22 +981,23 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
               editable={!isPending}
             />
 
+            <Text style={s.inputLabel}>Add media</Text>
             <View style={s.mediaActions}>
               <TouchableOpacity style={s.imagePickerBtn} onPress={handlePickImage} disabled={isPending}>
-                <Feather name="image" size={16} color={colors.mutedForeground} />
+                <Feather name="image" size={16} color={colors.foreground} />
                 <Text style={s.imagePickerText}>Photo</Text>
               </TouchableOpacity>
               <TouchableOpacity style={s.imagePickerBtn} onPress={handlePickVideo} disabled={isPending}>
-                <Feather name="film" size={16} color={colors.mutedForeground} />
+                <Feather name="film" size={16} color={colors.foreground} />
                 <Text style={s.imagePickerText}>Choose video</Text>
               </TouchableOpacity>
               <TouchableOpacity style={s.imagePickerBtn} onPress={handleRecordVideo} disabled={isPending}>
-                <Feather name="video" size={16} color={colors.mutedForeground} />
+                <Feather name="video" size={16} color={colors.foreground} />
                 <Text style={s.imagePickerText}>Record</Text>
               </TouchableOpacity>
               <TouchableOpacity style={s.imagePickerBtn} onPress={handlePickAudio} disabled={isPending}
                 accessibilityRole="button" accessibilityLabel="Choose an audio track from Files" testID="compose-pick-audio">
-                <Feather name="music" size={16} color={colors.mutedForeground} />
+                <Feather name="music" size={16} color={colors.foreground} />
                 <Text style={s.imagePickerText}>Audio</Text>
               </TouchableOpacity>
             </View>
@@ -1037,9 +1061,9 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
                 <Text style={s.composerButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[s.composerButton, { backgroundColor: colors.primary, opacity: !caption.trim() || isPending ? 0.5 : 1 }]}
+                style={[s.composerButton, { flex: 1.6, backgroundColor: colors.primary, opacity: !caption.trim() || isPending ? 0.5 : 1 }]}
                 onPress={handleSubmit} disabled={!caption.trim() || isPending}
-                accessibilityRole="button" testID="compose-confirm">
+                accessibilityRole="button" accessibilityState={{ disabled: !caption.trim() || isPending }} testID="compose-confirm">
                 {isPending ? <ActivityIndicator color={colors.primaryForeground} /> : (
                   <Text style={[s.composerButtonText, { color: colors.primaryForeground }]}>Confirm &amp; Post</Text>
                 )}

@@ -20,18 +20,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import {
+  getGetPracticeMilestonesQueryKey,
   getListHabitLogsQueryKey,
   useListHabits,
-  useListHabitLogs,
   useCreateHabit,
   useGetDashboardSummary,
 } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import HabitCard, { HABIT_ACTION_HELP } from '@/components/HabitCard';
-import RisingPracticeFlame from '@/components/RisingPracticeFlame';
+import HabitPracticeSummaryCard from '@/components/HabitPracticeSummaryCard';
 
 const CATEGORIES = ['Drawing', 'Painting', 'Sculpture', 'Photography', 'Music', 'Writing', 'Other'];
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
 export default function HabitsScreen({ embedded = false, scrollHeader }: {
   embedded?: boolean;
@@ -44,48 +43,12 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
   const [category, setCategory] = useState('Drawing');
   const [targetMinutes, setTargetMinutes] = useState('30');
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedHabitId, setSelectedHabitId] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
   const { data: habitsResponse, isLoading, isError, refetch } = useListHabits();
   const { data: summary, refetch: refetchSummary } = useGetDashboardSummary();
    const habitsInvalid = habitsResponse != null && !Array.isArray(habitsResponse.habits);
    const habits = Array.isArray(habitsResponse?.habits) ? habitsResponse.habits.filter(habit => habit != null && typeof habit.id === 'number') : [];
-  const selectedHabit = habits.find((habit) => habit.id === selectedHabitId) ?? habits[0];
-  const historyParams = { habitId: selectedHabit?.id ?? 0, days: 27 };
-  const {
-    data: historyLogs,
-    isLoading: historyLoading,
-    isError: historyFetchError,
-    refetch: refetchHistory,
-  } = useListHabitLogs(
-    historyParams,
-    { query: { enabled: Boolean(selectedHabit), queryKey: getListHabitLogsQueryKey(historyParams) } },
-  );
-  const historyError = historyFetchError || (historyLogs != null && !Array.isArray(historyLogs));
-  const weeklyPractice = useMemo(() => {
-    const now = new Date();
-    const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-    const completedDates = (Array.isArray(historyLogs) ? historyLogs : [])
-      .filter((log) => log != null && log.completed && typeof log.date === 'string')
-      .map((log) => log.date.slice(0, 10));
-
-    return Array.from({ length: 4 }, (_, weeksAgo) => {
-      const end = new Date(todayUtc - weeksAgo * SEVEN_DAYS_MS);
-      const start = new Date(todayUtc - (weeksAgo * 7 + 6) * 24 * 60 * 60 * 1000);
-      const startDate = start.toISOString().slice(0, 10);
-      const endDate = end.toISOString().slice(0, 10);
-      const daysCompleted = new Set(
-        completedDates.filter((date) => date >= startDate && date <= endDate),
-      ).size;
-
-      return {
-        label: ['Past 7 days', 'Previous 7 days', '2 weeks ago', '3 weeks ago'][weeksAgo],
-        daysCompleted,
-      };
-    });
-  }, [historyLogs]);
-
   const createMutation = useCreateHabit({
     mutation: {
       onSuccess: () => {
@@ -103,16 +66,17 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([refetch(), refetchSummary(), ...(selectedHabit ? [refetchHistory()] : [])]);
+      await Promise.all([refetch(), refetchSummary(), queryClient.invalidateQueries({ queryKey: getGetPracticeMilestonesQueryKey() })]);
     } finally {
       setRefreshing(false);
     }
-  }, [refetch, refetchHistory, refetchSummary, selectedHabit]);
+  }, [queryClient, refetch, refetchSummary]);
 
   const handleHabitLogged = useCallback(() => {
     void refetch();
     void refetchSummary();
     void queryClient.invalidateQueries({ queryKey: getListHabitLogsQueryKey() });
+    void queryClient.invalidateQueries({ queryKey: getGetPracticeMilestonesQueryKey() });
   }, [queryClient, refetch, refetchSummary]);
 
   const handleCreate = () => {
@@ -206,91 +170,7 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
-    progressPanel: {
-      marginHorizontal: 16,
-      marginBottom: 4,
-      padding: 14,
-      backgroundColor: colors.studioLavender,
-      borderWidth: 1.5,
-      borderColor: colors.studioInk,
-      borderRadius: 20,
-      gap: 10,
-      shadowColor: colors.studioShadow,
-      shadowOffset: { width: 3, height: 3 },
-      shadowOpacity: 1,
-      shadowRadius: 0,
-      elevation: 2,
-    },
-    progressHeading: {
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 16,
-      color: colors.foreground,
-    },
-    progressSubtitle: {
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 12,
-      color: colors.mutedForeground,
-      lineHeight: 17,
-    },
-    habitSelector: { flexGrow: 0, marginHorizontal: -4 },
-    habitSelectorContent: { paddingHorizontal: 4, gap: 7, alignItems: 'center' },
-    habitChip: {
-      paddingHorizontal: 12,
-      paddingVertical: 7,
-      borderRadius: colors.radius,
-      backgroundColor: colors.muted,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    habitChipText: {
-      fontFamily: 'DMSans_500Medium',
-      fontSize: 12,
-      color: colors.mutedForeground,
-      maxWidth: 150,
-    },
-    chart: {
-      height: 162,
-      flexDirection: 'row',
-      alignItems: 'stretch',
-      justifyContent: 'space-around',
-      gap: 8,
-      paddingTop: 8,
-    },
-    chartColumn: { flex: 1, minWidth: 0, alignItems: 'center', justifyContent: 'flex-end', gap: 5 },
-    chartValue: {
-      fontFamily: 'DMSans_600SemiBold',
-      fontSize: 12,
-      color: colors.foreground,
-    },
-    chartBarTrack: {
-      height: 112,
-      width: '100%',
-      maxWidth: 38,
-      justifyContent: 'flex-end',
-      alignItems: 'center',
-      overflow: 'hidden',
-    },
-    chartLabel: {
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 9,
-      lineHeight: 11,
-      textAlign: 'center',
-      color: colors.mutedForeground,
-    },
-    comparisonRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    comparisonText: {
-      flex: 1,
-      fontFamily: 'DMSans_500Medium',
-      fontSize: 12,
-      lineHeight: 17,
-      color: colors.mutedForeground,
-    },
-    historyEmptyText: {
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 12,
-      lineHeight: 17,
-      color: colors.mutedForeground,
-    },
+    milestoneWrap: { marginHorizontal: 16, marginTop: 24, marginBottom: 4 },
     listContent: {
       paddingTop: embedded ? 0 : 12,
       paddingBottom: Platform.OS === 'web' ? 100 : 100,
@@ -335,83 +215,52 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
       letterSpacing: 1,
     },
     // Modal
-    modalOverlay: {
-      flex: 1,
-      justifyContent: 'flex-end',
-      backgroundColor: 'rgba(0,0,0,0.75)',
-    },
+    modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.7)' },
     sheet: {
       backgroundColor: colors.card,
-      paddingTop: 16,
-      paddingHorizontal: 16,
-      paddingBottom: Platform.OS === 'web' ? 40 : insets.bottom + 24,
+      maxHeight: '92%',
+      paddingTop: 12,
+      paddingHorizontal: 18,
+      paddingBottom: Platform.OS === 'web' ? 40 : insets.bottom + 18,
+      borderTopLeftRadius: 26,
+      borderTopRightRadius: 26,
+      borderWidth: 1.5,
+      borderBottomWidth: 0,
+      borderColor: colors.studioInk,
     },
-    sheetHandle: {
-      width: 36,
-      height: 4,
-      backgroundColor: colors.border,
-      borderRadius: 2,
-      alignSelf: 'center',
-      marginBottom: 16,
-    },
-    sheetHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: 20,
-    },
-    sheetTitle: {
-      fontFamily: 'DMSans_600SemiBold',
-      fontSize: 16,
-      color: colors.foreground,
-    },
-    createBtn: {
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 15,
-      color: colors.primary,
-    },
-    label: {
-      fontFamily: 'DMSans_500Medium',
-      fontSize: 13,
-      color: colors.mutedForeground,
-      marginBottom: 6,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
+    sheetHandle: { width: 36, height: 4, backgroundColor: colors.border, borderRadius: 2, alignSelf: 'center', marginBottom: 14 },
+    sheetHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
+    sheetMark: { width: 40, height: 40, borderRadius: 13, borderWidth: 1.5, borderColor: colors.studioInk, backgroundColor: colors.studioMint, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-5deg' }] },
+    sheetTitle: { fontFamily: 'DMSans_700Bold', fontSize: 20, color: colors.foreground },
+    sheetHint: { fontFamily: 'DMSans_400Regular', fontSize: 13, color: colors.mutedForeground, marginTop: 1 },
+    label: { fontFamily: 'DMSans_700Bold', fontSize: 13, color: colors.foreground, marginTop: 14, marginBottom: 8 },
     input: {
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 15,
-      color: colors.foreground,
-      backgroundColor: colors.input,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      marginBottom: 16,
+      fontFamily: 'DMSans_400Regular', fontSize: 16, color: colors.foreground, backgroundColor: colors.input,
+      minHeight: 48, paddingHorizontal: 16, borderRadius: 99, borderWidth: 1.5, borderColor: colors.border,
     },
-    minutesInput: {
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 15,
-      color: colors.foreground,
-      backgroundColor: colors.input,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      width: 80,
-    },
-    categoryScroll: { marginBottom: 16 },
+    categoryWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     categoryChip: {
-      paddingHorizontal: 14,
-      paddingVertical: 7,
-      borderWidth: 1,
-      marginRight: 8,
+      minHeight: 44, paddingHorizontal: 14, justifyContent: 'center', borderRadius: 99,
+      borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.card,
     },
-    categoryChipText: {
-      fontFamily: 'DMSans_500Medium',
-      fontSize: 13,
+    categoryChipText: { fontFamily: 'DMSans_600SemiBold', fontSize: 13 },
+    minutesRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    minutesInput: {
+      fontFamily: 'DMSans_700Bold', fontSize: 16, color: colors.foreground, backgroundColor: colors.input,
+      minHeight: 48, width: 84, textAlign: 'center', borderRadius: 99, borderWidth: 1.5, borderColor: colors.border,
     },
+    minutesSuffix: { fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.mutedForeground },
+    sheetFooter: { flexDirection: 'row', gap: 10, paddingTop: 18 },
+    sheetButton: {
+      flex: 1, minHeight: 48, borderRadius: 99, alignItems: 'center', justifyContent: 'center',
+      borderWidth: 1.5, borderColor: colors.studioInk, backgroundColor: colors.card,
+    },
+    sheetPrimary: { flex: 1.6, backgroundColor: colors.primary },
+    sheetButtonText: { fontFamily: 'DMSans_700Bold', fontSize: 14, color: colors.foreground },
   }), [colors, insets, topPad]);
 
   const todayCount = habits?.filter((h) => h.completedToday).length ?? 0;
   const totalCount = habits?.length ?? 0;
-  const weeklyChange = weeklyPractice[0].daysCompleted - weeklyPractice[1].daysCompleted;
 
   return (
     <View style={s.container}>
@@ -466,95 +315,8 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
                 </View>
               </View>
               {!isError && !habitsInvalid && habits.length > 0 ? <View>
-                <View style={s.progressPanel} testID="habit-weekly-progress">
-                  <View>
-                    <Text style={s.progressHeading}>Practice over time</Text>
-                    <Text style={s.progressSubtitle}>Completed practice days per week · up to 7.</Text>
-                  </View>
-
-                  {habits.length > 1 && (
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      style={s.habitSelector}
-                      contentContainerStyle={s.habitSelectorContent}
-                      accessibilityRole="tablist"
-                    >
-                      {habits.map((habit) => {
-                        const isSelected = selectedHabit?.id === habit.id;
-                        return (
-                          <TouchableOpacity
-                            key={habit.id}
-                            onPress={() => setSelectedHabitId(habit.id)}
-                            style={[
-                              s.habitChip,
-                              isSelected && { backgroundColor: colors.primary, borderColor: colors.primary },
-                            ]}
-                            accessibilityRole="tab"
-                            accessibilityState={{ selected: isSelected }}
-                            accessibilityLabel={`${habit.name} practice history`}
-                            testID={`habit-trend-${habit.id}`}
-                          >
-                            <Text
-                              numberOfLines={1}
-                              style={[s.habitChipText, isSelected && { color: colors.primaryForeground }]}
-                            >
-                              {habit.name}
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </ScrollView>
-                  )}
-
-                  {historyLoading ? (
-                    <ActivityIndicator color={colors.primary} accessibilityLabel="Loading practice history" />
-                  ) : historyError ? (
-                    <TouchableOpacity onPress={() => { void refetchHistory(); }} accessibilityRole="button">
-                      <Text style={s.historyEmptyText}>Couldn’t load history. Tap to retry.</Text>
-                    </TouchableOpacity>
-                  ) : (
-                    <>
-                      <View style={s.chart} testID="habit-weekly-chart">
-                        {weeklyPractice.map((week) => {
-                          return (
-                            <View
-                              key={week.label}
-                              style={s.chartColumn}
-                              accessible
-                              accessibilityRole="progressbar"
-                              accessibilityLabel={`${week.label}: ${week.daysCompleted} completed practice days`}
-                              accessibilityValue={{ min: 0, max: 7, now: week.daysCompleted }}
-                            >
-                              <Text style={s.chartValue}>{week.daysCompleted}</Text>
-                              <View style={s.chartBarTrack} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                                <RisingPracticeFlame daysCompleted={week.daysCompleted} trackColor={colors.muted} railColor={colors.border} />
-                              </View>
-                              <Text style={s.chartLabel}>{week.label}</Text>
-                            </View>
-                          );
-                        })}
-                      </View>
-                      {historyLogs?.some((log) => log.completed) ? (
-                        <View style={s.comparisonRow} accessibilityLiveRegion="polite">
-                          <Feather
-                            name={weeklyChange > 0 ? 'trending-up' : weeklyChange < 0 ? 'trending-down' : 'minus'}
-                            size={15}
-                            color={weeklyChange > 0 ? colors.primary : colors.mutedForeground}
-                          />
-                          <Text style={s.comparisonText}>
-                            {weeklyChange === 0
-                              ? 'Same number of target days as the previous 7 days.'
-                              : `${Math.abs(weeklyChange)} ${Math.abs(weeklyChange) === 1 ? 'day' : 'days'} ${weeklyChange > 0 ? 'more' : 'fewer'} than the previous 7 days.`}
-                          </Text>
-                        </View>
-                      ) : (
-                        <Text style={s.historyEmptyText}>
-                        No days marked complete in this four-week view yet.
-                        </Text>
-                      )}
-                    </>
-                  )}
+                <View style={s.milestoneWrap}>
+                  <HabitPracticeSummaryCard embedded onOpenHabits={() => undefined} />
                 </View>
                 <View style={s.sectionHeader}>
                   <Text style={s.sectionTitle}>Today's Practice</Text>
@@ -585,7 +347,7 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
           }
         />
 
-      <Modal visible={adding} animationType="slide" transparent>
+      <Modal visible={adding} animationType="slide" transparent onRequestClose={() => setAdding(false)}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={s.modalOverlay}
@@ -593,68 +355,77 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
           <View style={s.sheet}>
             <View style={s.sheetHandle} />
             <View style={s.sheetHeader}>
-              <TouchableOpacity onPress={() => setAdding(false)}>
-                <Feather name="x" size={22} color={colors.mutedForeground} />
+              <View style={s.sheetMark}><Feather name="zap" size={18} color={colors.ink} /></View>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={s.sheetTitle} accessibilityRole="header">New habit</Text>
+                <Text style={s.sheetHint} numberOfLines={1}>Small daily reps. Big creative range.</Text>
+              </View>
+            </View>
+            <ScrollView keyboardShouldPersistTaps="handled" style={{ flexShrink: 1 }}>
+              <Text style={s.label}>Name</Text>
+              <TextInput
+                style={s.input}
+                value={habitName}
+                onChangeText={setHabitName}
+                placeholder="e.g. Figure drawing"
+                placeholderTextColor={colors.mutedForeground}
+                accessibilityLabel="Habit name"
+                returnKeyType="next"
+                testID="habit-name-input"
+                autoFocus
+              />
+
+              <Text style={s.label}>Discipline</Text>
+              <View style={s.categoryWrap} accessibilityRole="radiogroup">
+                {CATEGORIES.map((cat) => {
+                  const active = category === cat;
+                  return (
+                    <TouchableOpacity
+                      key={cat}
+                      style={[s.categoryChip, active && { backgroundColor: colors.studioYellow, borderColor: colors.studioInk }]}
+                      onPress={() => setCategory(cat)}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: active }}
+                    >
+                      <Text style={[s.categoryChipText, { color: active ? colors.ink : colors.foreground }]}>{cat}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={s.label}>Daily target</Text>
+              <View style={s.minutesRow}>
+                <TextInput
+                  style={s.minutesInput}
+                  value={targetMinutes}
+                  onChangeText={setTargetMinutes}
+                  keyboardType="numeric"
+                  maxLength={3}
+                  accessibilityLabel="Daily target in minutes"
+                  returnKeyType="done"
+                  onSubmitEditing={handleCreate}
+                />
+                <Text style={s.minutesSuffix}>minutes a day</Text>
+              </View>
+            </ScrollView>
+            <View style={s.sheetFooter}>
+              <TouchableOpacity style={s.sheetButton} onPress={() => setAdding(false)}
+                accessibilityRole="button" testID="habit-cancel">
+                <Text style={s.sheetButtonText}>Cancel</Text>
               </TouchableOpacity>
-              <Text style={s.sheetTitle}>New Habit</Text>
               <TouchableOpacity
+                style={[s.sheetButton, s.sheetPrimary, { opacity: habitName.trim() && !createMutation.isPending ? 1 : 0.5 }]}
                 onPress={handleCreate}
                 disabled={!habitName.trim() || createMutation.isPending}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !habitName.trim() || createMutation.isPending }}
+                testID="habit-create"
               >
-                <Text style={[s.createBtn, { opacity: habitName.trim() ? 1 : 0.35 }]}>
-                  {createMutation.isPending ? '...' : 'Add'}
-                </Text>
+                {createMutation.isPending
+                  ? <ActivityIndicator color={colors.primaryForeground} />
+                  : <Text style={[s.sheetButtonText, { color: colors.primaryForeground }]}>Add habit</Text>}
               </TouchableOpacity>
             </View>
-
-            <Text style={s.label}>Name</Text>
-            <TextInput
-              style={s.input}
-              value={habitName}
-              onChangeText={setHabitName}
-              placeholder="e.g. Figure drawing"
-              placeholderTextColor={colors.mutedForeground}
-              autoFocus
-            />
-
-            <Text style={s.label}>Discipline</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={s.categoryScroll}
-            >
-              {CATEGORIES.map((cat) => (
-                <TouchableOpacity
-                  key={cat}
-                  style={[
-                    s.categoryChip,
-                    {
-                      borderColor: category === cat ? colors.primary : colors.border,
-                      backgroundColor: category === cat ? colors.primary : 'transparent',
-                    },
-                  ]}
-                  onPress={() => setCategory(cat)}
-                >
-                  <Text
-                    style={[
-                      s.categoryChipText,
-                      { color: category === cat ? colors.primaryForeground : colors.mutedForeground },
-                    ]}
-                  >
-                    {cat}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
-            <Text style={s.label}>Daily Target (minutes)</Text>
-            <TextInput
-              style={s.minutesInput}
-              value={targetMinutes}
-              onChangeText={setTargetMinutes}
-              keyboardType="numeric"
-              maxLength={3}
-            />
           </View>
         </KeyboardAvoidingView>
       </Modal>

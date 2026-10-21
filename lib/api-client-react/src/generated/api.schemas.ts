@@ -5,6 +5,25 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+export interface PracticeMilestoneWeek {
+  start: string;
+  end: string;
+  days: number;
+  completed: boolean;
+  current: boolean;
+}
+
+export interface PracticeMilestones {
+  cycleStart: string;
+  cycleEnd: string;
+  currentWeekStart: string;
+  currentWeekDays: number;
+  completedWeeks: number;
+  weeklyBonus: number;
+  monthlyBonus: number;
+  weeks: PracticeMilestoneWeek[];
+}
+
 export interface HealthStatus {
   status: string;
 }

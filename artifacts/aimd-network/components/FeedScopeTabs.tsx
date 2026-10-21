@@ -21,10 +21,9 @@ export default function FeedScopeTabs({ scope, onChange }: {
         <TouchableOpacity key={item.value} accessibilityRole="tab"
           accessibilityState={{ selected: scope === item.value }}
           testID={`feed-scope-${item.value}`} onPress={() => onChange(item.value)}
-          style={[styles.tab, { borderColor: scope === item.value ? colors.primary : colors.border,
-            backgroundColor: scope === item.value ? colors.magentaWash : colors.card }]}>
-          <Feather name={item.icon} size={15} color={scope === item.value ? colors.primary : colors.mutedForeground} />
-          <Text style={[styles.label, { color: scope === item.value ? colors.primary : colors.foreground }]}>{item.label}</Text>
+          style={[styles.tab, scope === item.value && { backgroundColor: colors.studioYellow, borderColor: colors.studioInk }]}>
+          <Feather name={item.icon} size={15} color={scope === item.value ? colors.ink : colors.mutedForeground} />
+          <Text style={[styles.label, { color: scope === item.value ? colors.ink : colors.mutedForeground }]}>{item.label}</Text>
         </TouchableOpacity>
       ))}
     </ScrollView>
@@ -33,7 +32,7 @@ export default function FeedScopeTabs({ scope, onChange }: {
 
 const styles = StyleSheet.create({
   row: { paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
-  tab: { minHeight: 44, paddingHorizontal: 12, borderRadius: 99, borderWidth: 1,
+  tab: { minHeight: 44, paddingHorizontal: 14, borderRadius: 99, borderWidth: 1.5, borderColor: 'transparent',
     flexDirection: 'row', alignItems: 'center', gap: 7 },
-  label: { fontFamily: 'DMSans_600SemiBold', fontSize: 12 },
+  label: { fontFamily: 'DMSans_600SemiBold', fontSize: 13 },
 });

@@ -126,6 +126,27 @@ export const GetHabitHeatmapResponse = zod.array(GetHabitHeatmapResponseItem)
 
 
 /**
+ * @summary Five-day weeks and four-week practice streaks in Los Angeles time
+ */
+export const GetPracticeMilestonesResponse = zod.object({
+  "cycleStart": zod.string(),
+  "cycleEnd": zod.string(),
+  "currentWeekStart": zod.string(),
+  "currentWeekDays": zod.int(),
+  "completedWeeks": zod.int(),
+  "weeklyBonus": zod.int(),
+  "monthlyBonus": zod.int(),
+  "weeks": zod.array(zod.object({
+  "start": zod.string(),
+  "end": zod.string(),
+  "days": zod.int(),
+  "completed": zod.boolean(),
+  "current": zod.boolean()
+}))
+})
+
+
+/**
  * @summary Get a habit by ID
  */
 export const GetHabitParams = zod.object({

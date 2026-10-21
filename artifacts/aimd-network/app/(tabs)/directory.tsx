@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Platform,
   TextInput,
+  TouchableOpacity,
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -71,10 +72,10 @@ export default function DirectoryScreen({ embedded = false }: { embedded?: boole
     container: { flex: 1, backgroundColor: colors.background },
     header: {
       paddingTop: topPad,
-      paddingBottom: 14,
-      borderBottomWidth: 2,
-      borderBottomColor: colors.foreground,
-      backgroundColor: colors.studioPaper,
+      paddingBottom: 12,
+      backgroundColor: embedded ? colors.background : colors.studioPaper,
+      borderBottomWidth: embedded ? 0 : 1.5,
+      borderBottomColor: colors.studioInk,
     },
     titleRow: {
       flexDirection: 'row',
@@ -85,7 +86,7 @@ export default function DirectoryScreen({ embedded = false }: { embedded?: boole
     },
     headerTitle: {
       fontFamily: 'DMSans_700Bold',
-      fontSize: 25,
+      fontSize: embedded ? 18 : 25,
       color: colors.foreground,
       letterSpacing: -0.7,
     },
@@ -106,22 +107,25 @@ export default function DirectoryScreen({ embedded = false }: { embedded?: boole
       flexDirection: 'row',
       alignItems: 'center',
       marginHorizontal: 16,
-      backgroundColor: colors.input,
+      backgroundColor: colors.card,
       borderWidth: 1.5,
-      borderColor: colors.foreground,
-      borderRadius: 15,
+      borderColor: colors.studioInk,
+      borderRadius: 99,
       minHeight: 48,
-      paddingHorizontal: 10,
+      paddingLeft: 14,
+      paddingRight: 2,
       gap: 8,
     },
     searchInput: {
       flex: 1,
       fontFamily: 'DMSans_400Regular',
-      fontSize: 14,
+      fontSize: 15,
       color: colors.foreground,
-      paddingVertical: 9,
+      paddingVertical: 10,
+      minWidth: 0,
     },
     listContent: {
+      paddingTop: 4,
       paddingBottom: Platform.OS === 'web' ? 100 : 90,
     },
     centered: {
@@ -151,7 +155,10 @@ export default function DirectoryScreen({ embedded = false }: { embedded?: boole
       fontSize: 15,
       color: colors.mutedForeground,
     },
-  }), [colors, topPad]);
+    clearBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+    retryBtn: { minHeight: 44, paddingHorizontal: 20, justifyContent: 'center', borderRadius: 99, borderWidth: 1.5, borderColor: colors.studioInk, backgroundColor: colors.studioYellow },
+    retryText: { fontFamily: 'DMSans_700Bold', fontSize: 14, color: colors.ink },
+  }), [colors, topPad, embedded]);
 
   return (
     <View style={s.container}>
@@ -160,7 +167,7 @@ export default function DirectoryScreen({ embedded = false }: { embedded?: boole
               <Text style={s.headerTitle}>Members</Text>
           {creators && (
             <View style={s.badge}>
-                  <Text style={s.badgeText}>{creators.length} members</Text>
+                  <Text style={s.badgeText}>{creators.length} {creators.length === 1 ? 'member' : 'members'}</Text>
             </View>
           )}
         </View>
@@ -176,12 +183,10 @@ export default function DirectoryScreen({ embedded = false }: { embedded?: boole
             testID="directory-search"
           />
           {search.length > 0 && (
-            <Feather
-              name="x"
-              size={16}
-              color={colors.mutedForeground}
-              onPress={() => setSearch('')}
-            />
+            <TouchableOpacity style={s.clearBtn} onPress={() => setSearch('')}
+              accessibilityRole="button" accessibilityLabel="Clear search">
+              <Feather name="x" size={16} color={colors.mutedForeground} />
+            </TouchableOpacity>
           )}
         </View>
       </View>
@@ -194,6 +199,9 @@ export default function DirectoryScreen({ embedded = false }: { embedded?: boole
         <View style={s.centered}>
           <Feather name="wifi-off" size={40} color={colors.mutedForeground} />
           <Text style={s.emptyTitle}>Failed to load directory</Text>
+          <TouchableOpacity style={s.retryBtn} onPress={() => refetch()} accessibilityRole="button">
+            <Text style={s.retryText}>Retry</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList

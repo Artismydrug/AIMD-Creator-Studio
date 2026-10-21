@@ -144,6 +144,8 @@ export * from './planLimits';
 export * from './planTier';
 export * from './pointAwardResult';
 export * from './postDestination';
+export * from './practiceMilestones';
+export * from './practiceMilestoneWeek';
 export * from './progressDayInput';
 export * from './progressSummary';
 export * from './publicCreatorProfile';

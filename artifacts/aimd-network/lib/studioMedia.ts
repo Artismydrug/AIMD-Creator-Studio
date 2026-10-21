@@ -111,10 +111,19 @@ export async function uploadStudioMedia(
   onStatus({ phase: 'preparing', progress: null });
 
   const work = async () => {
-    if (media.mediaType === 'image') {
+    let preparedWebPhoto: Blob | undefined;
+    if (media.mediaType === 'image' && Platform.OS === 'web') {
+      const { prepareWebStudioPhoto } = await import('./prepareWebStudioPhoto');
+      preparedWebPhoto = await prepareWebStudioPhoto(
+        media.uri,
+        (width, height) => photoCrop(width, height, media.photoFormat),
+        optimizedImageSize,
+      );
+      contentType = 'image/png';
+    } else if (media.mediaType === 'image') {
       const { manipulateAsync, SaveFormat } = await import('expo-image-manipulator');
       const sourceContentType = media.contentType.split(';')[0].trim().toLowerCase();
-      const preserveAlpha = sourceContentType === 'image/png' ||
+      const preserveAlpha = sourceContentType !== 'image/jpeg' && sourceContentType !== 'image/jpg' ||
         /\.png(?:[?#]|$)/i.test(media.fileName) ||
         /\.png(?:[?#]|$)/i.test(media.uri);
       const outputContentType = preserveAlpha ? 'image/png' : 'image/jpeg';
@@ -134,9 +143,11 @@ export async function uploadStudioMedia(
     if (cancelled) throw new Error('Upload timed out. Your draft is still here.');
 
     if (Platform.OS === 'web') {
-      const local = await fetch(uploadUri);
-      if (!local.ok) throw new Error('Could not read the selected media.');
-      const blob = await local.blob();
+      const blob = preparedWebPhoto ?? await (async () => {
+        const local = await fetch(uploadUri);
+        if (!local.ok) throw new Error('Could not read the selected media.');
+        return local.blob();
+      })();
       validateStudioMediaSize(media.mediaType, blob.size);
       if (cancelled) throw new Error('Upload timed out. Your draft is still here.');
       onStatus({ phase: 'uploading', progress: null });

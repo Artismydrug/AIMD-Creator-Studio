@@ -1,58 +1,62 @@
-import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useFocusEffect } from 'expo-router';
 import {
-  getListHabitLogsQueryKey,
-  useListHabitLogs,
-  useListHabits,
+  getGetPracticeMilestonesQueryKey,
+  useGetPracticeMilestones,
+  type PracticeMilestoneWeek,
 } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
-import RisingPracticeFlame from '@/components/RisingPracticeFlame';
 
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+const WEEK_GOAL = 5;
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const WEEK_LABELS = ['Past 7 days', 'Prev. 7 days', '2 weeks', '3 weeks'];
+function parseDay(value: string) {
+  const [y, m, d] = value.slice(0, 10).split('-').map(Number);
+  return Number.isFinite(y) && Number.isFinite(m) && Number.isFinite(d) ? { y, m: m - 1, d } : null;
+}
 
-export default function HabitPracticeSummaryCard({ onOpenHabits }: { onOpenHabits: () => void }) {
+function formatRange(start: string, end: string) {
+  const a = parseDay(start);
+  const b = parseDay(end);
+  if (!a || !b) return '';
+  if (a.m === b.m && a.y === b.y) return `${MONTHS[a.m]} ${a.d}–${b.d}`;
+  return `${MONTHS[a.m]} ${a.d} – ${MONTHS[b.m]} ${b.d}`;
+}
+
+const clampDays = (days: number) => Math.max(0, Math.min(WEEK_GOAL, Number.isFinite(days) ? Math.floor(days) : 0));
+
+export default function HabitPracticeSummaryCard({ onOpenHabits, embedded = false }: {
+  onOpenHabits: () => void;
+  embedded?: boolean;
+}) {
   const colors = useColors();
-  const [selectedHabitId, setSelectedHabitId] = useState<number | null>(null);
-  const { data: habitsResponse, isLoading: habitsLoading, isError: habitsError } = useListHabits();
-  const habitsInvalid = habitsResponse != null && !Array.isArray(habitsResponse.habits);
-  const habits = Array.isArray(habitsResponse?.habits)
-    ? habitsResponse.habits.filter(habit => habit && typeof habit.id === 'number')
-    : [];
-  const selectedHabit = habits.find(habit => habit.id === selectedHabitId) ?? habits[0] ?? null;
-  const historyParams = { habitId: selectedHabit?.id ?? 0, days: 27 };
-  const {
-    data: historyResponse,
-    isLoading: historyLoading,
-    isError: historyError,
-    refetch: refetchHistory,
-  } = useListHabitLogs(historyParams, {
+  const { data, isLoading, isError, refetch, isRefetching } = useGetPracticeMilestones({
     query: {
-      enabled: selectedHabit !== null,
-      queryKey: getListHabitLogsQueryKey(historyParams),
+      queryKey: getGetPracticeMilestonesQueryKey(),
+      refetchOnMount: 'always',
+      staleTime: 30_000,
     },
   });
-  const historyInvalid = historyResponse != null && !Array.isArray(historyResponse);
-  const weeklyPractice = useMemo(() => {
-    const now = new Date();
-    const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-    const completedDates = (Array.isArray(historyResponse) ? historyResponse : [])
-      .filter(log => log && log.completed && typeof log.date === 'string')
-      .map(log => log.date.slice(0, 10));
-    return Array.from({ length: 4 }, (_, weeksAgo) => {
-      const endDate = new Date(todayUtc - weeksAgo * SEVEN_DAYS_MS).toISOString().slice(0, 10);
-      const startDate = new Date(todayUtc - (weeksAgo * 7 + 6) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-      const daysCompleted = new Set(completedDates.filter(date => date >= startDate && date <= endDate)).size;
-      return { label: WEEK_LABELS[weeksAgo], daysCompleted };
-    });
-  }, [historyResponse]);
 
-  const styles = useMemo(() => StyleSheet.create({
+  useFocusEffect(useCallback(() => {
+    void refetch({ cancelRefetch: false });
+  }, [refetch]));
+
+  const weeks: PracticeMilestoneWeek[] = useMemo(
+    () => (Array.isArray(data?.weeks) ? data.weeks.filter(w => w && typeof w.start === 'string').slice(0, 4) : []),
+    [data],
+  );
+  const invalid = data != null && (!Array.isArray(data.weeks) || typeof data.cycleStart !== 'string');
+  const anyPractice = weeks.some(w => w.days > 0);
+  const weeklyBonus = data?.weeklyBonus ?? 50;
+  const monthlyBonus = data?.monthlyBonus ?? 200;
+
+  const s = useMemo(() => StyleSheet.create({
     card: {
-      marginHorizontal: 16,
-      marginTop: 16,
+      marginHorizontal: embedded ? 0 : 16,
+      marginTop: embedded ? 0 : 16,
       padding: 16,
       backgroundColor: colors.studioPaper,
       borderColor: colors.studioInk,
@@ -67,107 +71,111 @@ export default function HabitPracticeSummaryCard({ onOpenHabits }: { onOpenHabit
     },
     header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     headerMark: { width: 34, height: 34, borderRadius: 11, backgroundColor: colors.studioOrange, borderWidth: 1.5, borderColor: colors.ink, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-5deg' }] },
-    title: { flex: 1, fontFamily: 'DMSans_700Bold', fontSize: 19, color: colors.studioInk, letterSpacing: -0.4 },
-    viewAll: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, borderWidth: 1.5, borderColor: colors.studioInk, borderRadius: 13, backgroundColor: colors.studioPaperAlt },
+    titleCopy: { flex: 1, minWidth: 0 },
+    title: { fontFamily: 'DMSans_700Bold', fontSize: 19, color: colors.studioInk, letterSpacing: -0.4 },
+    range: { fontFamily: 'DMSans_500Medium', fontSize: 12, color: colors.studioMuted, marginTop: 1 },
+    viewAll: { minHeight: 44, minWidth: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 2, paddingHorizontal: 10, borderWidth: 1.5, borderColor: colors.studioInk, borderRadius: 13, backgroundColor: colors.studioPaperAlt },
     viewAllText: { fontFamily: 'DMSans_600SemiBold', fontSize: 12, color: colors.studioVioletText },
-    selector: { flexGrow: 0, marginHorizontal: -3 },
-    selectorContent: { gap: 6, paddingHorizontal: 3 },
-    habitChip: {
-      minHeight: 36,
-      maxWidth: 150,
-      paddingHorizontal: 10,
-      borderRadius: 13,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1.5,
-    },
-    habitChipText: { fontFamily: 'DMSans_600SemiBold', fontSize: 11 },
-    chart: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', gap: 8, padding: 12, borderRadius: 18, borderWidth: 1.5, borderColor: colors.studioLine, backgroundColor: colors.studioPaperAlt },
-    column: { flex: 1, alignItems: 'center', gap: 5 },
-    count: { fontFamily: 'DMSans_700Bold', fontSize: 13, color: colors.studioOrangeText },
-    flameTrack: { width: '100%', alignItems: 'center' },
-    weekLabel: { minHeight: 28, fontFamily: 'DMSans_500Medium', fontSize: 9, color: colors.studioMuted, textAlign: 'center' },
-    status: { minHeight: 72, alignItems: 'center', justifyContent: 'center', gap: 8 },
+    rewards: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+    reward: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 99, borderWidth: 1.5, borderColor: colors.studioInk },
+    rewardText: { fontFamily: 'DMSans_700Bold', fontSize: 11, color: colors.ink },
+    rewardSub: { fontFamily: 'DMSans_500Medium', fontSize: 11, color: colors.ink },
+    weeks: { flexDirection: 'row', gap: 6 },
+    week: { flex: 1, minWidth: 0, alignItems: 'center', gap: 6, paddingVertical: 10, paddingHorizontal: 4, borderRadius: 14, borderWidth: 1.5, borderColor: colors.studioLine, backgroundColor: colors.studioPaperAlt },
+    weekCurrent: { borderColor: colors.studioInk, backgroundColor: colors.studioYellow },
+    weekLabel: { fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 0.6, textTransform: 'uppercase', color: colors.studioMuted },
+    dots: { flexDirection: 'row', gap: 3 },
+    dot: { width: 7, height: 12, borderRadius: 3, borderWidth: 1, borderColor: colors.studioLine, backgroundColor: 'transparent' },
+    dotOn: { backgroundColor: colors.studioOrange, borderColor: colors.ink },
+    weekCount: { fontFamily: 'DMSans_700Bold', fontSize: 13, color: colors.studioInk },
+    footer: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    footerText: { flex: 1, fontFamily: 'DMSans_500Medium', fontSize: 12, lineHeight: 17, color: colors.studioMuted },
+    status: { minHeight: 96, alignItems: 'center', justifyContent: 'center', gap: 8 },
     statusText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.studioMuted, textAlign: 'center' },
-    retry: { fontFamily: 'DMSans_600SemiBold', color: colors.studioVioletText, fontSize: 13 },
-  }), [colors]);
+    statusBtn: { minHeight: 44, paddingHorizontal: 18, justifyContent: 'center', borderRadius: 99, borderWidth: 1.5, borderColor: colors.studioInk, backgroundColor: colors.studioPaperAlt },
+    statusBtnText: { fontFamily: 'DMSans_700Bold', fontSize: 13, color: colors.studioVioletText },
+    skeleton: { flex: 1, height: 74, borderRadius: 14, backgroundColor: colors.studioPaperAlt, borderWidth: 1.5, borderColor: colors.studioLine },
+  }), [colors, embedded]);
+
+  const currentDays = clampDays(data?.currentWeekDays ?? 0);
+  const completedWeeks = Math.max(0, Math.min(4, data?.completedWeeks ?? 0));
 
   return (
-    <View style={styles.card} testID="dashboard-your-habits">
-      <View style={styles.header}>
-        <View style={styles.headerMark}><Feather name="activity" size={17} color={colors.ink} /></View>
-        <Text style={styles.title}>Your Habits</Text>
-        <TouchableOpacity
-          style={styles.viewAll}
+    <View style={s.card} testID="dashboard-your-habits">
+      <View style={s.header}>
+        <View style={s.headerMark}><Feather name="zap" size={17} color={colors.ink} /></View>
+        <View style={s.titleCopy}>
+          <Text style={s.title} accessibilityRole="header">Monthly Streak</Text>
+          {data && !invalid ? <Text style={s.range} numberOfLines={1}>{formatRange(data.cycleStart, data.cycleEnd)}</Text> : null}
+        </View>
+        {!embedded && <TouchableOpacity
+          style={s.viewAll}
           onPress={onOpenHabits}
           accessibilityRole="button"
           accessibilityLabel="Open all your habits"
           testID="dashboard-your-habits-open"
         >
-          <Text style={styles.viewAllText}>View all</Text>
+          <Text style={s.viewAllText}>Habits</Text>
           <Feather name="chevron-right" size={15} color={colors.studioViolet} />
-        </TouchableOpacity>
+        </TouchableOpacity>}
       </View>
 
-      {habits.length === 1 && <Text style={styles.statusText}>{selectedHabit?.name}</Text>}
-      {habits.length > 1 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}
-          style={styles.selector} contentContainerStyle={styles.selectorContent} accessibilityRole="tablist">
-          {habits.map(habit => {
-            const selected = habit.id === selectedHabit?.id;
-            return (
-              <TouchableOpacity
-                key={habit.id}
-                style={[styles.habitChip, { borderColor: selected ? colors.ink : colors.studioLine, backgroundColor: selected ? colors.studioYellow : colors.studioPaperAlt }]}
-                onPress={() => setSelectedHabitId(habit.id)}
-                accessibilityRole="tab"
-                accessibilityState={{ selected }}
-                accessibilityLabel={`${habit.name} practice history`}
-                testID={`dashboard-habit-${habit.id}`}
-              >
-                <Text numberOfLines={1} style={[styles.habitChipText, { color: selected ? colors.ink : colors.studioInk }]}>{habit.name}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      )}
+      <View style={s.rewards}>
+        <View style={[s.reward, { backgroundColor: colors.studioMint }]} accessibilityLabel={`${weeklyBonus} points for 5 practice days in a week`}>
+          <Text style={s.rewardText}>+{weeklyBonus}</Text><Text style={s.rewardSub}>5 days / week</Text>
+        </View>
+        <View style={[s.reward, { backgroundColor: colors.studioLavender }]} accessibilityLabel={`${monthlyBonus} points for completing all 4 weeks`}>
+          <Text style={s.rewardText}>+{monthlyBonus}</Text><Text style={s.rewardSub}>all 4 weeks</Text>
+        </View>
+      </View>
 
-      {habitsLoading || (!habitsError && habits.length > 0 && historyLoading) ? (
-        <View style={styles.status}><ActivityIndicator color={colors.studioViolet} /><Text style={styles.statusText}>Loading practice history</Text></View>
-      ) : habitsError || habitsInvalid ? (
-        <View style={styles.status}>
-          <Text style={styles.statusText}>Couldn’t load your habits.</Text>
-          <TouchableOpacity onPress={onOpenHabits}><Text style={styles.retry}>Open Habits</Text></TouchableOpacity>
+      {isLoading ? (
+        <View style={s.weeks} accessibilityLabel="Loading monthly streak">
+          {[0, 1, 2, 3].map(i => <View key={i} style={s.skeleton} />)}
         </View>
-      ) : habits.length === 0 ? (
-        <View style={styles.status}>
-          <Text style={styles.statusText}>Start a habit to see your practice here.</Text>
-          <TouchableOpacity onPress={onOpenHabits}><Text style={styles.retry}>Build your practice</Text></TouchableOpacity>
-        </View>
-      ) : historyError || historyInvalid ? (
-        <View style={styles.status}>
-          <Text style={styles.statusText}>Couldn’t load practice history.</Text>
-          <TouchableOpacity onPress={() => { void refetchHistory(); }} accessibilityRole="button"><Text style={styles.retry}>Tap to retry</Text></TouchableOpacity>
+      ) : isError || invalid || !data ? (
+        <View style={s.status}>
+          <Text style={s.statusText}>Couldn’t load your streak.</Text>
+          <TouchableOpacity style={s.statusBtn} onPress={() => { void refetch(); }} disabled={isRefetching} accessibilityRole="button" testID="monthly-streak-retry">
+            {isRefetching ? <ActivityIndicator color={colors.studioViolet} /> : <Text style={s.statusBtnText}>Try again</Text>}
+          </TouchableOpacity>
         </View>
       ) : (
-        <View style={styles.chart} testID="dashboard-habit-weekly-chart">
-          {weeklyPractice.map(week => (
-            <View
-              key={week.label}
-              style={styles.column}
-              accessible
-              accessibilityRole="progressbar"
-              accessibilityLabel={`${week.label}: ${week.daysCompleted} completed practice days`}
-              accessibilityValue={{ min: 0, max: 7, now: week.daysCompleted }}
-            >
-              <Text style={styles.count}>{week.daysCompleted}</Text>
-              <View style={styles.flameTrack} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                <RisingPracticeFlame daysCompleted={week.daysCompleted} trackColor={colors.studioLavender} railColor={colors.studioLine} />
-              </View>
-              <Text style={styles.weekLabel}>{week.label}</Text>
-            </View>
-          ))}
-        </View>
+        <>
+          <View style={s.weeks} testID="dashboard-habit-weekly-chart">
+            {weeks.map((week, index) => {
+              const days = clampDays(week.days);
+              return (
+                <View
+                  key={week.start}
+                  style={[s.week, week.current && s.weekCurrent]}
+                  accessible
+                  accessibilityRole="progressbar"
+                  accessibilityLabel={`Week ${index + 1}${week.current ? ', this week' : ''}: ${days} of ${WEEK_GOAL} days${week.completed ? ', complete' : ''}`}
+                  accessibilityValue={{ min: 0, max: WEEK_GOAL, now: days }}
+                >
+                  <Text style={[s.weekLabel, week.current && { color: colors.ink }]}>{week.current ? 'Now' : `Wk ${index + 1}`}</Text>
+                  <View style={s.dots}>
+                    {Array.from({ length: WEEK_GOAL }, (_, i) => (
+                      <View key={i} style={[s.dot, i < days && s.dotOn]} />
+                    ))}
+                  </View>
+                  {week.completed
+                    ? <Feather name="check-circle" size={15} color={week.current ? colors.ink : colors.studioOrangeText} />
+                    : <Text style={[s.weekCount, week.current && { color: colors.ink }]}>{days}/{WEEK_GOAL}</Text>}
+                </View>
+              );
+            })}
+          </View>
+          <View style={s.footer} accessibilityLiveRegion="polite">
+            <Feather name={anyPractice ? 'trending-up' : 'feather'} size={14} color={colors.studioMuted} />
+            <Text style={s.footerText}>
+              {anyPractice
+                ? `${currentDays}/${WEEK_GOAL} days this week · ${completedWeeks}/4 weeks done`
+                : 'Log any habit on 5 days to fill a week.'}
+            </Text>
+          </View>
+        </>
       )}
     </View>
   );

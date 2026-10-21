@@ -92,17 +92,17 @@ export default function FeedNavigation({
     <>
       {focused && <StatusBar style={!expanded || scheme === 'dark' ? 'light' : 'dark'} />}
       <View
-        style={[styles.overlay, { paddingTop: top }, expanded && { backgroundColor: colors.background }]}
+        style={[styles.overlay, { paddingTop: top }, expanded && { backgroundColor: colors.studioPaper, borderBottomWidth: 1.5, borderBottomColor: colors.studioInk }]}
         onLayout={(event) => onControlsHeightChange?.(event.nativeEvent.layout.height)}
         pointerEvents="box-none"
         testID="feed-navigation-overlay"
       >
         {!expanded && <LinearGradient pointerEvents="none" colors={['rgba(0,0,0,0.78)', 'rgba(0,0,0,0)']} style={StyleSheet.absoluteFill} />}
         {expanded && (
-          <View style={[styles.expandedHeader, { backgroundColor: colors.studioPaper, borderColor: colors.studioInk, shadowColor: colors.studioShadow }]} testID="feed-expanded-navigation">
+          <View style={styles.expandedHeader} testID="feed-expanded-navigation">
             <View style={styles.headingRow}>
               <View style={[styles.titleMark, { backgroundColor: colors.studioOrange, borderColor: colors.ink }]}>
-                <Feather name="users" size={19} color={colors.ink} />
+                <Feather name="users" size={17} color={colors.ink} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.title, { color: colors.foreground }]}>Feed</Text>
@@ -114,12 +114,12 @@ export default function FeedNavigation({
                 <Feather name="chevron-up" size={23} color={colors.foreground} />
               </Pressable>
             </View>
-            <View style={[styles.sectionTabs, { backgroundColor: colors.studioPaperAlt, borderColor: colors.studioInk }]} accessibilityRole="tablist">
+            <View style={styles.sectionTabs} accessibilityRole="tablist">
               {(['feed', 'creators', 'events'] as const).map(section => (
                 <Pressable key={section} accessibilityRole="tab" accessibilityState={{ selected: section === 'feed' }}
                   testID={`community-${section}-tab`}
                   onPress={() => section === 'feed' ? onScopeChange('community') : openCommunitySection(section)}
-                  style={[styles.sectionTab, section === 'feed' && { backgroundColor: colors.studioYellow, borderColor: colors.ink }]}>
+                  style={[styles.sectionTab, section === 'feed' && { backgroundColor: colors.studioYellow, borderColor: colors.studioInk }]}>
                   <Feather name={section === 'feed' ? 'image' : section === 'creators' ? 'users' : 'calendar'}
                     size={15} color={section === 'feed' ? colors.ink : colors.mutedForeground} />
                   <Text numberOfLines={1} style={[styles.sectionText, { color: section === 'feed' ? colors.ink : colors.mutedForeground }]}>
@@ -133,7 +133,7 @@ export default function FeedNavigation({
         <View style={styles.row} pointerEvents="box-none">
           <Pressable accessibilityRole="button" accessibilityLabel="Open Feed menu"
             accessibilityState={{ expanded: menuOpen }} onPress={() => onMenuOpenChange(true)}
-            style={[styles.iconButton, expanded && { backgroundColor: colors.muted }]} testID="feed-menu-toggle">
+            style={[styles.iconButton, expanded && { backgroundColor: 'transparent' }]} testID="feed-menu-toggle">
             <Feather name="menu" size={22} color={expanded ? colors.foreground : '#FFFFFF'} />
           </Pressable>
           <View style={styles.filters} accessibilityRole="tablist">
@@ -141,9 +141,9 @@ export default function FeedNavigation({
               <Pressable key={value} accessibilityRole="tab"
                 accessibilityLabel={value === 'all' ? 'Show all posts' : 'Show posts from creators you follow'}
                 accessibilityState={{ selected: mode === value }} onPress={() => onModeChange(value)}
-                 style={[styles.filter, mode === value && styles.selectedFilter, expanded && mode === value && { borderBottomColor: colors.primary }]}
+                 style={[styles.filter, mode === value && styles.selectedFilter, expanded && styles.expandedFilter, expanded && mode === value && { backgroundColor: colors.card, borderColor: colors.studioInk }]}
                 testID={`feed-filter-${value}`}>
-                <Text numberOfLines={1} style={[styles.filterText, mode !== value && styles.unselectedText, expanded && { color: colors.foreground }]}>{value === 'all' ? 'All' : 'Following'}</Text>
+                <Text numberOfLines={1} style={[styles.filterText, mode !== value && styles.unselectedText, expanded && { color: mode === value ? colors.foreground : colors.mutedForeground, opacity: 1 }]}>{value === 'all' ? 'All' : 'Following'}</Text>
               </Pressable>
             ))}
           </View>
@@ -192,13 +192,13 @@ export default function FeedNavigation({
 
 const styles = StyleSheet.create({
   overlay: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, paddingHorizontal: 16, paddingBottom: 12 },
-  expandedHeader: { gap: 12, padding: 12, marginBottom: 8, borderWidth: 1.5, borderRadius: 20, shadowOffset: { width: 3, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 },
+  expandedHeader: { gap: 8, marginBottom: 6 },
   headingRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   titleMark: { width: 44, height: 44, borderRadius: 15, borderWidth: 2, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-5deg' }], shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
-  title: { fontFamily: 'DMSans_700Bold', fontSize: 26, letterSpacing: -0.6 },
+  title: { fontFamily: 'DMSans_700Bold', fontSize: 24, letterSpacing: -0.6 },
   subtitle: { fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', marginTop: 2 },
-  sectionTabs: { flexDirection: 'row', padding: 4, gap: 3, borderWidth: 1.5, borderRadius: 15 },
-  sectionTab: { flex: 1, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: 'transparent', borderRadius: 11 },
+  sectionTabs: { flexDirection: 'row', gap: 6 },
+  sectionTab: { flex: 1, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: 'transparent', borderRadius: 99 },
   sectionText: { fontFamily: 'DMSans_600SemiBold', fontSize: 13 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   iconButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.4)' },
@@ -206,6 +206,7 @@ const styles = StyleSheet.create({
   filters: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: 1, minWidth: 0 },
   filter: { minHeight: 44, flexShrink: 1, minWidth: 0, paddingHorizontal: 12, justifyContent: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
   selectedFilter: { borderBottomColor: '#FFFFFF' },
+  expandedFilter: { borderBottomWidth: 0, borderWidth: 1.5, borderColor: 'transparent', borderRadius: 99, marginHorizontal: 2 },
   filterText: { fontFamily: 'DMSans_700Bold', fontSize: 14, color: '#FFFFFF' },
   unselectedText: { opacity: 0.78 },
   modal: { flex: 1, paddingHorizontal: 16, backgroundColor: 'rgba(0,0,0,0.6)' },

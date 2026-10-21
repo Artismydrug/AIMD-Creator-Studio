@@ -104,6 +104,7 @@ import type {
   NotificationsResponse,
   Plan,
   PointAwardResult,
+  PracticeMilestones,
   ProgressDayInput,
   ProgressSummary,
   PublicCreatorProfile,
@@ -703,6 +704,83 @@ export function useGetHabitHeatmap<TData = Awaited<ReturnType<typeof getHabitHea
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetHabitHeatmapQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetPracticeMilestonesUrl = () => {
+
+
+
+
+  return `/api/habits/milestones`
+}
+
+/**
+ * @summary Five-day weeks and four-week practice streaks in Los Angeles time
+ */
+export const getPracticeMilestones = async ( options?: Parameters<typeof customFetch>[1]): Promise<PracticeMilestones> => {
+
+  return customFetch<PracticeMilestones>(getGetPracticeMilestonesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPracticeMilestonesQueryKey = () => {
+    return [
+    `/api/habits/milestones`
+    ] as const;
+    }
+
+
+export const getGetPracticeMilestonesQueryOptions = <TData = Awaited<ReturnType<typeof getPracticeMilestones>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPracticeMilestones>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPracticeMilestonesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPracticeMilestones>>> = ({ signal }) => getPracticeMilestones({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPracticeMilestones>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPracticeMilestonesQueryResult = NonNullable<Awaited<ReturnType<typeof getPracticeMilestones>>>
+export type GetPracticeMilestonesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Five-day weeks and four-week practice streaks in Los Angeles time
+ */
+
+export function useGetPracticeMilestones<TData = Awaited<ReturnType<typeof getPracticeMilestones>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPracticeMilestones>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPracticeMilestonesQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

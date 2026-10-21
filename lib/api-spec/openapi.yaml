@@ -181,6 +181,19 @@ paths:
                 items:
                   $ref: "#/components/schemas/HeatmapDay"
 
+  /habits/milestones:
+    get:
+      operationId: getPracticeMilestones
+      tags: [habits]
+      summary: Five-day weeks and four-week practice streaks in Los Angeles time
+      responses:
+        "200":
+          description: Current four-week cycle across all habits
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PracticeMilestones"
+
   /habits/{id}:
     get:
       operationId: getHabit
@@ -2538,6 +2551,30 @@ components:
         check-in tokens. Must be supplied by event organizers only.
 
   schemas:
+    PracticeMilestoneWeek:
+      type: object
+      required: [start, end, days, completed, current]
+      properties:
+        start: { type: string }
+        end: { type: string }
+        days: { type: integer }
+        completed: { type: boolean }
+        current: { type: boolean }
+    PracticeMilestones:
+      type: object
+      required: [cycleStart, cycleEnd, currentWeekStart, currentWeekDays, completedWeeks, weeks, weeklyBonus, monthlyBonus]
+      properties:
+        cycleStart: { type: string }
+        cycleEnd: { type: string }
+        currentWeekStart: { type: string }
+        currentWeekDays: { type: integer }
+        completedWeeks: { type: integer }
+        weeklyBonus: { type: integer }
+        monthlyBonus: { type: integer }
+        weeks:
+          type: array
+          items:
+            $ref: "#/components/schemas/PracticeMilestoneWeek"
     HealthStatus:
       type: object
       properties:

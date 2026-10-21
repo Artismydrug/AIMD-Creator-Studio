@@ -15,8 +15,8 @@ Habits should be the first/default section, with Challenges second, and daily ha
 
 **How to apply:** Preserve habits-first ordering and default selection when changing the shared mobile practice screen or its navigation labels.
 
-The owner accepted the rolling-week interpretation of the practice graph and confirmed that the baseline-to-progress fire marker matches the intended experience.
+The earlier rolling-week practice graph and fire-marker presentation were approved at the time, but the owner later replaced that graph with a four-week Monthly Streak goal.
 
-**Why:** On October 10, 2026, the owner said “that looks perfect” after the weekly interpretation was clarified and the marker presentation was updated.
+**Why:** On October 21, 2026, the owner explicitly chose five distinct practice days per Monday–Sunday week (Los Angeles time), four consecutive completed weeks per Monthly Streak, and +50 / +200 point awards respectively.
 
-**How to apply:** Treat the weekly history view as an approved product choice, not an accidental implementation detail. Do not silently replace it with a daily-status chart during future visual refinements.
+**How to apply:** Keep this goal and bonus policy consistent between Dashboard, Habits, and server award calculations. The four-week goal is a rolling run of qualifying calendar weeks, not a calendar-month reset. Each bonus must be awarded once; existing lifetime points do not reset or gate monthly product drops.

@@ -21,6 +21,8 @@ import {
 } from "@workspace/api-zod";
 import { ObjectNotFoundError, ObjectStorageService } from "../lib/objectStorage";
 import { ObjectPermission, getObjectAclPolicy } from "../lib/objectAcl";
+import { awardPracticeMilestones, readPracticeMilestones } from "../lib/practiceRewards";
+import { GetPracticeMilestonesResponse } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -152,6 +154,12 @@ router.get("/habits/heatmap", async (req, res): Promise<void> => {
   res.json(GetHabitHeatmapResponse.parse(heatmap));
 });
 
+router.get("/habits/milestones", async (req, res): Promise<void> => {
+  if (!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const progress = await readPracticeMilestones(db, req.dbUser.id);
+  res.json(GetPracticeMilestonesResponse.parse(progress));
+});
+
 router.get("/habits/:id", async (req, res): Promise<void> => {
   if (!!!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
   const userId = req.dbUser!.id;
@@ -226,7 +234,7 @@ router.post("/habits/:id/log", async (req, res): Promise<void> => {
   const log = await db.transaction(async (tx) => {
     // Lock parent before child to remain compatible with account deletion.
     const [owner] = await tx.select({ id: usersTable.id }).from(usersTable)
-      .where(eq(usersTable.id, userId)).for("key share");
+      .where(eq(usersTable.id, userId)).for("update");
     if (!owner) return null;
     const [lockedHabit] = await tx.select().from(habitsTable)
       .where(and(eq(habitsTable.id, habit.id), eq(habitsTable.userId, userId))).for("update");
@@ -242,6 +250,7 @@ router.post("/habits/:id/log", async (req, res): Promise<void> => {
     })
     .returning();
     await updateStreak(habit.id, userId, tx);
+    await awardPracticeMilestones(tx, userId);
     return saved;
   });
   if (!log) { res.status(404).json({ error: "Habit not found" }); return; }

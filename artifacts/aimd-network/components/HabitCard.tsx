@@ -18,6 +18,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@clerk/expo';
 import HabitReminderControl from '@/components/HabitReminderControl';
 import { removeHabitReminder } from '@/lib/habitReminders';
+import { useQueryClient } from '@tanstack/react-query';
+import { getGetPracticeMilestonesQueryKey, getGetDashboardSummaryQueryKey, getGetCurrentUserQueryKey } from '@workspace/api-client-react';
 
 interface HabitCardProps {
   habit: Habit;
@@ -29,6 +31,7 @@ export const HABIT_ACTION_HELP =
   'Camera or Photos adds proof; ✓ logs it. Delete also removes history. Free on every plan.';
 
 export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps) {
+  const queryClient = useQueryClient();
   const colors = useColors();
   const { userId } = useAuth();
   const categoryColors: Record<string, string> = {
@@ -48,6 +51,9 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
     mutation: {
       onSuccess: () => {
         trackEvent('habit_logged');
+        void queryClient.invalidateQueries({ queryKey: getGetPracticeMilestonesQueryKey() });
+        void queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+        void queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
         setLocalDone(true);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         onLogged?.();
@@ -57,6 +63,7 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
   const deleteMutation = useDeleteHabit({
     mutation: {
       onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: getGetPracticeMilestonesQueryKey() });
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         if (userId && (Platform.OS === 'ios' || Platform.OS === 'android')) {
           removeHabitReminder(userId, habit.id).catch(() => {

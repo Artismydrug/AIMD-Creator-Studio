@@ -75,6 +75,13 @@ function harness({ platform = 'ios', size = 1000, token = 'fixture-token', statu
           return { uri: `file:///optimized.${args[2].format === 'png' ? 'png' : 'jpg'}` };
         },
       };
+      if (name === './prepareWebStudioPhoto') return {
+        prepareWebStudioPhoto: async (uri, cropFor, resizeFor) => {
+          const crop = cropFor(3024, 4032);
+          conversions.push([uri, [{ crop }, { resize: resizeFor(crop.width, crop.height) }], { format: 'png' }]);
+          return { size, type: 'image/png' };
+        },
+      };
       if (name === '@workspace/api-client-react') return {
         getBaseUrl: () => 'https://example.invalid',
         customFetch: async (url, options) => { uploads.push({ url, options }); return { objectPath: '/objects/web-upload' }; },
@@ -133,7 +140,7 @@ test('native video transfers a file, not a JS ArrayBuffer, with real progress an
 
 test('photo conversion changes only a temporary upload derivative and cleans it afterwards', async () => {
   const h = harness();
-  await h.send('image');
+  await h.send('image', { contentType: 'image/jpeg' });
   assert.equal(h.conversions.length, 1);
   assert.equal(h.conversions[0][2].format, 'jpeg');
   assert.equal(h.uploads[0].uri, 'file:///optimized.jpg');
@@ -174,7 +181,7 @@ test('three photo formats crop centrally, remain inside source bounds, and recov
     assert.equal(actions[1].resize.width, expectedWidth);
     assert.equal(actions[1].resize.height, expectedHeight);
     assert.equal(h.studioPhotoRatio(expectedWidth, expectedHeight), expectedWidth / expectedHeight);
-    assert.deepEqual(h.deleted, ['file:///optimized.jpg']);
+    assert.deepEqual(h.deleted, ['file:///optimized.png']);
   }
 });
 

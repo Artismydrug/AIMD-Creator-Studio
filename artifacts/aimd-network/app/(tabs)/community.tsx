@@ -21,10 +21,10 @@ export default function CommunityScreen() {
     header: {
       paddingTop: topPad,
       paddingHorizontal: 16,
-      paddingBottom: 14,
-      gap: 12,
+      paddingBottom: 10,
+      gap: 10,
       backgroundColor: colors.studioPaper,
-      borderBottomWidth: 2,
+      borderBottomWidth: 1.5,
       borderBottomColor: colors.studioInk,
     },
     titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -32,26 +32,19 @@ export default function CommunityScreen() {
     titleCopy: { flex: 1, gap: 2 },
     title: { fontFamily: 'DMSans_700Bold', fontSize: 26, color: colors.foreground, letterSpacing: -0.6 },
      subtitle: { fontFamily: 'DMSans_700Bold', fontSize: 11, color: colors.sunsetCoral, letterSpacing: 1.2, textTransform: 'uppercase' },
-    studioRule: { height: 3, width: 56, borderRadius: 3, backgroundColor: colors.cyan },
-    switcher: {
-      flexDirection: 'row',
-      backgroundColor: colors.studioPaperAlt,
-      borderWidth: 1.5,
-      borderColor: colors.studioInk,
-      borderRadius: 17,
-      padding: 4,
-      gap: 3,
-    },
+    switcher: { flexDirection: 'row', gap: 6 },
      switchButton: {
       flex: 1,
-       minHeight: 40,
-      borderRadius: colors.radius - 2,
+       minHeight: 44,
+      borderRadius: 99,
+      borderWidth: 1.5,
+      borderColor: 'transparent',
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 7,
     },
-    activeSwitch: { backgroundColor: colors.studioYellow, borderWidth: 1.5, borderColor: colors.ink, shadowColor: colors.studioShadow, shadowOffset: { width: 1, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 1 },
+    activeSwitch: { backgroundColor: colors.studioYellow, borderColor: colors.studioInk },
     switchText: { fontFamily: 'DMSans_600SemiBold', fontSize: 13, color: colors.mutedForeground },
     activeSwitchText: { color: colors.ink },
     content: { flex: 1 },
@@ -83,7 +76,6 @@ export default function CommunityScreen() {
              <Text style={s.subtitle}>Make · Share · Connect.</Text>
           </View>
         </View>
-        <View style={s.studioRule} />
          <View style={s.switcher} accessibilityRole="tablist">
            {(['feed', 'creators', 'events'] as const).map((item) => {
             const active = section === item;
