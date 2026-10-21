@@ -44,7 +44,6 @@ import AppearanceSettings from '@/components/AppearanceSettings';
 import { unregisterPushDevice } from '@/lib/pushNotifications';
 import { BiometricUnlockSettings } from '@/components/SessionSecurity';
 import { sessionSecurityStore } from '@/lib/sessionSecurity';
-import { PortfolioButton } from '@/components/PortfolioUI';
 
 type LocalImage = { uri: string; contentType: string } | null;
 const HANDLE_PATTERN = /^[a-zA-Z0-9_]{3,28}$/;
@@ -552,7 +551,6 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        <PortfolioButton label="Preview & share your public profile" onPress={() => router.push(`/creator/${me.id}`)} />
         <View style={s.metrics}>
           <Pressable
             accessibilityRole="button"
@@ -645,7 +643,7 @@ export default function ProfileScreen() {
            {postsLoading ? (
              <ActivityIndicator color={colors.primary} style={{ paddingVertical: 20 }} />
            ) : (posts ?? []).length === 0 ? (
-             <Text style={s.statusText}>Your published work will appear here as your portfolio.</Text>
+            <Text style={s.statusText}>Your published posts will appear here.</Text>
            ) : (
              (posts ?? []).map((post) => (
                <View key={post.id} style={s.portfolioPost}>

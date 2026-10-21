@@ -1,16 +1,10 @@
 ---
-name: Shareable creator profiles
-description: Shared Sticker Jam portfolio presentation for every member's public Creator Studio profile.
+name: Your Studio profile policy
+description: Product decision to keep Your Studio and remove public creator portfolio-detail pages.
 ---
 
-Every Creator Studio member's public profile should feel like a shareable creative portfolio, populated by that member's own signup profile details and publicly shared feed work.
+Keep the existing Your Studio page as the member's profile and editing destination. Do not reintroduce the separate public Creative Portfolio page.
 
-**Why:** The owner clarified that the portfolio design is the standard “Your Studio” profile for all members, not a separate founder-only page.
+**Why:** The owner rejected the new portfolio build and chose to remove public profile-detail pages while keeping Your Studio.
 
-**How to apply:** Show each member's own avatar, bio, discipline, public posts, website, and follow/message controls. Put profile editing behind a separate Edit action, and let members share their own profile link.
-
-Do not expose private habits, lesson reflections, or unpublished work on the public portfolio. Generic member profiles must not route into Poncho's booking or commission flow.
-
-**Why:** Signup profiles and the shareable public portfolio represent each member, while the existing edit page and private activity remain account-specific.
-
-**How to apply:** Source portfolio imagery only from the member's publicly published posts and provide a path back to account editing.
+**How to apply:** The Dashboard profile image opens Your Studio. Keep Creator Directory as a list, with messaging available but no creator-detail navigation.

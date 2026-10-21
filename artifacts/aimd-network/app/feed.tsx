@@ -807,7 +807,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel="Open your profile"
-          onPress={() => router.push(me?.id ? `/creator/${me.id}` : '/profile')}
+          onPress={() => router.push('/profile')}
           style={s.profileBtn}
           testID="open-profile"
         >

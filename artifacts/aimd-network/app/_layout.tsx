@@ -28,7 +28,6 @@ import {
   useFonts,
 } from '@expo-google-fonts/dm-sans';
 import { Stack } from 'expo-router';
-import { CormorantGaramond_700Bold } from '@expo-google-fonts/cormorant-garamond';
 import * as SplashScreen from 'expo-splash-screen';
 import { setAuthTokenGetter, setBaseUrl } from '@workspace/api-client-react';
 import { StatusBar } from 'expo-status-bar';
@@ -424,10 +423,6 @@ function RootLayoutNav() {
           headerShadowVisible: false,
         }}
       />
-      <Stack.Screen
-        name="creator/[id]"
-        options={{ headerShown: false }}
-      />
     </Stack>
     </>
   );
@@ -473,7 +468,6 @@ function ThemedApp() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    CormorantGaramond_700Bold,
     DMSans_400Regular,
     DMSans_500Medium,
     DMSans_600SemiBold,

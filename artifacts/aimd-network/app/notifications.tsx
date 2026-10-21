@@ -60,8 +60,6 @@ export default function NotificationsScreen() {
     if (!notification.readAt) markRead.mutate({ id: notification.id });
     if (notification.conversationDestination?.conversationId) {
       router.push({ pathname: '/conversation/[id]', params: { id: notification.conversationDestination.conversationId } });
-    } else if (notification.type === 'follow' && notification.actor) {
-      router.push({ pathname: '/creator/[id]', params: { id: notification.actor.id } });
     } else if (notification.postDestination?.postId) {
       router.push({ pathname: '/feed', params: { postId: notification.postDestination.postId } });
     }

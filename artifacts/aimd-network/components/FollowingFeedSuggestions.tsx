@@ -1,7 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getBaseUrl,
@@ -29,7 +28,6 @@ type Suggestion = {
 
 export default function FollowingFeedSuggestions({ currentUserId }: { currentUserId?: number }) {
   const colors = useColors();
-  const router = useRouter();
   const client = useQueryClient();
   const lock = useRef(false);
   const [followError, setFollowError] = useState<string | null>(null);
@@ -146,12 +144,7 @@ export default function FollowingFeedSuggestions({ currentUserId }: { currentUse
               const busy = follow.isPending && follow.variables?.id === creator.id;
               return (
                 <View key={creator.id} style={[s.row, isFeatured && s.featuredRow]} testID={`suggested-creator-${creator.id}`}>
-                  <TouchableOpacity
-                    style={s.identity}
-                    onPress={() => router.push({ pathname: '/creator/[id]', params: { id: creator.id } })}
-                    accessibilityRole="button"
-                    accessibilityLabel={`View @${handle(creator.username)}'s profile`}
-                  >
+                  <View style={s.identity}>
                     <View style={s.avatar}>
                       {avatarUrl ? <Image source={{ uri: avatarUrl }} style={s.avatarImage} /> : (
                         <Text style={s.initials}>{creator.username.slice(0, 2).toUpperCase()}</Text>
@@ -163,7 +156,7 @@ export default function FollowingFeedSuggestions({ currentUserId }: { currentUse
                         {isFeatured ? 'Featured creator' : creator.discipline || 'Sharing studio work'}
                       </Text>
                     </View>
-                  </TouchableOpacity>
+                  </View>
                   <TouchableOpacity
                     style={[s.follow, follow.isPending && !busy && { opacity: 0.6 }]}
                     disabled={follow.isPending}

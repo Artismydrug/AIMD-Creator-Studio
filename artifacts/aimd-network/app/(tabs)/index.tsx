@@ -771,7 +771,7 @@ export default function ProgressScreen() {
               style={s.profileButton}
               accessibilityRole="button"
               accessibilityLabel={profileUsername ? `Open your profile, @${profileUsername}` : 'Open your profile'}
-              onPress={() => profileUserId ? router.push(`/creator/${profileUserId}`) : router.push('/profile')}
+              onPress={() => router.push('/profile')}
               testID="dashboard-profile-button"
             >
               {profileAvatar ? (

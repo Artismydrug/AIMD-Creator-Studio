@@ -535,12 +535,7 @@ function PostCard({
               isOwnPost && (isTextOnly ? { paddingRight: 16 } : { right: 16 }),
             ]}>
               <View style={s.immersiveAuthorRow}>
-              <TouchableOpacity
-                accessibilityRole="button"
-                accessibilityLabel={`Open ${post.username ?? 'creator'} profile`}
-                onPress={() => router.push(`/creator/${post.userId}`)}
-                style={[s.immersiveAuthorButton, { flex: 1, marginBottom: 0 }]}
-              >
+              <View style={[s.immersiveAuthorButton, { flex: 1, marginBottom: 0 }]}>
                 <View style={[s.immersiveAvatarFrame, isTextOnly && { borderColor: colors.border }]}>
                   <Avatar username={post.username} avatarUrl={post.userAvatarUrl} size={42} />
                 </View>
@@ -552,7 +547,7 @@ function PostCard({
                     {formatTime(post.createdAt)} · {followerCount} followers
                   </Text>
                 </View>
-              </TouchableOpacity>
+              </View>
               {isOwnPost && (
                 <View style={[s.ownerActionsSurface, isTextOnly && { backgroundColor: colors.muted }]}>
                   <PostOwnerActions
@@ -634,19 +629,14 @@ function PostCard({
       ) : (
         <View style={[s.card, { borderTopColor: frameColor, borderTopWidth: 4 }]}>
           <View style={s.cardHeader}>
-            <TouchableOpacity
-              accessibilityRole="button"
-              accessibilityLabel={`Open ${post.username ?? 'creator'} profile`}
-              onPress={() => router.push(`/creator/${post.userId}`)}
-              style={s.authorButton}
-            >
+            <View style={s.authorButton}>
               <Avatar username={post.username} avatarUrl={post.userAvatarUrl} />
               <View style={s.userInfo}>
                 <Text style={s.username}>{post.username ?? `User #${post.userId}`}</Text>
                 <Text style={s.time}>{formatTime(post.createdAt)}</Text>
                 <Text style={s.socialMeta}>{followerCount} followers · {post.followingCount} following</Text>
               </View>
-            </TouchableOpacity>
+            </View>
             {isOwnPost && (
               <PostOwnerActions post={post} currentUserId={currentUserId} onVisibilityChange={setOwnerDialogOpen} />
             )}

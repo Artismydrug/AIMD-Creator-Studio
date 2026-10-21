@@ -210,7 +210,6 @@ export default function DirectoryScreen({ embedded = false }: { embedded?: boole
           renderItem={({ item }) => (
               <CreatorCard
                 creator={item}
-                onPress={() => router.push(`/creator/${item.id}`)}
                 onMessage={() => handleMessage(item.id, item.username)}
                 messagingLoading={messagingId === item.id}
               />

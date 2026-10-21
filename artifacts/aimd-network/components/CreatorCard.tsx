@@ -6,12 +6,11 @@ import type { DirectoryCreator } from '@workspace/api-client-react';
 
 interface CreatorCardProps {
   creator: DirectoryCreator;
-  onPress?: () => void;
   onMessage?: () => void;
   messagingLoading?: boolean;
 }
 
-export default function CreatorCard({ creator, onPress, onMessage, messagingLoading }: CreatorCardProps) {
+export default function CreatorCard({ creator, onMessage, messagingLoading }: CreatorCardProps) {
   const colors = useColors();
   const initials = creator.username.slice(0, 2).toUpperCase();
   const details = [creator.discipline, creator.location].filter(Boolean).join(' · ');
@@ -43,8 +42,7 @@ export default function CreatorCard({ creator, onPress, onMessage, messagingLoad
   }), [colors]);
 
   return (
-    <TouchableOpacity style={s.card} onPress={onPress} activeOpacity={0.75} testID={`creator-${creator.id}`}
-      accessibilityRole="button" accessibilityLabel={`Open ${creator.username}'s profile`}>
+    <View style={s.card} testID={`creator-${creator.id}`}>
       <View style={s.avatar}>
         <Text style={s.avatarText}>{initials}</Text>
       </View>
@@ -72,9 +70,7 @@ export default function CreatorCard({ creator, onPress, onMessage, messagingLoad
         >
           <Feather name="message-circle" size={18} color={colors.ink} />
         </TouchableOpacity>
-      ) : (
-        <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
-      )}
-    </TouchableOpacity>
+      ) : null}
+    </View>
   );
 }
