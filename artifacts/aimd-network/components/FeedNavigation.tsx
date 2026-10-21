@@ -99,10 +99,10 @@ export default function FeedNavigation({
       >
         {!expanded && <LinearGradient pointerEvents="none" colors={['rgba(0,0,0,0.78)', 'rgba(0,0,0,0)']} style={StyleSheet.absoluteFill} />}
         {expanded && (
-          <View style={styles.expandedHeader} testID="feed-expanded-navigation">
+          <View style={[styles.expandedHeader, { backgroundColor: colors.studioPaper, borderColor: colors.studioInk, shadowColor: colors.studioShadow }]} testID="feed-expanded-navigation">
             <View style={styles.headingRow}>
-              <View style={[styles.titleMark, { backgroundColor: colors.primary }]}>
-                <Feather name="users" size={19} color={colors.primaryForeground} />
+              <View style={[styles.titleMark, { backgroundColor: colors.studioOrange, borderColor: colors.ink }]}>
+                <Feather name="users" size={19} color={colors.ink} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.title, { color: colors.foreground }]}>Feed</Text>
@@ -114,15 +114,15 @@ export default function FeedNavigation({
                 <Feather name="chevron-up" size={23} color={colors.foreground} />
               </Pressable>
             </View>
-            <View style={[styles.sectionTabs, { backgroundColor: colors.muted }]} accessibilityRole="tablist">
+            <View style={[styles.sectionTabs, { backgroundColor: colors.studioPaperAlt, borderColor: colors.studioInk }]} accessibilityRole="tablist">
               {(['feed', 'creators', 'events'] as const).map(section => (
                 <Pressable key={section} accessibilityRole="tab" accessibilityState={{ selected: section === 'feed' }}
                   testID={`community-${section}-tab`}
                   onPress={() => section === 'feed' ? onScopeChange('community') : openCommunitySection(section)}
-                  style={[styles.sectionTab, section === 'feed' && { backgroundColor: colors.card, borderColor: colors.cyan }]}>
+                  style={[styles.sectionTab, section === 'feed' && { backgroundColor: colors.studioYellow, borderColor: colors.ink }]}>
                   <Feather name={section === 'feed' ? 'image' : section === 'creators' ? 'users' : 'calendar'}
-                    size={15} color={section === 'feed' ? colors.primary : colors.mutedForeground} />
-                  <Text numberOfLines={1} style={[styles.sectionText, { color: section === 'feed' ? colors.primary : colors.mutedForeground }]}>
+                    size={15} color={section === 'feed' ? colors.ink : colors.mutedForeground} />
+                  <Text numberOfLines={1} style={[styles.sectionText, { color: section === 'feed' ? colors.ink : colors.mutedForeground }]}>
                     {section === 'feed' ? 'Feed' : section === 'creators' ? 'Creators' : 'Events'}
                   </Text>
                 </Pressable>
@@ -148,9 +148,9 @@ export default function FeedNavigation({
             ))}
           </View>
           <Pressable accessibilityRole="button" accessibilityLabel="Create a new studio post"
-            onPress={onCompose} style={[styles.iconButton, { backgroundColor: colors.primary }]}
+            onPress={onCompose} style={[styles.iconButton, expanded && styles.expandedCompose, { backgroundColor: expanded ? colors.studioOrange : colors.primary, borderColor: colors.ink }]}
             testID="create-studio-post">
-            <Feather name="plus" size={24} color={colors.primaryForeground} />
+            <Feather name="plus" size={24} color={expanded ? colors.ink : colors.primaryForeground} />
           </Pressable>
         </View>
       </View>
@@ -191,17 +191,18 @@ export default function FeedNavigation({
 }
 
 const styles = StyleSheet.create({
-  overlay: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, paddingHorizontal: 16, paddingBottom: 16 },
-  expandedHeader: { gap: 12, paddingHorizontal: 0, paddingBottom: 8 },
+  overlay: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, paddingHorizontal: 16, paddingBottom: 12 },
+  expandedHeader: { gap: 12, padding: 12, marginBottom: 8, borderWidth: 1.5, borderRadius: 20, shadowOffset: { width: 3, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 },
   headingRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  titleMark: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  titleMark: { width: 44, height: 44, borderRadius: 15, borderWidth: 2, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-5deg' }], shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
   title: { fontFamily: 'DMSans_700Bold', fontSize: 26, letterSpacing: -0.6 },
   subtitle: { fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', marginTop: 2 },
-  sectionTabs: { flexDirection: 'row', padding: 4, gap: 3, borderRadius: 14 },
-  sectionTab: { flex: 1, minHeight: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: 'transparent', borderRadius: 10 },
+  sectionTabs: { flexDirection: 'row', padding: 4, gap: 3, borderWidth: 1.5, borderRadius: 15 },
+  sectionTab: { flex: 1, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: 'transparent', borderRadius: 11 },
   sectionText: { fontFamily: 'DMSans_600SemiBold', fontSize: 13 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   iconButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.4)' },
+  expandedCompose: { borderWidth: 1.5, borderRadius: 15, shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
   filters: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: 1, minWidth: 0 },
   filter: { minHeight: 44, flexShrink: 1, minWidth: 0, paddingHorizontal: 12, justifyContent: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
   selectedFilter: { borderBottomColor: '#FFFFFF' },

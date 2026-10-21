@@ -75,7 +75,7 @@ export default function OnboardingScreen() {
       <ScrollView
         contentContainerStyle={[
           s.container,
-          { backgroundColor: colors.background },
+          { backgroundColor: colors.studioBackground },
           { paddingTop: insets.top + 48, paddingBottom: insets.bottom + 24 },
         ]}
         keyboardShouldPersistTaps="handled"
@@ -141,7 +141,7 @@ export default function OnboardingScreen() {
 const s = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#FFF5E8',
     paddingHorizontal: 28,
     gap: 10,
   },
@@ -149,7 +149,7 @@ const s = StyleSheet.create({
     fontFamily: 'DMSans_700Bold',
     fontSize: 26,
     color: '#e8e3d5',
-    letterSpacing: 4,
+    letterSpacing: -1,
     textAlign: 'center',
     marginBottom: 2,
   },
@@ -196,9 +196,9 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#1a1a1a',
-    borderWidth: 1,
-    borderColor: '#2a2a2a',
-    borderRadius: 10,
+    borderColor: '#21162C',
+    borderRadius: 14,
+    borderWidth: 1.5,
     paddingHorizontal: 16,
   },
   prefix: {
@@ -228,10 +228,16 @@ const s = StyleSheet.create({
   },
   btn: {
     backgroundColor: '#b8532d',
-    borderRadius: 10,
+    borderRadius: 16,
+    minHeight: 52,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 24,
+    shadowColor: '#21162C',
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 3,
   },
   btnDisabled: { opacity: 0.5 },
   btnPressed: { opacity: 0.8 },

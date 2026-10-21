@@ -27,6 +27,10 @@ const warmCanvas = {
   goldWash: '#FFF0CF',
   ink: '#21162C',
   inkForeground: '#FFFBF3',
+  // Artwork is content, not themed UI: transparent black PNGs need a light
+  // backing in both appearances so their original marks stay visible.
+  mediaPaper: '#FFFBF3',
+  mediaPaperForeground: '#21162C',
   studioBackground: '#FFF5E8',
   studioPaper: '#FFFBF3',
   studioPaperAlt: '#F5EADB',

@@ -58,20 +58,26 @@ function MessageBubble({ msg, currentUserId }: { msg: ConversationMessage; curre
       maxWidth: '75%',
       paddingHorizontal: 14,
       paddingVertical: 10,
-      backgroundColor: isMe ? colors.primary : colors.card,
-      borderWidth: isMe ? 0 : 1,
-      borderColor: colors.border,
+      backgroundColor: isMe ? colors.studioYellow : colors.studioPaper,
+      borderWidth: 1.5,
+      borderColor: isMe ? colors.ink : colors.foreground,
+      borderRadius: 17,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 1,
     },
     text: {
       fontFamily: 'DMSans_400Regular',
       fontSize: 15,
-      color: isMe ? colors.primaryForeground : colors.foreground,
+      color: isMe ? colors.ink : colors.foreground,
       lineHeight: 22,
     },
     time: {
       fontFamily: 'DMSans_400Regular',
       fontSize: 10,
-      color: isMe ? colors.primaryForeground : colors.mutedForeground,
+      color: isMe ? colors.ink : colors.mutedForeground,
       marginTop: 4,
       opacity: 0.7,
     },
@@ -200,9 +206,9 @@ export default function ConversationScreen() {
       paddingHorizontal: 12,
       paddingVertical: 8,
       paddingBottom: Platform.OS === 'web' ? 34 : insets.bottom + 8,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-      backgroundColor: colors.background,
+      borderTopWidth: 1.5,
+      borderTopColor: colors.foreground,
+      backgroundColor: colors.studioPaper,
       gap: 10,
     },
     safetyBar: {
@@ -226,16 +232,27 @@ export default function ConversationScreen() {
       fontSize: 15,
       color: colors.foreground,
       backgroundColor: colors.input,
+      borderWidth: 1.5,
+      borderColor: colors.foreground,
+      borderRadius: 15,
       paddingHorizontal: 14,
       paddingVertical: Platform.OS === 'ios' ? 10 : 8,
       maxHeight: 100,
     },
     sendBtn: {
-      width: 40,
-      height: 40,
-      backgroundColor: colors.primary,
+      width: 44,
+      height: 44,
+      backgroundColor: colors.studioOrange,
+      borderWidth: 1.5,
+      borderColor: colors.foreground,
+      borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
     },
   }), [colors, insets]);
 
@@ -323,9 +340,9 @@ export default function ConversationScreen() {
           testID="send-message"
         >
           {sendMutation.isPending ? (
-            <ActivityIndicator size="small" color={colors.primaryForeground} />
+            <ActivityIndicator size="small" color={colors.ink} />
           ) : (
-            <Feather name="send" size={16} color={colors.primaryForeground} />
+            <Feather name="send" size={16} color={colors.ink} />
           )}
         </TouchableOpacity>
       </View>

@@ -270,15 +270,20 @@ export default function MiniHabitStudioScreen() {
     promptCard: {
       padding: 16,
       gap: 7,
-      borderRadius: colors.radius + 2,
-      backgroundColor: colors.card,
-      borderWidth: 1,
-      borderColor: colors.border,
+      borderRadius: 19,
+      backgroundColor: colors.studioYellow,
+      borderWidth: 1.5,
+      borderColor: colors.ink,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 3, height: 3 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
     },
-    promptLabel: { color: colors.primary, fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 1.2 },
-    prompt: { color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 16, lineHeight: 23 },
+    promptLabel: { color: colors.ink, fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 1.2 },
+    prompt: { color: colors.ink, fontFamily: 'DMSans_600SemiBold', fontSize: 16, lineHeight: 23 },
     promptAction: { alignSelf: 'flex-start', minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 6 },
-    promptActionText: { color: colors.primary, fontFamily: 'DMSans_600SemiBold', fontSize: 12 },
+    promptActionText: { color: colors.ink, fontFamily: 'DMSans_600SemiBold', fontSize: 12 },
     timerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
     timerLabel: { color: colors.mutedForeground, fontFamily: 'DMSans_500Medium', fontSize: 12 },
     timer: { color: colors.foreground, fontFamily: 'DMSans_700Bold', fontSize: 22, fontVariant: ['tabular-nums'] },
@@ -287,10 +292,15 @@ export default function MiniHabitStudioScreen() {
       height: canvasSize,
       alignSelf: 'center',
       overflow: 'hidden',
-      borderRadius: colors.radius + 2,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.card,
+      borderRadius: 23,
+      borderWidth: 2,
+      borderColor: colors.studioInk,
+      backgroundColor: colors.studioPaper,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 4, height: 5 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 3,
     },
     canvasHint: {
       position: 'absolute',
@@ -312,11 +322,12 @@ export default function MiniHabitStudioScreen() {
     },
     toolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
     toolButton: {
-      minHeight: 42,
+      minHeight: 44,
       paddingHorizontal: 12,
-      borderRadius: colors.radius,
-      borderColor: colors.border,
-      borderWidth: 1,
+      borderRadius: 14,
+      borderColor: colors.studioInk,
+      borderWidth: 1.5,
+      backgroundColor: colors.studioPaper,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
@@ -326,21 +337,28 @@ export default function MiniHabitStudioScreen() {
     primaryButton: {
       minHeight: 48,
       paddingHorizontal: 18,
-      borderRadius: colors.radius,
-      backgroundColor: colors.primary,
+      borderRadius: 16,
+      backgroundColor: colors.studioOrange,
+      borderWidth: 1.5,
+      borderColor: colors.ink,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 8,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 3, height: 3 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
     },
-    primaryButtonText: { color: colors.primaryForeground, fontFamily: 'DMSans_700Bold', fontSize: 14 },
+    primaryButtonText: { color: colors.ink, fontFamily: 'DMSans_700Bold', fontSize: 14 },
     secondaryButton: {
       minHeight: 48,
       paddingHorizontal: 16,
-      borderRadius: colors.radius,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.card,
+      borderRadius: 16,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      backgroundColor: colors.studioPaper,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
@@ -552,7 +570,7 @@ export default function MiniHabitStudioScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Choose another sketch prompt"
               >
-                <Feather name="shuffle" size={14} color={colors.primary} />
+                <Feather name="shuffle" size={14} color={colors.ink} />
                 <Text style={styles.promptActionText}>Try another prompt</Text>
               </TouchableOpacity>
             )}
@@ -626,7 +644,7 @@ export default function MiniHabitStudioScreen() {
                   accessibilityLabel="Finish this sketch early"
                   testID="mini-habit-sketch-done"
                 >
-                  <Feather name="check" size={15} color={colors.primaryForeground} />
+                  <Feather name="check" size={15} color={colors.ink} />
                   <Text style={styles.primaryButtonText}>Done</Text>
                 </TouchableOpacity>
               </View>
@@ -639,7 +657,7 @@ export default function MiniHabitStudioScreen() {
               accessibilityLabel="Start the 60-second Flash Sketch"
               testID="mini-habit-sketch-start"
             >
-              <Feather name="play" size={17} color={colors.primaryForeground} />
+              <Feather name="play" size={17} color={colors.ink} />
               <Text style={styles.primaryButtonText}>Start 60-second sketch</Text>
             </TouchableOpacity>
           ) : savedCurrentSketch ? (
@@ -680,7 +698,7 @@ export default function MiniHabitStudioScreen() {
                 accessibilityLabel="Save this sketch to this device"
                 testID="mini-habit-sketch-save"
               >
-                {saving ? <ActivityIndicator size="small" color={colors.primaryForeground} /> : <Feather name="bookmark" size={15} color={colors.primaryForeground} />}
+                {saving ? <ActivityIndicator size="small" color={colors.ink} /> : <Feather name="bookmark" size={15} color={colors.ink} />}
                 <Text style={styles.primaryButtonText}>{saving ? 'Saving…' : 'Save sketch'}</Text>
               </TouchableOpacity>
             </View>

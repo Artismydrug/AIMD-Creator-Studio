@@ -5,6 +5,30 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const ts = require('typescript');
 
+test('transparent PNG artwork keeps a light backing and readable status in both appearances', () => {
+  const paletteModule = { exports: {} };
+  const paletteJs = ts.transpileModule(
+    readFileSync(resolve(__dirname, '../constants/colors.ts'), 'utf8'),
+    { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } },
+  ).outputText;
+  vm.runInNewContext(paletteJs, { exports: paletteModule.exports });
+  const palettes = paletteModule.exports.default;
+  const luminance = hex => {
+    const channels = hex.slice(1).match(/../g).map(part => parseInt(part, 16) / 255)
+      .map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+    return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+  };
+  assert.equal(palettes.light.mediaPaper, palettes.dark.mediaPaper, 'appearance must not invert artwork backing');
+  for (const palette of [palettes.light, palettes.dark]) {
+    const paper = luminance(palette.mediaPaper);
+    assert.ok(paper > 0.8, 'black transparent artwork needs a light surface');
+    assert.ok((paper + 0.05) / (luminance(palette.mediaPaperForeground) + 0.05) > 7);
+  }
+  const image = readFileSync(resolve(__dirname, '../components/StudioImage.tsx'), 'utf8');
+  assert.match(image, /backgroundColor: colors\.mediaPaper\b/);
+  assert.match(image, /ActivityIndicator color=\{colors\.mediaPaperForeground\}/);
+});
+
 const compiled = ts.transpileModule(readFileSync(resolve(__dirname, '../lib/studioMedia.ts'), 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
 }).outputText;

@@ -238,9 +238,10 @@ export default function ProgressScreen() {
       minWidth: 0,
     },
     titleMark: {
-      width: 38,
-      height: 38,
-      borderRadius: 12,
+      width: 44,
+      height: 44,
+      borderRadius: 15,
+      transform: [{ rotate: '-5deg' }],
       backgroundColor: colors.studioLavender,
       borderWidth: 2,
       borderColor: colors.studioInk,

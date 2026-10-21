@@ -57,7 +57,8 @@ export default function FrostedTabBar({
           paddingBottom: bottom,
           borderTopColor: colors.border,
           backgroundColor:
-            Platform.OS === 'ios' ? 'transparent' : colors.card,
+            Platform.OS === 'ios' ? 'transparent' : colors.studioPaper,
+          borderTopWidth: 1.5,
         },
       ]}
     >
@@ -132,8 +133,8 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   row: {
-    minHeight: 76,
-    paddingTop: 9,
+    minHeight: 82,
+    paddingTop: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
   },
@@ -146,10 +147,10 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   activeLabel: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderWidth: 1,
-    borderRadius: 9,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1.5,
+    borderRadius: 10,
     maxWidth: '100%',
   },
   activeLabelText: {
@@ -158,8 +159,8 @@ const styles = StyleSheet.create({
     lineHeight: 12,
   },
   indicator: {
-    width: 22,
-    height: 4,
+    width: 25,
+    height: 5,
     borderRadius: 2,
     marginBottom: 1,
     backgroundColor: 'transparent',

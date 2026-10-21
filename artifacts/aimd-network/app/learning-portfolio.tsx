@@ -29,12 +29,14 @@ export default function LearningPortfolioScreen() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.background }}
-      contentContainerStyle={{ paddingTop: 20, paddingHorizontal: 20, paddingBottom: insets.bottom + 36, gap: 16 }}
+      contentContainerStyle={{ paddingTop: 24, paddingHorizontal: 20, paddingBottom: insets.bottom + 36, gap: 16 }}
       refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} tintColor={colors.primary} />}
       testID="learning-portfolio"
     >
-      <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 11, letterSpacing: 1.4, color: colors.sunsetCoral }}>PRIVATE LEARNING PORTFOLIO</Text>
-      <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 30, lineHeight: 35, color: colors.foreground }}>Your learning, in progress.</Text>
+      <View style={{ alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.studioYellow, borderWidth: 1.5, borderColor: colors.ink, borderRadius: 9, transform: [{ rotate: '-2deg' }] }}>
+        <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 1.4, color: colors.ink }}>PRIVATE LEARNING PORTFOLIO</Text>
+      </View>
+      <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 32, lineHeight: 36, color: colors.foreground, letterSpacing: -1 }}>Your learning, in progress.</Text>
       <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21, color: colors.mutedForeground }}>
         Workshop reflections and practice work, linked to each lesson. This is not your public profile. Workshop instructors can review your submissions.
       </Text>
@@ -51,7 +53,7 @@ export default function LearningPortfolioScreen() {
           <TouchableOpacity accessibilityRole="button" onPress={() => router.replace('/(tabs)/workshops')}><Text style={{ color: colors.primary, fontFamily: 'DMSans_700Bold' }}>Explore workshops</Text></TouchableOpacity>
         </View>
       ) : entries.map((entry) => (
-        <View key={entry.id} testID={`portfolio-entry-${entry.id}`} style={{ gap: 10, padding: 18, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card }}>
+        <View key={entry.id} testID={`portfolio-entry-${entry.id}`} style={{ gap: 10, padding: 18, borderRadius: 21, borderWidth: 1.5, borderColor: colors.foreground, backgroundColor: colors.studioPaper, shadowColor: colors.studioShadow, shadowOffset: { width: 3, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 }}>
           <Text style={{ fontSize: 11, color: colors.sunsetCoral, fontFamily: 'DMSans_700Bold' }}>{entry.submissionKind === 'lesson_reflection' ? 'LESSON REFLECTION' : 'PRACTICE WORK'}</Text>
           <Text style={{ color: colors.foreground, fontSize: 18, fontFamily: 'DMSans_700Bold' }}>{entry.moduleTitle ?? 'Workshop lesson'}</Text>
           <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>{entry.workshopTitle} · {new Date(entry.submittedAt).toLocaleDateString()}</Text>

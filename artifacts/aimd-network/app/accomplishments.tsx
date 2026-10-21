@@ -25,7 +25,7 @@ export default function AccomplishmentsScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: Platform.OS === 'web' ? 67 : insets.top + 10, borderColor: colors.border }]}>
+      <View style={[styles.header, { paddingTop: Platform.OS === 'web' ? 67 : insets.top + 10, borderColor: colors.foreground, backgroundColor: colors.studioPaper }]}>
         <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={() => router.canGoBack() ? router.back() : router.replace('/profile')} hitSlop={12}>
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </Pressable>
@@ -50,23 +50,23 @@ export default function AccomplishmentsScreen() {
         ListHeaderComponent={
           <View style={styles.intro}>
             <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>Your earned milestones, from the first to the latest.</Text>
-            <View style={[styles.summary, { backgroundColor: colors.goldWash, borderColor: colors.border }]}>
+              <View style={[styles.summary, { backgroundColor: colors.studioYellow, borderColor: colors.ink, shadowColor: colors.ink }]}>
               <View style={styles.stat}>
-                <Feather name="award" size={20} color={colors.gold} />
-                <Text style={[styles.statValue, { color: colors.foreground }]}>{isLoading || isError ? '—' : history.length}</Text>
-                <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>Earned badges</Text>
+                <Feather name="award" size={20} color={colors.ink} />
+                <Text style={[styles.statValue, { color: colors.ink }]}>{isLoading || isError ? '—' : history.length}</Text>
+                <Text style={[styles.statLabel, { color: colors.ink, opacity: 0.72 }]}>Earned badges</Text>
               </View>
               <View style={styles.stat}>
-                <Feather name="zap" size={20} color={colors.primary} />
-                <Text style={[styles.statValue, { color: colors.foreground }]}>{progress?.longestStreak ?? '—'}</Text>
-                <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>Best streak (days)</Text>
+                <Feather name="zap" size={20} color={colors.ink} />
+                <Text style={[styles.statValue, { color: colors.ink }]}>{progress?.longestStreak ?? '—'}</Text>
+                <Text style={[styles.statLabel, { color: colors.ink, opacity: 0.72 }]}>Best streak (days)</Text>
               </View>
             </View>
           </View>
         }
         renderItem={({ item }) => (
-          <View style={[styles.badge, { backgroundColor: colors.card, borderColor: colors.border }]} testID={`earned-badge-${item.id}`}>
-            <View style={[styles.badgeIcon, { backgroundColor: colors.magentaWash }]}>
+          <View style={[styles.badge, { backgroundColor: colors.studioPaper, borderColor: colors.foreground }]} testID={`earned-badge-${item.id}`}>
+            <View style={[styles.badgeIcon, { backgroundColor: colors.studioLavender, borderColor: colors.foreground }]}>
               {item.imageUrl
                 ? <Image source={{ uri: resolveImage(item.imageUrl) }} style={styles.image} resizeMode="contain" />
                 : <Feather name="award" size={26} color={colors.primary} />}
@@ -108,17 +108,17 @@ export default function AccomplishmentsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingBottom: 16, borderBottomWidth: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingBottom: 16, borderBottomWidth: 2 },
   title: { fontFamily: 'DMSans_700Bold', fontSize: 22 },
   content: { padding: 16, gap: 12 },
   intro: { gap: 16, marginBottom: 8 },
   subtitle: { fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 20 },
-  summary: { borderWidth: 1, borderRadius: 14, flexDirection: 'row', paddingVertical: 20 },
+  summary: { borderWidth: 1.5, borderRadius: 19, flexDirection: 'row', paddingVertical: 20, shadowOffset: { width: 3, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
   stat: { flex: 1, alignItems: 'center', gap: 5 },
   statValue: { fontFamily: 'DMSans_700Bold', fontSize: 24 },
   statLabel: { fontFamily: 'DMSans_500Medium', fontSize: 12 },
-  badge: { flexDirection: 'row', gap: 12, padding: 16, borderWidth: 1, borderRadius: 12 },
-  badgeIcon: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  badge: { flexDirection: 'row', gap: 12, padding: 16, borderWidth: 1.5, borderRadius: 18, shadowOffset: { width: 2, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
+  badgeIcon: { width: 48, height: 48, borderWidth: 1.5, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   image: { width: 36, height: 36 },
   badgeCopy: { flex: 1, gap: 5 },
   badgeName: { fontFamily: 'DMSans_600SemiBold', fontSize: 16 },

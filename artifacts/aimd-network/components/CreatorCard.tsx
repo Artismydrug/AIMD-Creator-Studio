@@ -31,10 +31,15 @@ export default function CreatorCard({ creator, onPress, onMessage, messagingLoad
       marginTop: 8,
       paddingVertical: 13,
       paddingHorizontal: 14,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: colors.foreground,
       borderRadius: colors.radius + 2,
       backgroundColor: colors.card,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 3 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
     },
     avatar: {
       width: 46,
@@ -45,6 +50,7 @@ export default function CreatorCard({ creator, onPress, onMessage, messagingLoad
       justifyContent: 'center',
       borderWidth: 1.5,
       borderColor: colors.foreground,
+      transform: [{ rotate: '-4deg' }],
     },
     avatarText: {
       fontFamily: 'DMSans_700Bold',
@@ -65,8 +71,11 @@ export default function CreatorCard({ creator, onPress, onMessage, messagingLoad
     },
     tierBadge: {
       paddingHorizontal: 6,
-      paddingVertical: 1,
-      backgroundColor: colors.muted,
+      paddingVertical: 3,
+      borderWidth: 1,
+      borderColor: colors.ink,
+      borderRadius: 7,
+      backgroundColor: colors.studioYellow,
     },
     tierText: {
       fontFamily: 'DMSans_500Medium',
@@ -106,9 +115,9 @@ export default function CreatorCard({ creator, onPress, onMessage, messagingLoad
       gap: 8,
     },
     msgBtn: {
-      width: 34,
-      height: 34,
-      borderRadius: 13,
+      width: 44,
+      height: 44,
+      borderRadius: 15,
       backgroundColor: colors.studioMint,
       borderWidth: 1,
       borderColor: colors.foreground,
@@ -126,7 +135,7 @@ export default function CreatorCard({ creator, onPress, onMessage, messagingLoad
         <View style={s.nameRow}>
           <Text style={s.username}>{creator.username}</Text>
           <View style={s.tierBadge}>
-            <Text style={[s.tierText, { color: tierColor }]}>{creator.tier}</Text>
+            <Text style={[s.tierText, { color: colors.ink }]}>{creator.tier}</Text>
           </View>
           {creator.bookingOpen && <View style={s.openBadge} />}
         </View>

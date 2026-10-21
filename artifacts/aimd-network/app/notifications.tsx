@@ -68,13 +68,13 @@ export default function NotificationsScreen() {
   };
   const s = useMemo(() => StyleSheet.create({
     screen: { backgroundColor: colors.background, flex: 1 },
-    header: { alignItems: 'center', borderBottomColor: colors.border, borderBottomWidth: 1, flexDirection: 'row', paddingBottom: 12, paddingHorizontal: 16, paddingTop: Platform.OS === 'web' ? 20 : insets.top + 8 },
-    title: { color: colors.foreground, flex: 1, fontFamily: 'DMSans_700Bold', fontSize: 22 },
+    header: { alignItems: 'center', borderBottomColor: colors.foreground, borderBottomWidth: 2, flexDirection: 'row', paddingBottom: 12, paddingHorizontal: 16, paddingTop: Platform.OS === 'web' ? 67 : insets.top + 8, backgroundColor: colors.studioPaper },
+    title: { color: colors.foreground, flex: 1, fontFamily: 'DMSans_700Bold', fontSize: 25, letterSpacing: -0.7 },
     back: { padding: 6 },
     markAll: { color: colors.primary, fontFamily: 'DMSans_600SemiBold', fontSize: 13, padding: 6 },
-    row: { alignItems: 'center', borderBottomColor: colors.border, borderBottomWidth: 1, flexDirection: 'row', gap: 12, padding: 16 },
-    unread: { backgroundColor: colors.primary + '12' },
-    avatar: { alignItems: 'center', backgroundColor: colors.muted, borderRadius: 22, height: 44, justifyContent: 'center', overflow: 'hidden', width: 44 },
+    row: { alignItems: 'center', borderColor: colors.foreground, borderWidth: 1.5, borderRadius: 17, flexDirection: 'row', gap: 12, padding: 13, marginHorizontal: 14, marginTop: 9, backgroundColor: colors.card, shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
+    unread: { backgroundColor: colors.coralWash },
+    avatar: { alignItems: 'center', backgroundColor: colors.studioLavender, borderWidth: 1.5, borderColor: colors.foreground, borderRadius: 16, height: 44, justifyContent: 'center', overflow: 'hidden', width: 44 },
     avatarImage: { height: 44, width: 44 },
     initials: { color: colors.primary, fontFamily: 'DMSans_700Bold', fontSize: 15 },
     copy: { flex: 1 },

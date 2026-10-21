@@ -97,7 +97,16 @@ test('Habits header aligns with the primary tabs without changing its type size'
   const habits = source('../app/(tabs)/habits.tsx');
   const challengeHabits = source('../app/(tabs)/challenge-habits.tsx');
   assert.match(habits, /listContent:\s*\{\s*paddingTop:\s*embedded\s*\?\s*0\s*:\s*12/);
-  assert.match(challengeHabits, /titleMark:\s*\{\s*width:\s*38,\s*height:\s*38/);
+  for (const screen of [
+    '../app/(tabs)/index.tsx',
+    '../app/(tabs)/community.tsx',
+    '../app/(tabs)/workshops.tsx',
+    '../app/(tabs)/challenge-habits.tsx',
+    '../components/FeedNavigation.tsx',
+  ]) {
+    assert.match(source(screen), /titleMark:\s*\{\s*width:\s*44,\s*height:\s*44/,
+      `${screen} must share the Sticker Jam header badge size`);
+  }
   assert.match(challengeHabits, /title:\s*\{\s*fontFamily:\s*'DMSans_700Bold',\s*fontSize:\s*26/);
 });
 
@@ -119,7 +128,7 @@ test('route headers hide default development labels and portfolio has exactly on
   assert.match(root, /screenOptions=\{\{\s*headerShown: false/);
   assert.match(root, /name="learning-portfolio"[\s\S]*?title: 'Learning Portfolio'/);
   assert.doesNotMatch(source('../app/learning-portfolio.tsx'), /arrow-left|<Stack\.Screen/);
-  assert.match(source('../app/learning-portfolio.tsx'), /paddingTop: 20/);
+  assert.match(source('../app/learning-portfolio.tsx'), /paddingTop: 24/);
 });
 
 test('screen recovery resets only the screen, without reloading or exposing private errors', async () => {
@@ -238,8 +247,8 @@ test('authentication entry screens follow the app theme instead of a fixed dark 
   for (const screen of ['sign-in', 'sign-up']) {
     const auth = source(`../app/(auth)/${screen}.tsx`);
     assert.match(auth, /const colors = useColors\(\)/);
-    assert.match(auth, /backgroundColor: colors\.background/);
-    assert.match(auth, /backgroundColor: colors\.card/);
+    assert.match(auth, /backgroundColor: colors\.studioBackground/);
+    assert.match(auth, /backgroundColor: colors\.studioPaper/);
     assert.match(auth, /placeholderTextColor=\{colors\.mutedForeground\}/);
     assert.doesNotMatch(auth, /#[0-9a-fA-F]{3,8}\b/);
   }

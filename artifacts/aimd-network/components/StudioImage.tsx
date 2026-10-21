@@ -14,7 +14,7 @@ export default function StudioImage({ uri, load = true, style, onLoadDimensions 
   const [attempt, setAttempt] = useState(0);
   const failed = failedUri === uri;
   return (
-    <View style={[{ backgroundColor: colors.ink }, style]}>
+    <View style={[{ backgroundColor: colors.mediaPaper }, style]}>
       {load && <Image key={`${uri}:${attempt}`}
         source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover"
         cachePolicy="memory-disk" recyclingKey={uri} accessibilityLabel="Creator's studio photo"
@@ -27,11 +27,11 @@ export default function StudioImage({ uri, load = true, style, onLoadDimensions 
       />}
       {load && !failed && loadedUri !== uri && (
         <View style={styles.center} pointerEvents="none">
-          <ActivityIndicator color={colors.cyan} accessibilityLabel="Loading photo" />
+          <ActivityIndicator color={colors.mediaPaperForeground} accessibilityLabel="Loading photo" />
         </View>
       )}
       {load && failed && <View style={styles.center}>
-        <Text style={[styles.label, { color: colors.inkForeground }]}>Photo couldn’t load.</Text>
+        <Text style={[styles.label, { color: colors.mediaPaperForeground }]}>Photo couldn’t load.</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Retry loading photo"
           onPress={() => { setFailedUri(null); setLoadedUri(null); setAttempt(value => value + 1); }}
           style={[styles.retry, { backgroundColor: colors.primary }]}>

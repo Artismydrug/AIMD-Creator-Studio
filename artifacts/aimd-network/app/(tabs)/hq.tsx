@@ -22,7 +22,7 @@ const money = (cents: number | null) =>
 function Metric({ label, value, detail, accent }: { label: string; value: string | number; detail: string; accent: string }) {
   const colors = useColors();
   return (
-    <View style={[styles.metric, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View style={[styles.metric, { backgroundColor: colors.studioPaper, borderColor: colors.studioInk, shadowColor: colors.studioShadow }]}>
       <View style={[styles.accent, { backgroundColor: accent }]} />
       <Text style={[styles.metricLabel, { color: colors.mutedForeground }]}>{label}</Text>
       <Text style={[styles.metricValue, { color: colors.foreground }]}>{value}</Text>
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 34, fontWeight: '700', letterSpacing: -1 },
   subtitle: { marginTop: 8, fontSize: 14, lineHeight: 21 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  metric: { width: '48%', minHeight: 132, borderWidth: 1, borderRadius: 14, padding: 14 },
+  metric: { width: '48%', minHeight: 132, borderWidth: 1.5, borderRadius: 18, padding: 14, shadowOffset: { width: 2, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
   accent: { width: 28, height: 4, borderRadius: 3, marginBottom: 14 },
   metricLabel: { fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, fontWeight: '600' },
   metricValue: { fontSize: 23, fontWeight: '700', marginTop: 8 },

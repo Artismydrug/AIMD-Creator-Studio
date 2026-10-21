@@ -55,33 +55,34 @@ export default function HabitPracticeSummaryCard({ onOpenHabits }: { onOpenHabit
       marginTop: 16,
       padding: 16,
       backgroundColor: colors.studioPaper,
-      borderWidth: 1.5,
       borderColor: colors.studioInk,
-      borderRadius: 22,
+      borderWidth: 2,
+      borderRadius: 24,
       gap: 14,
       shadowColor: colors.studioShadow,
-      shadowOffset: { width: 3, height: 3 },
+      shadowOffset: { width: 4, height: 5 },
       shadowOpacity: 1,
       shadowRadius: 0,
       elevation: 3,
     },
-    header: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    title: { flex: 1, fontFamily: 'DMSans_700Bold', fontSize: 18, color: colors.studioInk },
-    viewAll: { minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 5 },
+    header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    headerMark: { width: 34, height: 34, borderRadius: 11, backgroundColor: colors.studioOrange, borderWidth: 1.5, borderColor: colors.ink, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-5deg' }] },
+    title: { flex: 1, fontFamily: 'DMSans_700Bold', fontSize: 19, color: colors.studioInk, letterSpacing: -0.4 },
+    viewAll: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, borderWidth: 1.5, borderColor: colors.studioInk, borderRadius: 13, backgroundColor: colors.studioPaperAlt },
     viewAllText: { fontFamily: 'DMSans_600SemiBold', fontSize: 12, color: colors.studioVioletText },
     selector: { flexGrow: 0, marginHorizontal: -3 },
     selectorContent: { gap: 6, paddingHorizontal: 3 },
     habitChip: {
-      minHeight: 32,
+      minHeight: 36,
       maxWidth: 150,
       paddingHorizontal: 10,
       borderRadius: 13,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: 1,
+      borderWidth: 1.5,
     },
     habitChipText: { fontFamily: 'DMSans_600SemiBold', fontSize: 11 },
-    chart: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', gap: 8 },
+    chart: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', gap: 8, padding: 12, borderRadius: 18, borderWidth: 1.5, borderColor: colors.studioLine, backgroundColor: colors.studioPaperAlt },
     column: { flex: 1, alignItems: 'center', gap: 5 },
     count: { fontFamily: 'DMSans_700Bold', fontSize: 13, color: colors.studioOrangeText },
     flameTrack: { width: '100%', alignItems: 'center' },
@@ -94,7 +95,7 @@ export default function HabitPracticeSummaryCard({ onOpenHabits }: { onOpenHabit
   return (
     <View style={styles.card} testID="dashboard-your-habits">
       <View style={styles.header}>
-        <Feather name="activity" size={18} color={colors.studioOrange} />
+        <View style={styles.headerMark}><Feather name="activity" size={17} color={colors.ink} /></View>
         <Text style={styles.title}>Your Habits</Text>
         <TouchableOpacity
           style={styles.viewAll}
@@ -117,14 +118,14 @@ export default function HabitPracticeSummaryCard({ onOpenHabits }: { onOpenHabit
             return (
               <TouchableOpacity
                 key={habit.id}
-                style={[styles.habitChip, { borderColor: selected ? colors.studioInk : colors.studioLine, backgroundColor: selected ? colors.studioVioletText : colors.studioPaperAlt }]}
+                style={[styles.habitChip, { borderColor: selected ? colors.ink : colors.studioLine, backgroundColor: selected ? colors.studioYellow : colors.studioPaperAlt }]}
                 onPress={() => setSelectedHabitId(habit.id)}
                 accessibilityRole="tab"
                 accessibilityState={{ selected }}
                 accessibilityLabel={`${habit.name} practice history`}
                 testID={`dashboard-habit-${habit.id}`}
               >
-                <Text numberOfLines={1} style={[styles.habitChipText, { color: selected ? colors.studioPaper : colors.studioInk }]}>{habit.name}</Text>
+                <Text numberOfLines={1} style={[styles.habitChipText, { color: selected ? colors.ink : colors.studioInk }]}>{habit.name}</Text>
               </TouchableOpacity>
             );
           })}

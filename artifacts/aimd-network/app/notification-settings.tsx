@@ -76,7 +76,7 @@ export default function NotificationSettingsScreen() {
 
   return (
     <View style={[s.screen, { backgroundColor: colors.background, paddingTop: insets.top }]}>
-      <View style={s.header}>
+       <View style={[s.header, { backgroundColor: colors.studioPaper, borderBottomColor: colors.studioInk }]}>
         <Pressable onPress={() => router.back()} accessibilityLabel="Back" accessibilityRole="button" style={s.back}>
           <Feather name="arrow-left" size={24} color={colors.foreground} />
         </Pressable>
@@ -129,11 +129,11 @@ export default function NotificationSettingsScreen() {
 }
 const s = StyleSheet.create({
   screen: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 2 },
   back: { minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
   title: { fontFamily: 'DMSans_700Bold', fontSize: 21, flex: 1 },
   content: { padding: 20, gap: 18 },
-  card: { borderWidth: 1, borderRadius: 12, padding: 16, gap: 12 },
+  card: { borderWidth: 1.5, borderRadius: 20, padding: 16, gap: 12, shadowOffset: { width: 3, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
   section: { fontFamily: 'DMSans_700Bold', fontSize: 18 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   rowText: { flex: 1, gap: 5 },

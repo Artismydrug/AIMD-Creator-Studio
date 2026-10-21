@@ -136,6 +136,9 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
       paddingTop: topPad,
       paddingHorizontal: 16,
       paddingBottom: 16,
+      backgroundColor: colors.studioPaper,
+      borderBottomWidth: 2,
+      borderBottomColor: colors.studioInk,
     },
     headerRow: {
       flexDirection: 'row',
@@ -144,12 +147,19 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
       marginBottom: 10,
     },
     addBtn: {
-      width: 36,
-      height: 36,
-      backgroundColor: colors.ink,
-      borderRadius: 12,
+      width: 46,
+      height: 46,
+      backgroundColor: colors.studioOrange,
+      borderWidth: 2,
+      borderColor: colors.ink,
+      borderRadius: 15,
       alignItems: 'center',
       justifyContent: 'center',
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 3, height: 3 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
     },
     tagline: {
       fontFamily: 'DMSans_700Bold',
@@ -171,13 +181,18 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
     },
     statBox: {
       flex: 1,
-      backgroundColor: colors.card,
-      padding: 10,
+      backgroundColor: colors.studioPaper,
+      padding: 12,
       alignItems: 'center',
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: colors.radius,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      borderRadius: 17,
       overflow: 'hidden',
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
     },
     statNumber: {
       fontFamily: 'DMSans_700Bold',
@@ -195,11 +210,16 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
       marginHorizontal: 16,
       marginBottom: 4,
       padding: 14,
-      backgroundColor: colors.card,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: colors.radius,
+      backgroundColor: colors.studioLavender,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      borderRadius: 20,
       gap: 10,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 3, height: 3 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
     },
     progressHeading: {
       fontFamily: 'DMSans_700Bold',
@@ -426,7 +446,7 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
                     testID="add-habit-button"
                     accessibilityLabel="Add habit"
                   >
-                    <Feather name="plus" size={20} color={colors.primaryForeground} />
+                    <Feather name="plus" size={20} color={colors.ink} />
                   </TouchableOpacity>
                 </View>
                 <Text style={s.actionHelp} testID="habit-actions-help">{HABIT_ACTION_HELP}</Text>

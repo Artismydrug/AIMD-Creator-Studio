@@ -195,7 +195,7 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
   const s = useMemo(() => StyleSheet.create({
     card: {
       backgroundColor: colors.card,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: colors.foreground,
       borderRadius: colors.radius + 3,
       padding: 14,
@@ -205,7 +205,7 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
       overflow: 'hidden',
       shadowColor: colors.studioShadow,
       shadowOffset: { width: 2, height: 3 },
-      shadowOpacity: 0.14,
+      shadowOpacity: 1,
       shadowRadius: 0,
       elevation: 2,
     },
@@ -226,7 +226,9 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
     categoryBadge: {
       paddingHorizontal: 8,
       paddingVertical: 3,
-      borderRadius: 99,
+      borderRadius: 9,
+      borderWidth: 1,
+      borderColor: colors.foreground,
     },
     categoryText: {
       fontFamily: 'DMSans_500Medium',
@@ -262,15 +264,15 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
       gap: 8,
     },
     deleteBtn: {
-      width: 64,
-      height: 44,
+      minWidth: 64,
+      minHeight: 44,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 4,
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: 10,
+      borderRadius: 13,
     },
     deleteText: {
       fontFamily: 'DMSans_600SemiBold',

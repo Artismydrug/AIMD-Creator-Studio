@@ -21,19 +21,24 @@ export default function CommunityScreen() {
     header: {
       paddingTop: topPad,
       paddingHorizontal: 16,
-      paddingBottom: 16,
+      paddingBottom: 14,
       gap: 12,
+      backgroundColor: colors.studioPaper,
+      borderBottomWidth: 2,
+      borderBottomColor: colors.studioInk,
     },
     titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    titleMark: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary },
+    titleMark: { width: 44, height: 44, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.studioOrange, borderWidth: 2, borderColor: colors.ink, transform: [{ rotate: '-5deg' }], shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
     titleCopy: { flex: 1, gap: 2 },
     title: { fontFamily: 'DMSans_700Bold', fontSize: 26, color: colors.foreground, letterSpacing: -0.6 },
      subtitle: { fontFamily: 'DMSans_700Bold', fontSize: 11, color: colors.sunsetCoral, letterSpacing: 1.2, textTransform: 'uppercase' },
     studioRule: { height: 3, width: 56, borderRadius: 3, backgroundColor: colors.cyan },
     switcher: {
       flexDirection: 'row',
-      backgroundColor: colors.muted,
-      borderRadius: colors.radius + 2,
+      backgroundColor: colors.studioPaperAlt,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      borderRadius: 17,
       padding: 4,
       gap: 3,
     },
@@ -46,9 +51,9 @@ export default function CommunityScreen() {
       justifyContent: 'center',
       gap: 7,
     },
-    activeSwitch: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.cyan },
+    activeSwitch: { backgroundColor: colors.studioYellow, borderWidth: 1.5, borderColor: colors.ink, shadowColor: colors.studioShadow, shadowOffset: { width: 1, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 1 },
     switchText: { fontFamily: 'DMSans_600SemiBold', fontSize: 13, color: colors.mutedForeground },
-    activeSwitchText: { color: colors.primary },
+    activeSwitchText: { color: colors.ink },
     content: { flex: 1 },
   }), [colors, topPad]);
 
@@ -71,7 +76,7 @@ export default function CommunityScreen() {
       <View style={s.header}>
         <View style={s.titleRow}>
           <View style={s.titleMark}>
-            <Feather name="users" size={19} color={colors.primaryForeground} />
+            <Feather name="users" size={19} color={colors.ink} />
           </View>
           <View style={s.titleCopy}>
             <Text style={s.title}>Feed</Text>
@@ -94,7 +99,7 @@ export default function CommunityScreen() {
                  <Feather
                    name={item === 'feed' ? 'image' : item === 'creators' ? 'users' : 'calendar'}
                    size={15}
-                   color={active ? colors.primary : colors.mutedForeground}
+                   color={active ? colors.ink : colors.mutedForeground}
                  />
                 <Text style={[s.switchText, active && s.activeSwitchText]}>
                    {item === 'feed' ? 'Feed' : item === 'creators' ? 'Creators' : 'Events'}

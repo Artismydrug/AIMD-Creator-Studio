@@ -237,7 +237,7 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
       gap: embedded ? 6 : 12,
     },
     titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    titleMark: { width: 38, height: 38, borderRadius: 12, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+     titleMark: { width: 44, height: 44, borderRadius: 15, backgroundColor: colors.studioOrange, borderWidth: 2, borderColor: colors.ink, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-5deg' }], shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
     titleCopy: { flex: 1, minWidth: 0 },
     eyebrow: { fontFamily: 'DMSans_700Bold', fontSize: 11, letterSpacing: 1.8, textTransform: 'uppercase', color: colors.sunsetCoral },
     title: { fontFamily: 'DMSans_700Bold', fontSize: 26, letterSpacing: -0.6, color: colors.foreground },
@@ -245,18 +245,18 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
     embeddedTitle: { fontFamily: 'DMSans_700Bold', fontSize: 30, letterSpacing: -0.8, color: colors.foreground },
     intro: { fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21, color: colors.mutedForeground },
     previewGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 20, paddingBottom: 10 },
-    previewCard: {
-      width: '48%',
+     previewCard: {
+       width: '48%',
       minHeight: 228,
       padding: 12,
-      borderRadius: colors.radius + 4,
-      backgroundColor: colors.ink,
-      borderWidth: 1.5,
-      borderColor: colors.inkForeground,
+       borderRadius: 20,
+       backgroundColor: colors.ink,
+       borderWidth: 2,
+       borderColor: colors.ink,
       gap: 8,
       shadowColor: colors.studioShadow,
       shadowOffset: { width: 2, height: 3 },
-      shadowOpacity: 0.14,
+       shadowOpacity: 1,
       shadowRadius: 0,
       elevation: 2,
     },
@@ -272,7 +272,7 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
     previewFooter: { borderTopWidth: 1, borderTopColor: 'rgba(250,248,245,0.16)', paddingTop: 7, marginTop: 3 },
     previewTier: { fontFamily: 'DMSans_700Bold', fontSize: 8, color: colors.cyan, letterSpacing: 0.5 },
     previewPrice: { fontFamily: 'DMSans_400Regular', fontSize: 9, lineHeight: 12, color: 'rgba(250,248,245,0.68)', marginTop: 2 },
-    card: { padding: 16, borderRadius: colors.radius, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, gap: 8 },
+     card: { padding: 16, borderRadius: 18, backgroundColor: colors.studioPaper, borderWidth: 1.5, borderColor: colors.studioInk, gap: 8, shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
     selectedCard: { borderColor: colors.electricMagenta, borderWidth: 2 },
     category: { fontFamily: 'DMSans_700Bold', fontSize: 10, color: colors.sunsetCoral, textTransform: 'uppercase', letterSpacing: 1.2 },
     cardTitle: { fontFamily: 'DMSans_700Bold', fontSize: 17, color: colors.foreground },
@@ -308,11 +308,11 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
     upgrade: { minHeight: 46, marginTop: 4, paddingHorizontal: 18, borderRadius: 10, backgroundColor: colors.electricMagenta, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
     upgradeText: { fontFamily: 'DMSans_700Bold', color: colors.primaryForeground, fontSize: 14 },
     previewActions: { gap: 8, marginBottom: 8 },
-    workshopCard: { borderRadius: colors.radius, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
+     workshopCard: { borderRadius: 22, backgroundColor: colors.studioPaper, borderWidth: 1.5, borderColor: colors.studioInk, overflow: 'hidden', shadowColor: colors.studioShadow, shadowOffset: { width: 3, height: 4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 },
     workshopPreview: { width: '100%', aspectRatio: 16 / 9, overflow: 'hidden', backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
-    workshopPreviewBadge: { position: 'absolute', top: 10, left: 10, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 99, backgroundColor: 'rgba(16,19,23,0.82)' },
-    workshopPreviewBadgeText: { fontFamily: 'DMSans_700Bold', fontSize: 9, color: '#FFFFFF', letterSpacing: 0.8 },
-    workshopCardInfo: { padding: 16, gap: 8 },
+     workshopPreviewBadge: { position: 'absolute', top: 12, left: 12, paddingHorizontal: 10, paddingVertical: 7, borderWidth: 1.5, borderColor: colors.ink, borderRadius: 10, backgroundColor: colors.studioYellow, transform: [{ rotate: '-3deg' }] },
+     workshopPreviewBadgeText: { fontFamily: 'DMSans_700Bold', fontSize: 9, color: colors.ink, letterSpacing: 0.8 },
+     workshopCardInfo: { padding: 17, gap: 9 },
     workshopOpenHint: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 9, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
     workshopOpenHintText: { fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.primary },
     ...{},
@@ -338,7 +338,7 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
           ) : (
             <View style={s.titleRow} testID="workshops-page-heading">
               <View style={s.titleMark}>
-                <Feather name="play-circle" size={19} color={colors.primaryForeground} />
+                <Feather name="play-circle" size={19} color={colors.ink} />
               </View>
               <View style={s.titleCopy}>
                 <Text style={s.title} numberOfLines={1}>Workshops</Text>

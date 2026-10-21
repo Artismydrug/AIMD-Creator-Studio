@@ -119,19 +119,19 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
     eyebrow: { alignSelf: 'flex-start', fontFamily: 'DMSans_700Bold', fontSize: 11, letterSpacing: 1.7, color: colors.accentForeground, textTransform: 'uppercase', backgroundColor: colors.gold, borderRadius: 99, overflow: 'hidden', paddingHorizontal: 10, paddingVertical: 5 },
     title: { fontFamily: 'DMSans_700Bold', fontSize: 30, color: colors.foreground, letterSpacing: -0.9 },
     intro: { fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21, color: colors.mutedForeground },
-    challengeCard: { marginHorizontal: 20, padding: 19, backgroundColor: colors.card, borderRadius: colors.radius + 4, gap: 12, borderWidth: 1, borderColor: colors.border },
+     challengeCard: { marginHorizontal: 20, padding: 19, backgroundColor: colors.studioMint, borderRadius: 22, gap: 12, borderWidth: 1.5, borderColor: colors.ink, shadowColor: colors.studioShadow, shadowOffset: { width: 3, height: 4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 3 },
     challengeTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    challengeLabel: { fontFamily: 'DMSans_700Bold', color: colors.foreground, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase' },
+    challengeLabel: { fontFamily: 'DMSans_700Bold', color: colors.ink, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase' },
     challengeStatus: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-    challengeStatusText: { fontFamily: 'DMSans_600SemiBold', color: colors.foreground, fontSize: 11 },
-    challengeTitle: { fontFamily: 'DMSans_700Bold', color: colors.foreground, fontSize: 24, letterSpacing: -0.5 },
-    challengePrompt: { fontFamily: 'DMSans_400Regular', color: colors.mutedForeground, fontSize: 14, lineHeight: 21 },
+    challengeStatusText: { fontFamily: 'DMSans_600SemiBold', color: colors.ink, fontSize: 11 },
+    challengeTitle: { fontFamily: 'DMSans_700Bold', color: colors.ink, fontSize: 24, letterSpacing: -0.5 },
+    challengePrompt: { fontFamily: 'DMSans_400Regular', color: colors.ink, opacity: 0.82, fontSize: 14, lineHeight: 21 },
     challengeMeta: { flexDirection: 'row', gap: 14, flexWrap: 'wrap' },
-    meta: { fontFamily: 'DMSans_500Medium', color: colors.mutedForeground, fontSize: 12 },
-    primaryButton: { minHeight: 48, borderRadius: 12, backgroundColor: colors.electricMagenta, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-    primaryButtonText: { fontFamily: 'DMSans_700Bold', color: colors.primaryForeground, fontSize: 14 },
-    submitted: { minHeight: 46, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-    submittedText: { fontFamily: 'DMSans_700Bold', color: colors.foreground, fontSize: 14 },
+    meta: { fontFamily: 'DMSans_500Medium', color: colors.ink, opacity: 0.74, fontSize: 12 },
+     primaryButton: { minHeight: 48, borderRadius: 15, backgroundColor: colors.studioOrange, borderWidth: 1.5, borderColor: colors.ink, shadowColor: colors.ink, shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+    primaryButtonText: { fontFamily: 'DMSans_700Bold', color: colors.ink, fontSize: 14 },
+    submitted: { minHeight: 46, borderWidth: 1.5, borderColor: colors.ink, borderRadius: 15, backgroundColor: colors.inkForeground, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+    submittedText: { fontFamily: 'DMSans_700Bold', color: colors.ink, fontSize: 14 },
     section: { paddingHorizontal: 20, paddingTop: 25, gap: 12 },
     sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     sectionTitle: { fontFamily: 'DMSans_700Bold', fontSize: 19, color: colors.foreground },
@@ -184,7 +184,7 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
                   {challenge.status === 'upcoming' ? 'Coming next' : challenge.status === 'active' ? 'Active challenge' : 'Challenge closed'}
                 </Text>
               <View style={s.challengeStatus}>
-                  <Feather name="zap" size={13} color={colors.primary} />
+                  <Feather name="zap" size={13} color={colors.ink} />
                 <Text style={s.challengeStatusText}>+{challenge.submissionPoints} points</Text>
               </View>
             </View>
@@ -201,17 +201,17 @@ export default function ChallengesScreen({ embedded = false }: { embedded?: bool
             </View>
             {challengeData.hasSubmitted ? (
               <View style={s.submitted}>
-                <Feather name="check-circle" size={17} color={colors.primary} />
+                <Feather name="check-circle" size={17} color={colors.ink} />
                 <Text style={s.submittedText}>Entry submitted for review</Text>
               </View>
             ) : challenge.status === 'active' ? (
               <TouchableOpacity style={s.primaryButton} onPress={openSubmission} testID="challenges-submit-entry">
-                <Feather name="camera" size={17} color={colors.primaryForeground} />
+                <Feather name="camera" size={17} color={colors.ink} />
                 <Text style={s.primaryButtonText}>Capture proof & submit</Text>
               </TouchableOpacity>
             ) : (
               <View style={s.submitted}>
-                <Feather name="calendar" size={17} color={colors.primary} />
+                <Feather name="calendar" size={17} color={colors.ink} />
                 <Text style={s.submittedText}>
                   {challenge.status === 'upcoming'
                     ? `Opens ${new Date(challenge.startsAt).toLocaleDateString(undefined, { timeZone: 'America/Los_Angeles' })}`
