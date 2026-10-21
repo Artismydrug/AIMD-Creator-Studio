@@ -108,7 +108,7 @@ test('null elements and malformed array responses cannot throw during Dashboard 
       challenge: { ...challenge, submissions: badArray },
     });
     assert.ok(find(result.tree, 'dashboard-loaded-state'));
-    assert.match(JSON.stringify(result.tree), /Your profile/);
+    assert.match(JSON.stringify(result.tree), /your profile/i);
     assert.doesNotMatch(JSON.stringify(result.tree), /NaN%|undefined%/);
   }
 });
@@ -120,7 +120,7 @@ test('valid profile, badges, streaks and habits retain their displayed data and 
   });
   assert.match(JSON.stringify(result.tree), /@studio/);
   assert.match(JSON.stringify(result.tree), /Consistent/);
-  find(result.tree, 'dashboard-profile-snapshot').props.onPress();
+  find(result.tree, 'dashboard-profile-button').props.onPress();
   assert.deepEqual(result.routes, ['/profile']);
   assert.deepEqual(result.captures, []);
 });

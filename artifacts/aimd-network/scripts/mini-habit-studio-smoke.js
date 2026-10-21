@@ -41,15 +41,16 @@ function sketch(id, prompt = `Prompt ${id}`) {
   return { id, createdAt: '2026-10-18T20:00:00.000Z', prompt, paths: ['M10 10 L20 20'] };
 }
 
-test('Dashboard links to Creator Arcade after Your Habits, with a 60-second Flash Sketch', () => {
+test('Dashboard leads with the Sticker Jam sketch entry and keeps a 60-second Flash Sketch', () => {
   const dashboard = fs.readFileSync(path.resolve(__dirname, '../app/(tabs)/index.tsx'), 'utf8');
-  const card = fs.readFileSync(path.resolve(__dirname, '../components/MiniHabitStudioCard.tsx'), 'utf8');
+  const card = fs.readFileSync(path.resolve(__dirname, '../components/StickerJamPracticeCard.tsx'), 'utf8');
   const route = fs.readFileSync(path.resolve(__dirname, '../app/mini-habit-studio.tsx'), 'utf8');
   const habitsIndex = dashboard.indexOf('<HabitPracticeSummaryCard');
-  const studioIndex = dashboard.indexOf('<MiniHabitStudioCard');
-  assert.ok(habitsIndex >= 0 && studioIndex > habitsIndex);
+  const studioIndex = dashboard.indexOf('<StickerJamPracticeCard');
+  assert.ok(studioIndex >= 0 && habitsIndex > studioIndex);
   assert.match(dashboard, /router\.push\('\/mini-habit-studio'\)/);
   assert.match(card, /CREATOR ARCADE/);
+  assert.match(card, /Start a sketch/);
   assert.match(route, />Creator Arcade</);
   assert.match(route, /const GAME_SECONDS = 60/);
   assert.match(route, /Math\.floor\(secondsLeft \/ 60\)/);

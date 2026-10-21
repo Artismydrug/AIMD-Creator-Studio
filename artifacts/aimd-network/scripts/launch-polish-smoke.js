@@ -84,8 +84,8 @@ test('dashboard removes the Feed shortcut and keeps membership, Profile, and not
   assert.match(dashboard, /'Dedicated Artist'/);
   assert.match(dashboard, /'Professional Artist'/);
   assert.match(dashboard, /memberProfileGroup:\s*\{\s*flexDirection:\s*'column'/);
-  assert.match(dashboard, /profileButton:\s*\{\s*minHeight:\s*44/);
-  assert.match(dashboard, /fontSize:\s*13,\s*color:\s*colors\.studioVioletText/);
+  assert.match(dashboard, /profileButton:\s*\{\s*width:\s*44,\s*height:\s*44,\s*minHeight:\s*44/);
+  assert.match(dashboard, /profileButtonAvatar:\s*\{\s*width:\s*38,\s*height:\s*38/);
   assert.match(dashboard, /memberTierLabel:\s*\{[\s\S]*?translateY:\s*-10/);
   assert.match(dashboard, /headerActions:\s*\{[\s\S]*?gap:\s*0,[\s\S]*?translateY:\s*-4/);
   assert.match(dashboard, /header:\s*\{\s*paddingTop:\s*topPad,[\s\S]*?flexDirection:\s*'row',\s*alignItems:\s*'flex-start'/);
@@ -95,7 +95,7 @@ test('dashboard removes the Feed shortcut and keeps membership, Profile, and not
   assert.match(dashboard, /windowWidth < 360/);
   assert.match(dashboard, /titleRow:\s*\{[\s\S]*?alignItems:\s*'center'/);
   assert.match(dashboard, /titleMark:\s*\{[\s\S]*?width:\s*38[\s\S]*?height:\s*38[\s\S]*?backgroundColor:\s*colors\.studioLavender/);
-  assert.match(dashboard, /<Feather name="grid" size=\{19\} color=\{colors\.studioInk\}/);
+  assert.match(dashboard, /<Feather name="aperture" size=\{19\} color=\{colors\.studioInk\}/);
   assert.match(dashboard, /title:\s*\{\s*fontFamily:\s*'DMSans_700Bold',\s*fontSize:\s*26/);
 });
 
@@ -225,18 +225,19 @@ test('workshop placeholders clearly distinguish sample artwork from unavailable 
 });
 
 test('high-traffic cards keep short summaries while preserving action and storage guidance', () => {
-  const tour = source('../components/CreatorAppTour.tsx');
-  const summaries = [...tour.matchAll(/body: '([^']+)'/g)].map(match => match[1]);
-  assert.equal(summaries.length, 5);
-  for (const summary of summaries) assert.ok(summary.split(/\s+/).length <= 8);
+  const stickerJam = source('../components/StickerJamPracticeCard.tsx');
+  assert.match(stickerJam, /Make a little/);
+  assert.match(stickerJam, /TODAY’S PRACTICE/);
+  assert.match(stickerJam, /Your canvas/);
+  assert.match(stickerJam, /Start a sketch/);
+  for (const shortcut of ['habits', 'feed', 'workshops']) {
+    assert.match(stickerJam, new RegExp(`dashboard-shortcut-${shortcut}`));
+  }
   const habits = source('../components/HabitCard.tsx');
   assert.match(habits, /Camera or Photos adds proof; ✓ logs it/);
   assert.match(habits, /Delete also removes history/);
   assert.match(habits, /Free on every plan/);
-  const arcade = source('../components/MiniHabitStudioCard.tsx');
-  assert.match(arcade, /backgroundColor: colors\.studioLavender/);
-  assert.match(arcade, /Saved on this device/);
-  assert.match(arcade, /accessibilityLabel="Start a 60-second Flash Sketch"/);
+  assert.match(stickerJam, /accessibilityLabel="Start a 60-second Flash Sketch"/);
 });
 
 test('authentication entry screens follow the app theme instead of a fixed dark palette', () => {

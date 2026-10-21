@@ -23,10 +23,9 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
-import CreatorAppTour from '@/components/CreatorAppTour';
 import MonthlyMemberDrops from '@/components/MonthlyMemberDrops';
 import HabitPracticeSummaryCard from '@/components/HabitPracticeSummaryCard';
-import MiniHabitStudioCard from '@/components/MiniHabitStudioCard';
+import StickerJamPracticeCard from '@/components/StickerJamPracticeCard';
 import {
   useGetProgress,
   getGetProgressQueryKey,
@@ -302,17 +301,27 @@ export default function ProgressScreen() {
       transform: [{ translateY: -10 }],
     },
     profileButton: {
+      width: 44,
+      height: 44,
       minHeight: 44,
-      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 6,
-      paddingHorizontal: 9,
+      padding: 1,
+      borderWidth: 2,
+      borderColor: colors.studioInk,
+      borderRadius: 22,
+      backgroundColor: colors.studioLavender,
+      overflow: 'hidden',
     },
-    profileButtonText: {
+    profileButtonInitials: {
       fontFamily: 'DMSans_600SemiBold',
-      fontSize: 13,
-      color: colors.studioVioletText,
+      fontSize: 14,
+      color: colors.studioInk,
+    },
+    profileButtonAvatar: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
     },
     notificationButton: {
       width: 42,
@@ -383,67 +392,6 @@ export default function ProgressScreen() {
       shadowRadius: 0,
       elevation: 3,
     },
-    profileSnapshot: {
-      backgroundColor: colors.studioBackground,
-      paddingHorizontal: 16,
-      paddingTop: 10,
-    },
-    profileSnapshotCard: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-      padding: 14,
-      borderWidth: 2,
-      borderColor: colors.studioViolet,
-      borderRadius: 22,
-      backgroundColor: colors.studioLavender,
-      shadowColor: colors.studioShadow,
-      shadowOffset: { width: 3, height: 3 },
-      shadowOpacity: 1,
-      shadowRadius: 0,
-      elevation: 3,
-    },
-    profileSnapshotAvatar: {
-      width: 54,
-      height: 54,
-      borderRadius: 27,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.studioPaper,
-      overflow: 'hidden',
-    },
-    profileSnapshotAvatarText: {
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 18,
-      color: colors.studioInk,
-    },
-    profileSnapshotContent: {
-      flex: 1,
-      minWidth: 0,
-      gap: 5,
-    },
-    profileSnapshotEyebrow: {
-      fontFamily: 'DMSans_500Medium',
-      fontSize: 10,
-      color: colors.studioVioletText,
-      letterSpacing: 1.2,
-      textTransform: 'uppercase',
-    },
-    profileSnapshotName: {
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 17,
-      color: colors.studioInk,
-    },
-    profileSnapshotStats: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 10,
-    },
-    profileSnapshotStat: {
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 12,
-      color: colors.studioMuted,
-    },
     loadingText: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 10,
@@ -461,45 +409,6 @@ export default function ProgressScreen() {
     progressBarFill: {
       height: '100%',
       backgroundColor: colors.studioOrange,
-    },
-    // Stats grid
-    statsGrid: {
-      flexDirection: 'row',
-      gap: 8,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-    },
-    statCell: {
-      flex: 1,
-      paddingVertical: 14,
-      alignItems: 'center',
-      backgroundColor: colors.studioPaper,
-      borderWidth: 1.5,
-      borderColor: colors.studioLine,
-      borderRadius: 18,
-      shadowColor: colors.studioShadow,
-      shadowOffset: { width: 2, height: 2 },
-      shadowOpacity: 1,
-      shadowRadius: 0,
-      elevation: 2,
-    },
-    statCellNoBorder: {
-      borderWidth: 1.5,
-    },
-    statIcon: {
-      marginBottom: 5,
-    },
-    statValue: {
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 22,
-      color: colors.studioOrangeText,
-      marginBottom: 2,
-    },
-    statLabel: {
-      fontFamily: 'DMSans_500Medium',
-      fontSize: 11,
-      color: colors.studioMuted,
-      textTransform: 'uppercase',
     },
     // Badges block
     badgesBlock: {
@@ -868,7 +777,7 @@ export default function ProgressScreen() {
       <View style={[s.header, windowWidth < 360 && s.compactHeader]}>
         <View style={s.titleRow}>
           <View style={s.titleMark}>
-            <Feather name="grid" size={19} color={colors.studioInk} />
+              <Feather name="aperture" size={19} color={colors.studioInk} />
           </View>
           <View style={s.titleCopy}>
             <Text style={s.title} numberOfLines={1}>Dashboard</Text>
@@ -880,12 +789,15 @@ export default function ProgressScreen() {
             <TouchableOpacity
               style={s.profileButton}
               accessibilityRole="button"
-              accessibilityLabel="Open your profile"
+              accessibilityLabel={profileUsername ? `Open your profile, @${profileUsername}` : 'Open your profile'}
               onPress={() => router.push('/profile')}
               testID="dashboard-profile-button"
             >
-              <Feather name="user" size={18} color={colors.studioViolet} />
-              <Text style={s.profileButtonText}>Profile</Text>
+              {profileAvatar ? (
+                <Image source={{ uri: profileAvatar }} style={s.profileButtonAvatar} />
+              ) : (
+                <Text style={s.profileButtonInitials}>{profileInitials}</Text>
+              )}
             </TouchableOpacity>
             {membershipTitle ? (
               <TouchableOpacity
@@ -949,7 +861,13 @@ export default function ProgressScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.studioViolet} />
           }
         >
-          <CreatorAppTour />
+          <StickerJamPracticeCard
+            streak={displayCount(progress?.currentStreak)}
+            onStartSketch={() => router.push('/mini-habit-studio')}
+            onOpenHabits={() => router.push('/(tabs)/challenge-habits')}
+            onOpenFeed={() => router.push('/(tabs)/community')}
+            onOpenWorkshops={() => router.push('/(tabs)/workshops')}
+          />
 
           {progressLoading && !progress && (
             <View
@@ -964,69 +882,6 @@ export default function ProgressScreen() {
           {progress && (
             <>
               <View testID="dashboard-loaded-state" accessibilityLabel="Dashboard progress">
-
-              {currentUser && (
-                <View style={s.profileSnapshot}>
-                  <TouchableOpacity
-                    style={s.profileSnapshotCard}
-                    onPress={() => router.push('/profile')}
-                    testID="dashboard-profile-snapshot"
-                    accessibilityRole="button"
-                    accessibilityLabel={profileUsername ? `Open your profile, ${profileUsername}` : 'Open your profile'}
-                  >
-                    <View style={s.profileSnapshotAvatar}>
-                      {profileAvatar ? (
-                        <Image
-                          source={{
-                            uri: profileAvatar,
-                          }}
-                          style={{ width: 54, height: 54 }}
-                        />
-                      ) : (
-                        <Text style={s.profileSnapshotAvatarText}>
-                          {profileInitials}
-                        </Text>
-                      )}
-                    </View>
-                    <View style={s.profileSnapshotContent}>
-                      <Text style={s.profileSnapshotEyebrow}>Your public profile</Text>
-                      <Text style={s.profileSnapshotName} numberOfLines={1}>
-                        {profileUsername ? `@${profileUsername}` : 'Your profile'}
-                      </Text>
-                      <View style={s.profileSnapshotStats}>
-                        <Text style={s.profileSnapshotStat}>
-                          {profileSnapshot?.followerCount ?? '—'} followers
-                        </Text>
-                        <Text style={s.profileSnapshotStat}>
-                          {profileSnapshot?.followingCount ?? '—'} following
-                        </Text>
-                        <Text style={s.profileSnapshotStat}>
-                          {profileSnapshot?.badgesEarned ?? '—'} badges
-                        </Text>
-                      </View>
-                    </View>
-                    <Feather name="chevron-right" size={18} color={colors.studioMuted} />
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              <View style={s.statsGrid}>
-                <View style={s.statCell}>
-                  <Feather name="zap" size={15} color={colors.studioOrange} style={s.statIcon} />
-                  <Text style={s.statValue}>{displayCount(progress?.currentStreak)}</Text>
-                  <Text style={s.statLabel}>Day Streak</Text>
-                </View>
-                <View style={s.statCell}>
-                  <Feather name="check-circle" size={15} color={colors.studioViolet} style={s.statIcon} />
-                  <Text style={s.statValue}>{displayCount(progress?.todayHabitsCompleted)}/{displayCount(progress?.totalHabits)}</Text>
-                  <Text style={s.statLabel}>Habits Today</Text>
-                </View>
-                <View style={[s.statCell, s.statCellNoBorder]}>
-                  <Feather name="award" size={15} color={colors.studioYellow} style={s.statIcon} />
-                  <Text style={s.statValue}>{Array.isArray(progress?.recentBadges) ? recentBadges.length : '—'}</Text>
-                  <Text style={s.statLabel}>Recent Badges</Text>
-                </View>
-              </View>
 
               <View style={s.actionsBlock}>
                 {progress?.checkedInToday === false && (
@@ -1129,7 +984,6 @@ export default function ProgressScreen() {
           <MonthlyMemberDrops compact />
 
           <HabitPracticeSummaryCard onOpenHabits={() => router.push('/(tabs)/challenge-habits')} />
-          <MiniHabitStudioCard onPress={() => router.push('/mini-habit-studio')} />
 
         </ScrollView>
       )}
