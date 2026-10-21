@@ -116,6 +116,14 @@ export function PonchoPortfolio() {
           <a className="pp-wordmark" href="https://ponchotheartist.com" target="_blank" rel="noreferrer">
             CREATOR STUDIO <span>by AIMD</span>
           </a>
+          <button
+            className="pp-header-inquiry"
+            type="button"
+            aria-label="Start a Commission Inquiry"
+            onClick={() => setInquiryScreen(true)}
+          >
+            Inquiry <ArrowUpRight size={12} strokeWidth={2.5} />
+          </button>
           <span className="pp-header-caption">DISCIPLINE EATS TALENT</span>
         </header>
 
@@ -245,6 +253,9 @@ export function PonchoPortfolio() {
         .pp-sticker-mark { width:40px;height:40px;display:grid;place-items:center;flex:none;color:var(--pp-ink);background:#ffb08f;border:2px solid var(--pp-ink);border-radius:13px;transform:rotate(-6deg);box-shadow:3px 3px 0 var(--pp-ink); }
         .pp-wordmark { color:var(--pp-ink); font-size:11px; font-weight:900; letter-spacing:.09em; text-decoration:none; }
         .pp-wordmark span { font-size:9px;font-weight:700;letter-spacing:.04em;color:#625d67; }
+        .pp-header-inquiry { display:inline-flex; flex:none; align-items:center; justify-content:center; gap:3px; min-height:34px; padding:0 10px; border:1.5px solid var(--pp-ink); border-radius:999px; background:#df006c; color:#fffaf1; box-shadow:2px 2px 0 var(--pp-ink); font:inherit; font-size:10px; font-weight:800; cursor:pointer; transition:transform .16s,box-shadow .16s; }
+        .pp-header-inquiry:hover { transform:translate(-1px,-1px); box-shadow:3px 3px 0 var(--pp-ink); }
+        .pp-header-inquiry:focus-visible { outline:3px solid #39ded3; outline-offset:3px; }
         .pp-header-caption,.pp-eyebrow { display:inline-flex;align-items:center; min-height:24px; padding:4px 10px; border:1.5px solid var(--pp-ink);border-radius:99px;background:#f8d86a;color:var(--pp-ink);font-size:8px;font-weight:800;letter-spacing:.12em; }
         .pp-header-caption {margin-left:auto;font-size:8px; }
         .pp-profile { display:flex; align-items:center; gap:30px; padding:48px 0 42px; }
@@ -303,11 +314,12 @@ export function PonchoPortfolio() {
         }
         @media (max-width:600px) {
           .pp-page { width:calc(100% - 36px); }
-          .pp-header { min-height:60px; gap:8px; }
+          .pp-header { min-height:60px; gap:7px; }
           .pp-sticker-mark {width:34px;height:34px;border-radius:11px;}
-          .pp-wordmark {font-size:9px;letter-spacing:.04em;}
+          .pp-wordmark {flex:1;min-width:0;font-size:9px;letter-spacing:.025em;white-space:nowrap;}
           .pp-wordmark span {font-size:8px;}
-          .pp-header-caption {font-size:6px;letter-spacing:.05em;padding:4px 7px;min-height:21px;}
+          .pp-header-inquiry {min-height:32px;padding:0 8px;font-size:9px;}
+          .pp-header-caption {display:none;}
           .pp-profile { align-items:flex-start; gap:16px; padding:31px 0 28px; }
           .pp-avatar { width:96px; height:96px; }
           .pp-profile-copy .pp-eyebrow { font-size:6px; letter-spacing:.05em;padding:4px 7px;min-height:20px;margin:3px 0 8px; }
