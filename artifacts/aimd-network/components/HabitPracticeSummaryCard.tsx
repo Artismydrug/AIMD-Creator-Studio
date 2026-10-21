@@ -80,14 +80,16 @@ export default function HabitPracticeSummaryCard({ onOpenHabits, embedded = fals
     reward: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 99, borderWidth: 1.5, borderColor: colors.studioInk },
     rewardText: { fontFamily: 'DMSans_700Bold', fontSize: 11, color: colors.ink },
     rewardSub: { fontFamily: 'DMSans_500Medium', fontSize: 11, color: colors.ink },
+    monthlyRewardText: { fontFamily: 'DMSans_700Bold', fontSize: 12, color: colors.studioInk },
+    monthlyRewardSub: { fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.studioInk },
     weeks: { flexDirection: 'row', gap: 6 },
     week: { flex: 1, minWidth: 0, alignItems: 'center', gap: 6, paddingVertical: 10, paddingHorizontal: 4, borderRadius: 14, borderWidth: 1.5, borderColor: colors.studioLine, backgroundColor: colors.studioPaperAlt },
     weekCurrent: { borderColor: colors.studioInk, backgroundColor: colors.studioYellow },
-    weekLabel: { fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 0.6, textTransform: 'uppercase', color: colors.studioMuted },
+    weekLabel: { fontFamily: 'DMSans_700Bold', fontSize: 11, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.studioInk },
     dots: { flexDirection: 'row', gap: 3 },
     dot: { width: 7, height: 12, borderRadius: 3, borderWidth: 1, borderColor: colors.studioLine, backgroundColor: 'transparent' },
     dotOn: { backgroundColor: colors.studioOrange, borderColor: colors.ink },
-    weekCount: { fontFamily: 'DMSans_700Bold', fontSize: 13, color: colors.studioInk },
+    weekCount: { fontFamily: 'DMSans_700Bold', fontSize: 14, color: colors.studioInk },
     footer: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     footerText: { flex: 1, fontFamily: 'DMSans_500Medium', fontSize: 12, lineHeight: 17, color: colors.studioMuted },
     status: { minHeight: 96, alignItems: 'center', justifyContent: 'center', gap: 8 },
@@ -125,7 +127,7 @@ export default function HabitPracticeSummaryCard({ onOpenHabits, embedded = fals
           <Text style={s.rewardText}>+{weeklyBonus}</Text><Text style={s.rewardSub}>5 days / week</Text>
         </View>
         <View style={[s.reward, { backgroundColor: colors.studioLavender }]} accessibilityLabel={`${monthlyBonus} points for completing all 4 weeks`}>
-          <Text style={s.rewardText}>+{monthlyBonus}</Text><Text style={s.rewardSub}>all 4 weeks</Text>
+          <Text style={s.monthlyRewardText}>+{monthlyBonus}</Text><Text style={s.monthlyRewardSub}>all 4 weeks</Text>
         </View>
       </View>
 

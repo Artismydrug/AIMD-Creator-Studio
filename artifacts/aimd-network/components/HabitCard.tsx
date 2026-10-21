@@ -25,12 +25,13 @@ interface HabitCardProps {
   habit: Habit;
   onLogged?: () => void;
   onDeleted?: () => void;
+  stickerJam?: boolean;
 }
 
 export const HABIT_ACTION_HELP =
   'Camera or Photos adds proof; ✓ logs it. Delete also removes history. Free on every plan.';
 
-export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps) {
+export default function HabitCard({ habit, onLogged, onDeleted, stickerJam = false }: HabitCardProps) {
   const queryClient = useQueryClient();
   const colors = useColors();
   const { userId } = useAuth();
@@ -216,7 +217,20 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
       shadowRadius: 0,
       elevation: 2,
     },
+    stickerCard: {
+      backgroundColor: colors.studioPaper,
+      borderWidth: 2,
+      borderColor: colors.studioInk,
+      borderRadius: colors.radius + 6,
+      paddingVertical: 16,
+      marginBottom: 14,
+      shadowOffset: { width: 4, height: 5 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 4,
+    },
     accentRail: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 5 },
+    stickerRail: { width: 7 },
     row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     body: { flex: 1 },
     name: {
@@ -225,11 +239,13 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
       color: colors.foreground,
       marginBottom: 4,
     },
+    stickerName: { fontFamily: 'DMSans_700Bold', fontSize: 17, color: colors.studioInk, letterSpacing: -0.3 },
     meta: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
     },
+    stickerMeta: { flexWrap: 'wrap', rowGap: 8 },
     categoryBadge: {
       paddingHorizontal: 8,
       paddingVertical: 3,
@@ -237,12 +253,26 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
       borderWidth: 1,
       borderColor: colors.foreground,
     },
+    stickerCategoryBadge: {
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      borderRadius: 11,
+      transform: [{ rotate: '-2deg' }],
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 1, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
+    },
     categoryText: {
       fontFamily: 'DMSans_500Medium',
       fontSize: 11,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
+    stickerCategoryText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 10 },
     streak: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -265,6 +295,19 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
       justifyContent: 'center',
       borderWidth: 2,
       borderRadius: 14,
+    },
+    stickerCheckBtn: {
+      width: 46,
+      height: 46,
+      borderWidth: 2,
+      borderColor: colors.studioInk,
+      borderRadius: 16,
+      backgroundColor: colors.studioYellow,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 3 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
     },
     actionColumn: {
       alignItems: 'center',
@@ -299,6 +342,17 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
       borderColor: colors.border,
       borderRadius: 12,
     },
+    stickerProofButton: {
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      backgroundColor: colors.studioMint,
+      borderRadius: 14,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 1, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 1,
+    },
     proofActions: {
       flexDirection: 'row',
       gap: 8,
@@ -312,14 +366,14 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
   }), [colors]);
 
   return (
-    <View style={s.card}>
-      <View style={[s.accentRail, { backgroundColor: catColor }]} />
+    <View style={[s.card, stickerJam && s.stickerCard, stickerJam && localDone && { backgroundColor: colors.studioMint }]}>
+      <View style={[s.accentRail, stickerJam && s.stickerRail, { backgroundColor: catColor }]} />
       <View style={s.row}>
         <View style={s.body}>
-          <Text style={s.name}>{habit.name}</Text>
-          <View style={s.meta}>
-            <View style={[s.categoryBadge, { backgroundColor: `${catColor}22` }]}>
-              <Text style={[s.categoryText, { color: catColor }]}>{habit.category}</Text>
+          <Text style={[s.name, stickerJam && s.stickerName]}>{habit.name}</Text>
+          <View style={[s.meta, stickerJam && s.stickerMeta]}>
+            <View style={[s.categoryBadge, stickerJam && s.stickerCategoryBadge, { backgroundColor: stickerJam ? colors.studioYellow : `${catColor}22` }]}>
+              <Text style={[s.categoryText, stickerJam && s.stickerCategoryText, !stickerJam && { color: catColor }]}>{habit.category}</Text>
             </View>
             <View style={s.streak}>
               <Feather name="zap" size={12} color={colors.primary} />
@@ -338,7 +392,7 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
             ) : null}
             <View style={s.proofActions}>
               <TouchableOpacity
-                style={s.proofButton}
+                style={[s.proofButton, stickerJam && s.stickerProofButton]}
                 onPress={() => { void takeProofPhoto(); }}
                 disabled={uploadingProof}
                 accessibilityRole="button"
@@ -349,7 +403,7 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
                 <Text style={s.proofText}>Camera</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={s.proofButton}
+                style={[s.proofButton, stickerJam && s.stickerProofButton]}
                 onPress={() => { void chooseProofFromLibrary(); }}
                 disabled={uploadingProof}
                 accessibilityRole="button"
@@ -378,9 +432,9 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
             <Text style={s.deleteText}>Delete</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[s.checkBtn, {
-              borderColor: localDone ? colors.primary : colors.border,
-              backgroundColor: localDone ? colors.primary : 'transparent',
+            style={[s.checkBtn, stickerJam && s.stickerCheckBtn, {
+              borderColor: localDone && !stickerJam ? colors.primary : stickerJam ? colors.studioInk : colors.border,
+              backgroundColor: localDone ? (stickerJam ? colors.studioMint : colors.primary) : stickerJam ? colors.studioYellow : 'transparent',
             }]}
             onPress={handleLog}
             disabled={localDone || logMutation.isPending}
@@ -391,7 +445,9 @@ export default function HabitCard({ habit, onLogged, onDeleted }: HabitCardProps
             <Feather
               name="check"
               size={18}
-              color={localDone ? colors.primaryForeground : colors.mutedForeground}
+              color={localDone
+                ? (stickerJam ? colors.studioInk : colors.primaryForeground)
+                : (stickerJam ? colors.studioInk : colors.mutedForeground)}
             />
           </TouchableOpacity>
         </View>

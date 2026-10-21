@@ -204,15 +204,59 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
       color: colors.foreground,
     },
     sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 11,
       paddingHorizontal: 16,
-      paddingVertical: 10,
+      paddingTop: 22,
+      paddingBottom: 13,
+    },
+    sectionMark: {
+      width: 38,
+      height: 38,
+      borderRadius: 13,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.studioOrange,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      transform: [{ rotate: '-5deg' }],
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 3 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
     },
     sectionTitle: {
-      fontFamily: 'DMSans_600SemiBold',
-      fontSize: 13,
-      color: colors.mutedForeground,
-      textTransform: 'uppercase',
-      letterSpacing: 1,
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 20,
+      color: colors.studioInk,
+      letterSpacing: -0.4,
+    },
+    sectionHint: {
+      fontFamily: 'DMSans_500Medium',
+      fontSize: 11,
+      color: colors.studioMuted,
+    },
+    todaySticker: {
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 11,
+      backgroundColor: colors.studioYellow,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      transform: [{ rotate: '3deg' }],
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
+    },
+    todayStickerText: {
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 9,
+      color: colors.studioInk,
+      letterSpacing: 0.5,
     },
     // Modal
     modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.7)' },
@@ -268,7 +312,7 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
           data={isLoading || isError || habitsInvalid ? [] : habits}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
-              <HabitCard habit={item} onLogged={handleHabitLogged} onDeleted={refetch} />
+              <HabitCard habit={item} onLogged={handleHabitLogged} onDeleted={refetch} stickerJam />
           )}
           contentContainerStyle={s.listContent}
           testID="habits-scroll-list"
@@ -315,11 +359,15 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
                 </View>
               </View>
               {!isError && !habitsInvalid && habits.length > 0 ? <View>
-                <View style={s.milestoneWrap}>
-                  <HabitPracticeSummaryCard embedded onOpenHabits={() => undefined} />
-                </View>
-                <View style={s.sectionHeader}>
-                  <Text style={s.sectionTitle}>Today's Practice</Text>
+                <View style={s.sectionHeader} testID="today-habit-header">
+                  <View style={s.sectionMark}>
+                    <Feather name="check-circle" size={17} color={colors.ink} />
+                  </View>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Text style={s.sectionTitle} accessibilityRole="header" testID="today-habit-heading">Today's Habit</Text>
+                    <Text style={s.sectionHint}>Small reps. Keep your rhythm.</Text>
+                  </View>
+                  <View style={s.todaySticker}><Text style={s.todayStickerText}>TODAY</Text></View>
                 </View>
               </View> : null}
             </View>
@@ -344,6 +392,13 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
                 <Text style={s.emptyText}>Build your creative practice</Text>
               </View>
             )
+          }
+          ListFooterComponent={
+            !isError && !habitsInvalid ? (
+              <View style={s.milestoneWrap}>
+                <HabitPracticeSummaryCard embedded onOpenHabits={() => undefined} />
+              </View>
+            ) : null
           }
         />
 

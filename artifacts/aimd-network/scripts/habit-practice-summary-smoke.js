@@ -55,6 +55,11 @@ test('Monthly Streak displays real four-week progress and both reward amounts', 
   assert.match(text, /50/);
   assert.match(text, /200/);
   assert.equal(all(h.tree, node => node.props?.accessibilityRole === 'progressbar').length, 4);
+  const component = readFileSync(resolve(__dirname, '../components/HabitPracticeSummaryCard.tsx'), 'utf8');
+  assert.match(component, /monthlyRewardText:.*color: colors\.studioInk/);
+  assert.match(component, /monthlyRewardSub:.*color: colors\.studioInk/);
+  assert.match(component, /weekLabel:.*color: colors\.studioInk/);
+  assert.match(component, /weekCount:.*color: colors\.studioInk/);
   byId(h.tree, 'dashboard-your-habits-open').props.onPress();
   assert.equal(h.opened(), 1);
   assert.equal(byId(mount({ data: fixture }, true).tree, 'dashboard-your-habits-open'), undefined);
@@ -71,6 +76,10 @@ test('both routes share the same server-backed card and logging refreshes points
   const habits = readFileSync(resolve(__dirname, '../app/(tabs)/habits.tsx'), 'utf8');
   assert.match(dashboard, /<HabitPracticeSummaryCard/);
   assert.match(habits, /<HabitPracticeSummaryCard embedded/);
+  assert.match(habits, /ListFooterComponent=\{[\s\S]*?<HabitPracticeSummaryCard embedded/);
+  assert.match(habits, /Today's Habit/);
+  assert.doesNotMatch(habits, /Today's Practice/);
+  assert.match(habits, /<HabitCard[\s\S]*?stickerJam/);
   assert.doesNotMatch(habits, /Practice over time/);
   const card = readFileSync(resolve(__dirname, '../components/HabitCard.tsx'), 'utf8');
   assert.match(card, /getGetPracticeMilestonesQueryKey\(\)/);

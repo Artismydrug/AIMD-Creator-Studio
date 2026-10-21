@@ -45,6 +45,10 @@ const warmCanvas = {
   studioMint: '#B9E7DA',
   studioMuted: '#776A7D',
   studioShadow: '#21162C',
+  portfolioPaper: '#F9F8F6',
+  portfolioInk: '#1A1721',
+  portfolioMint: '#B9E7DA',
+  portfolioPink: '#D90069',
 };
 
 const colors = {
@@ -90,6 +94,10 @@ const colors = {
     studioMint: '#A9D7CB',
     studioMuted: '#B5A9B9',
     studioShadow: '#09070C',
+    portfolioPaper: '#17131C',
+    portfolioInk: '#FFF5E8',
+    portfolioMint: '#263A38',
+    portfolioPink: '#D90069',
   },
   radius: 16,
 };

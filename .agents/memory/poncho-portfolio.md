@@ -1,10 +1,16 @@
 ---
-name: Poncho artist portfolio
-description: The founder's public-facing artist identity, specialties, and inquiry destination.
+name: Shareable creator profiles
+description: Shared Sticker Jam portfolio presentation for every member's public Creator Studio profile.
 ---
 
-Edward “Poncho” Davila is the Lead Artist & Founder of AIMD, specializing in Custom Tattooing & Fine Art Commissions. A bespoke artist profile should feel like a premium digital portfolio, with Tattoo Work and Paintings as its primary categories rather than a social feed.
+Every Creator Studio member's public profile should feel like a shareable creative portfolio, populated by that member's own signup profile details and publicly shared feed work.
 
-**Why:** The owner supplied this identity and portfolio direction for a separately previewed artist profile.
+**Why:** The owner clarified that the portfolio design is the standard “Your Studio” profile for all members, not a separate founder-only page.
 
-**How to apply:** Keep the site and Instagram linked to Poncho's own presence. For direct bookings, use `https://ponchotheartist.com/booking/`. An in-app commission inquiry should only appear functional once its form and submission flow exist; do not imply a request was sent in a preview.
+**How to apply:** Show each member's own avatar, bio, discipline, public posts, website, and follow/message controls. Put profile editing behind a separate Edit action, and let members share their own profile link.
+
+Do not expose private habits, lesson reflections, or unpublished work on the public portfolio. Generic member profiles must not route into Poncho's booking or commission flow.
+
+**Why:** Signup profiles and the shareable public portfolio represent each member, while the existing edit page and private activity remain account-specific.
+
+**How to apply:** Source portfolio imagery only from the member's publicly published posts and provide a path back to account editing.

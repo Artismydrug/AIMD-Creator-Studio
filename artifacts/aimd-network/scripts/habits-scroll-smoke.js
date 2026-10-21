@@ -16,7 +16,7 @@ function jsxTree(file, inspect) {
   return source;
 }
 
-test('the Habits tagline, streak cards, weekly chart and practice list share one non-sticky scroll', () => {
+test('the Habits tagline, daily habit cards, and Monthly Streak share one non-sticky scroll', () => {
   let flatList, listHeader, habitHeader;
   jsxTree('../app/(tabs)/habits.tsx', node => {
     if (!ts.isJsxSelfClosingElement(node)) return;
@@ -43,7 +43,8 @@ test('the Habits tagline, streak cards, weekly chart and practice list share one
   assert.doesNotMatch(source, /<Text style=\{s\.headerTitle\}>Habits<\/Text>/, 'avoid repeating Habits beneath the screen title');
   assert.match(source, /<Text style=\{s\.tagline\}>Discipline Eats Talent<\/Text>/);
   assert.match(source, /accessibilityLabel="Add habit"/, 'the add-habit action stays visible next to the tagline');
-  for (const id of ['habit-weekly-progress', 'habits-scroll-list']) assert.ok(source.includes(id));
+  for (const id of ['today-habit-header', 'habits-scroll-list']) assert.ok(source.includes(id));
+  assert.match(source, /ListFooterComponent=\{[\s\S]*?HabitPracticeSummaryCard embedded/);
   assert.match(source, /scrollHeader/);
 });
 

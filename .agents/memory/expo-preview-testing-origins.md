@@ -14,3 +14,9 @@ Static Expo preview captures can intermittently be white even when browser logs 
 **Why:** A later capture rendered the sign-in page without any code change; other captures remained white despite password-field DOM logs. The cause was not established, so this is not evidence of a native TestFlight failure.
 
 **How to apply:** Distinguish static-capture limitations from reproducible app failures. Do not claim native or signed-in verification from a public preview screenshot.
+
+Mocked Expo booking tests must intercept the API host as well as the Expo preview origin, and block unmatched booking writes rather than allowing them to reach the server.
+
+**Why:** A browser test intercepted a draft response but missed its subsequent private-reference request on the API origin, producing an invalid-token response and an inconclusive retry test. A context-wide, any-host handler with explicit preflight handling isolated the flow correctly.
+
+**How to apply:** Install interception before opening the page, verify a mock-response marker, keep counters outside the browser page, and abort unhandled writes under the tested endpoint family. Do not mistake a partially mocked authorization failure for a product defect.
