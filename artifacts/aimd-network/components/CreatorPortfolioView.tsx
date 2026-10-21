@@ -188,13 +188,14 @@ export default function CreatorPortfolioView({
     primaryAction: { backgroundColor: colors.primary },
     actionText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 12 },
     primaryActionText: { color: colors.primaryForeground },
-    sectionHeader: { gap: 0 },
-    sectionTitle: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 22, lineHeight: 26 },
-    categoryScroll: { marginTop: -10, marginHorizontal: -4 },
-    categoryRow: { gap: 8, paddingHorizontal: 4, paddingVertical: 4 },
-    category: { minHeight: 36, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 99, borderWidth: 1.5, borderColor: colors.studioInk, backgroundColor: colors.studioPaper },
-    categorySelected: { backgroundColor: colors.studioYellow },
-    categoryText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 11 },
+    categoryScroll: { marginHorizontal: -16, borderBottomWidth: 1, borderBottomColor: colors.studioInk },
+    categoryRow: { minWidth: '100%', flexDirection: 'row', alignItems: 'stretch', paddingHorizontal: 16 },
+    category: {
+      minHeight: 44, flexGrow: 1, flexShrink: 0, justifyContent: 'center',
+      paddingHorizontal: 10, borderBottomWidth: 3, borderBottomColor: 'transparent',
+    },
+    categorySelected: { borderBottomColor: colors.studioOrange },
+    categoryText: { color: colors.studioMuted, fontFamily: 'DMSans_700Bold', fontSize: 11, textAlign: 'center' },
     grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
     tile: {
       borderRadius: 17, borderWidth: 1.5, borderColor: colors.studioInk,
@@ -374,25 +375,21 @@ export default function CreatorPortfolioView({
             </View>
           )}
 
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Selected work</Text>
-          </View>
-
           {workCategories.length > 0 && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll} testID="creator-work-tabs">
               <View style={styles.categoryRow}>
                 {[{ value: 'all', label: 'All work' }, ...workCategories].map((category) => {
                   const selected = selectedCategory === category.value;
                   return (
                     <Pressable
                       key={category.value}
-                      accessibilityRole="button"
+                      accessibilityRole="tab"
                       accessibilityState={{ selected }}
                       onPress={() => setSelectedCategory(category.value)}
                       style={[styles.category, selected && styles.categorySelected]}
                       testID={`creator-work-filter-${category.value}`}
                     >
-                      <Text style={styles.categoryText}>{category.label}</Text>
+                      <Text style={[styles.categoryText, selected && { color: colors.studioInk }]}>{category.label}</Text>
                     </Pressable>
                   );
                 })}

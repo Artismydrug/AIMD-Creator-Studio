@@ -57,6 +57,9 @@ test('inquiry settings are editable and creator cards link to the member portfol
   assert.match(studio, /value: 'tattoo'/);
   assert.match(studio, /value: 'painting'/);
   assert.match(studio, /value: 'murals'/);
+  assert.match(studio, /testID="creator-work-tabs"/);
+  assert.match(studio, /accessibilityRole="tab"/);
+  assert.doesNotMatch(studio, />Selected work</);
   assert.match(ownerStudio, /limit: 100/);
   assert.match(creatorStudio, /limit: 100/);
   assert.match(settings, /public studio and Creator Directory/);
