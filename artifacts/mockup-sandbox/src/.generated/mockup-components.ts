@@ -8,7 +8,9 @@ export const modules: ModuleMap = {
   "./components/mockups/canvas-board-art/OpenSketchbook.tsx": () => import("../components/mockups/canvas-board-art/OpenSketchbook.tsx"),
   "./components/mockups/canvas-board-art/PixelPractice.tsx": () => import("../components/mockups/canvas-board-art/PixelPractice.tsx"),
   "./components/mockups/canvas-board-art/StickerJam.tsx": () => import("../components/mockups/canvas-board-art/StickerJam.tsx"),
+  "./components/mockups/canvas-board-art/StickerPeelJam.tsx": () => import("../components/mockups/canvas-board-art/StickerPeelJam.tsx"),
   "./components/mockups/canvas-board-art/StreakOrbit.tsx": () => import("../components/mockups/canvas-board-art/StreakOrbit.tsx"),
   "./components/mockups/canvas-board-art/StudioFrequency.tsx": () => import("../components/mockups/canvas-board-art/StudioFrequency.tsx"),
-  "./components/mockups/canvas-board-art/WorkshopAtelier.tsx": () => import("../components/mockups/canvas-board-art/WorkshopAtelier.tsx")
+  "./components/mockups/canvas-board-art/WorkshopAtelier.tsx": () => import("../components/mockups/canvas-board-art/WorkshopAtelier.tsx"),
+  "./components/mockups/canvas-board-art/WorkshopBadges.tsx": () => import("../components/mockups/canvas-board-art/WorkshopBadges.tsx")
 };
