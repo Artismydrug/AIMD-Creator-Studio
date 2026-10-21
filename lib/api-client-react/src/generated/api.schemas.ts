@@ -1483,6 +1483,15 @@ export const TattooBookingNotificationStatus = {
   failed: 'failed',
 } as const;
 
+export type TattooBookingInputRequestType = typeof TattooBookingInputRequestType[keyof typeof TattooBookingInputRequestType];
+
+
+export const TattooBookingInputRequestType = {
+  tattoo: 'tattoo',
+  painting: 'painting',
+  other: 'other',
+} as const;
+
 export type TattooBookingInputPreferredArtist = typeof TattooBookingInputPreferredArtist[keyof typeof TattooBookingInputPreferredArtist];
 
 
@@ -1494,6 +1503,7 @@ export const TattooBookingInputPreferredArtist = {
 } as const;
 
 export interface TattooBookingInput {
+  requestType: TattooBookingInputRequestType;
   /**
      * @minLength 1
      * @maxLength 120
@@ -1559,7 +1569,17 @@ export interface TattooBookingSubmissionResult {
   notificationStatus: TattooBookingNotificationStatus;
 }
 
+export type TattooBookingRequestType = typeof TattooBookingRequestType[keyof typeof TattooBookingRequestType];
+
+
+export const TattooBookingRequestType = {
+  tattoo: 'tattoo',
+  painting: 'painting',
+  other: 'other',
+} as const;
+
 export interface TattooBooking {
+  requestType: TattooBookingRequestType;
   id: number;
   name: string;
   email: string;

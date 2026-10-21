@@ -1,16 +1,16 @@
 ---
 name: Your Studio profile policy
-description: Product decision to keep Your Studio and remove public creator portfolio-detail pages.
+description: Product decision to make Your Studio the public work portfolio and keep editing/account controls separate.
 ---
 
-Keep the existing Your Studio page as the member's profile and editing destination. Do not reintroduce the separate public Creative Portfolio page.
+Your Studio is each member's work-facing profile, usable by both the owner and visitors. Show the artist's public bio, work, follow/message actions, and an optional inquiry action. The member's own profile is the same portfolio view, not an account-settings screen.
 
-**Why:** The owner rejected the new portfolio build and chose to remove public profile-detail pages while keeping Your Studio.
+**Why:** The owner clarified that visitors must be able to open a creator's work from the directory and feed, while editing and account management clutter the portfolio.
 
-**How to apply:** The Dashboard profile image opens Your Studio. Keep Creator Directory as a list, with messaging available but no creator-detail navigation.
+**How to apply:** The Dashboard profile image opens the owner's Your Studio. Creator Directory identities and feed-post authors open that creator's Your Studio. Keep profile editing, optional inquiry settings, membership/app settings, and account deletion in a separate Edit Profile screen. Do not expose private membership or habit data on public profiles.
 
-The owner approved refreshing the existing Your Studio with the Sticker Jam artist mockup, using each member's own profile and published work. Inquiry tools are for every member to receive requests for their own work, not a founder-only commission flow.
+Inquiry links belong to each member and appear on their public profile only when enabled. Poncho's commission form remains the existing form-only destination for Tattoo, Painting, and Other; reference images stay in the private admin queue and submissions notify the studio by email.
 
-**Why:** The owner explicitly chose member-owned inquiries after clarifying the destination; the rejected part was the separate public profile, not the visual reference.
+**Why:** The owner wants each artist to control whether they accept inquiries, while keeping private commission references out of public artwork feeds.
 
-**How to apply:** Keep the restyle on Your Studio. Let members configure their own external contact or booking destination and availability; directory inquiry actions can open that destination without introducing public profile-detail pages.
+**How to apply:** Reuse the existing member-owned inquiry URL and open/closed setting; do not make inquiry availability global or expose inquiry attachments as portfolio posts.

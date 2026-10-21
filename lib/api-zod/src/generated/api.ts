@@ -2537,6 +2537,7 @@ export const createTattooBookingDraftBodyWebsiteMax = 200;
 
 
 export const CreateTattooBookingDraftBody = zod.object({
+  "requestType": zod.enum(['tattoo', 'painting', 'other']),
   "name": zod.string().min(1).max(createTattooBookingDraftBodyNameMax),
   "email": zod.email().max(createTattooBookingDraftBodyEmailMax),
   "phone": zod.string().max(createTattooBookingDraftBodyPhoneMax).nullish(),
@@ -2601,6 +2602,7 @@ export const SubmitTattooBookingResponse = zod.object({
  * @summary List submitted tattoo bookings for admins
  */
 export const ListAdminTattooBookingsResponseItem = zod.object({
+  "requestType": zod.enum(['tattoo', 'painting', 'other']),
   "id": zod.int(),
   "name": zod.string(),
   "email": zod.string(),
@@ -2638,6 +2640,7 @@ export const UpdateAdminTattooBookingBody = zod.object({
 })
 
 export const UpdateAdminTattooBookingResponse = zod.object({
+  "requestType": zod.enum(['tattoo', 'painting', 'other']),
   "id": zod.int(),
   "name": zod.string(),
   "email": zod.string(),

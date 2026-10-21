@@ -50,6 +50,7 @@ const ARTISTS = [
 ];
 
 type BookingForm = {
+  requestType: 'tattoo' | 'painting' | 'other';
   name: string;
   email: string;
   phone: string;
@@ -60,6 +61,7 @@ type BookingForm = {
 };
 
 const EMPTY_FORM: BookingForm = {
+  requestType: 'tattoo',
   name: '',
   email: '',
   phone: '',
@@ -69,7 +71,7 @@ const EMPTY_FORM: BookingForm = {
   artist: 'No preference',
 };
 
-const STEPS = ['Contact Info', 'Tattoo Concept', 'References & Review'] as const;
+const STEPS = ['Contact Info', 'Project Details', 'References & Review'] as const;
 
 export default function Tattoo() {
   const [form, setForm] = useState<BookingForm>(EMPTY_FORM);
@@ -81,8 +83,54 @@ export default function Tattoo() {
   const [submittedBookingId, setSubmittedBookingId] = useState<number | null>(null);
   const [notificationStatus, setNotificationStatus] = useState<'pending' | 'sent' | 'failed' | null>(null);
 
-  const set = (key: keyof BookingForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+  const set = (key: Exclude<keyof BookingForm, 'requestType'>) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  const requestCopy = {
+    tattoo: {
+      headline: 'Book Your Session',
+      detailPrompt: 'Tattoo Idea',
+      detailPlaceholder: 'Share the concept, style, and meaning behind your tattoo.',
+      placementLabel: 'Body Placement',
+      placementPlaceholder: 'e.g. left forearm',
+      sizeLabel: 'Estimated Size',
+      sizePlaceholder: 'e.g. 4 × 6 inches',
+      detailsTitle: 'Tattoo idea',
+    },
+    painting: {
+      headline: 'Commission a Painting',
+      detailPrompt: 'Painting Vision',
+      detailPlaceholder: 'Describe the subject, mood, palette, or story you want to see.',
+      placementLabel: 'Canvas or Surface',
+      placementPlaceholder: 'Canvas, wall, or another surface',
+      sizeLabel: 'Approximate Dimensions',
+      sizePlaceholder: 'e.g. 24 × 36 inches',
+      detailsTitle: 'Painting vision',
+    },
+    other: {
+      headline: 'Start a Creative Inquiry',
+      detailPrompt: 'Project Details',
+      detailPlaceholder: 'Tell us what you are imagining and what would make it feel right.',
+      placementLabel: 'Medium or Project Type',
+      placementPlaceholder: 'e.g. mural, illustration, design',
+      sizeLabel: 'Timeline or Scope',
+      sizePlaceholder: 'When you need it, or the scale of the project',
+      detailsTitle: 'Project details',
+    },
+  }[form.requestType];
+
+  const chooseRequestType = (requestType: BookingForm['requestType']) => {
+    setForm((current) => ({
+      ...current,
+      requestType,
+      idea: '',
+      placement: '',
+      size: '',
+      artist: requestType === 'tattoo' ? current.artist : 'Poncho The Artist',
+    }));
+    setStep(0);
+    setSubmissionError(null);
+  };
 
   const stepValid =
     step === 0
@@ -115,6 +163,7 @@ export default function Tattoo() {
 
     try {
       const draft = await createTattooBookingDraft({
+        requestType: form.requestType,
         name: form.name.trim(),
         email: form.email.trim(),
         phone: form.phone.trim() || null,
@@ -250,20 +299,19 @@ export default function Tattoo() {
         <div className="container mx-auto grid md:grid-cols-2 gap-10 items-start">
           <div>
             <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-primary mb-4">
-              <Calendar className="w-4 h-4" /> Booking Intake
+              <Calendar className="w-4 h-4" /> Commission Inquiry
             </div>
             <h2 className="text-3xl md:text-5xl font-black font-display uppercase tracking-tight mb-4">
-              Book Your Session
+              {requestCopy.headline}
             </h2>
             <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
-              Tell us your idea, placement, size, and preferred artist. We'll match you
-              with the right artist and confirm a time. Deposits lock in your session.
+              Share a little about your tattoo, painting, or creative project, and attach references. We’ll review your inquiry and follow up by email.
             </p>
             <ul className="space-y-3 mb-8">
               {[
-                'Describe your idea — references welcome',
-                'We pair you with the best-fit resident artist',
-                'Confirm date, deposit, and aftercare plan',
+                'Describe your project and what you have in mind',
+                'Add reference photos or sketches',
+                'We will follow up by email',
               ].map((step, i) => (
                 <li key={step} className="flex items-start gap-3">
                   <span className="w-6 h-6 border border-primary/40 text-primary font-mono text-xs flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -301,19 +349,19 @@ export default function Tattoo() {
               <CheckCircle2 className="w-12 h-12 text-primary mb-5" />
               <p className="font-mono text-xs uppercase tracking-widest text-primary mb-2">Request received</p>
               <h3 className="font-display font-black uppercase tracking-tight text-2xl mb-3">
-                You're in the studio queue.
+                Your request is in the studio queue.
               </h3>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                Your request #{submittedBookingId} and private reference images are saved. The AIMD team will review your idea and contact you about availability, deposit, and scheduling.
+                Your request #{submittedBookingId} and private reference images are saved. The AIMD team will review the details and follow up by email.
               </p>
               {notificationStatus === 'failed' ? (
                 <p className="text-sm border border-amber-500/40 bg-amber-500/10 p-3 mb-6">
-                  Your booking is safe in our dashboard. The inbox notice was delayed, so you can also reach us at{' '}
+                  Your inquiry is safe in our dashboard. The inbox notice was delayed, so you can also reach us at{' '}
                   <a className="underline font-medium" href={`mailto:${BOOKING_EMAIL}`}>{BOOKING_EMAIL}</a>.
                 </p>
               ) : notificationStatus === 'pending' ? (
                 <p className="text-sm text-muted-foreground mb-6">
-                  Your booking is saved and the studio inbox notification is processing.
+                  Your inquiry is saved and the studio inbox notification is processing.
                 </p>
               ) : (
                 <p className="text-sm text-muted-foreground mb-6">
@@ -333,7 +381,34 @@ export default function Tattoo() {
               </Button>
             </div>
           ) : (
-          <form onSubmit={handleSubmit} className="glass-card p-6 md:p-8 space-y-5">
+          <form onSubmit={handleSubmit} style={{ backgroundColor: '#F9F8F6', color: '#1A1721' }} className="border-2 border-[#1A1721] bg-[#F9F8F6] text-[#1A1721] shadow-[5px_5px_0_#1A1721] p-6 md:p-8 space-y-5">
+            <fieldset className="space-y-2">
+              <legend style={{ color: '#514B58' }} className="font-mono text-[10px] uppercase tracking-widest text-[#514B58]">
+                What are we making?
+              </legend>
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  ['tattoo', 'Tattoo', Sparkles],
+                  ['painting', 'Painting', Brush],
+                  ['other', 'Something else', ArrowRight],
+                ] as const).map(([value, label, Icon]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={form.requestType === value}
+                    onClick={() => chooseRequestType(value)}
+                    className={`min-h-12 flex items-center justify-center gap-1.5 border px-2 py-2 text-xs font-semibold transition-colors ${
+                      form.requestType === value
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-[#1A1721]/30 bg-white text-[#1A1721] hover:border-primary/70'
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
             <div className="absolute -left-[9999px] h-px w-px overflow-hidden" aria-hidden="true">
               <Label htmlFor="booking-website">Website</Label>
               <Input
@@ -354,7 +429,7 @@ export default function Tattoo() {
                     className="h-1.5 mb-2"
                     style={{ backgroundColor: i <= step ? 'var(--vibrant-magenta)' : 'var(--border)' }}
                   />
-                  <p className={`font-mono text-[10px] uppercase tracking-wide ${i === step ? 'text-foreground font-bold' : 'text-muted-foreground'}`}>
+                  <p className={`font-mono text-[10px] uppercase tracking-wide ${i === step ? 'text-[#1A1721] font-bold' : 'text-[#5B5560]'}`}>
                     {i + 1}. {label}
                   </p>
                 </div>
@@ -365,33 +440,33 @@ export default function Tattoo() {
               <>
                 <div className="grid sm:grid-cols-2 gap-5">
                   <div>
-                    <Label htmlFor="bk-name" className="font-mono text-xs uppercase">Name *</Label>
-                    <Input id="bk-name" required value={form.name} onChange={set('name')} className="rounded-none mt-1.5" placeholder="Your full name" />
+                    <Label htmlFor="bk-name" className="font-mono text-xs uppercase text-[#1A1721]">Name *</Label>
+                    <Input id="bk-name" required value={form.name} onChange={set('name')} className="rounded-none mt-1.5 bg-white text-[#1A1721] placeholder:text-[#746D79] border-[#1A1721]/30" placeholder="Your full name" />
                   </div>
                   <div>
-                    <Label htmlFor="bk-email" className="font-mono text-xs uppercase">Email *</Label>
-                    <Input id="bk-email" type="email" required value={form.email} onChange={set('email')} className="rounded-none mt-1.5" placeholder="you@email.com" />
+                    <Label htmlFor="bk-email" className="font-mono text-xs uppercase text-[#1A1721]">Email *</Label>
+                    <Input id="bk-email" type="email" required value={form.email} onChange={set('email')} className="rounded-none mt-1.5 bg-white text-[#1A1721] placeholder:text-[#746D79] border-[#1A1721]/30" placeholder="you@email.com" />
                   </div>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-5">
                   <div>
-                    <Label htmlFor="bk-phone" className="font-mono text-xs uppercase">Phone</Label>
-                    <Input id="bk-phone" type="tel" value={form.phone} onChange={set('phone')} className="rounded-none mt-1.5" placeholder="(555) 555-5555" />
+                    <Label htmlFor="bk-phone" className="font-mono text-xs uppercase text-[#1A1721]">Phone</Label>
+                    <Input id="bk-phone" type="tel" value={form.phone} onChange={set('phone')} className="rounded-none mt-1.5 bg-white text-[#1A1721] placeholder:text-[#746D79] border-[#1A1721]/30" placeholder="(555) 555-5555" />
                   </div>
-                  <div>
-                    <Label htmlFor="bk-artist" className="font-mono text-xs uppercase">Preferred Artist</Label>
+                  {form.requestType === 'tattoo' && <div>
+                    <Label htmlFor="bk-artist" className="font-mono text-xs uppercase text-[#1A1721]">Preferred Artist</Label>
                     <select
                       id="bk-artist"
                       value={form.artist}
                       onChange={set('artist')}
-                      className="mt-1.5 w-full h-10 border border-input bg-background px-3 text-sm rounded-none"
+                      className="mt-1.5 w-full h-10 border border-[#1A1721]/30 bg-white px-3 text-sm text-[#1A1721] rounded-none"
                     >
                       <option>No preference</option>
                       <option>Poncho The Artist</option>
                       <option>Edwin</option>
                       <option>Ash</option>
                     </select>
-                  </div>
+                  </div>}
                 </div>
               </>
             )}
@@ -399,17 +474,17 @@ export default function Tattoo() {
             {step === 1 && (
               <>
                 <div>
-                  <Label htmlFor="bk-idea" className="font-mono text-xs uppercase">Tattoo Idea *</Label>
-                  <Textarea id="bk-idea" required value={form.idea} onChange={set('idea')} className="rounded-none mt-1.5 min-h-28" placeholder="Describe your tattoo idea, style, and any meaning behind it" />
+                  <Label htmlFor="bk-idea" className="font-mono text-xs uppercase text-[#1A1721]">{requestCopy.detailPrompt} *</Label>
+                  <Textarea id="bk-idea" required value={form.idea} onChange={set('idea')} className="rounded-none mt-1.5 min-h-28 bg-white text-[#1A1721] placeholder:text-[#746D79] border-[#1A1721]/30" placeholder={requestCopy.detailPlaceholder} />
                 </div>
                 <div className="grid sm:grid-cols-2 gap-5">
                   <div>
-                    <Label htmlFor="bk-placement" className="font-mono text-xs uppercase">Body Placement *</Label>
-                    <Input id="bk-placement" required value={form.placement} onChange={set('placement')} className="rounded-none mt-1.5" placeholder="e.g. left forearm" />
+                    <Label htmlFor="bk-placement" className="font-mono text-xs uppercase text-[#1A1721]">{requestCopy.placementLabel} *</Label>
+                    <Input id="bk-placement" required value={form.placement} onChange={set('placement')} className="rounded-none mt-1.5 bg-white text-[#1A1721] placeholder:text-[#746D79] border-[#1A1721]/30" placeholder={requestCopy.placementPlaceholder} />
                   </div>
                   <div>
-                    <Label htmlFor="bk-size" className="font-mono text-xs uppercase">Estimated Size *</Label>
-                    <Input id="bk-size" required value={form.size} onChange={set('size')} className="rounded-none mt-1.5" placeholder='e.g. 4" x 6"' />
+                    <Label htmlFor="bk-size" className="font-mono text-xs uppercase text-[#1A1721]">{requestCopy.sizeLabel} *</Label>
+                    <Input id="bk-size" required value={form.size} onChange={set('size')} className="rounded-none mt-1.5 bg-white text-[#1A1721] placeholder:text-[#746D79] border-[#1A1721]/30" placeholder={requestCopy.sizePlaceholder} />
                   </div>
                 </div>
               </>
@@ -418,26 +493,26 @@ export default function Tattoo() {
             {step === 2 && (
               <>
                 <div>
-                  <Label htmlFor="bk-refs" className="font-mono text-xs uppercase">Reference Images (up to 6)</Label>
+                  <Label htmlFor="bk-refs" className="font-mono text-xs uppercase text-[#1A1721]">Reference Images (up to 6)</Label>
                   <label
                     htmlFor="bk-refs"
                     className="mt-1.5 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer py-8 px-4 text-center"
                   >
                     <ImagePlus className="w-6 h-6 text-primary" />
                     <span className="font-mono text-xs uppercase text-primary">Add reference images</span>
-                    <span className="text-xs text-muted-foreground">Style examples, sketches, or photos of the placement area</span>
+                    <span className="text-xs text-[#5B5560]">Style examples, sketches, or project references</span>
                   </label>
                   <input id="bk-refs" type="file" accept="image/*" multiple className="sr-only" onChange={addReferences} />
                   {references.length > 0 && (
                     <ul className="mt-3 space-y-1.5">
                       {references.map((f, i) => (
-                        <li key={`${f.name}-${i}`} className="flex items-center justify-between gap-2 text-sm bg-background border border-border px-3 py-1.5">
+                        <li key={`${f.name}-${i}`} className="flex items-center justify-between gap-2 text-sm text-[#1A1721] bg-white border border-[#1A1721]/20 px-3 py-1.5">
                           <span className="truncate">{f.name}</span>
                           <button
                             type="button"
                             aria-label={`Remove ${f.name}`}
                             onClick={() => setReferences((prev) => prev.filter((_, j) => j !== i))}
-                            className="text-muted-foreground hover:text-foreground flex-shrink-0"
+                            className="text-[#5B5560] hover:text-[#1A1721] flex-shrink-0"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -448,14 +523,15 @@ export default function Tattoo() {
                 </div>
 
                 {/* Review summary */}
-                <div className="border border-border bg-background p-4 space-y-1.5 text-sm">
+                <div className="border border-[#1A1721]/20 bg-white p-4 space-y-1.5 text-sm text-[#1A1721]">
                   <p className="font-mono text-[11px] uppercase tracking-widest text-primary mb-2">Review Your Request</p>
-                  <p><span className="text-muted-foreground">Name:</span> {form.name}</p>
-                  <p><span className="text-muted-foreground">Email:</span> {form.email}</p>
-                  {form.phone && <p><span className="text-muted-foreground">Phone:</span> {form.phone}</p>}
-                  <p><span className="text-muted-foreground">Artist:</span> {form.artist}</p>
-                  <p><span className="text-muted-foreground">Placement:</span> {form.placement} · <span className="text-muted-foreground">Size:</span> {form.size}</p>
-                  <p className="line-clamp-3"><span className="text-muted-foreground">Idea:</span> {form.idea}</p>
+                  <p><span className="text-[#5B5560]">Name:</span> {form.name}</p>
+                  <p><span className="text-[#5B5560]">Email:</span> {form.email}</p>
+                  {form.phone && <p><span className="text-[#5B5560]">Phone:</span> {form.phone}</p>}
+                  <p><span className="text-[#5B5560]">Request type:</span> {({ tattoo: 'Tattoo', painting: 'Painting', other: 'Other' })[form.requestType]}</p>
+                  {form.requestType === 'tattoo' && <p><span className="text-[#5B5560]">Artist:</span> {form.artist}</p>}
+                  <p><span className="text-[#5B5560]">{requestCopy.placementLabel}:</span> {form.placement} · <span className="text-[#5B5560]">{requestCopy.sizeLabel}:</span> {form.size}</p>
+                  <p className="line-clamp-3"><span className="text-[#5B5560]">{requestCopy.detailsTitle}:</span> {form.idea}</p>
                 </div>
               </>
             )}
@@ -466,7 +542,7 @@ export default function Tattoo() {
                   type="button"
                   variant="outline"
                   size="lg"
-                  className="h-14 rounded-none border-foreground/20 uppercase font-mono font-bold"
+                  className="h-14 rounded-none border-[#1A1721]/30 text-[#1A1721] uppercase font-mono font-bold"
                   onClick={() => setStep(step - 1)}
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" /> Back
@@ -490,14 +566,14 @@ export default function Tattoo() {
                     ) : (
                       <Mail className="w-4 h-4 mr-2" />
                     )}
-                    {isSubmitting ? 'Submitting…' : 'Send Booking Request'}
+                    {isSubmitting ? 'Sending…' : 'Send Inquiry'}
                     <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </Button>
             </div>
             {step === STEPS.length - 1 && (
-              <p className="font-mono text-xs text-muted-foreground">
+              <p className="font-mono text-xs text-[#5B5560]">
                 Your request and reference images are sent securely to the AIMD studio. Questions? Email {BOOKING_EMAIL}.
               </p>
             )}

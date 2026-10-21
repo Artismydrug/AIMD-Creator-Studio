@@ -14,6 +14,7 @@ export const tattooBookingsTable = pgTable(
   "tattoo_bookings",
   {
     id: serial("id").primaryKey(),
+    requestType: text("request_type").$type<"tattoo" | "painting" | "other">().notNull().default("tattoo"),
     name: text("name").notNull(),
     email: text("email").notNull(),
     phone: text("phone"),

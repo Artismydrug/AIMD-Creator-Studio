@@ -162,6 +162,7 @@ function toBookingResponse(
 ) {
   return {
     id: booking.id,
+    requestType: booking.requestType,
     name: booking.name,
     email: booking.email,
     phone: booking.phone,
@@ -256,6 +257,7 @@ router.post("/tattoo-bookings", async (req, res): Promise<void> => {
   const [booking] = await db
     .insert(tattooBookingsTable)
     .values({
+      requestType: parsed.data.requestType,
       name: parsed.data.name.trim(),
       email: parsed.data.email.trim().toLowerCase(),
       phone: parsed.data.phone?.trim() || null,
@@ -401,6 +403,7 @@ router.post(
     try {
       await sendTattooBookingNotification({
         id: submitted.id,
+        requestType: submitted.requestType,
         name: submitted.name,
         email: submitted.email,
         phone: submitted.phone,

@@ -60,6 +60,9 @@ test('Monthly Streak displays real four-week progress and both reward amounts', 
   assert.match(component, /monthlyRewardSub:.*color: colors\.studioInk/);
   assert.match(component, /weekLabel:.*color: colors\.studioInk/);
   assert.match(component, /weekCount:.*color: colors\.studioInk/);
+  assert.match(component, /card: \{[\s\S]*?backgroundColor: colors\.studioInk,[\s\S]*?borderColor: colors\.studioViolet/);
+  assert.match(component, /title: \{[\s\S]*?color: colors\.studioPaper/);
+  assert.match(component, /dot: \{ width: 8, height: 8, borderRadius: 99/);
   byId(h.tree, 'dashboard-your-habits-open').props.onPress();
   assert.equal(h.opened(), 1);
   assert.equal(byId(mount({ data: fixture }, true).tree, 'dashboard-your-habits-open'), undefined);

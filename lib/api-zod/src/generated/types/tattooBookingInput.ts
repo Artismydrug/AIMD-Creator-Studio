@@ -6,8 +6,10 @@
  * OpenAPI spec version: 0.2.0
  */
 import type { TattooBookingInputPreferredArtist } from './tattooBookingInputPreferredArtist';
+import type { TattooBookingInputRequestType } from './tattooBookingInputRequestType';
 
 export interface TattooBookingInput {
+  requestType: TattooBookingInputRequestType;
   /**
      * @minLength 1
      * @maxLength 120

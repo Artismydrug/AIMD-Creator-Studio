@@ -156,6 +156,10 @@ test('original section tabs collapse while the pager keeps its full viewport', (
     'expo-router': { useFocusEffect() {}, useRouter: () => ({}) },
   }, props);
   assert.ok(node(h.tree, 'feed-expanded-navigation'));
+  assert.equal(node(h.tree, 'feed-menu-toggle'), undefined, 'section tabs replace the duplicate menu while expanded');
+  assert.equal(node(h.tree, 'feed-mode-filters').props.style[1].padding, 3, 'All/Following sits in one segmented sticker control');
+  assert.equal(node(h.tree, 'feed-navigation-title').props.style[0].fontSize, 26, 'Feed title matches the Community page header');
+  assert.equal(node(h.tree, 'feed-navigation-subtitle').props.style[0].fontSize, 11);
   for (const section of ['feed', 'creators', 'events']) node(h.tree, `community-${section}-tab`).props.onPress();
   assert.deepEqual(calls, [['scope', 'community'], ['section', 'creators'], ['section', 'events']]);
   node(h.tree, 'feed-navigation-overlay').props.onLayout({ nativeEvent: { layout: { height: 230 } } });
@@ -168,6 +172,18 @@ test('original section tabs collapse while the pager keeps its full viewport', (
   assert.equal(node(h.tree, 'feed-navigation-overlay').props.style[0].position, 'absolute');
   const menuItems = findAll(h.tree, item => typeof item.props?.testID === 'string' && item.props.testID.startsWith('feed-menu-') && !['feed-menu-toggle', 'feed-menu-close', 'feed-menu-backdrop'].includes(item.props.testID));
   assert.deepEqual(menuItems.map(item => item.props.testID), ['feed-menu-community', 'feed-menu-creators', 'feed-menu-events']);
+});
+
+test('Your Studio work composer returns to Studio and keeps its category', () => {
+  const profile = readFileSync(resolve(__dirname, '../app/profile.tsx'), 'utf8');
+  const feed = readFileSync(resolve(__dirname, '../app/feed.tsx'), 'utf8');
+  assert.match(profile, /returnTo:\s*'profile'/);
+  assert.match(profile, /pathname: '\/feed'/);
+  assert.match(profile, /category && category !== 'all' \? \{ category \} : \{\}/);
+  assert.match(profile, /onAddWork=\{\(category\) => router\.push/);
+  assert.match(feed, /returnTo\?: string/);
+  assert.match(feed, /if \(isStudioComposer\) router\.replace\('\/profile'\)/);
+  assert.match(feed, /setTags\(categoryTag/);
 });
 
 test('Feed title and icon stay below the web status area and align to the app header inset', () => {

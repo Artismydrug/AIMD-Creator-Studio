@@ -57,24 +57,24 @@ export default function HabitPracticeSummaryCard({ onOpenHabits, embedded = fals
     card: {
       marginHorizontal: embedded ? 0 : 16,
       marginTop: embedded ? 0 : 16,
-      padding: 16,
-      backgroundColor: colors.studioPaper,
-      borderColor: colors.studioInk,
+      padding: 18,
+      backgroundColor: colors.studioInk,
+      borderColor: colors.studioViolet,
       borderWidth: 2,
-      borderRadius: 24,
+      borderRadius: 28,
       gap: 14,
       shadowColor: colors.studioShadow,
-      shadowOffset: { width: 4, height: 5 },
+      shadowOffset: { width: 5, height: 6 },
       shadowOpacity: 1,
       shadowRadius: 0,
-      elevation: 3,
+      elevation: 4,
     },
     header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    headerMark: { width: 34, height: 34, borderRadius: 11, backgroundColor: colors.studioOrange, borderWidth: 1.5, borderColor: colors.ink, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-5deg' }] },
+    headerMark: { width: 34, height: 34, borderRadius: 11, backgroundColor: colors.studioYellow, borderWidth: 1.5, borderColor: colors.studioPaper, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-5deg' }] },
     titleCopy: { flex: 1, minWidth: 0 },
-    title: { fontFamily: 'DMSans_700Bold', fontSize: 19, color: colors.studioInk, letterSpacing: -0.4 },
-    range: { fontFamily: 'DMSans_500Medium', fontSize: 12, color: colors.studioMuted, marginTop: 1 },
-    viewAll: { minHeight: 44, minWidth: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 2, paddingHorizontal: 10, borderWidth: 1.5, borderColor: colors.studioInk, borderRadius: 13, backgroundColor: colors.studioPaperAlt },
+    title: { fontFamily: 'DMSans_700Bold', fontSize: 19, color: colors.studioPaper, letterSpacing: -0.4 },
+    range: { fontFamily: 'DMSans_500Medium', fontSize: 12, color: colors.studioPaper, marginTop: 1 },
+    viewAll: { minHeight: 44, minWidth: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 2, paddingHorizontal: 10, borderWidth: 1.5, borderColor: colors.studioViolet, borderRadius: 13, backgroundColor: colors.studioPaper },
     viewAllText: { fontFamily: 'DMSans_600SemiBold', fontSize: 12, color: colors.studioVioletText },
     rewards: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
     reward: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 99, borderWidth: 1.5, borderColor: colors.studioInk },
@@ -84,19 +84,19 @@ export default function HabitPracticeSummaryCard({ onOpenHabits, embedded = fals
     monthlyRewardSub: { fontFamily: 'DMSans_600SemiBold', fontSize: 11, color: colors.studioInk },
     weeks: { flexDirection: 'row', gap: 6 },
     week: { flex: 1, minWidth: 0, alignItems: 'center', gap: 6, paddingVertical: 10, paddingHorizontal: 4, borderRadius: 14, borderWidth: 1.5, borderColor: colors.studioLine, backgroundColor: colors.studioPaperAlt },
-    weekCurrent: { borderColor: colors.studioInk, backgroundColor: colors.studioYellow },
+    weekCurrent: { borderColor: colors.ink, backgroundColor: colors.studioYellow },
     weekLabel: { fontFamily: 'DMSans_700Bold', fontSize: 11, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.studioInk },
-    dots: { flexDirection: 'row', gap: 3 },
-    dot: { width: 7, height: 12, borderRadius: 3, borderWidth: 1, borderColor: colors.studioLine, backgroundColor: 'transparent' },
-    dotOn: { backgroundColor: colors.studioOrange, borderColor: colors.ink },
+    dots: { flexDirection: 'row', gap: 4 },
+    dot: { width: 8, height: 8, borderRadius: 99, borderWidth: 1, borderColor: colors.studioLine, backgroundColor: 'transparent' },
+    dotOn: { backgroundColor: colors.studioViolet, borderColor: colors.studioViolet },
     weekCount: { fontFamily: 'DMSans_700Bold', fontSize: 14, color: colors.studioInk },
     footer: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    footerText: { flex: 1, fontFamily: 'DMSans_500Medium', fontSize: 12, lineHeight: 17, color: colors.studioMuted },
+    footerText: { flex: 1, fontFamily: 'DMSans_500Medium', fontSize: 12, lineHeight: 17, color: colors.studioPaper },
     status: { minHeight: 96, alignItems: 'center', justifyContent: 'center', gap: 8 },
-    statusText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.studioMuted, textAlign: 'center' },
-    statusBtn: { minHeight: 44, paddingHorizontal: 18, justifyContent: 'center', borderRadius: 99, borderWidth: 1.5, borderColor: colors.studioInk, backgroundColor: colors.studioPaperAlt },
+    statusText: { fontFamily: 'DMSans_500Medium', fontSize: 13, color: colors.studioPaper, textAlign: 'center' },
+    statusBtn: { minHeight: 44, paddingHorizontal: 18, justifyContent: 'center', borderRadius: 99, borderWidth: 1.5, borderColor: colors.studioViolet, backgroundColor: colors.studioPaper },
     statusBtnText: { fontFamily: 'DMSans_700Bold', fontSize: 13, color: colors.studioVioletText },
-    skeleton: { flex: 1, height: 74, borderRadius: 14, backgroundColor: colors.studioPaperAlt, borderWidth: 1.5, borderColor: colors.studioLine },
+    skeleton: { flex: 1, height: 74, borderRadius: 14, backgroundColor: colors.studioPaperAlt, borderWidth: 1.5, borderColor: colors.studioPaper },
   }), [colors, embedded]);
 
   const currentDays = clampDays(data?.currentWeekDays ?? 0);
@@ -170,7 +170,7 @@ export default function HabitPracticeSummaryCard({ onOpenHabits, embedded = fals
             })}
           </View>
           <View style={s.footer} accessibilityLiveRegion="polite">
-            <Feather name={anyPractice ? 'trending-up' : 'feather'} size={14} color={colors.studioMuted} />
+            <Feather name={anyPractice ? 'trending-up' : 'feather'} size={14} color={colors.studioPaper} />
             <Text style={s.footerText}>
               {anyPractice
                 ? `${currentDays}/${WEEK_GOAL} days this week · ${completedWeeks}/4 weeks done`

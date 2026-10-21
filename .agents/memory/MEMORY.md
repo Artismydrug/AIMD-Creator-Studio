@@ -50,4 +50,4 @@
 - [Creator Arcade policy](mini-habit-studio-policy.md) — renamed from Mini Habit Studio; first activity is local-only Flash Sketch, separate from points, habit completion, and streaks.
 - [Metro multi-artifact startup](metro-multi-artifact-startup.md) — healthy Expo dependencies do not rule out watcher timeouts caused by unrelated sibling artifacts.
 - [Sticker Jam visual direction](design-exploration-isolation.md) — approved app-wide; preserve each route’s content and interactions while applying the shared design system.
-- [Your Studio profile policy](poncho-portfolio.md) — keep the existing Your Studio screen; Creator Directory is a list without public profile-detail pages.
+- [Your Studio profile policy](poncho-portfolio.md) — public work profiles for owners and visitors; keep profile editing, inquiry controls, and account settings separate.

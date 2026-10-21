@@ -7,9 +7,11 @@
  */
 import type { TattooBookingNotificationStatus } from './tattooBookingNotificationStatus';
 import type { TattooBookingReference } from './tattooBookingReference';
+import type { TattooBookingRequestType } from './tattooBookingRequestType';
 import type { TattooBookingStatus } from './tattooBookingStatus';
 
 export interface TattooBooking {
+  requestType: TattooBookingRequestType;
   id: number;
   name: string;
   email: string;

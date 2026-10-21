@@ -68,10 +68,39 @@ afterAll(async () => {
 });
 
 describe("tattoo booking intake", () => {
+  it("accepts Painting and Other commission requests and emails each category", async () => {
+    for (const requestType of ["painting", "other"] as const) {
+      const draft = await request(appFor())
+        .post("/api/tattoo-bookings")
+        .set("User-Agent", `commission-${requestType}-${suffix}`)
+        .send({
+          requestType,
+          name: "Commission Test",
+          email: testEmail,
+          idea: "An illustrated design for a community arts event",
+          placement: requestType === "painting" ? "Canvas" : "Illustration and print",
+          estimatedSize: requestType === "painting" ? "24 by 36 inches" : "Needed in six weeks",
+          preferredArtist: "Poncho The Artist",
+          website: "",
+        });
+
+      expect(draft.status).toBe(201);
+      const submitted = await request(appFor())
+        .post(`/api/tattoo-bookings/${draft.body.id}/submit`)
+        .send({ uploadToken: draft.body.uploadToken });
+
+      expect(submitted.status).toBe(200);
+      expect(sendNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ requestType }),
+      );
+    }
+  });
+
   it("stores a public request, sends the notification, and exposes it only to admins", async () => {
     const draft = await request(appFor())
       .post("/api/tattoo-bookings")
       .send({
+        requestType: "tattoo",
         name: "Booking Test",
         email: testEmail,
         phone: "555-0101",
@@ -162,6 +191,7 @@ describe("tattoo booking intake", () => {
     const response = await request(appFor())
       .post("/api/tattoo-bookings")
       .send({
+        requestType: "tattoo",
         name: "Spam Bot",
         email: "spam@example.test",
         idea: "This is long enough to satisfy the minimum",

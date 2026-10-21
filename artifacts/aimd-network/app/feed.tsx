@@ -69,7 +69,13 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { getToken } = useAuth();
-  const { compose } = useLocalSearchParams<{ compose?: string }>();
+  const { compose, returnTo, category } = useLocalSearchParams<{
+    compose?: string;
+    returnTo?: string;
+    category?: string;
+  }>();
+  const isStudioComposer = !embedded && returnTo === 'profile';
+  const categoryTag = typeof category === 'string' ? category : category?.[0];
   const queryClient = useQueryClient();
   const feedRef = useRef<FlatList<StudioPost>>(null);
   const [composing, setComposing] = useState(false);
@@ -124,8 +130,11 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
     if (!embedded && compose === '1') {
       setScope('community');
       setComposing(true);
+      if (isStudioComposer) {
+        setTags(categoryTag && ['tattoo', 'painting', 'murals'].includes(categoryTag) ? categoryTag : '');
+      }
     }
-  }, [compose, embedded]);
+  }, [compose, embedded, isStudioComposer, categoryTag]);
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -213,6 +222,13 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
             return [createdPost, ...currentPosts];
           },
         );
+        if (isStudioComposer && me?.id) {
+          const myPostsKey = getListStudioPostsQueryKey({ userId: me.id, limit: 10 });
+          queryClient.setQueryData<StudioPost[]>(myPostsKey, (currentPosts = []) => {
+            const withoutDuplicate = currentPosts.filter((post) => post.id !== createdPost.id);
+            return [createdPost, ...withoutDuplicate].slice(0, 10);
+          });
+        }
         setFeedMode('all');
         setActiveIndex(0);
         requestAnimationFrame(() => feedRef.current?.scrollToOffset({ offset: 0, animated: false }));
@@ -226,6 +242,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
         setSelectedMedia(null);
         setUploadProgress(0);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        if (isStudioComposer) router.replace('/profile');
       },
       onError: (error) => {
         const message =
@@ -449,6 +466,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
     setCaption('');
     setTags('');
     setUploadProgress(0);
+    if (isStudioComposer) router.replace('/profile');
   };
 
   const handleFeedModeChange = (mode: 'all' | 'following') => {

@@ -1,873 +1,121 @@
-import React, { useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Linking,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import { KeyboardAwareScrollViewCompat as KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollViewCompat';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import React from 'react';
+import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
-import { useAuth } from '@clerk/expo';
 import {
-  customFetch,
-  getBaseUrl,
   getGetUserProfileQueryKey,
-  useGetCurrentUser,
-  useGetProgress,
-  useGetUserProfile,
-  useDeleteCurrentUser,
-  useListBadges,
-  useListStudioPosts,
   getListStudioPostsQueryKey,
-  useUpdateCurrentUser,
-  useGetNotifications,
-  getGetNotificationsQueryKey,
+  useGetCurrentUser,
+  useGetUserProfile,
+  useListStudioPosts,
 } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
-import LegalHelpLinks from '@/components/LegalHelpLinks';
-import StudioInquirySettings from '@/components/StudioInquirySettings';
-import { clearHabitReminders } from '@/lib/habitReminders';
-import { miniHabitSketchbook } from '@/lib/miniHabitSketchbookStorage';
-import StudioVideo from '@/components/StudioVideo';
-import AudioTrackPlayer from '@/components/AudioTrackPlayer';
-import PostOwnerActions from '@/components/PostOwnerActions';
-import AppearanceSettings from '@/components/AppearanceSettings';
-import { unregisterPushDevice } from '@/lib/pushNotifications';
-import { BiometricUnlockSettings } from '@/components/SessionSecurity';
-import { sessionSecurityStore } from '@/lib/sessionSecurity';
+import CreatorPortfolioView, { type CreatorPortfolioProfile } from '@/components/CreatorPortfolioView';
+import { getStudioInquiryLink } from '@/lib/studioInquiry';
 
-type LocalImage = { uri: string; contentType: string } | null;
-const HANDLE_PATTERN = /^[a-zA-Z0-9_]{3,28}$/;
-
-function normalizeHandle(value: string): string {
-  return value
-    .replace(/[^a-zA-Z0-9_]+/g, '_')
-    .replace(/_+/g, '_')
-    .slice(0, 28);
-}
-
-function getProfileSaveError(error: unknown): string {
-  if (
-    error &&
-    typeof error === 'object' &&
-    'data' in error &&
-    error.data &&
-    typeof error.data === 'object' &&
-    'error' in error.data &&
-    typeof error.data.error === 'string'
-  ) {
-    return error.data.error;
-  }
-  return 'Please try again.';
-}
-
-function resolveImageUrl(url: string | null | undefined): string | null {
-  if (!url) return null;
-  if (/^https?:\/\//i.test(url)) return url;
-  const base = getBaseUrl();
-  return base ? `${base}${url}` : url;
-}
-
-async function uploadAvatar(uri: string, contentType: string): Promise<string> {
-  const fileResponse = await fetch(uri);
-  const arrayBuffer = await fileResponse.arrayBuffer();
-  const result = await customFetch<{ objectPath: string }>('/api/storage/uploads', {
-    method: 'POST',
-    headers: { 'Content-Type': contentType },
-    body: arrayBuffer,
-  });
-  return `/api/storage${result.objectPath}`;
-}
-
-function initials(username: string): string {
-  return username.slice(0, 2).toUpperCase();
-}
-
-function Avatar({
-  username,
-  avatarUrl,
-  size,
-}: {
-  username: string;
-  avatarUrl: string | null | undefined;
-  size: number;
-}) {
-  const colors = useColors();
-  const source = resolveImageUrl(avatarUrl);
-  return (
-    <View style={[styles.avatar, { width: size, height: size, borderRadius: size / 2, backgroundColor: colors.muted }]}>
-      {source ? (
-        <Image source={{ uri: source }} style={{ width: size, height: size, borderRadius: size / 2 }} />
-      ) : (
-        <Text style={[styles.avatarText, { color: colors.primary, fontSize: size * 0.35 }]}>{initials(username)}</Text>
-      )}
-    </View>
-  );
-}
-
-function ProfileEditor({
-  id,
-  username: initialUsername,
-  bio: initialBio,
-  discipline: initialDiscipline,
-  location: initialLocation,
-  avatarUrl: initialAvatarUrl,
-  onSaved,
-}: {
-  id: number;
-  username: string;
-  bio: string | null | undefined;
-  discipline: string | null | undefined;
-  location: string | null | undefined;
-  avatarUrl: string | null | undefined;
-  onSaved: () => void;
-}) {
-  const colors = useColors();
-  const [username, setUsername] = useState(initialUsername);
-  const [bio, setBio] = useState(initialBio ?? '');
-  const [discipline, setDiscipline] = useState(initialDiscipline ?? '');
-  const [location, setLocation] = useState(initialLocation ?? '');
-  const [selectedAvatar, setSelectedAvatar] = useState<LocalImage>(null);
-  const [saving, setSaving] = useState(false);
-  const updateProfile = useUpdateCurrentUser();
-  const avatarPreview = selectedAvatar?.uri ?? resolveImageUrl(initialAvatarUrl);
-
-  const chooseAvatar = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      if (!permission.canAskAgain && Platform.OS !== 'web') {
-        Alert.alert(
-          'Photo access is off',
-          'Enable photo access in Settings to choose a profile image.',
-          [{ text: 'Not now', style: 'cancel' }, { text: 'Open Settings', onPress: () => Linking.openSettings().catch(() => undefined) }],
-        );
-      } else {
-        Alert.alert('Photo access needed', 'Allow photo access to choose a profile image.');
-      }
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.85,
-    });
-    if (result.canceled || !result.assets[0]) return;
-
-    const asset = result.assets[0];
-    const extension = asset.uri.split('.').pop()?.toLowerCase();
-    const contentType = asset.mimeType ?? ({
-      jpg: 'image/jpeg',
-      jpeg: 'image/jpeg',
-      png: 'image/png',
-      webp: 'image/webp',
-      heic: 'image/heic',
-    }[extension ?? ''] ?? 'image/jpeg');
-    setSelectedAvatar({ uri: asset.uri, contentType });
-  };
-
-  const save = async () => {
-    if (saving) return;
-    const handle = normalizeHandle(username.trim()).replace(/^_+|_+$/g, '');
-    setUsername(handle);
-    if (!HANDLE_PATTERN.test(handle)) {
-      Alert.alert(
-        'Update your handle',
-        'Use 3–28 letters, numbers, or underscores. Spaces and punctuation become underscores.',
-      );
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const avatarUrl = selectedAvatar
-        ? await uploadAvatar(selectedAvatar.uri, selectedAvatar.contentType)
-        : undefined;
-      await updateProfile.mutateAsync({
-        data: {
-          username: handle,
-          bio: bio.trim() || null,
-          discipline: discipline.trim() || null,
-          location: location.trim() || null,
-          ...(avatarUrl ? { avatarUrl } : {}),
-        },
-      });
-      Alert.alert('Profile saved', 'Your creator profile is up to date.');
-      onSaved();
-    } catch (error) {
-      Alert.alert('Could not save profile', getProfileSaveError(error));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <View style={[styles.editor, { borderColor: colors.border, backgroundColor: colors.card }]}>
-      <View style={styles.editorHeader}>
-        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Creator profile</Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Choose profile photo"
-          onPress={chooseAvatar}
-          style={styles.avatarPicker}
-          testID="choose-profile-avatar"
-        >
-          <Avatar username={username || initialUsername} avatarUrl={avatarPreview} size={76} />
-          <View style={[styles.avatarEdit, { backgroundColor: colors.primary }]}>
-            <Feather name="camera" size={13} color={colors.primaryForeground} />
-          </View>
-        </Pressable>
-      </View>
-
-      <Text style={[styles.inputLabel, { color: colors.mutedForeground }]}>Handle</Text>
-      <TextInput
-        accessibilityLabel="Creator handle"
-        autoCapitalize="none"
-        maxLength={28}
-        onChangeText={(value) => setUsername(normalizeHandle(value))}
-        style={[styles.input, { color: colors.foreground, backgroundColor: colors.input, borderColor: colors.border }]}
-        value={username}
-      />
-      <Text style={[styles.inputHint, { color: colors.mutedForeground }]}>
-        3–28 letters, numbers, or underscores. Spaces and punctuation become underscores.
-      </Text>
-
-      <Text style={[styles.inputLabel, { color: colors.mutedForeground }]}>Bio</Text>
-      <TextInput
-        accessibilityLabel="Creator bio"
-        maxLength={500}
-        multiline
-        onChangeText={setBio}
-        placeholder="What are you making right now?"
-        placeholderTextColor={colors.mutedForeground}
-        style={[styles.input, styles.bioInput, { color: colors.foreground, backgroundColor: colors.input, borderColor: colors.border }]}
-        value={bio}
-      />
-
-      <View style={styles.twoColumns}>
-        <View style={styles.field}>
-          <Text style={[styles.inputLabel, { color: colors.mutedForeground }]}>Medium</Text>
-          <TextInput
-            accessibilityLabel="Artistic medium"
-            onChangeText={setDiscipline}
-            placeholder="Tattoo"
-            placeholderTextColor={colors.mutedForeground}
-            style={[styles.input, { color: colors.foreground, backgroundColor: colors.input, borderColor: colors.border }]}
-            value={discipline}
-          />
-        </View>
-        <View style={styles.field}>
-          <Text style={[styles.inputLabel, { color: colors.mutedForeground }]}>Location</Text>
-          <TextInput
-            accessibilityLabel="Creator location"
-            onChangeText={setLocation}
-            placeholder="Los Angeles"
-            placeholderTextColor={colors.mutedForeground}
-            style={[styles.input, { color: colors.foreground, backgroundColor: colors.input, borderColor: colors.border }]}
-            value={location}
-          />
-        </View>
-      </View>
-
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Save creator profile"
-        disabled={saving}
-        onPress={save}
-        style={[styles.saveButton, { backgroundColor: colors.primary, opacity: saving ? 0.55 : 1 }]}
-        testID="save-profile"
-      >
-        {saving ? (
-          <ActivityIndicator color={colors.primaryForeground} />
-        ) : (
-          <>
-            <Feather name="check" size={18} color={colors.primaryForeground} />
-            <Text style={[styles.saveText, { color: colors.primaryForeground }]}>Save profile</Text>
-          </>
-        )}
-      </Pressable>
-    </View>
-  );
-}
+const PUBLIC_COMMISSION_FORM_URL = 'https://artismydrug.com/tattoo#booking';
 
 export default function ProfileScreen() {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { signOut, userId, sessionId } = useAuth();
-  const deleteAccount = useDeleteCurrentUser();
-  const deletionInFlight = useRef(false);
-  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
-  const [profileEditorOpen, setProfileEditorOpen] = useState(false);
-  const [studioToolsOpen, setStudioToolsOpen] = useState(false);
-  const {
-    data: me,
-    isLoading: meLoading,
-    isError: meError,
-    refetch: refetchMe,
-  } = useGetCurrentUser();
-  const { data: progress, isError: progressError, refetch: refetchProgress } = useGetProgress();
-  const { data: notifications } = useGetNotifications({
-    query: { queryKey: getGetNotificationsQueryKey(), refetchInterval: 60_000 },
+  const { data: me, isLoading: meLoading, isError: meError, refetch: refetchMe } = useGetCurrentUser();
+  const { data: socialProfile } = useGetUserProfile(me?.id ?? 0, {
+    query: { enabled: !!me, queryKey: me ? getGetUserProfileQueryKey(me.id) : [] },
   });
-  const { data: badges, isError: badgesError, refetch: refetchBadges } = useListBadges();
   const {
     data: posts,
     isLoading: postsLoading,
     isError: postsError,
     refetch: refetchPosts,
   } = useListStudioPosts(
-    { userId: me?.id, limit: 10 },
-    {
-      query: {
-        enabled: !!me,
-        queryKey: me ? getListStudioPostsQueryKey({ userId: me.id, limit: 10 }) : [],
-      },
-      request: {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache' },
-      },
-    },
-  );
-  const {
-    data: publicProfile,
-    refetch: refetchPublicProfile,
-  } = useGetUserProfile(me?.id ?? 0, {
-    query: {
+    { userId: me?.id, limit: 100 },
+    { query: {
       enabled: !!me,
-      queryKey: me ? getGetUserProfileQueryKey(me.id) : [],
-    },
-  });
-  const [videosMuted, setVideosMuted] = useState(true);
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top + 10;
+      queryKey: me ? getListStudioPostsQueryKey({ userId: me.id, limit: 100 }) : [],
+    } },
+  );
 
-  const s = useMemo(() => StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.studioBackground },
-    header: { alignItems: 'center', flexDirection: 'row', gap: 10, minHeight: 64, paddingBottom: 10, paddingHorizontal: 18, paddingTop: topPadding, backgroundColor: colors.studioPaper, borderBottomWidth: 2, borderBottomColor: colors.studioInk },
-    headerTitle: { color: colors.studioInk, flex: 1, fontFamily: 'DMSans_700Bold', fontSize: 11, letterSpacing: 1 },
-    headerButton: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
-    brandMark: { alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 12, borderWidth: 2, borderColor: colors.studioInk, backgroundColor: colors.studioOrange, transform: [{ rotate: '-6deg' }] },
-    notificationButton: { padding: 6, position: 'relative' },
-    notificationBadge: { alignItems: 'center', backgroundColor: colors.studioOrange, borderColor: colors.studioInk, borderWidth: 1, borderRadius: 10, justifyContent: 'center', minWidth: 18, paddingHorizontal: 4, position: 'absolute', right: -2, top: -2 },
-    notificationBadgeText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 10 },
-    content: { gap: 22, paddingHorizontal: 18, paddingTop: 8, paddingBottom: Platform.OS === 'web' ? 100 : insets.bottom + 36, width: '100%', maxWidth: 920, alignSelf: 'center' },
-    accountActions: { borderTopWidth: 1, paddingTop: 16, gap: 14 },
-    deleteAccountSection: { gap: 8, paddingTop: 8 },
-    deleteAccountTitle: { color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 15 },
-    deleteAccountDescription: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 13, lineHeight: 19 },
-    deleteOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: 'rgba(0,0,0,0.5)' },
-    deletePanel: { width: '100%', maxWidth: 420, padding: 20, gap: 16, backgroundColor: colors.card, borderRadius: colors.radius, borderWidth: 1, borderColor: colors.border },
-    deletePanelActions: { gap: 10 },
-    signOutButton: { alignItems: 'center', borderRadius: 10, borderWidth: 1, flexDirection: 'row', gap: 8, justifyContent: 'center', minHeight: 46 },
-    signOutText: { fontFamily: 'DMSans_700Bold', fontSize: 14 },
-    state: { alignItems: 'center', gap: 12, justifyContent: 'center', minHeight: 320, padding: 24 },
-    stateTitle: { color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 17 },
-    stateText: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 14, textAlign: 'center' },
-    overview: { alignItems: 'flex-start', flexDirection: 'row', gap: 17, paddingVertical: 23, borderBottomWidth: 2, borderBottomColor: colors.studioInk },
-    overviewCopy: { flex: 1, minWidth: 0, gap: 8 },
-    eyebrow: { alignSelf: 'flex-start', backgroundColor: colors.studioMint, borderColor: colors.studioInk, borderRadius: 99, borderWidth: 1.5, paddingHorizontal: 9, paddingVertical: 5, color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 8, letterSpacing: 1 },
-    username: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 34, letterSpacing: -1.7, lineHeight: 39 },
-    bio: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21 },
-    tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginTop: 2 },
-    tag: { backgroundColor: colors.studioPaper, borderColor: colors.studioInk, borderRadius: 99, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6 },
-    tagText: { color: colors.studioInk, fontFamily: 'DMSans_600SemiBold', fontSize: 11 },
-    heroActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
-    outlineAction: { alignItems: 'center', backgroundColor: colors.studioPaper, borderColor: colors.studioInk, borderRadius: 99, borderWidth: 1.5, flexDirection: 'row', gap: 6, justifyContent: 'center', minHeight: 36, paddingHorizontal: 12 },
-    outlineActionText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 11 },
-    metrics: { backgroundColor: colors.studioPaper, borderColor: colors.studioInk, borderRadius: 16, borderWidth: 1.5, flexDirection: 'row', overflow: 'hidden', shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
-    metric: { alignItems: 'center', flex: 1, gap: 3, paddingVertical: 10 },
-    metricPressed: { opacity: 0.65 },
-    metricIcon: { marginBottom: 2 },
-    metricDivider: { backgroundColor: colors.border, width: 1 },
-    metricValue: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 16 },
-    metricLabel: { color: colors.mutedForeground, fontFamily: 'DMSans_500Medium', fontSize: 9, textTransform: 'uppercase' },
-    statusCard: { borderColor: colors.studioInk, borderRadius: 16, borderWidth: 1.5, gap: 6, padding: 14, shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
-    statusCardHeader: { alignItems: 'center', flexDirection: 'row', gap: 10, justifyContent: 'space-between' },
-    statusTitle: { color: colors.foreground, flex: 1, fontFamily: 'DMSans_600SemiBold', fontSize: 15 },
-    statusText: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 13, lineHeight: 19 },
-    badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-    badge: { alignItems: 'center', backgroundColor: colors.muted, borderRadius: colors.radius, flexDirection: 'row', gap: 6, paddingHorizontal: 10, paddingVertical: 7 },
-    badgeText: { color: colors.foreground, fontFamily: 'DMSans_500Medium', fontSize: 12 },
-    portfolio: { gap: 14, borderTopWidth: 2, borderTopColor: colors.studioInk, paddingTop: 23 },
-    portfolioGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-    portfolioHeader: { alignItems: 'flex-end', flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
-    portfolioTitle: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 28, letterSpacing: -1 },
-    portfolioCount: { color: colors.mutedForeground, fontFamily: 'DMSans_600SemiBold', fontSize: 11, paddingBottom: 4 },
-    portfolioPost: { backgroundColor: colors.studioPaper, borderColor: colors.studioInk, borderRadius: 18, borderWidth: 1.5, overflow: 'hidden', shadowColor: colors.studioShadow, shadowOffset: { width: 3, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
-    portfolioFeature: { width: '100%' },
-    portfolioTile: { width: '47%' },
-    portfolioMedia: { height: 310, width: '100%' },
-    portfolioMediaCompact: { height: 220, width: '100%' },
-    portfolioImage: { backgroundColor: colors.mediaPaper, height: 330, width: '100%' },
-    portfolioImageCompact: { backgroundColor: colors.mediaPaper, height: 230, width: '100%' },
-    portfolioCaption: { color: colors.studioInk, fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21, paddingHorizontal: 15, paddingTop: 13, paddingBottom: 10 },
-    portfolioMeta: { alignItems: 'center', justifyContent: 'space-between', borderTopColor: colors.border, borderTopWidth: 1, flexDirection: 'row', gap: 6, paddingHorizontal: 14, paddingVertical: 8 },
-    portfolioMetaText: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 11 },
-    sectionEyebrow: { color: colors.studioMuted, fontFamily: 'DMSans_700Bold', fontSize: 9, letterSpacing: 1.3, marginBottom: 5 },
-    accordion: { borderColor: colors.studioInk, borderRadius: 15, borderWidth: 1.5, backgroundColor: colors.studioPaper, overflow: 'hidden' },
-    accordionHeader: { minHeight: 55, alignItems: 'center', flexDirection: 'row', gap: 11, paddingHorizontal: 15 },
-    accordionTitle: { color: colors.studioInk, flex: 1, fontFamily: 'DMSans_700Bold', fontSize: 14 },
-    accordionBody: { borderTopColor: colors.border, borderTopWidth: 1, gap: 14, padding: 14 },
-  }), [colors, insets.bottom, topPadding]);
+  const stateStyles = StyleSheet.create({
+    screen: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, gap: 13, backgroundColor: colors.studioBackground },
+    title: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 18, textAlign: 'center' },
+    button: { minHeight: 44, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1.5, borderColor: colors.studioInk, backgroundColor: colors.studioYellow, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
+    buttonText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 13 },
+  });
 
   if (meLoading) {
     return (
-      <View style={[s.screen, s.state]} accessibilityLabel="Loading your studio">
-        <View style={{ width: '100%', maxWidth: 620, gap: 14 }}>
-          <View style={{ height: 126, borderRadius: 18, backgroundColor: colors.studioPaperAlt }} />
-          <View style={{ height: 48, borderRadius: 14, backgroundColor: colors.studioPaperAlt }} />
-          <View style={{ height: 280, borderRadius: 18, backgroundColor: colors.studioPaperAlt }} />
-        </View>
+      <View style={stateStyles.screen} accessibilityLabel="Loading Your Studio">
+        <Stack.Screen options={{ headerShown: false }} />
+        <ActivityIndicator color={colors.primary} />
+        <Text style={stateStyles.title}>Opening your studio…</Text>
       </View>
     );
   }
 
   if (meError || !me) {
     return (
-      <View style={[s.screen, s.state]}>
-        <Feather name="user-x" size={42} color={colors.mutedForeground} />
-        <Text style={s.stateTitle}>Couldn’t load your profile</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Retry loading profile" onPress={() => refetchMe()}>
-          <Text style={[s.statusTitle, { color: colors.primary }]}>Try again</Text>
+      <View style={stateStyles.screen}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <Feather name="user-x" size={38} color={colors.studioMuted} />
+        <Text style={stateStyles.title}>Couldn’t load Your Studio</Text>
+        <Pressable accessibilityRole="button" onPress={() => void refetchMe()} style={stateStyles.button}>
+          <Feather name="refresh-cw" size={15} color={colors.studioInk} />
+          <Text style={stateStyles.buttonText}>Try again</Text>
         </Pressable>
       </View>
     );
   }
 
-  const handleSaved = () => {
-    refetchMe();
-    refetchPublicProfile();
-    refetchProgress();
-    refetchBadges();
+  const creator: CreatorPortfolioProfile = {
+    id: me.id,
+    username: me.username,
+    avatarUrl: me.avatarUrl,
+    bio: me.bio,
+    discipline: me.discipline,
+    location: me.location,
+    portfolioUrl: me.portfolioUrl,
+    bookingOpen: me.bookingOpen,
+    followerCount: socialProfile?.followerCount ?? 0,
+    followingCount: socialProfile?.followingCount ?? 0,
+    followedByMe: false,
+    postCount: socialProfile?.postCount ?? posts?.length ?? 0,
   };
-  const handleSignOut = () => {
-    Alert.alert(
-      'Sign out?',
-      'You can sign back in with the same account whenever you are ready.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign out',
-          style: 'destructive',
-          onPress: () => {
-            const finish = () => void signOut()
-              .then(async () => {
-                if (userId && sessionId) {
-                  try {
-                    await sessionSecurityStore.clearLastActiveAt(String(userId), sessionId);
-                  } catch {
-                    Alert.alert('Signed out', 'Your local inactivity timer could not be cleared. Sign in again to refresh your secure session.');
-                  }
-                }
-                router.replace('/(auth)/sign-in');
-              })
-              .catch(() => Alert.alert('Could not sign out', 'Please try again.'));
-            void (userId ? unregisterPushDevice(userId) : Promise.resolve())
-              .then(finish)
-              .catch(() => Alert.alert(
-                'Couldn’t disconnect phone alerts',
-                'You can still sign out, but generic push alerts may continue. You can silence them in device Settings.',
-                [{ text: 'Cancel', style: 'cancel' }, { text: 'Sign out anyway', style: 'destructive', onPress: finish }],
-              ));
-          },
-        },
-      ],
-    );
+  const isPoncho = me.username.replace(/^@/, '').toLowerCase() === 'ponchotheartist';
+  const inquiryUrl = me.bookingOpen
+    ? (isPoncho ? PUBLIC_COMMISSION_FORM_URL : getStudioInquiryLink(creator))
+    : null;
+  const onOpenInquiry = () => {
+    if (!inquiryUrl) return;
+    void Linking.openURL(inquiryUrl).catch(() => Alert.alert('Could not open inquiry link', 'Please try again.'));
   };
-  const showDeletionNotice = (title: string, message: string) => {
-      if (Platform.OS === 'web') {
-        window.alert(`${title}\n\n${message}`);
-      } else {
-        Alert.alert(title, message);
-      }
-  };
-  const performDeletion = () => {
-      if (deleteAccount.isPending || deletionInFlight.current) return;
-      deletionInFlight.current = true;
-      void deleteAccount.mutateAsync(undefined)
-        .then(async () => {
-          if (userId) {
-            try { await sessionSecurityStore.clearAccount(String(userId)); }
-            catch { showDeletionNotice('Account deleted', 'Local security settings could not be cleared. Remove Creator Studio from this device if you no longer use it.'); }
-            try { await miniHabitSketchbook.clearAccount(userId); }
-            catch { showDeletionNotice('Account deleted', 'Locally saved sketches could not be cleared. Remove Creator Studio from this device if you no longer use it.'); }
-            try { await clearHabitReminders(userId); }
-            catch { showDeletionNotice('Account deleted', 'Local reminder cleanup failed. Turn off Creator Studio alerts in device settings.'); }
-          }
-        })
-        .then(() => signOut())
-        .then(() => router.replace('/(auth)/sign-in'))
-        .catch(() => showDeletionNotice('Could not confirm completion', 'Please reopen the app or contact info@artismydrug.com before retrying account deletion.'))
-        .finally(() => { deletionInFlight.current = false; });
-  };
-  const deleteTitle = 'Delete your account permanently?';
-  const deleteWarning = 'This permanently removes your AIMD profile, posts, habits, badges, messages, and other account data. This cannot be undone.';
-  const handleDeleteAccount = () => {
-    if (deleteAccount.isPending) return;
-
-    // Only the explicit confirmation button may start browser deletion.
-    if (Platform.OS === 'web') {
-      setDeleteConfirmationOpen(true);
-      return;
-    }
-
-    Alert.alert(
-      deleteTitle,
-      deleteWarning,
-      [
-        { text: 'Keep my account', style: 'cancel' },
-        {
-          text: 'Delete permanently',
-          style: 'destructive',
-          onPress: performDeletion,
-        },
-      ],
-    );
-  };
-  const mediumTags = [me.discipline, me.location].filter((value): value is string => !!value);
-  const unreadNotifications = notifications?.unreadCount ?? 0;
 
   return (
-    <View style={s.screen}>
-      <View style={s.header}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={() => router.back()} style={s.headerButton}>
-          <Feather name="arrow-left" size={20} color={colors.studioInk} />
-        </Pressable>
-        <View style={s.brandMark} accessibilityElementsHidden>
-          <Feather name="aperture" size={19} color={colors.studioInk} />
-        </View>
-        <Text style={s.headerTitle}>CREATOR STUDIO  ·  BY AIMD</Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={unreadNotifications ? `Open notifications, ${unreadNotifications} unread` : 'Open notifications'}
-          onPress={() => router.push('/notifications')}
-          style={s.notificationButton}
-          testID="profile-notifications-button"
-        >
-          <Feather name="bell" size={21} color={colors.foreground} />
-          {unreadNotifications > 0 ? (
-            <View style={s.notificationBadge} testID="profile-notifications-badge">
-              <Text style={s.notificationBadgeText}>{unreadNotifications > 99 ? '99+' : unreadNotifications}</Text>
-            </View>
-          ) : null}
-        </Pressable>
-      </View>
-
-      <KeyboardAwareScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false} bottomOffset={24}>
-        <View style={s.overview}>
-          <Avatar username={me.username} avatarUrl={me.avatarUrl} size={88} />
-          <View style={s.overviewCopy}>
-            <Text style={s.eyebrow}>YOUR PRACTICE</Text>
-            <Text style={s.username} accessibilityRole="header">{me.username}</Text>
-            <Text style={s.bio}>{me.bio || 'Your studio is taking shape. Add a few words about what you make.'}</Text>
-            {mediumTags.length > 0 && (
-              <View style={s.tags}>
-                {mediumTags.map((tag) => <View key={tag} style={s.tag}><Text style={s.tagText}>{tag}</Text></View>)}
-              </View>
-            )}
-            <View style={s.heroActions}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={profileEditorOpen ? 'Close profile editor' : 'Edit studio profile'}
-                accessibilityState={{ expanded: profileEditorOpen }}
-                onPress={() => setProfileEditorOpen((open) => !open)}
-                style={s.outlineAction}
-                testID="toggle-profile-editor"
-              >
-                <Feather name={profileEditorOpen ? 'x' : 'edit-2'} size={13} color={colors.studioInk} />
-                <Text style={s.outlineActionText}>{profileEditorOpen ? 'Close editor' : 'Edit profile'}</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Create a new studio post"
-                onPress={() => router.push({ pathname: '/feed', params: { compose: '1' } })}
-                style={s.outlineAction}
-                testID="profile-posts-button"
-              >
-                <Feather name="plus" size={14} color={colors.studioInk} />
-                <Text style={s.outlineActionText}>New work</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-
-        {profileEditorOpen ? (
-          <View style={s.accordionBody}>
-            <ProfileEditor
-              key={`${me.id}-${me.username}-${me.avatarUrl ?? ''}-${me.bio ?? ''}-${me.discipline ?? ''}-${me.location ?? ''}`}
-              id={me.id}
-              username={me.username}
-              bio={me.bio}
-              discipline={me.discipline}
-              location={me.location}
-              avatarUrl={me.avatarUrl}
-              onSaved={handleSaved}
-            />
-          </View>
-        ) : null}
-
-        <View style={s.metrics}>
-          <View style={s.metric}><Feather name="grid" size={14} color={colors.studioOrangeText} style={s.metricIcon} /><Text style={s.metricValue}>{publicProfile?.postCount ?? 0}</Text><Text style={s.metricLabel}>Posts</Text></View>
-          <View style={s.metricDivider} />
-          <View style={s.metric}><Feather name="users" size={14} color={colors.studioOrangeText} style={s.metricIcon} /><Text style={s.metricValue}>{publicProfile?.followerCount ?? '—'}</Text><Text style={s.metricLabel}>Followers</Text></View>
-          <View style={s.metricDivider} />
-          <View style={s.metric}><Feather name="user-plus" size={14} color={colors.studioOrangeText} style={s.metricIcon} /><Text style={s.metricValue}>{publicProfile?.followingCount ?? '—'}</Text><Text style={s.metricLabel}>Following</Text></View>
-          <View style={s.metricDivider} />
-          <View style={s.metric}><Feather name="zap" size={14} color={colors.studioOrangeText} style={s.metricIcon} /><Text style={s.metricValue}>{progress?.currentStreak ?? 0}</Text><Text style={s.metricLabel}>Day streak</Text></View>
-        </View>
-
-        <StudioInquirySettings
-          key={me.id}
-          user={{ id: me.id, portfolioUrl: me.portfolioUrl, bookingOpen: me.bookingOpen }}
-          onSaved={handleSaved}
-        />
-
-        <View style={s.portfolio}>
-          <View style={s.portfolioHeader}>
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={s.sectionEyebrow}>SELECTED WORK</Text>
-              <Text style={s.portfolioTitle} accessibilityRole="header">Made to stay with you.</Text>
-            </View>
-            <Text style={s.portfolioCount}>{posts?.length ?? 0} posts</Text>
-          </View>
-          {postsLoading ? (
-            <View style={[s.portfolioPost, { padding: 12, gap: 10 }]} accessibilityLabel="Loading your published work">
-              <View style={{ width: '100%', height: 250, borderRadius: 12, backgroundColor: colors.studioPaperAlt }} />
-              <View style={{ width: '58%', height: 14, borderRadius: 7, backgroundColor: colors.studioPaperAlt }} />
-              <View style={{ width: '32%', height: 10, borderRadius: 7, backgroundColor: colors.studioPaperAlt }} />
-            </View>
-          ) : postsError ? (
-            <View style={s.accordionBody}>
-              <Text style={[s.statusText, { color: colors.destructive }]}>Your work could not load just now.</Text>
-              <Pressable accessibilityRole="button" onPress={() => refetchPosts()} style={s.outlineAction}>
-                <Feather name="refresh-cw" size={14} color={colors.studioInk} />
-                <Text style={s.outlineActionText}>Try again</Text>
-              </Pressable>
-            </View>
-          ) : (posts ?? []).length === 0 ? (
-            <View style={[s.portfolioPost, { padding: 22, gap: 9 }]}>
-              <Feather name="image" size={23} color={colors.studioOrangeText} />
-              <Text style={s.statusTitle}>Your first piece is waiting.</Text>
-              <Text style={s.statusText}>Published work will live here, ready to be revisited.</Text>
-              <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/feed', params: { compose: '1' } })} style={s.outlineAction}>
-                <Feather name="plus" size={14} color={colors.studioInk} />
-                <Text style={s.outlineActionText}>Share your work</Text>
-              </Pressable>
-            </View>
-          ) : (
-            <View style={s.portfolioGrid}>
-              {(posts ?? []).map((post, index) => (
-              <View key={post.id} style={[s.portfolioPost, index === 0 ? s.portfolioFeature : s.portfolioTile]}>
-                {post.imageUrl && post.mediaType === 'audio' ? (
-                  <AudioTrackPlayer uri={resolveImageUrl(post.imageUrl) ?? post.imageUrl} />
-                ) : post.imageUrl && post.mediaType === 'video' ? (
-                  <StudioVideo
-                    uri={resolveImageUrl(post.imageUrl) ?? post.imageUrl}
-                    active={false}
-                    reducedMotion
-                    muted={videosMuted}
-                    onMutedChange={setVideosMuted}
-                    style={index === 0 ? s.portfolioMedia : s.portfolioMediaCompact}
-                  />
-                ) : post.imageUrl ? (
-                  <Image
-                    source={{ uri: resolveImageUrl(post.imageUrl) ?? post.imageUrl }}
-                    style={index === 0 ? s.portfolioImage : s.portfolioImageCompact}
-                    resizeMode="contain"
-                    accessibilityLabel={post.caption || `Published artwork ${index + 1}`}
-                  />
-                ) : null}
-                {post.caption ? <Text style={s.portfolioCaption}>{post.caption}</Text> : null}
-                <View style={s.portfolioMeta}>
-                  <Text style={s.portfolioMetaText}>{new Date(post.createdAt).toLocaleDateString()}</Text>
-                  <PostOwnerActions post={post} currentUserId={me.id} />
-                </View>
-              </View>
-              ))}
-            </View>
-          )}
-        </View>
-
-        <View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="View all past accomplishments"
-            onPress={() => router.push('/accomplishments')}
-            style={[s.portfolioHeader, { marginBottom: 10, minHeight: 44 }]}
-            testID="profile-accomplishments"
-          >
-            <View>
-              <Text style={s.sectionEyebrow}>MILESTONES</Text>
-              <Text style={s.portfolioTitle}>Accomplishments</Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Text style={[s.badgeText, { color: colors.foreground }]}>View all</Text>
-              <Feather name="chevron-right" size={18} color={colors.primary} />
-            </View>
-          </Pressable>
-          {badgesError ? (
-            <Text style={[s.statusText, { color: colors.destructive }]}>Badges couldn’t load right now.</Text>
-          ) : (badges ?? []).length === 0 ? (
-            <Text style={s.statusText}>Your first badge will appear here as you build your practice.</Text>
-          ) : (
-            <View style={s.badgeRow}>
-              {(badges ?? []).slice(0, 6).map((badge) => (
-                <View key={badge.id} style={s.badge}>
-                  <Feather name="award" size={15} color={colors.primary} />
-                  <Text style={s.badgeText}>{badge.name}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-
-        <Pressable
-          style={[s.statusCard, { backgroundColor: colors.goldWash }]}
-          accessibilityRole="button"
-          accessibilityLabel={me.tier === 'free' ? 'View membership options' : 'Manage your AIMD membership'}
-          onPress={() => router.push('/membership')}
-          testID="profile-membership-button"
-        >
-          <View style={s.statusCardHeader}>
-            <Text style={s.statusTitle}><Feather name="shield" size={14} color={colors.primary} />  {progress?.phase?.phase ?? 'Discovering'} · {me.tier === 'free' ? 'Free' : me.tier}</Text>
-            <Feather name="chevron-right" size={18} color={colors.primary} />
-          </View>
-          <Text style={s.statusText}>
-            {me.tier === 'free' ? 'Free access. See what’s coming next.' : 'Membership active. Manage your access.'}
-          </Text>
-          {progressError && <Text style={[s.statusText, { color: colors.destructive }]}>Progress details are temporarily unavailable.</Text>}
-        </Pressable>
-
-        <View style={s.accordion}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={studioToolsOpen ? 'Hide studio and account settings' : 'Open studio and account settings'}
-            accessibilityState={{ expanded: studioToolsOpen }}
-            onPress={() => setStudioToolsOpen((open) => !open)}
-            style={s.accordionHeader}
-            testID="toggle-studio-settings"
-          >
-            <Feather name="sliders" size={18} color={colors.studioOrangeText} />
-            <Text style={s.accordionTitle}>Studio settings & account</Text>
-            <Feather name={studioToolsOpen ? 'chevron-up' : 'chevron-down'} size={18} color={colors.mutedForeground} />
-          </Pressable>
-          {studioToolsOpen ? (
-            <View style={s.accordionBody}>
-              <AppearanceSettings />
-              <BiometricUnlockSettings userId={userId} />
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Notification settings"
-                testID="profile-notification-settings"
-                onPress={() => router.push('/notification-settings')}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, minHeight: 56, borderWidth: 1, borderRadius: 12, borderColor: colors.border, backgroundColor: colors.card }}
-              >
-                <Feather name="bell" size={20} color={colors.primary} />
-                <Text style={{ flex: 1, color: colors.foreground, fontFamily: 'DMSans_600SemiBold', fontSize: 15 }}>Notification settings</Text>
-                <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
-              </Pressable>
-              <View style={[s.accountActions, { borderTopColor: colors.border }]}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Sign out of Creator Studio"
-            disabled={deleteAccount.isPending}
-            onPress={handleSignOut}
-            style={[s.signOutButton, { borderColor: colors.border }]}
-            testID="sign-out"
-          >
-            <Feather name="log-out" size={16} color={colors.destructive} />
-            <Text style={[s.signOutText, { color: colors.destructive }]}>Sign out</Text>
-          </Pressable>
-          <LegalHelpLinks />
-          <View style={[s.deleteAccountSection, { borderTopColor: colors.border }]}>
-            <Text style={s.deleteAccountTitle}>Delete account</Text>
-            <Text style={s.deleteAccountDescription}>
-              Permanently remove your Creator Studio profile and personal content. Any required record retention is described in our Privacy Policy. This action cannot be undone.
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Delete my AIMD account permanently"
-              disabled={deleteAccount.isPending}
-              onPress={handleDeleteAccount}
-              style={[s.signOutButton, { borderColor: colors.destructive, opacity: deleteAccount.isPending ? 0.55 : 1 }]}
-              testID="delete-account"
-            >
-              <Feather name="trash-2" size={16} color={colors.destructive} />
-              <Text style={[s.signOutText, { color: colors.destructive }]}>Delete my account</Text>
-            </Pressable>
-          </View>
-              </View>
-            </View>
-          ) : null}
-        </View>
-      {Platform.OS === 'web' && (
-        <Modal
-          visible={deleteConfirmationOpen}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setDeleteConfirmationOpen(false)}
-        >
-          <View style={s.deleteOverlay}>
-            <View style={s.deletePanel} accessibilityViewIsModal accessibilityRole="alert" testID="delete-account-confirmation">
-              <Text style={s.deleteAccountTitle}>{deleteTitle}</Text>
-              <Text style={s.deleteAccountDescription}>{deleteWarning}</Text>
-              <View style={s.deletePanelActions}>
-                <Pressable
-                  accessibilityRole="button"
-                  testID="delete-confirm-cancel"
-                  style={[s.signOutButton, { borderColor: colors.border }]}
-                  onPress={() => setDeleteConfirmationOpen(false)}
-                >
-                  <Text style={[s.signOutText, { color: colors.foreground }]}>Keep my account</Text>
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  testID="delete-confirm-submit"
-                  disabled={deleteAccount.isPending}
-                  style={[s.signOutButton, { borderColor: colors.destructive, backgroundColor: colors.destructive }]}
-                  onPress={() => {
-                    if (!deleteConfirmationOpen || deleteAccount.isPending) return;
-                    setDeleteConfirmationOpen(false);
-                    performDeletion();
-                  }}
-                >
-                  <Text style={[s.signOutText, { color: colors.destructiveForeground }]}>Delete permanently</Text>
-                </Pressable>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      )}
-    </KeyboardAwareScrollView>
+    <View style={{ flex: 1 }}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <CreatorPortfolioView
+        creator={creator}
+        posts={posts ?? []}
+        isOwner
+        currentUserId={me.id}
+        isLoading={postsLoading}
+        isError={postsError}
+        onRetry={() => void refetchPosts()}
+        onEdit={() => router.push('/edit-profile')}
+        onBack={() => {
+          if (router.canGoBack()) router.back();
+          else router.replace('/(tabs)');
+        }}
+        onAddWork={(category) => router.push({
+          pathname: '/feed',
+          params: {
+            compose: '1',
+            returnTo: 'profile',
+            ...(category && category !== 'all' ? { category } : {}),
+          },
+        })}
+        inquiryAvailable={!!inquiryUrl}
+        onInquiry={onOpenInquiry}
+      />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  avatar: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  avatarText: { fontFamily: 'DMSans_700Bold' },
-  editor: { borderRadius: 12, borderWidth: 1, gap: 10, padding: 14 },
-  editorHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 },
-  sectionTitle: { fontFamily: 'DMSans_600SemiBold', fontSize: 16 },
-  avatarPicker: { position: 'relative' },
-  avatarEdit: { alignItems: 'center', borderRadius: 14, bottom: -2, height: 28, justifyContent: 'center', position: 'absolute', right: -2, width: 28 },
-  inputLabel: { fontFamily: 'DMSans_500Medium', fontSize: 12, marginTop: 2 },
-  inputHint: { fontFamily: 'DMSans_400Regular', fontSize: 11, lineHeight: 16, marginTop: -4 },
-  input: { borderRadius: 10, borderWidth: 1, fontFamily: 'DMSans_400Regular', fontSize: 14, minHeight: 44, paddingHorizontal: 12, paddingVertical: 9 },
-  bioInput: { minHeight: 82, textAlignVertical: 'top' },
-  twoColumns: { flexDirection: 'row', gap: 10 },
-  field: { flex: 1 },
-  saveButton: { alignItems: 'center', borderRadius: 10, flexDirection: 'row', gap: 8, justifyContent: 'center', marginTop: 4, minHeight: 46 },
-  saveText: { fontFamily: 'DMSans_700Bold', fontSize: 14 },
-});

@@ -4286,8 +4286,11 @@ components:
 
     TattooBookingInput:
       type: object
-      required: [name, email, idea, placement, estimatedSize, preferredArtist]
+      required: [requestType, name, email, idea, placement, estimatedSize, preferredArtist]
       properties:
+        requestType:
+          type: string
+          enum: ["tattoo", "painting", "other"]
         name:
           type: string
           minLength: 1
@@ -4372,6 +4375,7 @@ components:
     TattooBooking:
       type: object
       required:
+        - requestType
         - id
         - name
         - email
@@ -4388,6 +4392,9 @@ components:
         - createdAt
         - updatedAt
       properties:
+        requestType:
+          type: string
+          enum: ["tattoo", "painting", "other"]
         id:
           type: integer
         name:

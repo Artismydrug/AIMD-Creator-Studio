@@ -47,11 +47,12 @@ test('the compact dashboard points card opens a safe-area-aware Member Drops pag
   assert.match(page, /router\.canGoBack\(\) \? router\.back\(\) : router\.replace\('\/\(tabs\)'\)/);
 });
 
-test('Following suggestions can follow creators without opening removed public profile pages', () => {
+test('creator suggestions, directory cards and feed authors open public creator studios', () => {
   const suggestions = fs.readFileSync(path.resolve(__dirname, '../components/FollowingFeedSuggestions.tsx'), 'utf8');
   const feed = fs.readFileSync(path.resolve(__dirname, '../app/feed.tsx'), 'utf8');
   const dashboard = fs.readFileSync(path.resolve(__dirname, '../app/(tabs)/index.tsx'), 'utf8');
   const directory = fs.readFileSync(path.resolve(__dirname, '../app/(tabs)/directory.tsx'), 'utf8');
+  const postCard = fs.readFileSync(path.resolve(__dirname, '../components/PostCard.tsx'), 'utf8');
   const notifications = fs.readFileSync(path.resolve(__dirname, '../app/notifications.tsx'), 'utf8');
   assert.match(feed, /<FollowingFeedSuggestions currentUserId=\{me\?\.id\}/);
   assert.match(suggestions, /const FEATURED_HANDLE = 'ponchotheartist'/);
@@ -61,12 +62,14 @@ test('Following suggestions can follow creators without opening removed public p
   assert.match(suggestions, /client\.setQueriesData<StudioPost\[\]>/);
   assert.match(suggestions, /client\.invalidateQueries\(\{ queryKey: \['\/api\/studio-posts'\] \}/);
   assert.match(suggestions, /client\.invalidateQueries\(\{ queryKey: getGetUserProfileQueryKey\(creator\.id\)/);
-  assert.doesNotMatch(suggestions, /\/creator\/\[id\]/);
+  assert.match(suggestions, /pathname: '\/creator\/\[creatorId\]'/);
   assert.match(dashboard, /onPress=\{\(\) => router\.push\('\/profile'\)\}/);
   assert.match(feed, /onPress=\{\(\) => router\.push\('\/profile'\)\}/);
-  assert.doesNotMatch(directory, /router\.push\(`\/creator\//);
+  assert.match(directory, /pathname: '\/creator\/\[creatorId\]'/);
+  assert.match(postCard, /pathname: '\/creator\/\[creatorId\]'/);
+  assert.match(postCard, /open-creator-profile-\$\{post\.userId\}/);
   assert.doesNotMatch(notifications, /\/creator\/\[id\]/);
-  assert.equal(fs.existsSync(path.resolve(__dirname, '../app/creator/[id].tsx')), false);
+  assert.equal(fs.existsSync(path.resolve(__dirname, '../app/creator/[creatorId].tsx')), true);
 });
 
 test('short writing leaves feed paging available; long writing can scroll in its own viewport', () => {

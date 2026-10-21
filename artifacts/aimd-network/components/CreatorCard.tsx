@@ -2,19 +2,24 @@ import React, { useMemo } from 'react';
 import { Alert, Linking, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
-import type { DirectoryCreator } from '@workspace/api-client-react';
+import { Image } from 'expo-image';
+import { getBaseUrl, type DirectoryCreator } from '@workspace/api-client-react';
 import { getStudioInquiryLink } from '@/lib/studioInquiry';
 
 interface CreatorCardProps {
   creator: DirectoryCreator;
+  onOpenProfile?: () => void;
   onMessage?: () => void;
   messagingLoading?: boolean;
 }
 
-export default function CreatorCard({ creator, onMessage, messagingLoading }: CreatorCardProps) {
+export default function CreatorCard({ creator, onOpenProfile, onMessage, messagingLoading }: CreatorCardProps) {
   const colors = useColors();
   const initials = creator.username.slice(0, 2).toUpperCase();
   const details = [creator.discipline, creator.location].filter(Boolean).join(' · ');
+  const avatarUrl = creator.avatarUrl
+    ? (/^https?:\/\//i.test(creator.avatarUrl) ? creator.avatarUrl : `${getBaseUrl() ?? ''}${creator.avatarUrl}`)
+    : null;
   const inquiryLink = getStudioInquiryLink(creator);
   const openInquiry = async () => {
     if (!inquiryLink) return;
@@ -35,6 +40,7 @@ export default function CreatorCard({ creator, onMessage, messagingLoading }: Cr
     avatar: {
       width: 46, height: 46, borderRadius: 23, backgroundColor: colors.studioLavender,
       alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: colors.studioInk,
+      overflow: 'hidden',
     },
     avatarText: { fontFamily: 'DMSans_700Bold', fontSize: 16, color: colors.ink },
     info: { flex: 1, minWidth: 0, gap: 3 },
@@ -50,13 +56,45 @@ export default function CreatorCard({ creator, onMessage, messagingLoading }: Cr
 
   return (
     <View style={s.card} testID={`creator-${creator.id}`}>
-      <View style={s.avatar}>
-        <Text style={s.avatarText}>{initials}</Text>
-      </View>
+      {onOpenProfile ? (
+        <TouchableOpacity
+          onPress={onOpenProfile}
+          accessibilityRole="button"
+          accessibilityLabel={`Open ${creator.username}'s studio`}
+          testID={`open-creator-profile-${creator.id}`}
+          activeOpacity={0.75}
+        >
+          <View style={s.avatar}>
+            {avatarUrl ? <Image source={{ uri: avatarUrl }} style={{ width: 44, height: 44 }} contentFit="cover" /> : (
+              <Text style={s.avatarText}>{initials}</Text>
+            )}
+          </View>
+        </TouchableOpacity>
+      ) : (
+        <View style={s.avatar}>
+          {avatarUrl ? <Image source={{ uri: avatarUrl }} style={{ width: 44, height: 44 }} contentFit="cover" /> : (
+            <Text style={s.avatarText}>{initials}</Text>
+          )}
+        </View>
+      )}
       <View style={s.info}>
         <View style={s.nameRow}>
-          <Text style={s.username} numberOfLines={1} ellipsizeMode="tail">{creator.username}</Text>
+          {onOpenProfile ? (
+            <TouchableOpacity
+              onPress={onOpenProfile}
+              accessibilityRole="button"
+              accessibilityLabel={`Open ${creator.username}'s studio`}
+              testID={`open-creator-name-${creator.id}`}
+              activeOpacity={0.75}
+              style={{ minHeight: 30, justifyContent: 'center', flexShrink: 1 }}
+            >
+              <Text style={s.username} numberOfLines={1} ellipsizeMode="tail">{creator.username}</Text>
+            </TouchableOpacity>
+          ) : (
+            <Text style={s.username} numberOfLines={1} ellipsizeMode="tail">{creator.username}</Text>
+          )}
           {inquiryLink && <View style={s.openDot} accessibilityLabel="Open for inquiries" />}
+          {onOpenProfile && <Feather name="chevron-right" size={15} color={colors.mutedForeground} accessibilityLabel="Open creator studio" />}
         </View>
         {details ? <Text style={s.details} numberOfLines={1}>{details}</Text> : null}
         {creator.badgeCount > 0 && (

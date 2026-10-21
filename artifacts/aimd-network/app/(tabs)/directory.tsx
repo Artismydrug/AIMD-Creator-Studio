@@ -210,6 +210,10 @@ export default function DirectoryScreen({ embedded = false }: { embedded?: boole
           renderItem={({ item }) => (
               <CreatorCard
                 creator={item}
+                onOpenProfile={() => router.push({
+                  pathname: '/creator/[creatorId]',
+                  params: { creatorId: String(item.id) },
+                })}
                 onMessage={() => handleMessage(item.id, item.username)}
                 messagingLoading={messagingId === item.id}
               />

@@ -118,7 +118,7 @@ export default function StudioInquirySettings({ user, onSaved }: Props) {
             <Switch value={open} onValueChange={setOpen} disabled={saving}
               accessibilityLabel="Open for inquiries" testID="studio-inquiry-open" />
           </View>
-          <Text style={s.copy}>When on, this link appears in Creator Directory. It also serves as your website link.</Text>
+          <Text style={s.copy}>When on, visitors can contact you from your public studio and Creator Directory. This link also serves as your website link.</Text>
           {error ? <Text style={s.error} accessibilityRole="alert">{error}</Text> : null}
           <View style={s.actions}>
             <Pressable style={s.button} onPress={save} disabled={saving}
@@ -135,8 +135,8 @@ export default function StudioInquirySettings({ user, onSaved }: Props) {
       ) : (
         <>
           <Text style={s.copy}>{activeLink
-            ? 'Your inquiry link is live in Creator Directory.'
-            : 'Add your contact or booking link to receive work requests.'}</Text>
+            ? 'Your inquiry option is live on your public studio and in Creator Directory.'
+            : 'Add a contact or booking link to let visitors reach you about work.'}</Text>
           <View style={s.actions}>
             <Pressable style={s.button} onPress={edit} accessibilityRole="button" testID="edit-studio-inquiries">
               <Feather name="edit-2" size={14} color={colors.foreground} />

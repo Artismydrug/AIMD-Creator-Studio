@@ -32,9 +32,14 @@ test('links require an explicit web destination and never carry embedded credent
   assert.equal(normalizeStudioLink('HTTPS://example.com/contact'), 'https://example.com/contact');
 });
 
-test('save, cancel and sharing retain clear member ownership and directory remains list-only', () => {
+test('inquiry settings are editable and creator cards link to the member portfolio', () => {
   const settings = fs.readFileSync(path.resolve(__dirname, '../components/StudioInquirySettings.tsx'), 'utf8');
   const card = fs.readFileSync(path.resolve(__dirname, '../components/CreatorCard.tsx'), 'utf8');
+  const directory = fs.readFileSync(path.resolve(__dirname, '../app/(tabs)/directory.tsx'), 'utf8');
+  const editor = fs.readFileSync(path.resolve(__dirname, '../app/edit-profile.tsx'), 'utf8');
+  const studio = fs.readFileSync(path.resolve(__dirname, '../components/CreatorPortfolioView.tsx'), 'utf8');
+  const ownerStudio = fs.readFileSync(path.resolve(__dirname, '../app/profile.tsx'), 'utf8');
+  const creatorStudio = fs.readFileSync(path.resolve(__dirname, '../app/creator/[creatorId].tsx'), 'utf8');
   assert.match(settings, /data: \{ portfolioUrl: normalized, bookingOpen: open \}/);
   assert.match(settings, /if \(lock\.current\) return/);
   assert.match(settings, /queryKey: getListDirectoryQueryKey\(\)/);
@@ -43,6 +48,17 @@ test('save, cancel and sharing retain clear member ownership and directory remai
   assert.match(settings, /Share\.share\(\{ message: activeLink/);
   assert.match(card, /getStudioInquiryLink\(creator\)/);
   assert.match(card, /await Linking\.openURL\(inquiryLink\)/);
-  assert.doesNotMatch(card, /\/creator\/|router\.push/);
+  assert.match(card, /onOpenProfile/);
+  assert.match(directory, /pathname: '\/creator\/\[creatorId\]'/);
+  assert.match(editor, /<StudioInquirySettings/);
+  assert.match(editor, /testID="profile-basics-editor"/);
+  assert.match(editor, /testID="delete-account"/);
+  assert.match(studio, /inquiryAvailable/);
+  assert.match(studio, /value: 'tattoo'/);
+  assert.match(studio, /value: 'painting'/);
+  assert.match(studio, /value: 'murals'/);
+  assert.match(ownerStudio, /limit: 100/);
+  assert.match(creatorStudio, /limit: 100/);
+  assert.match(settings, /public studio and Creator Directory/);
   assert.doesNotMatch(settings, /ponchotheartist|example.*@/i);
 });

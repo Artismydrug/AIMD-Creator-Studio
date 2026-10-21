@@ -139,6 +139,17 @@ function PostCard({
   const isOwnPost = currentUserId === post.userId;
   const canMessageCreator = !!currentUserId && !isOwnPost;
 
+  const openCreatorProfile = () => {
+    if (isOwnPost) {
+      router.push('/profile');
+      return;
+    }
+    router.push({
+      pathname: '/creator/[creatorId]',
+      params: { creatorId: String(post.userId) },
+    });
+  };
+
   const handleMessage = () => {
     if (canMessageCreator && !createConversation.isPending) {
       createConversation.mutate({ data: { participantIds: [post.userId] } });
@@ -535,7 +546,14 @@ function PostCard({
               isOwnPost && (isTextOnly ? { paddingRight: 16 } : { right: 16 }),
             ]}>
               <View style={s.immersiveAuthorRow}>
-              <View style={[s.immersiveAuthorButton, { flex: 1, marginBottom: 0 }]}>
+              <TouchableOpacity
+                style={[s.immersiveAuthorButton, { flex: 1, marginBottom: 0 }]}
+                onPress={openCreatorProfile}
+                accessibilityRole="button"
+                accessibilityLabel={`Open ${post.username ?? 'creator'}'s studio`}
+                testID={`open-creator-profile-${post.userId}`}
+                activeOpacity={0.75}
+              >
                 <View style={[s.immersiveAvatarFrame, isTextOnly && { borderColor: colors.border }]}>
                   <Avatar username={post.username} avatarUrl={post.userAvatarUrl} size={42} />
                 </View>
@@ -547,7 +565,7 @@ function PostCard({
                     {formatTime(post.createdAt)} · {followerCount} followers
                   </Text>
                 </View>
-              </View>
+              </TouchableOpacity>
               {isOwnPost && (
                 <View style={[s.ownerActionsSurface, isTextOnly && { backgroundColor: colors.muted }]}>
                   <PostOwnerActions
@@ -629,14 +647,21 @@ function PostCard({
       ) : (
         <View style={[s.card, { borderTopColor: frameColor, borderTopWidth: 4 }]}>
           <View style={s.cardHeader}>
-            <View style={s.authorButton}>
+            <TouchableOpacity
+              style={s.authorButton}
+              onPress={openCreatorProfile}
+              accessibilityRole="button"
+              accessibilityLabel={`Open ${post.username ?? 'creator'}'s studio`}
+              testID={`open-creator-profile-${post.userId}`}
+              activeOpacity={0.75}
+            >
               <Avatar username={post.username} avatarUrl={post.userAvatarUrl} />
               <View style={s.userInfo}>
                 <Text style={s.username}>{post.username ?? `User #${post.userId}`}</Text>
                 <Text style={s.time}>{formatTime(post.createdAt)}</Text>
                 <Text style={s.socialMeta}>{followerCount} followers · {post.followingCount} following</Text>
               </View>
-            </View>
+            </TouchableOpacity>
             {isOwnPost && (
               <PostOwnerActions post={post} currentUserId={currentUserId} onVisibilityChange={setOwnerDialogOpen} />
             )}

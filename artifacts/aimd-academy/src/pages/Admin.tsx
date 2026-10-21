@@ -525,14 +525,14 @@ function TattooBookingsCard() {
     <section className="border border-border bg-card p-6 md:p-8">
       <div className="flex flex-wrap items-start justify-between gap-4 mb-1">
         <h2 className="font-display font-bold text-xl uppercase flex items-center gap-2">
-          <ClipboardList className="w-5 h-5 text-primary" /> Tattoo Bookings
+          <ClipboardList className="w-5 h-5 text-primary" /> Commission Inquiries
         </h2>
         <span className="font-mono text-xs text-muted-foreground border border-border px-2 py-1">
           {bookings.length} requests
         </span>
       </div>
       <p className="text-sm text-muted-foreground mb-6">
-        Private booking intakes and reference images. New requests also notify info@artismydrug.com.
+        Private project requests and reference images. New submissions also notify the studio inbox.
       </p>
 
       {isLoading ? (
@@ -544,7 +544,7 @@ function TattooBookingsCard() {
       ) : bookings.length === 0 ? (
         <div className="py-10 text-center border border-dashed border-border">
           <ClipboardList className="w-7 h-7 text-muted-foreground mx-auto mb-3" />
-          <p className="font-mono text-sm text-muted-foreground">No tattoo booking requests yet.</p>
+          <p className="font-mono text-sm text-muted-foreground">No commission inquiries yet.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -554,6 +554,9 @@ function TattooBookingsCard() {
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     <span className="font-mono text-[10px] uppercase tracking-wider text-primary">#{booking.id}</span>
+                    <span className="font-mono text-[10px] uppercase tracking-wide border border-primary/30 text-primary px-1.5 py-0.5">
+                      {booking.requestType === 'other' ? 'Other' : booking.requestType}
+                    </span>
                     <h3 className="font-display font-bold uppercase tracking-tight">{booking.name}</h3>
                     <span className="font-mono text-[10px] uppercase tracking-wide border border-primary/30 text-primary px-1.5 py-0.5">
                       {booking.preferredArtist}
@@ -597,7 +600,9 @@ function TattooBookingsCard() {
                     )}
                   </div>
                   <div>
-                    <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Tattoo idea</p>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
+                      {booking.requestType === 'tattoo' ? 'Tattoo idea' : booking.requestType === 'painting' ? 'Painting request' : 'Project details'}
+                    </p>
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{booking.idea}</p>
                   </div>
                   {booking.notificationStatus === 'failed' && (
