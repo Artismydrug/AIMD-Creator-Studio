@@ -40,6 +40,7 @@ test('inquiry settings are editable and creator cards link to the member portfol
   const studio = fs.readFileSync(path.resolve(__dirname, '../components/CreatorPortfolioView.tsx'), 'utf8');
   const ownerStudio = fs.readFileSync(path.resolve(__dirname, '../app/profile.tsx'), 'utf8');
   const creatorStudio = fs.readFileSync(path.resolve(__dirname, '../app/creator/[creatorId].tsx'), 'utf8');
+  const inquiryScreen = fs.readFileSync(path.resolve(__dirname, '../app/commission-inquiry.tsx'), 'utf8');
   assert.match(settings, /data: \{ portfolioUrl: normalized, bookingOpen: open \}/);
   assert.match(settings, /if \(lock\.current\) return/);
   assert.match(settings, /queryKey: getListDirectoryQueryKey\(\)/);
@@ -62,6 +63,14 @@ test('inquiry settings are editable and creator cards link to the member portfol
   assert.doesNotMatch(studio, />Selected work</);
   assert.match(ownerStudio, /limit: 100/);
   assert.match(creatorStudio, /limit: 100/);
+  assert.match(ownerStudio, /router\.push\('\/commission-inquiry'\)/);
+  assert.match(creatorStudio, /router\.push\('\/commission-inquiry'\)/);
+  assert.match(card, /router\.push\('\/commission-inquiry'\)/);
+  assert.match(inquiryScreen, /createTattooBookingDraft/);
+  assert.match(inquiryScreen, /submitTattooBooking/);
+  assert.match(inquiryScreen, /\/api\/tattoo-bookings\/\$\{draft\.id\}\/references/);
+  assert.match(inquiryScreen, /type ProjectType = 'tattoo' \| 'painting' \| 'other'/);
+  assert.match(inquiryScreen, /Only the AIMD studio team can see them/);
   assert.match(settings, /public studio and Creator Directory/);
   assert.doesNotMatch(settings, /ponchotheartist|example.*@/i);
 });

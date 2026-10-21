@@ -3,6 +3,7 @@ import { Alert, Linking, View, Text, StyleSheet, TouchableOpacity } from 'react-
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import { getBaseUrl, type DirectoryCreator } from '@workspace/api-client-react';
 import { getStudioInquiryLink } from '@/lib/studioInquiry';
 
@@ -15,13 +16,20 @@ interface CreatorCardProps {
 
 export default function CreatorCard({ creator, onOpenProfile, onMessage, messagingLoading }: CreatorCardProps) {
   const colors = useColors();
+  const router = useRouter();
   const initials = creator.username.slice(0, 2).toUpperCase();
   const details = [creator.discipline, creator.location].filter(Boolean).join(' · ');
   const avatarUrl = creator.avatarUrl
     ? (/^https?:\/\//i.test(creator.avatarUrl) ? creator.avatarUrl : `${getBaseUrl() ?? ''}${creator.avatarUrl}`)
     : null;
   const inquiryLink = getStudioInquiryLink(creator);
+  const isPoncho = creator.username.replace(/^@/, '').toLowerCase() === 'ponchotheartist';
+  const inquiryAvailable = isPoncho ? !!creator.bookingOpen : !!inquiryLink;
   const openInquiry = async () => {
+    if (isPoncho && creator.bookingOpen) {
+      router.push('/commission-inquiry');
+      return;
+    }
     if (!inquiryLink) return;
     try { await Linking.openURL(inquiryLink); }
     catch { Alert.alert('Could not open inquiry link', 'Try messaging this creator instead.'); }
@@ -93,7 +101,7 @@ export default function CreatorCard({ creator, onOpenProfile, onMessage, messagi
           ) : (
             <Text style={s.username} numberOfLines={1} ellipsizeMode="tail">{creator.username}</Text>
           )}
-          {inquiryLink && <View style={s.openDot} accessibilityLabel="Open for inquiries" />}
+          {inquiryAvailable && <View style={s.openDot} accessibilityLabel="Open for inquiries" />}
           {onOpenProfile && <Feather name="chevron-right" size={15} color={colors.mutedForeground} accessibilityLabel="Open creator studio" />}
         </View>
         {details ? <Text style={s.details} numberOfLines={1}>{details}</Text> : null}
@@ -102,12 +110,12 @@ export default function CreatorCard({ creator, onOpenProfile, onMessage, messagi
             <Feather name="award" size={11} color={colors.mutedForeground} /> {creator.badgeCount} {creator.badgeCount === 1 ? 'badge' : 'badges'}
           </Text>
         )}
-        {inquiryLink ? (
+        {inquiryAvailable ? (
           <TouchableOpacity onPress={openInquiry}
             style={{ minHeight: 44, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 5 }}
             testID={`inquire-creator-${creator.id}`}
-            accessibilityRole="link"
-            accessibilityLabel={`Open ${creator.username}'s external inquiry link`}
+            accessibilityRole={isPoncho ? 'button' : 'link'}
+            accessibilityLabel={isPoncho ? 'Open Poncho The Artist inquiry form' : `Open ${creator.username}'s external inquiry link`}
             activeOpacity={0.7}>
             <Text style={[s.details, { color: colors.foreground, fontFamily: 'DMSans_700Bold' }]}>Inquire</Text>
             <Feather name="arrow-up-right" size={14} color={colors.foreground} />

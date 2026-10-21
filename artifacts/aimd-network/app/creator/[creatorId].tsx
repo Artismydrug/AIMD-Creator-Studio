@@ -17,8 +17,6 @@ import { useColors } from '@/hooks/useColors';
 import CreatorPortfolioView from '@/components/CreatorPortfolioView';
 import { getStudioInquiryLink } from '@/lib/studioInquiry';
 
-const PONCHO_INQUIRY_URL = 'https://artismydrug.com/tattoo#booking';
-
 export default function CreatorProfileScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -103,9 +101,7 @@ export default function CreatorProfileScreen() {
   }
 
   const isPoncho = creator.username.replace(/^@/, '').toLowerCase() === 'ponchotheartist';
-  const inquiryUrl = creator.bookingOpen
-    ? (isPoncho ? PONCHO_INQUIRY_URL : getStudioInquiryLink(creator))
-    : null;
+  const inquiryUrl = creator.bookingOpen && !isPoncho ? getStudioInquiryLink(creator) : null;
 
   const toggleFollow = () => {
     if (!me || follow.isPending || unfollow.isPending) return;
@@ -136,6 +132,11 @@ export default function CreatorProfileScreen() {
   };
 
   const openInquiry = () => {
+    if (!creator.bookingOpen) return;
+    if (isPoncho) {
+      router.push('/commission-inquiry');
+      return;
+    }
     if (!inquiryUrl) return;
     void Linking.openURL(inquiryUrl).catch(() => Alert.alert('Could not open inquiry link', 'Please try again.'));
   };
@@ -156,7 +157,7 @@ export default function CreatorProfileScreen() {
         followBusy={follow.isPending || unfollow.isPending}
         onMessage={messageCreator}
         messageBusy={createConversation.isPending}
-        inquiryAvailable={!!inquiryUrl}
+        inquiryAvailable={!!creator.bookingOpen && (isPoncho || !!inquiryUrl)}
         onInquiry={openInquiry}
       />
     </View>

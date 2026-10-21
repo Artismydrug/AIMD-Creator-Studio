@@ -13,8 +13,6 @@ import { useColors } from '@/hooks/useColors';
 import CreatorPortfolioView, { type CreatorPortfolioProfile } from '@/components/CreatorPortfolioView';
 import { getStudioInquiryLink } from '@/lib/studioInquiry';
 
-const PUBLIC_COMMISSION_FORM_URL = 'https://artismydrug.com/tattoo#booking';
-
 export default function ProfileScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -81,10 +79,14 @@ export default function ProfileScreen() {
     postCount: socialProfile?.postCount ?? posts?.length ?? 0,
   };
   const isPoncho = me.username.replace(/^@/, '').toLowerCase() === 'ponchotheartist';
-  const inquiryUrl = me.bookingOpen
-    ? (isPoncho ? PUBLIC_COMMISSION_FORM_URL : getStudioInquiryLink(creator))
-    : null;
+  const inquiryUrl = me.bookingOpen && !isPoncho ? getStudioInquiryLink(creator) : null;
+  const inquiryAvailable = !!me.bookingOpen && (isPoncho || !!inquiryUrl);
   const onOpenInquiry = () => {
+    if (!me.bookingOpen) return;
+    if (isPoncho) {
+      router.push('/commission-inquiry');
+      return;
+    }
     if (!inquiryUrl) return;
     void Linking.openURL(inquiryUrl).catch(() => Alert.alert('Could not open inquiry link', 'Please try again.'));
   };
@@ -113,7 +115,7 @@ export default function ProfileScreen() {
             ...(category && category !== 'all' ? { category } : {}),
           },
         })}
-        inquiryAvailable={!!inquiryUrl}
+        inquiryAvailable={inquiryAvailable}
         onInquiry={onOpenInquiry}
       />
     </View>

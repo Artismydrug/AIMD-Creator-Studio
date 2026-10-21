@@ -331,7 +331,7 @@ export default function CreatorPortfolioView({
               {inquiryAvailable ? (
                 <Pressable accessibilityRole="button" onPress={onInquiry} style={styles.action} testID="creator-profile-inquiry">
                   <Feather name="send" size={15} color={colors.studioInk} />
-                  <Text style={styles.actionText}>View inquiry</Text>
+                  <Text style={styles.actionText}>{isPoncho ? 'Open inquiry form' : 'View inquiry'}</Text>
                 </Pressable>
               ) : (
                 <Pressable accessibilityRole="button" onPress={onEdit} style={styles.action} testID="creator-profile-setup-inquiry">
