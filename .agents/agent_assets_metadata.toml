@@ -217,3 +217,31 @@ mtime_ms = 1792504953909
 storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/9128b792-b4f9-4e8a-b53a-efb3e62d3f23/2e461171-85c0-474d-a380-965efed8c7a2"
 storage_version_token = "1792504962895986"
 content_type = "application/pdf"
+
+[[outputs]]
+id = "pAKERv5LutrTFAhqGl0Dv"
+uri = "file://generated-artifacts/aimd-design-review/AIMD_Design_Finalists_Comparison.pptx"
+type = "slides"
+title = "AIMD Design Finalists — PowerPoint"
+description = "One-slide side-by-side comparison of Sticker Jam, Sticker Frequency, and Open Canvas for the team."
+logical_id = "8ff2d106-4389-4f19-8b68-efa4eeb10396"
+content_hash = "sha256:60401f83979d29e6e5436ed6db68c5fe9aa894d539aebde0297ea3813598db98"
+size = 142652
+mtime_ms = 1792599466383
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/8ff2d106-4389-4f19-8b68-efa4eeb10396/dfce6702-9d2c-4275-9de4-2271f38f0220"
+storage_version_token = "1792599478176854"
+content_type = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+
+[[outputs]]
+id = "Qy3XgOqJUROxL3okRHGRW"
+uri = "file://generated-artifacts/aimd-design-review/AIMD_Design_Finalists_Comparison.pdf"
+type = "pdf"
+title = "AIMD Design Finalists — PDF"
+description = "Presentation-ready comparison slide with all three mobile designs and concise design notes."
+logical_id = "a156db06-39a8-425b-915e-fa45a350a98f"
+content_hash = "sha256:5f9f59977f948b11919824d588fba27bf272e7d20a731442850a64dfd05b93d2"
+size = 150047
+mtime_ms = 1792599466387
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:3cd8f5f2-77da-45ec-88bc-6b6d71600833/a156db06-39a8-425b-915e-fa45a350a98f/618f89b8-20d0-45ef-ab70-4bd265779a12"
+storage_version_token = "1792599478738530"
+content_type = "application/pdf"
