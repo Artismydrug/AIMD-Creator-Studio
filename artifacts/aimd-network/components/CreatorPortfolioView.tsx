@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -93,6 +94,7 @@ export default function CreatorPortfolioView({
   const [videosMuted, setVideosMuted] = useState(true);
   const safeName = creator.username.replace(/^@/, '');
   const website = normalizeStudioLink(creator.portfolioUrl);
+  const topInsetFallback = Platform.OS === 'web' && windowWidth <= 500 ? 56 : 8;
   const categories = useMemo(() => {
     const tags = new Set<string>();
     posts.forEach((post) => {
@@ -110,7 +112,7 @@ export default function CreatorPortfolioView({
       );
   const contentWidth = Math.min(windowWidth - 32, 680);
   const tileWidth = Math.max(120, (contentWidth - 12) / 2);
-  const topPadding = Math.max(insets.top, 8) + 8;
+  const topPadding = Math.max(insets.top, topInsetFallback) + 8;
   const styles = useMemo(() => StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.studioBackground },
     scroll: { alignItems: 'center', paddingBottom: Math.max(insets.bottom, 24) + 30 },
