@@ -146,3 +146,19 @@ test('Poncho retains his known website without a saved URL; other members do not
   assert.equal(get(member, 'creator-instagram-link'), undefined);
   assert.equal(get(member, 'creator-direct-booking'), undefined);
 });
+
+test('studio combines discipline and location, omits gallery filler, and keeps a compact accessible add control', () => {
+  const h = harness({ creator: { id: 16, username: 'ponchotheartist', discipline: 'Tattooing', location: 'Los Angeles' } });
+  const tree = h.render();
+  assert.equal(get(tree, 'creator-profile-label').props.children[0], 'TATTOOING · Los Angeles');
+  const text = allNodes(tree).filter(node => node.type === 'Text').flatMap(node => node.props.children).join(' ');
+  assert.doesNotMatch(text, /SELECTED WORK|Made to stay with you\./);
+  const add = get(tree, 'creator-profile-add-work');
+  assert.equal(flattenStyle(add.props.style).minHeight, 44, 'smaller visual treatment retains an easy tap target');
+  const pill = allNodes(add).find(node => node.type === 'View');
+  assert.equal(flattenStyle(pill.props.style).minHeight, 30);
+  add.props.onPress();
+  assert.deepEqual(h.calls.add, ['all']);
+  const locationOnly = harness({ creator: { id: 99, username: 'member', location: 'Los Angeles' } }).render();
+  assert.equal(get(locationOnly, 'creator-profile-label').props.children[0], 'Los Angeles');
+});

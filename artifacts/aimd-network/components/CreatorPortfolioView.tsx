@@ -99,6 +99,7 @@ export default function CreatorPortfolioView({
   const [videosMuted, setVideosMuted] = useState(true);
   const [selectedPost, setSelectedPost] = useState<StudioPost | null>(null);
   const safeName = creator.username.replace(/^@/, '');
+  const profileLabel = [creator.discipline?.trim().toUpperCase(), creator.location?.trim()].filter(Boolean).join(' · ');
   const isPoncho = safeName.toLowerCase() === 'ponchotheartist';
   const website = normalizeStudioLink(creator.portfolioUrl) || (isPoncho ? 'https://ponchotheartist.com' : null);
   const topInsetFallback = Platform.OS === 'web' && windowWidth <= 500 ? 56 : 8;
@@ -178,12 +179,6 @@ export default function CreatorPortfolioView({
     },
     name: { color: colors.studioInk, fontFamily: portfolioSerif, fontWeight: '700', fontSize: 27, lineHeight: 29, letterSpacing: -0.8 },
     bio: { color: colors.studioMuted, fontFamily: 'DMSans_400Regular', fontSize: 12, lineHeight: 18 },
-    details: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-    detailChip: {
-      backgroundColor: colors.studioPaper, borderColor: colors.studioInk,
-      borderWidth: 1, borderRadius: 99, paddingHorizontal: 9, paddingVertical: 5,
-    },
-    detailText: { color: colors.studioInk, fontFamily: 'DMSans_600SemiBold', fontSize: 10 },
     linkRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 4 },
     link: {
       minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10,
@@ -207,10 +202,14 @@ export default function CreatorPortfolioView({
     actionText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 12 },
     primaryActionText: { color: colors.primaryForeground },
     workSection: { borderTopWidth: 1.5, borderTopColor: colors.studioInk, paddingTop: 20, gap: 14 },
-    workHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-    workLabel: { backgroundColor: colors.studioOrange },
-    workTitle: { color: colors.studioInk, fontFamily: portfolioSerif, fontWeight: '700', fontSize: 26, lineHeight: 29, letterSpacing: -0.7 },
-    categoryScroll: { flexGrow: 0 },
+    workToolbar: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    addWorkTarget: { minHeight: 44, justifyContent: 'center', flexShrink: 0 },
+    addWorkPill: {
+      minHeight: 30, paddingHorizontal: 9, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
+      borderRadius: 99, borderWidth: 1, borderColor: colors.studioInk, backgroundColor: colors.studioPaper,
+    },
+    addWorkText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 10 },
+    categoryScroll: { flex: 1 },
     categoryRow: { flexDirection: 'row', alignItems: 'center', paddingRight: 4, paddingBottom: 4, gap: 8 },
     category: {
       minHeight: 44, flexShrink: 0, justifyContent: 'center', borderRadius: 99,
@@ -343,14 +342,9 @@ export default function CreatorPortfolioView({
               )}
             </View>
             <View style={styles.heroCopy}>
-              {!!creator.discipline && <Text style={styles.eyebrow}>{creator.discipline.toUpperCase()}</Text>}
+              {!!profileLabel && <Text style={styles.eyebrow} testID="creator-profile-label">{profileLabel}</Text>}
               <Text style={styles.name} accessibilityRole="header">{displayName}</Text>
               {creator.bio?.trim() ? <Text style={styles.bio}>{creator.bio.trim()}</Text> : null}
-              {(creator.location || creator.discipline) && (
-                <View style={styles.details}>
-                  {creator.location ? <View style={styles.detailChip}><Text style={styles.detailText}>{creator.location}</Text></View> : null}
-                </View>
-              )}
               {(website || isPoncho) && (
                 <View style={styles.linkRow}>
                   {website && (
@@ -410,21 +404,7 @@ export default function CreatorPortfolioView({
           )}
 
           <View style={styles.workSection}>
-            <View style={styles.workHeading}>
-              <Text style={[styles.eyebrow, styles.workLabel]}>SELECTED WORK</Text>
-              {isOwner && (
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => onAddWork?.(selectedCategory)}
-                  style={styles.link}
-                  testID="creator-profile-add-work"
-                >
-                  <Feather name="plus" size={14} color={colors.studioInk} />
-                  <Text style={styles.linkText}>New work</Text>
-                </Pressable>
-              )}
-            </View>
-            <Text style={styles.workTitle} accessibilityRole="header">Made to stay with you.</Text>
+            <View style={styles.workToolbar}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll} testID="creator-work-tabs">
               <View style={styles.categoryRow}>
                 {[{ value: 'all', label: 'All work' }, ...workCategories].map((category) => {
@@ -444,6 +424,21 @@ export default function CreatorPortfolioView({
                 })}
               </View>
             </ScrollView>
+              {isOwner && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Add new work"
+                  onPress={() => onAddWork?.(selectedCategory)}
+                  style={styles.addWorkTarget}
+                  testID="creator-profile-add-work"
+                >
+                  <View style={styles.addWorkPill}>
+                    <Feather name="plus" size={12} color={colors.studioInk} />
+                    <Text style={styles.addWorkText}>New work</Text>
+                  </View>
+                </Pressable>
+              )}
+            </View>
 
           {isLoading ? (
             <View style={styles.empty}><ActivityIndicator color={colors.primary} /><Text style={styles.emptyText}>Loading artwork…</Text></View>
