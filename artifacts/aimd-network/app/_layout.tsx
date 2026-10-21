@@ -34,6 +34,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { AppearanceProvider, useAppearance } from '@/lib/appearance';
 import { useColors } from '@/hooks/useColors';
+import palette from '@/constants/colors';
 import { ClerkLoaded, ClerkLoading, ClerkProvider, useAuth } from '@clerk/expo';
 import { tokenCache } from '@clerk/expo/token-cache';
 import { SessionSecurityGate } from '@/components/SessionSecurity';
@@ -124,48 +125,6 @@ function SessionPreparationScreen({
   error: string | null;
   onRetry: () => void;
 }) {
-  const colors = useColors();
-  const sessionStyles = StyleSheet.create({
-    container: {
-      alignItems: 'center',
-      backgroundColor: colors.background,
-      flex: 1,
-      gap: 14,
-      justifyContent: 'center',
-      paddingHorizontal: 32,
-    },
-    title: {
-      color: colors.foreground,
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 22,
-      textAlign: 'center',
-    },
-    body: {
-      color: colors.mutedForeground,
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 15,
-      lineHeight: 22,
-      maxWidth: 420,
-      textAlign: 'center',
-    },
-    retryButton: {
-      backgroundColor: colors.studioOrange,
-      borderColor: colors.ink,
-      borderRadius: colors.radius + 3,
-      borderWidth: 1.5,
-      marginTop: 8,
-      paddingHorizontal: 24,
-      paddingVertical: 14,
-    },
-    retryButtonPressed: {
-      opacity: 0.8,
-    },
-    retryText: {
-      color: colors.ink,
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 15,
-    },
-  });
   return (
     <View style={sessionStyles.container} testID="session-preparation-screen">
       {error ? (
@@ -189,7 +148,7 @@ function SessionPreparationScreen({
         </>
       ) : (
         <>
-          <ActivityIndicator color={colors.primary} size="large" />
+          <ActivityIndicator color={palette.light.primary} size="large" />
           <Text style={sessionStyles.title}>Opening Creator Studio…</Text>
           <Text style={sessionStyles.body}>Preparing your secure account session.</Text>
         </>
@@ -197,6 +156,48 @@ function SessionPreparationScreen({
     </View>
   );
 }
+
+const sessionStyles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    backgroundColor: palette.light.background,
+    flex: 1,
+    gap: 14,
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  title: {
+    color: palette.light.foreground,
+    fontFamily: 'DMSans_700Bold',
+    fontSize: 22,
+    textAlign: 'center',
+  },
+  body: {
+    color: palette.light.mutedForeground,
+    fontFamily: 'DMSans_400Regular',
+    fontSize: 15,
+    lineHeight: 22,
+    maxWidth: 420,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: palette.light.studioOrange,
+    borderColor: palette.light.ink,
+    borderRadius: palette.radius + 3,
+    borderWidth: 1.5,
+    marginTop: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+  },
+  retryButtonPressed: {
+    opacity: 0.8,
+  },
+  retryText: {
+    color: palette.light.ink,
+    fontFamily: 'DMSans_700Bold',
+    fontSize: 15,
+  },
+});
 
 function ClerkStartupScreen() {
   const [timedOut, setTimedOut] = useState(false);
