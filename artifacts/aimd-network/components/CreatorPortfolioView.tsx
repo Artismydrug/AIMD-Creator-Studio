@@ -114,7 +114,7 @@ export default function CreatorPortfolioView({
   const styles = useMemo(() => StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.studioBackground },
     scroll: { alignItems: 'center', paddingBottom: Math.max(insets.bottom, 24) + 30 },
-    content: { width: contentWidth, gap: 22 },
+    content: { width: contentWidth, gap: 16 },
     header: {
       minHeight: 58,
       borderBottomWidth: 1.5,
@@ -125,7 +125,7 @@ export default function CreatorPortfolioView({
       paddingHorizontal: 16,
       paddingTop: topPadding,
       paddingBottom: 10,
-      marginBottom: 19,
+      marginBottom: 12,
     },
     backButton: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
     mark: {
@@ -142,16 +142,16 @@ export default function CreatorPortfolioView({
       shadowOpacity: 1, shadowRadius: 0, elevation: 2,
     },
     headerActionText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 11 },
-    hero: { flexDirection: 'row', gap: 16, alignItems: 'center' },
+    hero: { flexDirection: 'row', gap: 14, alignItems: 'center' },
     avatarFrame: {
-      width: 88, height: 88, borderRadius: 44, borderWidth: 2,
+      width: 80, height: 80, borderRadius: 40, borderWidth: 2,
       borderColor: colors.studioInk, backgroundColor: colors.studioPaperAlt,
       alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
       shadowColor: colors.studioOrange, shadowOffset: { width: 3, height: 3 },
       shadowOpacity: 1, shadowRadius: 0, elevation: 2,
     },
-    avatar: { width: 84, height: 84, borderRadius: 42 },
-    initials: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 25 },
+    avatar: { width: 76, height: 76, borderRadius: 38 },
+    initials: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 23 },
     heroCopy: { flex: 1, minWidth: 0, gap: 6 },
     eyebrow: {
       alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 5,
@@ -173,7 +173,7 @@ export default function CreatorPortfolioView({
     stats: {
       flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around',
       borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.studioInk,
-      paddingVertical: 12,
+      paddingVertical: 10,
     },
     statValue: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 16, textAlign: 'center' },
     statLabel: { color: colors.studioMuted, fontFamily: 'DMSans_500Medium', fontSize: 10, textAlign: 'center', marginTop: 2 },
@@ -188,8 +188,7 @@ export default function CreatorPortfolioView({
     primaryAction: { backgroundColor: colors.primary },
     actionText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 12 },
     primaryActionText: { color: colors.primaryForeground },
-    sectionHeader: { gap: 5 },
-    sectionEyebrow: { color: colors.studioMuted, fontFamily: 'DMSans_700Bold', fontSize: 9, letterSpacing: 1.1 },
+    sectionHeader: { gap: 0 },
     sectionTitle: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 22, lineHeight: 26 },
     categoryScroll: { marginTop: -10, marginHorizontal: -4 },
     categoryRow: { gap: 8, paddingHorizontal: 4, paddingVertical: 4 },
@@ -256,7 +255,7 @@ export default function CreatorPortfolioView({
         >
           <Feather name="arrow-left" size={20} color={colors.studioInk} />
         </Pressable>
-        <Text style={styles.headerLabel}>{isOwner ? 'YOUR STUDIO' : 'CREATOR PROFILE'}  ·  AIMD</Text>
+        <Text style={styles.headerLabel}>{isOwner ? 'YOUR STUDIO' : 'CREATOR PROFILE'}</Text>
         {isOwner ? (
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <Pressable
@@ -291,7 +290,7 @@ export default function CreatorPortfolioView({
             <View style={styles.heroCopy}>
               {!!creator.discipline && <Text style={styles.eyebrow}>{creator.discipline.toUpperCase()}</Text>}
               <Text style={styles.name} accessibilityRole="header">{safeName}</Text>
-              <Text style={styles.bio}>{creator.bio?.trim() || 'A creator making room for their next idea.'}</Text>
+              {creator.bio?.trim() ? <Text style={styles.bio}>{creator.bio.trim()}</Text> : null}
               {(creator.location || creator.discipline) && (
                 <View style={styles.details}>
                   {creator.location ? <View style={styles.detailChip}><Text style={styles.detailText}>{creator.location}</Text></View> : null}
@@ -376,7 +375,6 @@ export default function CreatorPortfolioView({
           )}
 
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionEyebrow}>THE WORK</Text>
             <Text style={styles.sectionTitle}>Selected work</Text>
           </View>
 
