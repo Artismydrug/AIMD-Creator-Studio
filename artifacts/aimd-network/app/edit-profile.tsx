@@ -101,7 +101,7 @@ export default function EditProfileScreen() {
 
   const styles = StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.studioBackground },
-    header: { minHeight: 58, paddingTop: Math.max(insets.top, 8) + 6, paddingHorizontal: 15, paddingBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1.5, borderBottomColor: colors.studioInk },
+    header: { minHeight: 58, paddingTop: Platform.OS === 'web' ? 67 : insets.top + 8, paddingHorizontal: 15, paddingBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1.5, borderBottomColor: colors.studioInk },
     back: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
     mark: { width: 34, height: 34, borderRadius: 11, borderWidth: 1.5, borderColor: colors.studioInk, backgroundColor: colors.studioOrange, alignItems: 'center', justifyContent: 'center' },
     heading: { flex: 1, color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 19 },
