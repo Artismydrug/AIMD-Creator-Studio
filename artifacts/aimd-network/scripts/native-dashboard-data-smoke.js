@@ -68,7 +68,7 @@ function render(responses = {}, overrides = {}) {
       if (name === '@expo/vector-icons') return { Feather: 'Feather' };
       if (name === 'expo-haptics') return { notificationAsync: async () => {}, NotificationFeedbackType: { Success: 'success' } };
       if (name === 'expo-image-picker') return {};
-      if (name === 'expo-router') return { useRouter: () => ({ push: route => routes.push(route) }) };
+       if (name === 'expo-router') return { useFocusEffect: () => {}, useRouter: () => ({ push: route => routes.push(route) }) };
       if (name === '@tanstack/react-query') return {
         useQueryClient: () => ({ invalidateQueries: async ({ queryKey }) => { invalidations.push(queryKey); } }),
       };
@@ -80,7 +80,9 @@ function render(responses = {}, overrides = {}) {
     },
   };
   vm.runInNewContext(compiled, sandbox);
-  const tree = sandbox.exports.default();
+  // The default index export now redirects to Habits; exercise the retained
+  // implementation directly, while v1-scope checks that its route stays gated.
+  const tree = sandbox.exports.DashboardScreen();
   return { tree, requests, captures, routes, mutations, invalidations, profileRefreshes: () => profileRefreshes };
 }
 function find(node, testID) {

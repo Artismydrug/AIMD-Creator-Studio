@@ -31,7 +31,6 @@ export default function CommunityScreen() {
     titleMark: { width: 44, height: 44, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.studioOrange, borderWidth: 2, borderColor: colors.ink, transform: [{ rotate: '-5deg' }], shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
     titleCopy: { flex: 1, gap: 2 },
     title: { fontFamily: 'DMSans_700Bold', fontSize: 26, color: colors.foreground, letterSpacing: -0.6 },
-     subtitle: { fontFamily: 'DMSans_700Bold', fontSize: 11, color: colors.sunsetCoral, letterSpacing: 1.2, textTransform: 'uppercase' },
     switcher: { flexDirection: 'row', gap: 6 },
      switchButton: {
       flex: 1,
@@ -72,8 +71,7 @@ export default function CommunityScreen() {
             <Feather name="users" size={19} color={colors.ink} />
           </View>
           <View style={s.titleCopy}>
-            <Text style={s.title}>Feed</Text>
-             <Text style={s.subtitle}>Make · Share · Connect.</Text>
+            <Text style={s.title} numberOfLines={1}>Feed</Text>
           </View>
         </View>
          <View style={s.switcher} accessibilityRole="tablist">

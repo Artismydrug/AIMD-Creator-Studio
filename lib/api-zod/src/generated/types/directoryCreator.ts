@@ -5,6 +5,7 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+import type { DirectoryCreatorProfileAccentColor } from './directoryCreatorProfileAccentColor';
 import type { DirectoryCreatorRecentBadgesItem } from './directoryCreatorRecentBadgesItem';
 
 export interface DirectoryCreator {
@@ -22,6 +23,18 @@ export interface DirectoryCreator {
   bookingOpen: boolean;
   /** @nullable */
   portfolioUrl?: string | null;
+  /** @nullable */
+  instagramUrl?: string | null;
+  /** @nullable */
+  tiktokUrl?: string | null;
+  /** @nullable */
+  profileAccentColor?: DirectoryCreatorProfileAccentColor;
+  /**
+     * @maxItems 20
+     * @items.minLength 1
+     * @items.maxLength 32
+     */
+  inquiryOptions?: string[];
   badgeCount: number;
   postCount: number;
   points?: number;

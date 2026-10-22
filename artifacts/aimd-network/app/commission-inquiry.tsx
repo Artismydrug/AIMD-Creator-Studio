@@ -17,12 +17,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   createTattooBookingDraft,
   customFetch,
+  getGetUserProfileQueryKey,
   submitTattooBooking,
+  useGetUserProfile,
 } from '@workspace/api-client-react';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import { useColors } from '@/hooks/useColors';
 
-type ProjectType = 'tattoo' | 'painting' | 'other';
+type ProjectType = string;
 type ReferenceImage = {
   uri: string;
   name: string;
@@ -97,13 +99,32 @@ function imageContentType(asset: ImagePicker.ImagePickerAsset) {
 export default function CommissionInquiryScreen() {
   const colors = useColors();
   const router = useRouter();
-  const params = useLocalSearchParams<{ creatorName?: string | string[] }>();
+  const params = useLocalSearchParams<{
+    creatorId?: string | string[];
+    creatorName?: string | string[];
+  }>();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  const rawCreatorId = Array.isArray(params.creatorId) ? params.creatorId[0] : params.creatorId;
+  const parsedCreatorId = Number(rawCreatorId);
+  const creatorUserId = Number.isInteger(parsedCreatorId) && parsedCreatorId > 0
+    ? parsedCreatorId
+    : undefined;
   const rawCreatorName = Array.isArray(params.creatorName) ? params.creatorName[0] : params.creatorName;
   const creatorName = rawCreatorName?.trim().replace(/^@/, '').slice(0, 120) || 'Creator';
+  const {
+    data: creatorProfile,
+    isLoading: creatorProfileLoading,
+    isError: creatorProfileError,
+    refetch: refetchCreatorProfile,
+  } = useGetUserProfile(creatorUserId ?? 0, {
+    query: {
+      enabled: creatorUserId !== undefined,
+      queryKey: creatorUserId ? getGetUserProfileQueryKey(creatorUserId) : [],
+    },
+  });
   const submitLock = useRef(false);
-  const [requestType, setRequestType] = useState<ProjectType>('tattoo');
+  const [requestType, setRequestType] = useState<ProjectType>('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -115,7 +136,29 @@ export default function CommissionInquiryScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<SubmittedInquiry | null>(null);
 
-  const copy = PROJECT_COPY[requestType];
+  const projectOptions = creatorUserId
+    ? (creatorProfile?.inquiryOptions ?? []).map((label) => ({
+      value: label,
+      label,
+      icon: (label.toLocaleLowerCase() === 'tattoo'
+        ? 'edit-3'
+        : label.toLocaleLowerCase() === 'painting'
+          ? 'image'
+          : 'briefcase') as React.ComponentProps<typeof Feather>['name'],
+    }))
+    : PROJECT_TYPES;
+  const selectedProjectType = projectOptions.find((item) => item.value === requestType)?.value
+    ?? projectOptions[0]?.value
+    ?? '';
+  const copy = PROJECT_COPY[selectedProjectType.toLocaleLowerCase()] ?? {
+    headline: selectedProjectType ? `Tell us about your ${selectedProjectType.toLocaleLowerCase()} project.` : 'No services are available.',
+    ideaLabel: selectedProjectType ? `${selectedProjectType} details` : 'Project details',
+    ideaPlaceholder: 'Describe what you have in mind, including the style, purpose, or story.',
+    placementLabel: 'Medium or project details',
+    placementPlaceholder: 'Where or how the work will be used',
+    sizeLabel: 'Timeline or scope',
+    sizePlaceholder: 'Add dimensions, timing, or project scale',
+  };
   const topInsetFallback = Platform.OS === 'web' && width <= 500 ? 56 : 8;
   const topPadding = Math.max(insets.top, topInsetFallback) + 8;
   const styles = StyleSheet.create({
@@ -143,10 +186,10 @@ export default function CommissionInquiryScreen() {
     subtitle: { color: colors.studioMuted, fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 20 },
     section: { gap: 10 },
     sectionTitle: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 15 },
-    projectTypes: { flexDirection: 'row', gap: 8 },
+    projectTypes: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     projectType: {
-      flex: 1, minHeight: 46, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5,
-      paddingHorizontal: 6, borderWidth: 1.5, borderColor: colors.studioInk,
+      flexGrow: 1, minWidth: '29%', minHeight: 46, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5,
+      paddingHorizontal: 10, borderWidth: 1.5, borderColor: colors.studioInk,
       borderRadius: 14, backgroundColor: colors.studioPaper,
     },
     projectTypeSelected: { backgroundColor: colors.studioYellow },
@@ -181,7 +224,6 @@ export default function CommissionInquiryScreen() {
       flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 11,
       borderRadius: 13, backgroundColor: colors.studioPaperAlt,
     },
-    privacyText: { flex: 1, color: colors.studioMuted, fontFamily: 'DMSans_500Medium', fontSize: 11, lineHeight: 16 },
     error: {
       padding: 11, borderRadius: 12, borderWidth: 1, borderColor: colors.destructive,
       backgroundColor: colors.card, color: colors.destructive,
@@ -254,6 +296,10 @@ export default function CommissionInquiryScreen() {
 
   const submit = async () => {
     if (submitLock.current || isSubmitting) return;
+    if (!selectedProjectType) {
+      setError('This creator has not added any inquiry services yet.');
+      return;
+    }
     const cleanName = name.trim();
     const cleanEmail = email.trim();
     if (!cleanName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
@@ -270,7 +316,8 @@ export default function CommissionInquiryScreen() {
     setError(null);
     try {
       const draft = await createTattooBookingDraft({
-        requestType,
+        requestType: selectedProjectType,
+        ...(creatorUserId ? { creatorUserId } : {}),
         name: cleanName,
         email: cleanEmail,
         phone: phone.trim() || null,
@@ -311,7 +358,7 @@ export default function CommissionInquiryScreen() {
 
   const startAnotherInquiry = () => {
     setSubmitted(null);
-    setRequestType('tattoo');
+    setRequestType(projectOptions[0]?.value ?? '');
     setName('');
     setEmail('');
     setPhone('');
@@ -340,7 +387,13 @@ export default function CommissionInquiryScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {submitted ? (
+        {creatorUserId && (creatorProfileLoading || !creatorProfile || creatorProfileError) ? (
+          <View style={{ minHeight: 260, alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+            {creatorProfileLoading ? <ActivityIndicator color={colors.studioOrangeText} /> : <Feather name="alert-circle" size={28} color={colors.destructive} />}
+            <Text style={styles.sectionTitle}>{creatorProfileLoading ? 'Opening this creator’s services…' : 'Could not load this creator’s services.'}</Text>
+            {!creatorProfileLoading ? <Pressable accessibilityRole="button" onPress={() => void refetchCreatorProfile()} style={styles.secondaryButton}><Text style={styles.secondaryButtonText}>Try again</Text></Pressable> : null}
+          </View>
+        ) : submitted ? (
           <View style={styles.successCard} accessibilityLiveRegion="polite" testID="commission-inquiry-success">
             <Feather name="check-circle" size={32} color={colors.primary} />
             <Text style={styles.eyebrow}>REQUEST #{submitted.id}</Text>
@@ -371,8 +424,8 @@ export default function CommissionInquiryScreen() {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>What are we making?</Text>
               <View style={styles.projectTypes}>
-                {PROJECT_TYPES.map((item) => {
-                  const selected = requestType === item.value;
+                {projectOptions.map((item) => {
+                  const selected = selectedProjectType === item.value;
                   return (
                     <Pressable
                       key={item.value}
@@ -502,7 +555,7 @@ export default function CommissionInquiryScreen() {
                 <Feather name="image" size={18} color={colors.studioOrangeText} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.referenceButtonText}>Add photos or sketches</Text>
-                  <Text style={styles.helper}>Only the AIMD studio team can see them.</Text>
+                  <Text style={styles.helper}>Your details and photos stay private to this creator and authorized AIMD staff.</Text>
                 </View>
                 <Feather name="plus" size={17} color={colors.studioInk} />
               </Pressable>
@@ -527,7 +580,6 @@ export default function CommissionInquiryScreen() {
 
             <View style={styles.privacy}>
               <Feather name="lock" size={14} color={colors.studioInk} />
-              <Text style={styles.privacyText}>Your contact details and references are sent privately to the AIMD studio.</Text>
             </View>
 
             {error ? <Text style={styles.error} accessibilityRole="alert">{error}</Text> : null}

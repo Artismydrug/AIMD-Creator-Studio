@@ -5,6 +5,7 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+import type { UserUpdateProfileAccentColor } from './userUpdateProfileAccentColor';
 
 export interface UserUpdate {
   username?: string;
@@ -22,4 +23,16 @@ export interface UserUpdate {
   bookingOpen?: boolean;
   /** @nullable */
   portfolioUrl?: string | null;
+  /** @nullable */
+  instagramUrl?: string | null;
+  /** @nullable */
+  tiktokUrl?: string | null;
+  /** @nullable */
+  profileAccentColor?: UserUpdateProfileAccentColor;
+  /**
+     * @maxItems 20
+     * @items.minLength 1
+     * @items.maxLength 32
+     */
+  inquiryOptions?: string[];
 }

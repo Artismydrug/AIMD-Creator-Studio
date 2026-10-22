@@ -31,7 +31,7 @@ type StickerJamPracticeCardProps = {
   onOpenEvents: () => void;
 };
 
-export default function StickerJamPracticeCard({
+function StickerJamPracticeCard({
   streak,
   onStartSketch,
   onOpenHabits,
@@ -454,10 +454,10 @@ export default function StickerJamPracticeCard({
                 style={styles.startButton}
                 onPress={onStartSketch}
                 accessibilityRole="button"
-                accessibilityLabel="Start a 60-second Flash Sketch"
+                accessibilityLabel="Start a 60-second Side Quest"
                 testID="dashboard-mini-habit-studio-open"
               >
-                <Text style={styles.startButtonText}>Start a sketch</Text>
+                <Text style={styles.startButtonText}>Try Side Quest</Text>
                 <Feather name="arrow-up-right" size={16} color={colors.studioInk} />
               </TouchableOpacity>
             </View>
@@ -542,3 +542,5 @@ export default function StickerJamPracticeCard({
     </View>
   );
 }
+
+export default React.memo(StickerJamPracticeCard);

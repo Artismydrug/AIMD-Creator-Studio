@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, FlatList, Image, Platform, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Platform, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -68,7 +69,7 @@ export default function AccomplishmentsScreen() {
           <View style={[styles.badge, { backgroundColor: colors.studioPaper, borderColor: colors.foreground }]} testID={`earned-badge-${item.id}`}>
             <View style={[styles.badgeIcon, { backgroundColor: colors.studioLavender, borderColor: colors.foreground }]}>
               {item.imageUrl
-                ? <Image source={{ uri: resolveImage(item.imageUrl) }} style={styles.image} resizeMode="contain" />
+                ? <Image source={{ uri: resolveImage(item.imageUrl) }} style={styles.image} contentFit="contain" cachePolicy="memory-disk" recyclingKey={item.imageUrl} allowDownscaling priority="low" />
                 : <Feather name="award" size={26} color={colors.primary} />}
             </View>
             <View style={styles.badgeCopy}>

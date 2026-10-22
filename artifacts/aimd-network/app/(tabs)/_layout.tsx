@@ -6,6 +6,9 @@ import { useColors } from '@/hooks/useColors';
 import { useAuth } from '@clerk/expo';
 import FrostedTabBar from '@/components/FrostedTabBar';
 import ScreenErrorBoundary from '@/components/ScreenErrorBoundary';
+import { PRIMARY_LANDING_TAB } from '@/lib/primaryNavigation';
+
+export const unstable_settings = { initialRouteName: 'challenge-habits' };
 
 export default function TabLayout() {
   const colors = useColors();
@@ -27,29 +30,25 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      initialRouteName={PRIMARY_LANDING_TAB}
+      backBehavior="history"
       screenLayout={({ children, route }) => <ScreenErrorBoundary key={route.key} routeName={route.name}>{children}</ScreenErrorBoundary>}
       tabBar={(props) => <FrostedTabBar {...props} />}
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
         headerShown: false,
+        lazy: true,
+        freezeOnBlur: true,
+        animation: 'none',
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="challenge-habits"
         options={{
-          title: 'Dashboard',
+          title: 'Habits',
           tabBarIcon: ({ color, size }) => (
-            <Feather name="grid" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="community"
-        options={{
-          title: 'Feed',
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="users" size={size} color={color} />
+            <Feather name="zap" size={size} color={color} />
           ),
         }}
       />
@@ -63,18 +62,26 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="challenge-habits"
+        name="community"
         options={{
-          title: 'Habits & Challenges',
-          tabBarLabel: 'Habits & Challenges',
+          title: 'Feed',
           tabBarIcon: ({ color, size }) => (
-            <Feather name="zap" size={size} color={color} />
+            <Feather name="users" size={size} color={color} />
           ),
         }}
       />
-      {/* Profile is part of the Dashboard home base; it remains reachable from
-          the dashboard header and the profile stack screen, not as a fifth tab. */}
-      <Tabs.Screen name="profile-tab" options={{ href: null }} />
+      <Tabs.Screen
+        name="profile-tab"
+        options={{
+          title: 'Your Studio',
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="user" size={size} color={color} />
+          ),
+        }}
+      />
+      {/* Root opens daily practice; the older dashboard stays reachable from Studio. */}
+      <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen name="dashboard" options={{ href: null }} />
       {/* These screens remain deep-linkable, but are not bottom-navigation tabs. */}
       <Tabs.Screen name="events" options={{ href: null }} />
       <Tabs.Screen name="habits" options={{ href: null }} />

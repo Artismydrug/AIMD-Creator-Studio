@@ -5,6 +5,7 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+import type { UserProfileAccentColor } from './userProfileAccentColor';
 import type { UserTier } from './userTier';
 
 export interface User {
@@ -26,5 +27,17 @@ export interface User {
   bookingOpen?: boolean;
   /** @nullable */
   portfolioUrl?: string | null;
+  /** @nullable */
+  instagramUrl?: string | null;
+  /** @nullable */
+  tiktokUrl?: string | null;
+  /** @nullable */
+  profileAccentColor?: UserProfileAccentColor;
+  /**
+     * @maxItems 20
+     * @items.minLength 1
+     * @items.maxLength 32
+     */
+  inquiryOptions: string[];
   createdAt: Date;
 }

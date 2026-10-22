@@ -1,6 +1,6 @@
-import React from 'react';
-import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { Feather } from '@expo/vector-icons';
 import {
@@ -8,19 +8,29 @@ import {
   getGetUserProfileQueryKey,
   getListStudioPostsQueryKey,
   useGetCurrentUser,
+  useGetNotifications,
+  getGetNotificationsQueryKey,
   useGetUserProfile,
   useListStudioPosts,
   useUpdatePortfolioCategories,
   useUpdateStudioPostCategory,
 } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
+import { LAUNCH_FEATURES } from '@/lib/launchFeatures';
 import CreatorPortfolioView, { type CreatorPortfolioProfile } from '@/components/CreatorPortfolioView';
-import { getStudioInquiryLink } from '@/lib/studioInquiry';
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ asTab = false }: { asTab?: boolean } = {}) {
   const colors = useColors();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [isFocused, setIsFocused] = useState(false);
+  useFocusEffect(useCallback(() => {
+    setIsFocused(true);
+    return () => setIsFocused(false);
+  }, []));
+  const { data: notifications } = useGetNotifications({
+    query: { queryKey: getGetNotificationsQueryKey(), enabled: isFocused, refetchInterval: isFocused ? 15_000 : false },
+  });
   const { data: me, isLoading: meLoading, isError: meError, refetch: refetchMe } = useGetCurrentUser();
   const { data: socialProfile } = useGetUserProfile(me?.id ?? 0, {
     query: { enabled: !!me, queryKey: me ? getGetUserProfileQueryKey(me.id) : [] },
@@ -79,6 +89,9 @@ export default function ProfileScreen() {
     discipline: me.discipline,
     location: me.location,
     portfolioUrl: me.portfolioUrl,
+    instagramUrl: me.instagramUrl,
+    tiktokUrl: me.tiktokUrl,
+    profileAccentColor: me.profileAccentColor,
     bookingOpen: me.bookingOpen,
     followerCount: socialProfile?.followerCount ?? 0,
     followingCount: socialProfile?.followingCount ?? 0,
@@ -86,20 +99,13 @@ export default function ProfileScreen() {
     postCount: socialProfile?.postCount ?? posts?.length ?? 0,
     ...(socialProfile ? { portfolioCategories: socialProfile.portfolioCategories } : {}),
   };
-  const isPoncho = me.username.replace(/^@/, '').toLowerCase() === 'ponchotheartist';
-  const inquiryUrl = me.bookingOpen && !isPoncho ? getStudioInquiryLink(creator) : null;
-  const inquiryAvailable = !!me.bookingOpen && (isPoncho || !!inquiryUrl);
+  const inquiryAvailable = !!me.bookingOpen;
   const onOpenInquiry = () => {
     if (!me.bookingOpen) return;
-    if (isPoncho) {
-      router.push({
-        pathname: '/commission-inquiry',
-        params: { creatorName: me.username },
-      });
-      return;
-    }
-    if (!inquiryUrl) return;
-    void Linking.openURL(inquiryUrl).catch(() => Alert.alert('Could not open inquiry link', 'Please try again.'));
+    router.push({
+      pathname: '/commission-inquiry',
+      params: { creatorId: me.id, creatorName: me.username },
+    });
   };
 
   return (
@@ -114,6 +120,10 @@ export default function ProfileScreen() {
         isError={postsError}
         onRetry={() => void refetchPosts()}
         onEdit={() => router.push('/edit-profile')}
+        hideBack={asTab && !LAUNCH_FEATURES.dashboard}
+        onDashboard={asTab && LAUNCH_FEATURES.dashboard ? () => router.push('/(tabs)/dashboard') : undefined}
+        onInbox={() => router.push('/notifications')}
+        unreadCount={notifications?.unreadCount ?? 0}
         onBack={() => {
           if (router.canGoBack()) router.back();
           else router.replace('/(tabs)');
@@ -122,7 +132,7 @@ export default function ProfileScreen() {
           pathname: '/feed',
           params: {
             compose: '1',
-            returnTo: 'profile',
+            returnTo: asTab ? 'studio-tab' : 'profile',
             ...(categoryId !== null ? { categoryId: String(categoryId) } : {}),
             ...(legacyCategoryName ? { categoryName: legacyCategoryName } : {}),
           },

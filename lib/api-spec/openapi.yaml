@@ -2226,6 +2226,58 @@ paths:
         "404":
           description: Booking draft not found
 
+  /creator-inquiries/{bookingId}:
+    get:
+      operationId: getCreatorInquiry
+      tags: [creator-inquiries]
+      summary: Get an inquiry submitted to the signed-in creator
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Private inquiry details and references
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorInquiryDetails"
+        "401":
+          description: Authentication required
+        "404":
+          description: Inquiry not found
+
+  /creator-inquiries/{bookingId}/references/{referenceId}:
+    get:
+      operationId: getCreatorInquiryReference
+      tags: [creator-inquiries]
+      summary: Stream a private reference image for the signed-in creator
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: referenceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Private image bytes
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: Authentication required
+        "404":
+          description: Inquiry or reference not found
+
   /admin/tattoo-bookings:
     get:
       operationId: listAdminTattooBookings
@@ -2643,7 +2695,7 @@ components:
     # ── Users ─────────────────────────────────────────────────────────────
     User:
       type: object
-      required: [id, username, email, tier, createdAt]
+      required: [id, username, email, tier, inquiryOptions, createdAt]
       properties:
         id:
           type: integer
@@ -2672,6 +2724,20 @@ components:
           type: boolean
         portfolioUrl:
           type: ["string", "null"]
+        instagramUrl:
+          type: ["string", "null"]
+        tiktokUrl:
+          type: ["string", "null"]
+        profileAccentColor:
+          type: ["string", "null"]
+          enum: [null, coral, violet, mint, blue, rose, gold]
+        inquiryOptions:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 32
         createdAt:
           type: string
           format: date-time
@@ -2863,6 +2929,20 @@ components:
           type: boolean
         portfolioUrl:
           type: ["string", "null"]
+        instagramUrl:
+          type: ["string", "null"]
+        tiktokUrl:
+          type: ["string", "null"]
+        profileAccentColor:
+          type: ["string", "null"]
+          enum: [null, coral, violet, mint, blue, rose, gold]
+        inquiryOptions:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 32
 
     PortfolioCategory:
       type: object
@@ -3919,6 +3999,20 @@ components:
           type: boolean
         portfolioUrl:
           type: ["string", "null"]
+        instagramUrl:
+          type: ["string", "null"]
+        tiktokUrl:
+          type: ["string", "null"]
+        profileAccentColor:
+          type: ["string", "null"]
+          enum: [null, coral, violet, mint, blue, rose, gold]
+        inquiryOptions:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 32
         badgeCount:
           type: integer
         postCount:
@@ -3949,7 +4043,7 @@ components:
       type: object
       required:
         [id, username, tier, bookingOpen, postCount, badgesEarned, currentStreak,
-         workshopsEnrolled, followerCount, followingCount, followedByMe, blockedByMe, recentBadges, portfolioCategories]
+         workshopsEnrolled, followerCount, followingCount, followedByMe, blockedByMe, recentBadges, portfolioCategories, inquiryOptions]
       properties:
         id:
           type: integer
@@ -3973,6 +4067,20 @@ components:
           type: boolean
         portfolioUrl:
           type: ["string", "null"]
+        instagramUrl:
+          type: ["string", "null"]
+        tiktokUrl:
+          type: ["string", "null"]
+        profileAccentColor:
+          type: ["string", "null"]
+          enum: [null, coral, violet, mint, blue, rose, gold]
+        inquiryOptions:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 32
         portfolioCategories:
           type: array
           items:
@@ -4264,15 +4372,22 @@ components:
         postId:
           type: integer
 
+    InquiryDestination:
+      type: object
+      required: [bookingId]
+      properties:
+        bookingId:
+          type: integer
+
     Notification:
       type: object
-      required: [id, type, actor, conversationId, postId, conversationDestination, postDestination, createdAt, readAt]
+      required: [id, type, actor, conversationId, postId, conversationDestination, postDestination, inquiryDestination, inquirySummary, createdAt, readAt]
       properties:
         id:
           type: integer
         type:
           type: string
-          enum: [direct_message, follow, like, critique]
+          enum: [direct_message, follow, like, critique, commission_inquiry]
         actor:
           anyOf:
             - $ref: "#/components/schemas/NotificationActor"
@@ -4289,6 +4404,12 @@ components:
           anyOf:
             - $ref: "#/components/schemas/PostDestination"
             - type: "null"
+        inquiryDestination:
+          anyOf:
+            - $ref: "#/components/schemas/InquiryDestination"
+            - type: "null"
+        inquirySummary:
+          type: ["string", "null"]
         createdAt:
           type: string
           format: date-time
@@ -4402,7 +4523,8 @@ components:
       properties:
         requestType:
           type: string
-          enum: ["tattoo", "painting", "other"]
+          minLength: 1
+          maxLength: 32
         name:
           type: string
           minLength: 1
@@ -4430,6 +4552,9 @@ components:
           type: string
           minLength: 1
           maxLength: 120
+        creatorUserId:
+          type: integer
+          description: Optional creator owner for a profile-specific inquiry.
         website:
           type: string
           maxLength: 200
@@ -4465,6 +4590,56 @@ components:
           type: string
         sizeBytes:
           type: integer
+
+    CreatorInquiryReference:
+      type: object
+      required: [id, url, originalName, contentType, sizeBytes]
+      properties:
+        id:
+          type: integer
+        url:
+          type: string
+        originalName:
+          type: string
+        contentType:
+          type: string
+        sizeBytes:
+          type: integer
+
+    CreatorInquiryDetails:
+      type: object
+      required: [id, requestType, name, email, phone, idea, placement, estimatedSize, preferredArtist, submittedAt, createdAt, references]
+      properties:
+        id:
+          type: integer
+        requestType:
+          type: string
+          minLength: 1
+          maxLength: 32
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: ["string", "null"]
+        idea:
+          type: string
+        placement:
+          type: string
+        estimatedSize:
+          type: string
+        preferredArtist:
+          type: string
+        submittedAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        references:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreatorInquiryReference"
 
     TattooBookingFinalizeInput:
       type: object
@@ -4507,7 +4682,8 @@ components:
       properties:
         requestType:
           type: string
-          enum: ["tattoo", "painting", "other"]
+          minLength: 1
+          maxLength: 32
         id:
           type: integer
         name:

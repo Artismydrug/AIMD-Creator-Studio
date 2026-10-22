@@ -23,6 +23,7 @@ import { ObjectNotFoundError, ObjectStorageService } from "../lib/objectStorage"
 import { deleteLocalAccount } from "../lib/accountDeletion";
 import { logger } from "../lib/logger";
 import { createNotification, removeActiveNotification } from "../lib/notifications";
+import { isSafeProfileWebsite, isValidSocialProfileUrl } from "../lib/profileLinks";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -171,11 +172,19 @@ router.patch("/users/me", async (req, res): Promise<void> => {
     }
   }
 
-  // URL validation: portfolio must be http(s); avatars must be creator-owned
+  // Website URLs must be safe web destinations; social URLs must match their
+  // named platform. Avatars must remain creator-owned
   // public uploads returned by our authenticated storage endpoint.
-  if (parsed.data.portfolioUrl) {
-    if (!/^https?:\/\//i.test(parsed.data.portfolioUrl)) {
-      res.status(400).json({ error: "Portfolio link must start with http:// or https://" });
+  if (parsed.data.portfolioUrl != null) {
+    if (!isSafeProfileWebsite(parsed.data.portfolioUrl)) {
+      res.status(400).json({ error: "Website must be a valid http:// or https:// link without embedded credentials." });
+      return;
+    }
+  }
+  for (const platform of ["instagram", "tiktok"] as const) {
+    const socialUrl = parsed.data[`${platform}Url`];
+    if (socialUrl != null && !isValidSocialProfileUrl(platform, socialUrl)) {
+      res.status(400).json({ error: `Use a valid ${platform === "instagram" ? "Instagram" : "TikTok"} profile link.` });
       return;
     }
   }
@@ -187,11 +196,38 @@ router.patch("/users/me", async (req, res): Promise<void> => {
     }
   }
 
+  let inquiryOptions: string[] | undefined;
+  if (parsed.data.inquiryOptions !== undefined) {
+    inquiryOptions = parsed.data.inquiryOptions.map((option) => option.trim());
+    const normalizedOptions = inquiryOptions.map((option) => option.toLocaleLowerCase());
+    if (
+      inquiryOptions.some((option) => !option || option.length > 32) ||
+      normalizedOptions.length > 20 ||
+      new Set(normalizedOptions).size !== normalizedOptions.length
+    ) {
+      res.status(400).json({ error: "Service names must be unique and contain 1–32 characters (up to 20 services)." });
+      return;
+    }
+  }
+
+  if (parsed.data.bookingOpen === true) {
+    const current = await db.select({ inquiryOptions: usersTable.inquiryOptions })
+      .from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (!(inquiryOptions ?? current[0]?.inquiryOptions ?? []).length) {
+      res.status(400).json({ error: "Add at least one service before opening inquiries." });
+      return;
+    }
+  }
+
   // Explicit allowlist of self-editable profile fields (never tier/points/isAdmin)
   const updates: Record<string, unknown> = {};
-  for (const key of ["username", "avatarUrl", "bio", "discipline", "location", "bookingOpen", "portfolioUrl"] as const) {
+  for (const key of [
+    "username", "avatarUrl", "bio", "discipline", "location", "bookingOpen",
+    "portfolioUrl", "instagramUrl", "tiktokUrl", "profileAccentColor",
+  ] as const) {
     if (parsed.data[key] !== undefined) updates[key] = parsed.data[key];
   }
+  if (inquiryOptions !== undefined) updates.inquiryOptions = inquiryOptions;
   if (Object.keys(updates).length === 0) {
     res.status(400).json({ error: "No profile fields to update." });
     return;
@@ -320,6 +356,10 @@ router.get("/directory", async (req, res): Promise<void> => {
       u.location,
       u.booking_open      AS "bookingOpen",
       u.portfolio_url     AS "portfolioUrl",
+      u.instagram_url     AS "instagramUrl",
+      u.tiktok_url        AS "tiktokUrl",
+      u.profile_accent_color AS "profileAccentColor",
+      u.inquiry_options   AS "inquiryOptions",
       COUNT(DISTINCT p.id)::int  AS "postCount",
       COUNT(DISTINCT b.id)::int  AS "badgeCount"
     FROM users u
@@ -352,6 +392,10 @@ router.get("/users/:id/profile", async (req, res): Promise<void> => {
       u.discipline, u.bio, u.location,
       u.booking_open AS "bookingOpen",
       u.portfolio_url AS "portfolioUrl",
+      u.instagram_url AS "instagramUrl",
+      u.tiktok_url AS "tiktokUrl",
+      u.profile_accent_color AS "profileAccentColor",
+      u.inquiry_options AS "inquiryOptions",
       u.portfolio_categories_configured AS "portfolioCategoriesConfigured",
       u.created_at AS "createdAt",
        COALESCE(

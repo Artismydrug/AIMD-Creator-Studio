@@ -4,9 +4,10 @@ import { Image } from 'expo-image';
 import { useColors } from '@/hooks/useColors';
 
 /** A cached photo with an explicit loading/error state and a light artwork backing. */
-export default function StudioImage({ uri, load = true, style, onLoadDimensions, contentFit = 'cover' }: {
+function StudioImage({ uri, load = true, style, onLoadDimensions, contentFit = 'cover', priority = 'low' }: {
   uri: string; load?: boolean; style?: StyleProp<ViewStyle>;
   contentFit?: 'cover' | 'contain';
+  priority?: 'low' | 'normal' | 'high';
   onLoadDimensions?: (width: number, height: number) => void;
 }) {
   const colors = useColors();
@@ -19,7 +20,8 @@ export default function StudioImage({ uri, load = true, style, onLoadDimensions,
     <View style={[style, { backgroundColor: colors.mediaPaper }]}>
       {load && <Image key={`${uri}:${attempt}`}
         source={{ uri }} style={StyleSheet.absoluteFill} contentFit={contentFit}
-        cachePolicy="memory-disk" recyclingKey={uri} accessibilityLabel="Creator's studio photo"
+        cachePolicy="memory-disk" recyclingKey={uri} allowDownscaling priority={priority}
+        accessibilityLabel="Creator's studio photo"
         onLoad={({ source }) => {
           setLoadedUri(uri);
           setFailedUri(null);
@@ -43,6 +45,8 @@ export default function StudioImage({ uri, load = true, style, onLoadDimensions,
     </View>
   );
 }
+
+export default React.memo(StudioImage);
 
 const styles = StyleSheet.create({
   center: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 20 },

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.2.0
  */
 import type { PortfolioCategory } from './portfolioCategory';
+import type { PublicCreatorProfileProfileAccentColor } from './publicCreatorProfileProfileAccentColor';
 import type { PublicCreatorProfileRecentBadgesItem } from './publicCreatorProfileRecentBadgesItem';
 
 export interface PublicCreatorProfile {
@@ -25,6 +26,18 @@ export interface PublicCreatorProfile {
   bookingOpen: boolean;
   /** @nullable */
   portfolioUrl?: string | null;
+  /** @nullable */
+  instagramUrl?: string | null;
+  /** @nullable */
+  tiktokUrl?: string | null;
+  /** @nullable */
+  profileAccentColor?: PublicCreatorProfileProfileAccentColor;
+  /**
+     * @maxItems 20
+     * @items.minLength 1
+     * @items.maxLength 32
+     */
+  inquiryOptions: string[];
   portfolioCategories: PortfolioCategory[];
   postCount: number;
   badgesEarned: number;

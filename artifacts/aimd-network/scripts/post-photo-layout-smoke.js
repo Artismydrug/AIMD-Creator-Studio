@@ -33,6 +33,7 @@ function harness(mediaType = 'image', immersive = true) {
     if (name === 'react') return {
       memo: component => component,
       useMemo: factory => factory(),
+      useCallback: callback => callback,
       useState: initial => {
         const index = stateIndex++;
         if (!(index in states)) states[index] = initial;

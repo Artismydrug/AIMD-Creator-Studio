@@ -2,7 +2,6 @@ import React, { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Linking,
   Modal,
   Platform,
@@ -12,6 +11,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Feather } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
@@ -37,6 +37,8 @@ import { clearHabitReminders } from '@/lib/habitReminders';
 import { miniHabitSketchbook } from '@/lib/miniHabitSketchbookStorage';
 import { unregisterPushDevice } from '@/lib/pushNotifications';
 import { sessionSecurityStore } from '@/lib/sessionSecurity';
+import { normalizeSocialProfileUrl, profileAccentColor, PROFILE_BRAND_ACCENTS, socialProfileHandle, type ProfileBrandAccent } from '@/lib/profileBranding';
+import { normalizeStudioLink } from '@/lib/studioInquiry';
 
 type PickedImage = { uri: string; contentType: string } | null;
 const HANDLE_PATTERN = /^[a-zA-Z0-9_]{3,28}$/;
@@ -77,6 +79,10 @@ export default function EditProfileScreen() {
   const [bio, setBio] = useState('');
   const [discipline, setDiscipline] = useState('');
   const [location, setLocation] = useState('');
+  const [portfolioUrl, setPortfolioUrl] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [tiktok, setTiktok] = useState('');
+  const [accent, setAccent] = useState<ProfileBrandAccent | null>(null);
   const [avatar, setAvatar] = useState<PickedImage>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
@@ -87,7 +93,11 @@ export default function EditProfileScreen() {
     setBio(me.bio ?? '');
     setDiscipline(me.discipline ?? '');
     setLocation(me.location ?? '');
-  }, [me?.id, me?.username, me?.bio, me?.discipline, me?.location]);
+    setPortfolioUrl(me.portfolioUrl ?? '');
+    setInstagram(socialProfileHandle('instagram', me.instagramUrl));
+    setTiktok(socialProfileHandle('tiktok', me.tiktokUrl));
+    setAccent((PROFILE_BRAND_ACCENTS.find((item) => item.value === me.profileAccentColor)?.value ?? null) as ProfileBrandAccent | null);
+  }, [me?.id, me?.username, me?.bio, me?.discipline, me?.location, me?.portfolioUrl, me?.instagramUrl, me?.tiktokUrl, me?.profileAccentColor]);
 
   const styles = StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.studioBackground },
@@ -96,9 +106,6 @@ export default function EditProfileScreen() {
     mark: { width: 34, height: 34, borderRadius: 11, borderWidth: 1.5, borderColor: colors.studioInk, backgroundColor: colors.studioOrange, alignItems: 'center', justifyContent: 'center' },
     heading: { flex: 1, color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 19 },
     content: { width: '100%', maxWidth: 680, alignSelf: 'center', padding: 16, paddingBottom: Math.max(insets.bottom, 24) + 40, gap: 18 },
-    intro: { gap: 5 },
-    eyebrow: { color: colors.studioOrangeText, fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 1.2 },
-    title: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 25 },
     subtitle: { color: colors.studioMuted, fontFamily: 'DMSans_400Regular', fontSize: 13, lineHeight: 19 },
     card: { gap: 13, padding: 15, borderRadius: 17, borderWidth: 1.5, borderColor: colors.studioInk, backgroundColor: colors.studioPaper, shadowColor: colors.studioInk, shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
     cardTitle: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 16 },
@@ -106,7 +113,6 @@ export default function EditProfileScreen() {
     avatarButton: { width: 76, height: 76, borderRadius: 38, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.studioInk, backgroundColor: colors.studioYellow },
     avatarImage: { width: 72, height: 72, borderRadius: 36 },
     avatarInitials: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 24 },
-    avatarHint: { flex: 1, color: colors.studioMuted, fontFamily: 'DMSans_500Medium', fontSize: 12, lineHeight: 18 },
     label: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 12, marginBottom: -7 },
     input: { minHeight: 46, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.input, color: colors.foreground, fontFamily: 'DMSans_500Medium', fontSize: 14 },
     bio: { minHeight: 108, textAlignVertical: 'top' },
@@ -114,6 +120,10 @@ export default function EditProfileScreen() {
     field: { flex: 1, gap: 10, minWidth: 0 },
     save: { minHeight: 48, borderRadius: 15, borderWidth: 1.5, borderColor: colors.studioInk, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
     saveText: { color: colors.primaryForeground, fontFamily: 'DMSans_700Bold', fontSize: 14 },
+    accentOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: 11 },
+    accentOption: { width: 58, minHeight: 65, alignItems: 'center', justifyContent: 'center', gap: 4 },
+    accentSwatch: { width: 34, height: 34, borderRadius: 12, borderWidth: 2, borderColor: colors.studioInk },
+    accentLabel: { color: colors.studioInk, fontFamily: 'DMSans_500Medium', fontSize: 10 },
     rowButton: { minHeight: 50, paddingHorizontal: 13, borderRadius: 13, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.studioPaperAlt, alignItems: 'center', flexDirection: 'row', gap: 11 },
     rowText: { flex: 1, color: colors.studioInk, fontFamily: 'DMSans_600SemiBold', fontSize: 13 },
     danger: { color: colors.destructive },
@@ -159,6 +169,21 @@ export default function EditProfileScreen() {
       Alert.alert('Update your handle', 'Use 3–28 letters, numbers, or underscores.');
       return;
     }
+    const normalizedPortfolioUrl = normalizeStudioLink(portfolioUrl);
+    if (portfolioUrl.trim() && !normalizedPortfolioUrl) {
+      Alert.alert('Check your website link', 'Enter a valid http:// or https:// website link without login credentials.');
+      return;
+    }
+    const instagramUrl = normalizeSocialProfileUrl('instagram', instagram);
+    const tiktokUrl = normalizeSocialProfileUrl('tiktok', tiktok);
+    if (instagram.trim() && !instagramUrl) {
+      Alert.alert('Check your Instagram', 'Enter an Instagram handle or profile link.');
+      return;
+    }
+    if (tiktok.trim() && !tiktokUrl) {
+      Alert.alert('Check your TikTok', 'Enter a TikTok handle or profile link.');
+      return;
+    }
     setSaving(true);
     try {
       const avatarUrl = avatar ? await uploadAvatar(avatar.uri, avatar.contentType) : undefined;
@@ -168,6 +193,10 @@ export default function EditProfileScreen() {
           bio: bio.trim() || null,
           discipline: discipline.trim() || null,
           location: location.trim() || null,
+          portfolioUrl: normalizedPortfolioUrl,
+          instagramUrl,
+          tiktokUrl,
+          profileAccentColor: accent,
           ...(avatarUrl ? { avatarUrl } : {}),
         },
       });
@@ -272,23 +301,16 @@ export default function EditProfileScreen() {
           bottomOffset={24}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.intro}>
-            <Text style={styles.eyebrow}>YOUR PUBLIC STUDIO</Text>
-            <Text style={styles.title}>Make it yours.</Text>
-            <Text style={styles.subtitle}>Choose what people see when they visit your studio.</Text>
-          </View>
-
           <View style={styles.card} testID="profile-basics-editor">
             <Text style={styles.cardTitle}>Profile details</Text>
             <View style={styles.avatarRow}>
               <Pressable accessibilityRole="button" accessibilityLabel="Choose profile photo" onPress={chooseAvatar} style={styles.avatarButton} testID="choose-profile-avatar">
                 {resolveImageUrl(avatar?.uri ?? me.avatarUrl) ? (
-                  <Image source={{ uri: resolveImageUrl(avatar?.uri ?? me.avatarUrl)! }} style={styles.avatarImage} resizeMode="cover" />
+                  <Image source={{ uri: resolveImageUrl(avatar?.uri ?? me.avatarUrl)! }} style={styles.avatarImage} contentFit="cover" cachePolicy="memory-disk" recyclingKey={avatar?.uri ?? me.avatarUrl ?? ''} allowDownscaling priority="low" />
                 ) : (
                   <Text style={styles.avatarInitials}>{(username || me.username).slice(0, 2).toUpperCase()}</Text>
                 )}
               </Pressable>
-              <Text style={styles.avatarHint}>Tap your photo to update your studio image.</Text>
             </View>
             <Text style={styles.label}>Handle</Text>
             <TextInput accessibilityLabel="Creator handle" autoCapitalize="none" maxLength={28} value={username} onChangeText={(value) => setUsername(normalizeHandle(value))} style={styles.input} />
@@ -304,6 +326,80 @@ export default function EditProfileScreen() {
                 <TextInput accessibilityLabel="Creator location" value={location} onChangeText={setLocation} placeholder="City" placeholderTextColor={colors.mutedForeground} style={styles.input} />
               </View>
             </View>
+          </View>
+
+          <View style={styles.card} testID="profile-links-branding-editor">
+            <Text style={styles.cardTitle}>Links & brand color</Text>
+            <Text style={styles.label}>Website or portfolio link</Text>
+            <TextInput
+              accessibilityLabel="Website or portfolio URL"
+              testID="creator-portfolio-url"
+              value={portfolioUrl}
+              onChangeText={setPortfolioUrl}
+              editable={!saving}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              maxLength={2048}
+              placeholder="https://your-portfolio.com"
+              placeholderTextColor={colors.mutedForeground}
+              style={styles.input}
+            />
+            <View style={styles.columns}>
+              <View style={styles.field}>
+                <Text style={styles.label}>Instagram</Text>
+                <TextInput
+                  accessibilityLabel="Instagram handle or profile URL"
+                  testID="creator-instagram-url"
+                  value={instagram}
+                  onChangeText={setInstagram}
+                  editable={!saving}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  maxLength={300}
+                  placeholder="@yourname"
+                  placeholderTextColor={colors.mutedForeground}
+                  style={styles.input}
+                />
+              </View>
+              <View style={styles.field}>
+                <Text style={styles.label}>TikTok</Text>
+                <TextInput
+                  accessibilityLabel="TikTok handle or profile URL"
+                  testID="creator-tiktok-url"
+                  value={tiktok}
+                  onChangeText={setTiktok}
+                  editable={!saving}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  maxLength={300}
+                  placeholder="@yourname"
+                  placeholderTextColor={colors.mutedForeground}
+                  style={styles.input}
+                />
+              </View>
+            </View>
+            <Text style={styles.label}>Studio accent</Text>
+            <View style={styles.accentOptions} testID="profile-brand-color-options">
+              {PROFILE_BRAND_ACCENTS.map((item) => {
+                const selected = (accent ?? 'coral') === item.value;
+                return (
+                  <Pressable
+                    key={item.value}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Use ${item.label} studio accent`}
+                    accessibilityState={{ selected }}
+                    disabled={saving}
+                    onPress={() => setAccent(item.value)}
+                    style={styles.accentOption}
+                    testID={`profile-accent-${item.value}`}
+                  >
+                    <View style={[styles.accentSwatch, { backgroundColor: item.color, borderWidth: selected ? 3 : 1.5 }]} />
+                    <Text style={styles.accentLabel}>{item.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
             <Pressable accessibilityRole="button" accessibilityLabel="Save creator profile" onPress={() => void saveProfile()} disabled={saving} style={[styles.save, saving && { opacity: 0.6 }]} testID="save-profile">
               {saving ? <ActivityIndicator color={colors.primaryForeground} /> : <><Feather name="check" size={17} color={colors.primaryForeground} /><Text style={styles.saveText}>Save changes</Text></>}
             </Pressable>
@@ -311,10 +407,13 @@ export default function EditProfileScreen() {
 
           <View style={styles.card} testID="edit-profile-inquiries">
             <Text style={styles.cardTitle}>Inquiries</Text>
-            <Text style={styles.subtitle}>Choose whether an inquiry link appears on your public studio.</Text>
             <StudioInquirySettings
               key={me.id}
-              user={{ id: me.id, portfolioUrl: me.portfolioUrl, bookingOpen: me.bookingOpen }}
+              user={{
+                id: me.id,
+                bookingOpen: me.bookingOpen,
+                inquiryOptions: me.inquiryOptions,
+              }}
               onSaved={() => {
                 void queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
                 void queryClient.invalidateQueries({ queryKey: getGetUserProfileQueryKey(me.id) });
@@ -336,6 +435,11 @@ export default function EditProfileScreen() {
             <Text style={styles.cardTitle}>App settings</Text>
             <AppearanceSettings />
             <BiometricUnlockSettings userId={userId} />
+            <Pressable accessibilityRole="button" accessibilityLabel="View earned accomplishment history" onPress={() => router.push('/accomplishments')} style={styles.rowButton} testID="edit-profile-accomplishments">
+              <Feather name="award" size={18} color={colors.studioOrangeText} />
+              <Text style={styles.rowText}>Earned history</Text>
+              <Feather name="chevron-right" size={18} color={colors.studioMuted} />
+            </Pressable>
             <Pressable accessibilityRole="button" accessibilityLabel="Notification settings" onPress={() => router.push('/notification-settings')} style={styles.rowButton} testID="profile-notification-settings">
               <Feather name="bell" size={18} color={colors.studioOrangeText} />
               <Text style={styles.rowText}>Notification settings</Text>

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -58,7 +58,15 @@ function Avatar({ username, avatarUrl, size = 36 }: { username?: string; avatarU
       overflow: 'hidden',
     }}>
       {resolveImageUrl(avatarUrl) ? (
-        <Image source={{ uri: resolveImageUrl(avatarUrl)! }} style={{ width: size, height: size }} />
+        <Image
+          source={{ uri: resolveImageUrl(avatarUrl)! }}
+          style={{ width: size, height: size }}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          recyclingKey={resolveImageUrl(avatarUrl)!}
+          allowDownscaling
+          priority="low"
+        />
       ) : (
         <Text style={{ color: colors.primary, fontFamily: 'DMSans_600SemiBold', fontSize: size * 0.38 }}>
           {initials}
@@ -110,11 +118,11 @@ function PostCard({
   const photoRatio = photoMetadata?.uri === mediaUri ? photoMetadata.ratio : 4 / 5;
   const photoAreaHeight = Math.max(1, viewport.height - contentTopInset - photoFooterHeight - 40);
   const photoFrame = fitMediaFrame(viewport.width, photoAreaHeight, photoRatio);
-  const handlePhotoDimensions = (width: number, height: number) => {
+  const handlePhotoDimensions = useCallback((width: number, height: number) => {
     const ratio = studioPhotoRatio(width, height);
     setPhotoMetadata(previous => previous?.uri === mediaUri && previous.ratio === ratio
       ? previous : { uri: mediaUri!, ratio });
-  };
+  }, [mediaUri]);
   const mediaFrame = portraitFrame(viewport.width, viewport.height);
   const frameColors = [colors.primary, colors.sunsetCoral, colors.cyan, colors.gold];
   const frameColor = frameColors[post.id % frameColors.length];
@@ -540,6 +548,7 @@ function PostCard({
               <StudioImage
                 uri={resolveImageUrl(post.imageUrl)!}
                 load={active || preload}
+                priority={active ? 'high' : 'low'}
                 onLoadDimensions={handlePhotoDimensions}
                 style={{
                   position: 'absolute',

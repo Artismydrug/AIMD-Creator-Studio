@@ -15,7 +15,6 @@ import {
 } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import CreatorPortfolioView from '@/components/CreatorPortfolioView';
-import { getStudioInquiryLink } from '@/lib/studioInquiry';
 
 export default function CreatorProfileScreen() {
   const colors = useColors();
@@ -100,9 +99,6 @@ export default function CreatorProfileScreen() {
     );
   }
 
-  const isPoncho = creator.username.replace(/^@/, '').toLowerCase() === 'ponchotheartist';
-  const inquiryUrl = creator.bookingOpen && !isPoncho ? getStudioInquiryLink(creator) : null;
-
   const toggleFollow = () => {
     if (!me || follow.isPending || unfollow.isPending) return;
     const mutation = creator.followedByMe ? unfollow : follow;
@@ -133,15 +129,10 @@ export default function CreatorProfileScreen() {
 
   const openInquiry = () => {
     if (!creator.bookingOpen) return;
-    if (isPoncho) {
-      router.push({
-        pathname: '/commission-inquiry',
-        params: { creatorName: creator.username },
-      });
-      return;
-    }
-    if (!inquiryUrl) return;
-    void Linking.openURL(inquiryUrl).catch(() => Alert.alert('Could not open inquiry link', 'Please try again.'));
+    router.push({
+      pathname: '/commission-inquiry',
+      params: { creatorId: creator.id, creatorName: creator.username },
+    });
   };
 
   return (
@@ -160,7 +151,7 @@ export default function CreatorProfileScreen() {
         followBusy={follow.isPending || unfollow.isPending}
         onMessage={messageCreator}
         messageBusy={createConversation.isPending}
-        inquiryAvailable={!!creator.bookingOpen && (isPoncho || !!inquiryUrl)}
+        inquiryAvailable={!!creator.bookingOpen}
         onInquiry={openInquiry}
       />
     </View>

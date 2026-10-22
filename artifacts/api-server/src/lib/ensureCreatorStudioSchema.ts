@@ -161,9 +161,10 @@ export async function ensureCreatorStudioSchema(
       id serial PRIMARY KEY,
       recipient_user_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       actor_user_id integer REFERENCES users(id) ON DELETE SET NULL,
-      type text NOT NULL CHECK (type IN ('direct_message', 'follow', 'like', 'critique')),
+      type text NOT NULL CHECK (type IN ('direct_message', 'follow', 'like', 'critique', 'commission_inquiry')),
       conversation_id integer REFERENCES conversations(id) ON DELETE CASCADE,
       post_id integer REFERENCES studio_posts(id) ON DELETE CASCADE,
+      booking_id integer REFERENCES tattoo_bookings(id) ON DELETE CASCADE,
       created_at timestamptz NOT NULL DEFAULT now(),
       read_at timestamptz
     )
@@ -181,6 +182,11 @@ export async function ensureCreatorStudioSchema(
     CREATE UNIQUE INDEX IF NOT EXISTS notifications_active_like_unique
       ON notifications (recipient_user_id, actor_user_id, post_id, type)
       WHERE type = 'like' AND read_at IS NULL
+  `);
+  await database.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS notifications_inquiry_booking_unique
+      ON notifications (recipient_user_id, booking_id)
+      WHERE type = 'commission_inquiry' AND booking_id IS NOT NULL
   `);
 
   await database.query(`

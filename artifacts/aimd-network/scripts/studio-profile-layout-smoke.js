@@ -4,6 +4,7 @@ const vm = require('node:vm');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const ts = require('typescript');
+const Module = require('node:module');
 
 function load(file, require) {
   const module = { exports: {} };
@@ -13,6 +14,13 @@ function load(file, require) {
   vm.runInNewContext(js, { exports: module.exports, require });
   return module.exports.default;
 }
+const brandingPath = resolve(__dirname, '../lib/profileBranding.ts');
+const brandingCompiled = ts.transpileModule(readFileSync(brandingPath, 'utf8'), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+}).outputText;
+const brandingModule = new Module(brandingPath, module);
+brandingModule._compile(brandingCompiled, brandingPath);
+const profileBranding = brandingModule.exports;
 const palettes = load('../constants/colors.ts');
 const posts = [1, 2, 3].map((id) => ({
   id, userId: 16, imageUrl: `/art-${id}.jpg`, mediaType: 'image',
@@ -25,6 +33,13 @@ function allNodes(node) {
   if (!node || typeof node !== 'object') return [];
   if (Array.isArray(node)) return node.flatMap(allNodes);
   if (node.type === 'Modal' && !node.props.visible) return [];
+  if (node.type === 'FlatList') {
+    const { data = [], renderItem, ListHeaderComponent, ListFooterComponent } = node.props ?? {};
+    const items = typeof renderItem === 'function'
+      ? data.map((item, index) => renderItem({ item, index }))
+      : [];
+    return [node, ...allNodes([ListHeaderComponent, ...items, ListFooterComponent])];
+  }
   return [node, ...allNodes(node.props?.children)];
 }
 const get = (tree, id) => allNodes(tree).find((node) => node.props?.testID === id);
@@ -37,6 +52,7 @@ function harness({ width = 390, theme = 'light', ...overrides } = {}) {
     createElement: (type, props, ...children) => ({ type, props: { ...props, children } }),
     Fragment: 'Fragment',
     useMemo: fn => fn(),
+    useCallback: fn => fn,
     useState(initial) {
       const slot = cursor++;
       if (!(slot in state)) state[slot] = initial;
@@ -46,7 +62,7 @@ function harness({ width = 390, theme = 'light', ...overrides } = {}) {
   const Component = load('../components/CreatorPortfolioView.tsx', (name) => {
     if (name === 'react') return react;
     if (name === 'react-native') return {
-      ...Object.fromEntries(['ActivityIndicator', 'Modal', 'Pressable', 'ScrollView', 'Text', 'TextInput', 'View'].map(key => [key, key])),
+      ...Object.fromEntries(['ActivityIndicator', 'FlatList', 'Modal', 'Pressable', 'ScrollView', 'Text', 'TextInput', 'View'].map(key => [key, key])),
       Alert: { alert() {} }, Linking: { openURL: url => { calls.links.push(url); return Promise.resolve(); } },
       Platform: { OS: 'web' }, StyleSheet: { create: value => value }, useWindowDimensions: () => ({ width }),
     };
@@ -56,11 +72,18 @@ function harness({ width = 390, theme = 'light', ...overrides } = {}) {
     if (name === '@workspace/api-client-react') return { getBaseUrl: () => 'https://example.test' };
     if (name === '@/hooks/useColors') return { useColors: () => palettes[theme] };
     if (name === '@/lib/studioInquiry') return { normalizeStudioLink: value => value || null };
+    if (name === '@/lib/profileBranding') return profileBranding;
     if (name.startsWith('@/components/')) return name.split('/').pop();
     throw new Error(`Unexpected dependency: ${name}`);
   });
   const props = {
-    creator: { id: 16, username: 'ponchotheartist', bio: 'Artist biography', portfolioUrl: 'https://example.test' },
+    creator: {
+      id: 16, username: 'ponchotheartist', bio: 'Artist biography',
+      portfolioUrl: 'https://example.test',
+      instagramUrl: 'https://www.instagram.com/ponchotheartist/',
+      tiktokUrl: 'https://www.tiktok.com/@ponchotheartist',
+      profileAccentColor: 'violet',
+    },
     posts, isOwner: true, currentUserId: 16, inquiryAvailable: true,
     onInquiry: () => calls.inquiry++, onEdit: () => calls.edit++,
     onFollow: () => calls.follow++, onMessage: () => calls.message++,
@@ -143,6 +166,42 @@ test('header and bottom inquiry buttons use the existing form handler; editing a
   assert.equal(get(closed, 'creator-contact-block'), undefined);
 });
 
+test('saved profile links appear for owners and visitors and open their normalized destinations', () => {
+  const owner = harness();
+  const ownerTree = owner.render();
+  for (const id of ['creator-website-link', 'creator-instagram-link', 'creator-tiktok-link']) {
+    assert.ok(get(ownerTree, id), `${id} is visible on the owner profile`);
+    assert.equal(flattenStyle(get(ownerTree, id).props.style).borderColor, '#6D28D9');
+  }
+  get(ownerTree, 'creator-tiktok-link').props.onPress();
+  assert.deepEqual(owner.calls.links, ['https://www.tiktok.com/@ponchotheartist']);
+
+  const visitor = harness({ isOwner: false });
+  const visitorTree = visitor.render();
+  for (const id of ['creator-website-link', 'creator-instagram-link', 'creator-tiktok-link']) {
+    assert.ok(get(visitorTree, id), `${id} is visible to a profile visitor`);
+  }
+  get(visitorTree, 'creator-instagram-link').props.onPress();
+  get(visitorTree, 'creator-tiktok-link').props.onPress();
+  assert.deepEqual(visitor.calls.links, [
+    'https://www.instagram.com/ponchotheartist/',
+    'https://www.tiktok.com/@ponchotheartist',
+  ]);
+});
+
+test('v1 Studio tab offers inbox without a legacy dashboard button or duplicate owner inquiry action', () => {
+  let inbox = 0;
+  const h = harness({ hideBack: true, onInbox: () => inbox++, unreadCount: 2 });
+  const tree = h.render();
+  assert.equal(get(tree, 'creator-profile-back'), undefined);
+  get(tree, 'creator-profile-inbox').props.onPress();
+  assert.equal(inbox, 1);
+  assert.match(get(tree, 'creator-profile-inbox').props.accessibilityLabel, /2 unread/);
+  assert.equal(get(tree, 'creator-profile-inquiry'), undefined);
+  get(tree, 'creator-profile-inquiry-bottom').props.onPress();
+  assert.equal(h.calls.inquiry, 1);
+});
+
 test('image-first tiles open uncropped artwork with its caption and close back to the grid', () => {
   const h = harness();
   get(h.render(), 'creator-artwork-1').props.onPress();
@@ -212,8 +271,11 @@ test('studio combines discipline and location, keeps owner links in one row, and
   const nodes = allNodes(tree);
   const tabsIndex = nodes.findIndex(node => node.props?.testID === 'creator-work-tabs');
   const statsIndex = nodes.findIndex(node => node.props?.testID === 'creator-profile-stats');
-  const gridIndex = nodes.findIndex(node => node.props?.testID === 'creator-work-grid');
-  assert.ok(statsIndex < tabsIndex && tabsIndex < gridIndex, 'work, follower, and following counts sit above filters and artwork');
+  const firstWorkIndex = nodes.findIndex(node => node.props?.testID === 'creator-work-1');
+  assert.ok(statsIndex < tabsIndex && tabsIndex < firstWorkIndex, 'work, follower, and following counts sit above filters and artwork');
+  const virtualGallery = get(tree, 'creator-work-grid');
+  assert.equal(virtualGallery.type, 'FlatList');
+  assert.equal(virtualGallery.props.windowSize, 5);
 
   const locationOnly = harness({ creator: { id: 99, username: 'member', location: 'Los Angeles' } }).render();
   assert.equal(get(locationOnly, 'creator-profile-label').props.children[0], 'Los Angeles');

@@ -10,18 +10,18 @@ import {
   ActivityIndicator,
   RefreshControl,
   Platform,
-  Image,
   Alert,
   Animated,
   Easing,
   AccessibilityInfo,
   useWindowDimensions,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useRouter } from 'expo-router';
+import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import MonthlyMemberDrops from '@/components/MonthlyMemberDrops';
 import HabitPracticeSummaryCard from '@/components/HabitPracticeSummaryCard';
@@ -63,7 +63,11 @@ function deviceTimezone(): string {
   }
 }
 
-export default function ProgressScreen() {
+export default function DailyLandingRoute() {
+  return <Redirect href="/(tabs)/challenge-habits" />;
+}
+
+export function DashboardScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
@@ -71,6 +75,11 @@ export default function ProgressScreen() {
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [focused, setFocused] = useState(false);
+  useFocusEffect(useCallback(() => {
+    setFocused(true);
+    return () => setFocused(false);
+  }, []));
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -100,7 +109,7 @@ export default function ProgressScreen() {
   const profileUserId = typeof currentUser?.id === 'number' && Number.isFinite(currentUser.id) && currentUser.id > 0
     ? currentUser.id : null;
   const { data: notifications } = useGetNotifications({
-    query: { queryKey: getGetNotificationsQueryKey(), refetchInterval: 60_000 },
+    query: { queryKey: getGetNotificationsQueryKey(), enabled: focused, refetchInterval: focused ? 15_000 : false },
   });
   const {
     data: profileSnapshot,
@@ -128,6 +137,12 @@ export default function ProgressScreen() {
       setRefreshing(false);
     }
   }, [refetchProgress, refetchCurrentUser, refetchProfileSnapshot, profileUserId, queryClient]);
+
+  const openMiniHabitStudio = useCallback(() => router.push('/mini-habit-studio'), [router]);
+  const openHabits = useCallback(() => router.push('/(tabs)/challenge-habits'), [router]);
+  const openCommunity = useCallback(() => router.push('/(tabs)/community'), [router]);
+  const openWorkshops = useCallback(() => router.push('/(tabs)/workshops'), [router]);
+  const openEvents = useCallback(() => router.push('/(tabs)/events'), [router]);
 
   // Mutations
   const checkInMut = useCheckInProgress({
@@ -775,7 +790,7 @@ export default function ProgressScreen() {
               testID="dashboard-profile-button"
             >
               {profileAvatar ? (
-                <Image source={{ uri: profileAvatar }} style={s.profileButtonAvatar} />
+                <Image source={{ uri: profileAvatar }} style={s.profileButtonAvatar} contentFit="cover" cachePolicy="memory-disk" recyclingKey={profileAvatar} allowDownscaling priority="low" />
               ) : (
                 <Text style={s.profileButtonInitials}>{profileInitials}</Text>
               )}
@@ -823,11 +838,11 @@ export default function ProgressScreen() {
         >
           <StickerJamPracticeCard
             streak={displayCount(progress?.currentStreak)}
-            onStartSketch={() => router.push('/mini-habit-studio')}
-            onOpenHabits={() => router.push('/(tabs)/challenge-habits')}
-            onOpenFeed={() => router.push('/(tabs)/community')}
-            onOpenWorkshops={() => router.push('/(tabs)/workshops')}
-            onOpenEvents={() => router.push('/(tabs)/events')}
+            onStartSketch={openMiniHabitStudio}
+            onOpenHabits={openHabits}
+            onOpenFeed={openCommunity}
+            onOpenWorkshops={openWorkshops}
+            onOpenEvents={openEvents}
           />
 
           {progressLoading && !progress && (
@@ -908,12 +923,11 @@ export default function ProgressScreen() {
 
                   {nextBadge && (
                     <View style={s.nextBadgeBox}>
-                      <Text style={s.nextBadgeName}>Next Badge: {nextBadge?.name ?? 'Upcoming milestone'}</Text>
+                      <Text style={s.nextBadgeName}>{nextBadge?.name ?? 'Next milestone'}</Text>
                       <View style={s.progressBarContainer}>
                         <View style={[s.progressBarFill, { width: `${nextBadgePercent}%` }]} />
                       </View>
                       <View style={s.nextBadgeMeta}>
-                        <Text style={s.nextBadgeText}>Streak progress</Text>
                         <Text style={s.nextBadgeText}>{displayCount(nextBadge?.currentStreak)} / {displayCount(nextBadge?.requiredStreak)} days</Text>
                       </View>
                     </View>
@@ -924,7 +938,7 @@ export default function ProgressScreen() {
                       {recentBadges.map((badge, idx) => (
                         <View key={badge.id || idx} style={s.recentBadgeItem}>
                           {badge.imageUrl ? (
-                            <Image source={{ uri: badge.imageUrl }} style={{ width: 24, height: 24 }} />
+                            <Image source={{ uri: badge.imageUrl }} style={{ width: 24, height: 24 }} contentFit="contain" cachePolicy="memory-disk" recyclingKey={badge.imageUrl} allowDownscaling priority="low" />
                           ) : (
                             <Feather name="award" size={20} color={colors.studioViolet} />
                           )}

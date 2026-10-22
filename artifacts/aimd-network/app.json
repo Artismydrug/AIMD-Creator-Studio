@@ -49,7 +49,14 @@
         "expo-camera",
         {
           "cameraPermission": "Allow Creator Studio by AIMD to record live drill and challenge footage.",
-          "microphonePermission": "Allow Creator Studio by AIMD to record sound with drill and challenge footage.",
+          "microphonePermission": "Allow Creator Studio by AIMD to record sound for video challenges and Side Quest music prompts.",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow Creator Studio by AIMD to record short Side Quest audio prompts.",
           "recordAudioAndroid": true
         }
       ],

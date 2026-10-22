@@ -17,6 +17,10 @@ export const usersTable = pgTable("users", {
   location: text("location"),
   bookingOpen: boolean("booking_open").notNull().default(false),
   portfolioUrl: text("portfolio_url"),
+  instagramUrl: text("instagram_url"),
+  tiktokUrl: text("tiktok_url"),
+  profileAccentColor: text("profile_accent_color"),
+  inquiryOptions: text("inquiry_options").array().notNull().default(sql`ARRAY['Tattoo','Painting','Other']::text[]`),
   portfolioCategoriesConfigured: boolean("portfolio_categories_configured").notNull().default(false),
   // Replit Auth: links Replit OIDC sub claim to this integer-id user row
   replitId: text("replit_id").unique(),

@@ -76,7 +76,8 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
     categoryId?: string | string[];
     categoryName?: string | string[];
   }>();
-  const isStudioComposer = !embedded && returnTo === 'profile';
+  const isStudioComposer = !embedded && (returnTo === 'profile' || returnTo === 'studio-tab');
+  const studioReturnRoute = returnTo === 'studio-tab' ? '/(tabs)/profile-tab' : '/profile';
   const categoryTag = typeof category === 'string' ? category : category?.[0];
   const categoryName = typeof rawCategoryName === 'string' ? rawCategoryName : rawCategoryName?.[0];
   const categoryIdValue = typeof rawCategoryId === 'string' ? rawCategoryId : rawCategoryId?.[0];
@@ -247,7 +248,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
         setSelectedMedia(null);
         setUploadProgress(0);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        if (isStudioComposer) router.replace('/profile');
+        if (isStudioComposer) router.replace(studioReturnRoute);
       },
       onError: (error) => {
         const message =
@@ -472,7 +473,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
     setCaption('');
     setTags('');
     setUploadProgress(0);
-    if (isStudioComposer) router.replace('/profile');
+    if (isStudioComposer) router.replace(studioReturnRoute);
   };
 
   const handleFeedModeChange = (mode: 'all' | 'following') => {
