@@ -1,6 +1,5 @@
 import React, { useCallback, useState } from 'react';
 import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -90,14 +89,21 @@ export default function FeedNavigation({
 
   return (
     <>
-      {focused && <StatusBar style={!expanded || scheme === 'dark' ? 'light' : 'dark'} />}
+      {focused && <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />}
       <View
-        style={[styles.overlay, { paddingTop: top }, expanded && { backgroundColor: colors.studioPaper, borderBottomWidth: 1.5, borderBottomColor: colors.studioInk }]}
+        style={[
+          styles.overlay,
+          {
+            paddingTop: top,
+            backgroundColor: colors.studioPaper,
+            borderBottomWidth: 1.5,
+            borderBottomColor: colors.studioInk,
+          },
+        ]}
         onLayout={(event) => onControlsHeightChange?.(event.nativeEvent.layout.height)}
         pointerEvents="box-none"
         testID="feed-navigation-overlay"
       >
-        {!expanded && <LinearGradient pointerEvents="none" colors={['rgba(0,0,0,0.78)', 'rgba(0,0,0,0)']} style={StyleSheet.absoluteFill} />}
         {expanded && (
           <View style={styles.expandedHeader} testID="feed-expanded-navigation">
             <View style={styles.headingRow}>
@@ -134,15 +140,15 @@ export default function FeedNavigation({
           {!expanded && (
             <Pressable accessibilityRole="button" accessibilityLabel="Open Feed menu"
               accessibilityState={{ expanded: menuOpen }} onPress={() => onMenuOpenChange(true)}
-              style={styles.iconButton} testID="feed-menu-toggle">
-              <Feather name="menu" size={22} color="#FFFFFF" />
+              style={[styles.iconButton, { backgroundColor: colors.studioPaperAlt, borderColor: colors.studioInk, borderWidth: 1.5 }]} testID="feed-menu-toggle">
+              <Feather name="menu" size={22} color={colors.studioInk} />
             </Pressable>
           )}
           <View
             style={[
               styles.filters,
-              expanded && styles.expandedFilters,
-              expanded && { borderColor: colors.studioInk, backgroundColor: colors.studioPaperAlt },
+              styles.expandedFilters,
+              { borderColor: colors.studioInk, backgroundColor: colors.studioPaperAlt },
             ]}
             accessibilityRole="tablist"
             testID="feed-mode-filters"
@@ -151,16 +157,25 @@ export default function FeedNavigation({
               <Pressable key={value} accessibilityRole="tab"
                 accessibilityLabel={value === 'all' ? 'Show all posts' : 'Show posts from creators you follow'}
                 accessibilityState={{ selected: mode === value }} onPress={() => onModeChange(value)}
-                 style={[styles.filter, mode === value && styles.selectedFilter, expanded && styles.expandedFilter, expanded && mode === value && { backgroundColor: colors.studioYellow, borderColor: colors.studioInk }]}
+                style={[
+                  styles.filter,
+                  styles.expandedFilter,
+                  mode === value && { backgroundColor: colors.studioYellow, borderColor: colors.studioInk },
+                ]}
                 testID={`feed-filter-${value}`}>
-                <Text numberOfLines={1} style={[styles.filterText, mode !== value && styles.unselectedText, expanded && { color: mode === value ? colors.ink : colors.mutedForeground, opacity: 1 }]}>{value === 'all' ? 'All' : 'Following'}</Text>
+                <Text
+                  numberOfLines={1}
+                  style={[styles.filterText, { color: mode === value ? colors.ink : colors.mutedForeground }]}
+                >
+                  {value === 'all' ? 'All' : 'Following'}
+                </Text>
               </Pressable>
             ))}
           </View>
           <Pressable accessibilityRole="button" accessibilityLabel="Create a new studio post"
-            onPress={onCompose} style={[styles.iconButton, expanded && styles.expandedCompose, { backgroundColor: expanded ? colors.studioOrange : colors.primary, borderColor: colors.ink }]}
+            onPress={onCompose} style={[styles.iconButton, styles.expandedCompose, { backgroundColor: colors.studioOrange, borderColor: colors.studioInk, borderWidth: 1.5, shadowColor: colors.studioShadow }]}
             testID="create-studio-post">
-            <Feather name="plus" size={24} color={expanded ? colors.ink : colors.primaryForeground} />
+            <Feather name="plus" size={24} color={colors.ink} />
           </Pressable>
         </View>
       </View>
@@ -211,15 +226,13 @@ const styles = StyleSheet.create({
   sectionTab: { flex: 1, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: 'transparent', borderRadius: 99 },
   sectionText: { fontFamily: 'DMSans_600SemiBold', fontSize: 13 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  iconButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.4)' },
+  iconButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   expandedCompose: { borderWidth: 1.5, borderRadius: 15, shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
   filters: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flex: 1, minWidth: 0 },
   expandedFilters: { gap: 2, padding: 3, borderRadius: 99, borderWidth: 1.5 },
   filter: { minHeight: 44, flexShrink: 1, minWidth: 0, paddingHorizontal: 12, justifyContent: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  selectedFilter: { borderBottomColor: '#FFFFFF' },
   expandedFilter: { flex: 1, minHeight: 38, borderBottomWidth: 0, borderWidth: 1.5, borderColor: 'transparent', borderRadius: 99, marginHorizontal: 0 },
-  filterText: { fontFamily: 'DMSans_700Bold', fontSize: 14, color: '#FFFFFF' },
-  unselectedText: { opacity: 0.78 },
+  filterText: { fontFamily: 'DMSans_700Bold', fontSize: 14, color: '#21162C' },
   modal: { flex: 1, paddingHorizontal: 16, backgroundColor: 'rgba(0,0,0,0.6)' },
   panel: { alignSelf: 'center', width: '100%', maxWidth: 420, borderRadius: 20, borderWidth: 1, overflow: 'hidden', padding: 12 },
   menuHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 12 },

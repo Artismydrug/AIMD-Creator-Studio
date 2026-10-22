@@ -266,6 +266,19 @@ function PostCard({
       right: 84,
       bottom: 28,
     },
+    photoCaptionCard: {
+      backgroundColor: colors.studioPaper,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      borderRadius: 16,
+      paddingHorizontal: 10,
+      paddingVertical: 9,
+    },
+    photoOwnerActionsSurface: {
+      backgroundColor: colors.studioLavender,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+    },
     immersiveAuthorButton: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -273,6 +286,7 @@ function PostCard({
       marginBottom: 14,
     },
     immersiveAuthorRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
+    photoAuthorRow: { marginBottom: 8 },
     ownerActionsSurface: { borderRadius: 22, backgroundColor: 'rgba(23,52,58,0.72)' },
     immersiveAvatarFrame: {
       borderWidth: 2,
@@ -301,6 +315,12 @@ function PostCard({
       lineHeight: 23,
       marginBottom: 10,
     },
+    photoCaption: {
+      color: colors.studioInk,
+      fontSize: 15,
+      lineHeight: 20,
+      marginBottom: 7,
+    },
     immersiveTagsRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -314,6 +334,12 @@ function PostCard({
       paddingHorizontal: 8,
       paddingVertical: 4,
       borderRadius: 99,
+    },
+    photoCaptionTag: {
+      color: colors.studioInk,
+      backgroundColor: colors.studioLavender,
+      borderWidth: 1,
+      borderColor: colors.studioInk,
     },
     immersiveActions: {
       position: 'absolute',
@@ -542,14 +568,15 @@ function PostCard({
             </>
             )}
 
-            <View onLayout={isPhoto ? ({ nativeEvent: { layout } }) => {
+              <View onLayout={isPhoto ? ({ nativeEvent: { layout } }) => {
               setPhotoFooterHeight(previous => Math.abs(previous - layout.height) > 1 ? layout.height : previous);
             } : undefined} style={[
               s.immersiveContent,
+               isPhoto && s.photoCaptionCard,
               isTextOnly && s.textPostFooter,
               isOwnPost && (isTextOnly ? { paddingRight: 16 } : { right: 16 }),
             ]}>
-              <View style={s.immersiveAuthorRow}>
+              <View style={[s.immersiveAuthorRow, isPhoto && s.photoAuthorRow]}>
               <TouchableOpacity
                 style={[s.immersiveAuthorButton, { flex: 1, marginBottom: 0 }]}
                 onPress={openCreatorProfile}
@@ -558,35 +585,47 @@ function PostCard({
                 testID={`open-creator-profile-${post.userId}`}
                 activeOpacity={0.75}
               >
-                <View style={[s.immersiveAvatarFrame, isTextOnly && { borderColor: colors.border }]}>
+                <View style={[
+                  s.immersiveAvatarFrame,
+                  isTextOnly && { borderColor: colors.border },
+                  isPhoto && { borderColor: colors.studioInk },
+                ]}>
                   <Avatar username={post.username} avatarUrl={post.userAvatarUrl} size={42} />
                 </View>
                 <View style={s.immersiveUserInfo}>
-                  <Text style={[s.immersiveUsername, isTextOnly && { color: colors.foreground }]} numberOfLines={1}>
+                  <Text style={[s.immersiveUsername, (isTextOnly || isPhoto) && { color: colors.studioInk }]} numberOfLines={1}>
                     {post.username ?? `User #${post.userId}`}
                   </Text>
-                  <Text style={[s.immersiveMeta, isTextOnly && { color: colors.mutedForeground }]}>
+                  <Text style={[s.immersiveMeta, (isTextOnly || isPhoto) && { color: colors.mutedForeground }]}>
                     {formatTime(post.createdAt)} · {followerCount} followers
                   </Text>
                 </View>
               </TouchableOpacity>
               {isOwnPost && (
-                <View style={[s.ownerActionsSurface, isTextOnly && { backgroundColor: colors.muted }]}>
+                <View style={[
+                  s.ownerActionsSurface,
+                  isTextOnly && { backgroundColor: colors.muted },
+                  isPhoto && s.photoOwnerActionsSurface,
+                ]}>
                   <PostOwnerActions
                     post={post}
                     currentUserId={currentUserId}
-                    triggerColor={isTextOnly ? colors.foreground : '#FFFFFF'}
+                    triggerColor={isTextOnly || isPhoto ? colors.studioInk : '#FFFFFF'}
                     onVisibilityChange={setOwnerDialogOpen}
                   />
                 </View>
               )}
               </View>
 
-              {!isTextOnly && <Text style={s.immersiveCaption} numberOfLines={4}>{post.caption}</Text>}
+              {!isTextOnly && (
+                <Text style={[s.immersiveCaption, isPhoto && s.photoCaption]} numberOfLines={4}>
+                  {post.caption}
+                </Text>
+              )}
               {!isTextOnly && post.tags && post.tags.length > 0 && (
                 <View style={s.immersiveTagsRow}>
                   {post.tags.slice(0, 4).map((tag, i) => (
-                    <Text key={i} style={s.immersiveTag}>#{tag}</Text>
+                    <Text key={i} style={[s.immersiveTag, isPhoto && s.photoCaptionTag]}>#{tag}</Text>
                   ))}
                 </View>
               )}

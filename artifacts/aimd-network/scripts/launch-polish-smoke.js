@@ -181,6 +181,7 @@ test('feed video pauses when backgrounded or blurred and does not load inactive 
     '@expo/vector-icons': { Feather: 'Feather' },
     'expo-video': { VideoView: 'VideoView', useVideoPlayer: uri => { sources.push(uri); return player; } },
     'expo-router': { useFocusEffect: fn => { focusedCallback = fn; } },
+    '@/hooks/useColors': { useColors: () => ({ mediaPaper: '#FFFBF3', studioOrange: '#FF5C35', studioInk: '#21162C', studioPaper: '#FFFBF3', ink: '#21162C' }) },
   }, props);
   const blur = focusedCallback();
   result.render();
@@ -264,4 +265,19 @@ test('feed replaces the ink-black post stage with a light Sticker Jam media fram
   assert.match(posts, /mediaSurface:\s*\{[\s\S]*?backgroundColor: colors\.mediaPaper/);
   assert.doesNotMatch(posts, /immersiveCard:\s*\{[\s\S]*?backgroundColor: colors\.ink/);
   assert.doesNotMatch(posts, /mediaSurface:\s*\{[\s\S]*?backgroundColor: colors\.ink/);
+});
+
+test('photo captions and collapsed feed controls keep readable Sticker Jam contrast', () => {
+  const posts = source('../components/PostCard.tsx');
+  const navigation = source('../components/FeedNavigation.tsx');
+  const video = source('../components/StudioVideo.tsx');
+  assert.match(posts, /photoCaptionCard:\s*\{[\s\S]*?backgroundColor: colors\.studioPaper[\s\S]*?borderColor: colors\.studioInk/);
+  assert.match(posts, /isPhoto && s\.photoCaptionCard/);
+  assert.match(posts, /isPhoto && s\.photoCaption/);
+  assert.match(posts, /isPhoto && s\.photoCaptionTag/);
+  assert.match(navigation, /backgroundColor: colors\.studioPaper/);
+  assert.doesNotMatch(navigation, /rgba\(0,0,0,0\.78\)/);
+  assert.match(navigation, /StatusBar style=\{scheme === 'dark' \? 'light' : 'dark'\}/);
+  assert.match(video, /backgroundColor: colors\.mediaPaper/);
+  assert.match(video, /colors\.studioOrange/);
 });

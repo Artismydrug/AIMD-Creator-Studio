@@ -12,6 +12,7 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useFocusEffect } from 'expo-router';
+import { useColors } from '@/hooks/useColors';
 
 type StudioVideoProps = {
   uri: string;
@@ -34,6 +35,7 @@ export default function StudioVideo({
   onMutedChange,
   style,
 }: StudioVideoProps) {
+  const colors = useColors();
   const [showPlayControl, setShowPlayControl] = useState(reducedMotion || !active);
   const [focused, setFocused] = useState(false);
   const [foreground, setForeground] = useState(AppState.currentState !== 'background' && AppState.currentState !== 'inactive');
@@ -97,7 +99,7 @@ export default function StudioVideo({
   };
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, { backgroundColor: colors.mediaPaper }, style]}>
       <VideoView
         player={player}
         style={StyleSheet.absoluteFill}
@@ -109,19 +111,19 @@ export default function StudioVideo({
         onFirstFrameRender={() => setLoading(false)}
         accessibilityLabel="Studio post video"
       />
-      {active && loading && !failed && <View style={styles.failure} pointerEvents="none">
-        <ActivityIndicator color="#FFFFFF" accessibilityLabel="Loading video" />
-        <Text style={styles.failureText}>Loading video…</Text>
+      {active && loading && !failed && <View style={[styles.failure, { backgroundColor: colors.mediaPaper }]} pointerEvents="none">
+        <ActivityIndicator color={colors.studioOrange} accessibilityLabel="Loading video" />
+        <Text style={[styles.failureText, { color: colors.studioInk }]}>Loading video…</Text>
       </View>}
       {failed && (
-        <View style={styles.failure}>
-          <Text style={styles.failureText}>Video couldn’t load.</Text>
+        <View style={[styles.failure, { backgroundColor: colors.mediaPaper }]}>
+          <Text style={[styles.failureText, { color: colors.studioInk }]}>Video couldn’t load.</Text>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Retry loading video"
-            style={styles.retryButton} onPress={() => {
+            style={[styles.retryButton, { backgroundColor: colors.studioOrange, borderColor: colors.studioInk, paddingHorizontal: 16 }]} onPress={() => {
               setFailed(false); setLoading(true);
               void player.replaceAsync({ uri, useCaching: true }).catch(() => { setFailed(true); setLoading(false); });
             }}>
-            <Text style={styles.failureText}>Retry video</Text>
+            <Text style={[styles.failureText, { color: colors.ink, padding: 0, backgroundColor: 'transparent' }]}>Retry video</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -142,10 +144,10 @@ export default function StudioVideo({
         accessibilityRole="button"
         accessibilityLabel={muted ? 'Unmute videos' : 'Mute videos'}
         accessibilityState={{ checked: !muted }}
-        style={[styles.muteButton, { top: controlsTopInset }]}
+        style={[styles.muteButton, { top: controlsTopInset, backgroundColor: colors.studioPaper, borderColor: colors.studioInk }]}
         onPress={() => onMutedChange(!muted)}
       >
-        <Feather name={muted ? 'volume-x' : 'volume-2'} size={18} color="#FFFFFF" />
+        <Feather name={muted ? 'volume-x' : 'volume-2'} size={18} color={colors.ink} />
       </TouchableOpacity>
     </View>
   );
@@ -155,7 +157,6 @@ const styles = StyleSheet.create({
   container: {
     position: 'relative',
     overflow: 'hidden',
-    backgroundColor: '#17343A',
   },
   playButton: {
     position: 'absolute',
@@ -177,9 +178,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(23,52,58,0.76)',
+    borderWidth: 1.5,
   },
   failure: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
-  retryButton: { minHeight: 44, justifyContent: 'center', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: 12 },
-  failureText: { color: '#FFFFFF', fontSize: 14, textAlign: 'center', backgroundColor: 'rgba(23,52,58,0.9)', padding: 12, borderRadius: 8 },
+  retryButton: { minHeight: 44, justifyContent: 'center', borderWidth: 1.5, borderRadius: 12 },
+  failureText: { fontSize: 14, textAlign: 'center', padding: 12, borderRadius: 8 },
 });
