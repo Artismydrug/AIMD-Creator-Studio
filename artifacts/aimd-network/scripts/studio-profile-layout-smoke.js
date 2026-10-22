@@ -126,10 +126,10 @@ test('header and bottom inquiry buttons use the existing form handler; editing a
   assert.equal(h.calls.inquiry, 2);
   assert.equal(h.calls.edit, 1);
   assert.equal(h.calls.links.length, 0, 'primary inquiry buttons must not open the booking website');
+  assert.equal(get(tree, 'creator-direct-booking'), undefined, 'the profile uses the in-app inquiry form without a second booking link');
   get(tree, 'creator-website-link').props.onPress();
   get(tree, 'creator-instagram-link').props.onPress();
-  get(tree, 'creator-direct-booking').props.onPress();
-  assert.deepEqual(h.calls.links, ['https://example.test', 'https://www.instagram.com/ponchotheartist/', 'https://ponchotheartist.com/booking/']);
+  assert.deepEqual(h.calls.links, ['https://example.test', 'https://www.instagram.com/ponchotheartist/']);
   const visitor = harness({ isOwner: false });
   const publicTree = visitor.render();
   assert.equal(get(publicTree, 'edit-profile-navigation'), undefined);

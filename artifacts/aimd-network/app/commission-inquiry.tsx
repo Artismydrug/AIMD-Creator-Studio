@@ -12,7 +12,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { Feather } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   createTattooBookingDraft,
@@ -23,7 +23,6 @@ import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollV
 import { useColors } from '@/hooks/useColors';
 
 type ProjectType = 'tattoo' | 'painting' | 'other';
-type PreferredArtist = 'No preference' | 'Poncho The Artist' | 'Edwin' | 'Ash';
 type ReferenceImage = {
   uri: string;
   name: string;
@@ -42,7 +41,6 @@ const PROJECT_TYPES: { value: ProjectType; label: string; icon: React.ComponentP
   { value: 'painting', label: 'Painting', icon: 'image' },
   { value: 'other', label: 'Other', icon: 'plus' },
 ];
-const ARTISTS: PreferredArtist[] = ['No preference', 'Poncho The Artist', 'Edwin', 'Ash'];
 const PROJECT_COPY: Record<ProjectType, {
   headline: string;
   ideaLabel: string;
@@ -99,11 +97,13 @@ function imageContentType(asset: ImagePicker.ImagePickerAsset) {
 export default function CommissionInquiryScreen() {
   const colors = useColors();
   const router = useRouter();
+  const params = useLocalSearchParams<{ creatorName?: string | string[] }>();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  const rawCreatorName = Array.isArray(params.creatorName) ? params.creatorName[0] : params.creatorName;
+  const creatorName = rawCreatorName?.trim().replace(/^@/, '').slice(0, 120) || 'Creator';
   const submitLock = useRef(false);
   const [requestType, setRequestType] = useState<ProjectType>('tattoo');
-  const [artist, setArtist] = useState<PreferredArtist>('No preference');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -161,13 +161,6 @@ export default function CommissionInquiryScreen() {
     },
     multiline: { minHeight: 118, textAlignVertical: 'top' },
     helper: { color: colors.studioMuted, fontFamily: 'DMSans_400Regular', fontSize: 11, lineHeight: 16 },
-    artistChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-    artistChoice: {
-      minHeight: 38, justifyContent: 'center', paddingHorizontal: 12,
-      borderRadius: 99, borderWidth: 1.5, borderColor: colors.studioInk, backgroundColor: colors.studioPaper,
-    },
-    artistChoiceSelected: { backgroundColor: colors.studioYellow },
-    artistText: { color: colors.studioInk, fontFamily: 'DMSans_600SemiBold', fontSize: 11 },
     referenceButton: {
       minHeight: 72, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12,
       borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.studioInk,
@@ -224,7 +217,6 @@ export default function CommissionInquiryScreen() {
     setIdea('');
     setPlacement('');
     setEstimatedSize('');
-    setArtist(value === 'tattoo' ? 'No preference' : 'Poncho The Artist');
     setError(null);
   };
 
@@ -285,7 +277,7 @@ export default function CommissionInquiryScreen() {
         idea: idea.trim(),
         placement: placement.trim(),
         estimatedSize: estimatedSize.trim(),
-        preferredArtist: requestType === 'tattoo' ? artist : 'Poncho The Artist',
+        preferredArtist: creatorName,
         website: '',
       });
 
@@ -320,7 +312,6 @@ export default function CommissionInquiryScreen() {
   const startAnotherInquiry = () => {
     setSubmitted(null);
     setRequestType('tattoo');
-    setArtist('No preference');
     setName('');
     setEmail('');
     setPhone('');
@@ -339,7 +330,7 @@ export default function CommissionInquiryScreen() {
           <Feather name="arrow-left" size={20} color={colors.studioInk} />
         </Pressable>
         <View style={styles.headerMark}><Feather name="edit-3" size={16} color={colors.studioInk} /></View>
-        <Text style={styles.headerLabel}>COMMISSION INQUIRY</Text>
+        <Text style={styles.headerLabel}>STUDIO INQUIRY</Text>
       </View>
 
       <KeyboardAwareScrollViewCompat
@@ -353,13 +344,13 @@ export default function CommissionInquiryScreen() {
           <View style={styles.successCard} accessibilityLiveRegion="polite" testID="commission-inquiry-success">
             <Feather name="check-circle" size={32} color={colors.primary} />
             <Text style={styles.eyebrow}>REQUEST #{submitted.id}</Text>
-            <Text style={styles.title}>Your inquiry is in the studio queue.</Text>
+            <Text style={styles.title}>Your inquiry is in {creatorName}’s studio queue.</Text>
             {submitted.notificationStatus === 'failed' ? (
               <Text style={styles.subtitle}>Your request and private images are saved. The studio email alert was delayed, but your inquiry is safe in the queue.</Text>
             ) : submitted.notificationStatus === 'pending' ? (
               <Text style={styles.subtitle}>Your request is saved. The studio email alert is processing.</Text>
             ) : (
-              <Text style={styles.subtitle}>The AIMD studio has been notified and will follow up by email.</Text>
+              <Text style={styles.subtitle}>You’ll hear back by email.</Text>
             )}
             <Pressable accessibilityRole="button" onPress={goBack} style={styles.secondaryButton}>
               <Feather name="arrow-left" size={15} color={colors.studioInk} />
@@ -372,9 +363,9 @@ export default function CommissionInquiryScreen() {
         ) : (
           <>
             <View style={styles.intro}>
-              <Text style={styles.eyebrow}>PONCHO DAVILA · AIMD</Text>
+              <Text style={styles.eyebrow}>INQUIRY FOR · {creatorName.toUpperCase()}</Text>
               <Text style={styles.title}>Let’s make something.</Text>
-              <Text style={styles.subtitle}>Share your idea and the studio will follow up by email.</Text>
+              <Text style={styles.subtitle}>Share your idea directly with {creatorName}.</Text>
             </View>
 
             <View style={styles.section}>
@@ -455,27 +446,6 @@ export default function CommissionInquiryScreen() {
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>{copy.headline}</Text>
-              {requestType === 'tattoo' && (
-                <View style={styles.field}>
-                  <Text style={styles.label}>Preferred artist</Text>
-                  <View style={styles.artistChoices}>
-                    {ARTISTS.map((option) => {
-                      const selected = artist === option;
-                      return (
-                        <Pressable
-                          key={option}
-                          accessibilityRole="button"
-                          accessibilityState={{ selected }}
-                          onPress={() => setArtist(option)}
-                          style={[styles.artistChoice, selected && styles.artistChoiceSelected]}
-                        >
-                          <Text style={styles.artistText}>{option === 'Poncho The Artist' ? 'Poncho' : option}</Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                </View>
-              )}
               <View style={styles.field}>
                 <Text style={styles.label}>{copy.ideaLabel} *</Text>
                 <TextInput

@@ -192,7 +192,6 @@ export * from './tattooBooking';
 export * from './tattooBookingDraft';
 export * from './tattooBookingFinalizeInput';
 export * from './tattooBookingInput';
-export * from './tattooBookingInputPreferredArtist';
 export * from './tattooBookingInputRequestType';
 export * from './tattooBookingNotificationStatus';
 export * from './tattooBookingReference';

@@ -332,21 +332,17 @@ export default function CreatorPortfolioView({
     categoryOptionSelected: { backgroundColor: colors.studioYellow },
     categoryOptionText: { flex: 1, color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 13 },
     contact: {
-      marginTop: 10, padding: 20, gap: 12, borderWidth: 1.5, borderColor: colors.studioInk,
+      marginTop: 10, padding: 14, borderWidth: 1.5, borderColor: colors.studioInk,
       borderRadius: 18, backgroundColor: colors.studioMint, shadowColor: colors.studioShadow,
       shadowOffset: { width: 3, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2,
     },
-    contactEyebrow: { backgroundColor: colors.studioYellow },
-    contactTitle: { color: colors.ink, fontFamily: portfolioSerif, fontWeight: '700', fontSize: 27, lineHeight: 30, letterSpacing: -0.8 },
     contactButton: {
-      minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-      marginTop: 4, paddingHorizontal: 12, borderWidth: 1.5, borderColor: colors.ink,
+      minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+      paddingHorizontal: 14, borderWidth: 1.5, borderColor: colors.ink,
       borderRadius: 13, backgroundColor: colors.studioInquiry, shadowColor: colors.studioShadow,
       shadowOffset: { width: 3, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2,
     },
-    contactButtonText: { color: colors.studioInquiryForeground, fontFamily: 'DMSans_700Bold', fontSize: 12, flexShrink: 1 },
-    bookingLink: { minHeight: 44, justifyContent: 'center' },
-    bookingText: { color: colors.ink, fontFamily: 'DMSans_500Medium', fontSize: 11, lineHeight: 17, textDecorationLine: 'underline' },
+    contactButtonText: { flexShrink: 1, textAlign: 'center', color: colors.studioInquiryForeground, fontFamily: 'DMSans_700Bold', fontSize: 13, lineHeight: 18 },
     lightbox: { flex: 1, backgroundColor: colors.studioBackground, paddingHorizontal: 18, paddingTop: topPadding, paddingBottom: Math.max(insets.bottom, 16), gap: 16 },
     lightboxHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
     lightboxTitle: { flex: 1, color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 14 },
@@ -743,17 +739,10 @@ export default function CreatorPortfolioView({
 
           {inquiryAvailable && (
             <View style={styles.contact} testID="creator-contact-block">
-              <Text style={[styles.eyebrow, styles.contactEyebrow]}>HAVE SOMETHING IN MIND?</Text>
-              <Text style={styles.contactTitle} accessibilityRole="header">Let’s make it personal.</Text>
               <Pressable accessibilityRole="button" onPress={onInquiry} style={styles.contactButton} testID="creator-profile-inquiry-bottom">
                 <Text style={styles.contactButtonText}>{isPoncho ? 'Start a Commission Inquiry' : 'Start an inquiry'}</Text>
                 <Feather name="arrow-up-right" size={17} color={colors.studioInquiryForeground} />
               </Pressable>
-              {isPoncho && (
-                <Pressable accessibilityRole="link" accessibilityLabel="Visit Poncho's direct booking website" onPress={() => openLink('https://ponchotheartist.com/booking/')} style={styles.bookingLink} testID="creator-direct-booking">
-                  <Text style={styles.bookingText}>Prefer to book a slot directly? Visit ponchotheartist.com/booking/.</Text>
-                </Pressable>
-              )}
             </View>
           )}
         </View>

@@ -92,7 +92,10 @@ export default function ProfileScreen() {
   const onOpenInquiry = () => {
     if (!me.bookingOpen) return;
     if (isPoncho) {
-      router.push('/commission-inquiry');
+      router.push({
+        pathname: '/commission-inquiry',
+        params: { creatorName: me.username },
+      });
       return;
     }
     if (!inquiryUrl) return;

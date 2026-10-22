@@ -15,6 +15,12 @@ Inquiry actions belong to each member and appear on their public profile only wh
 
 **How to apply:** Keep each member's inquiry open/closed setting. Use the existing private booking API, admin queue, and email notification for Poncho's in-app form; do not expose reference attachments as portfolio posts. Leave other members' saved inquiry destinations unchanged unless they request app-based forms.
 
+The in-app inquiry form is opened from a specific studio profile, so the profile owner is the artist context. Do not ask the client to choose from a hard-coded list of unrelated artists; carry the opened profile's creator name into the form and submitted request.
+
+**Why:** The owner clarified that an inquiry should be unique to the profile being viewed, not a shared form listing Edwin, Ash, or other fixed artist choices.
+
+**How to apply:** Pass the profile's creator name into the form, identify the target in its intro, and store that name with the inquiry. Preserve other members' existing external inquiry links until app-based forms are explicitly enabled for them.
+
 Use the approved artist-portfolio mockup as the visual reference for Your Studio, rather than creating another separate portfolio or an approximate restyle.
 
 **Why:** The owner repeatedly requested the reference's gallery layout and button placement, while clarifying that it should represent each member's own work.
@@ -26,6 +32,12 @@ For the owner-facing portfolio, keep the main surface work-first: the header's i
 **Why:** The owner asked to make new work immediately accessible while keeping profile links together, reducing text on Edit Profile, and placing Works/Followers/Following above the category tabs.
 
 **How to apply:** Keep posting mapped to the currently selected work category. Keep owner links in one horizontal row, allowing horizontal scrolling only on narrow screens. Put counts above the category tabs unless the owner requests another layout.
+
+Keep the Your Studio inquiry area concise: show the in-app inquiry action without the “Let’s make it personal” headline or a second direct-booking link beneath it.
+
+**Why:** The owner asked to remove the extra inquiry copy and booking link so the profile stays focused on one clear inquiry action.
+
+**How to apply:** Keep the primary in-app inquiry button and its existing form flow; do not add a separate booking CTA or decorative inquiry headline below it.
 
 Work categories belong to the creator, not a fixed set of disciplines. Creators can add, rename, remove, reorder tabs, and assign their own artwork.
 

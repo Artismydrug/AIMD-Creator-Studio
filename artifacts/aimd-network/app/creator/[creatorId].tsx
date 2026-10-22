@@ -134,7 +134,10 @@ export default function CreatorProfileScreen() {
   const openInquiry = () => {
     if (!creator.bookingOpen) return;
     if (isPoncho) {
-      router.push('/commission-inquiry');
+      router.push({
+        pathname: '/commission-inquiry',
+        params: { creatorName: creator.username },
+      });
       return;
     }
     if (!inquiryUrl) return;

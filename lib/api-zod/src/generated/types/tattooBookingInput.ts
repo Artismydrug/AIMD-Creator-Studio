@@ -5,7 +5,6 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
-import type { TattooBookingInputPreferredArtist } from './tattooBookingInputPreferredArtist';
 import type { TattooBookingInputRequestType } from './tattooBookingInputRequestType';
 
 export interface TattooBookingInput {
@@ -37,7 +36,11 @@ export interface TattooBookingInput {
      * @maxLength 120
      */
   estimatedSize: string;
-  preferredArtist: TattooBookingInputPreferredArtist;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  preferredArtist: string;
   /**
      * Honeypot field; must remain empty.
      * @maxLength 200

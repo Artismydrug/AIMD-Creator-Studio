@@ -294,35 +294,68 @@ export default function EventsScreen({ embedded = false }: { embedded?: boolean 
     const topPad = embedded ? 16 : Platform.OS === 'web' ? 67 : insets.top + 8;
 
   const s = useMemo(() => StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
+    container: { flex: 1, backgroundColor: colors.studioBackground },
     header: {
       paddingTop: topPad,
       paddingHorizontal: 16,
-      paddingBottom: 14,
-      borderBottomWidth: 2,
-      borderBottomColor: colors.foreground,
+      paddingBottom: 12,
+      borderBottomWidth: 1.5,
+      borderBottomColor: colors.studioInk,
       backgroundColor: colors.studioPaper,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
+      gap: 12,
+    },
+    headerHeading: {
+      flex: 1,
+      minWidth: 0,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    titleMark: {
+      width: 38,
+      height: 38,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      borderRadius: 13,
+      backgroundColor: colors.studioOrange,
+      alignItems: 'center',
+      justifyContent: 'center',
+      transform: [{ rotate: '-5deg' }],
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
+    },
+    titleCopy: { flex: 1, minWidth: 0, gap: 1 },
+    headerEyebrow: {
+      flexShrink: 1,
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 9,
+      color: colors.studioOrangeText,
+      letterSpacing: 1.3,
     },
     headerTitle: {
       fontFamily: 'DMSans_700Bold',
-      fontSize: 25,
-      color: colors.foreground,
+      fontSize: 24,
+      lineHeight: 29,
+      color: colors.studioInk,
       letterSpacing: -0.7,
     },
     scanBtn: {
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'center',
       gap: 6,
       paddingHorizontal: 12,
-      minHeight: 44,
-      paddingVertical: 7,
+      minHeight: 46,
       borderWidth: 1.5,
-      borderColor: colors.foreground,
+      borderColor: colors.studioInk,
       borderRadius: 14,
-      backgroundColor: colors.studioMint,
+      backgroundColor: colors.studioYellow,
       shadowColor: colors.studioShadow,
       shadowOffset: { width: 2, height: 2 },
       shadowOpacity: 1,
@@ -332,10 +365,10 @@ export default function EventsScreen({ embedded = false }: { embedded?: boolean 
     scanBtnText: {
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 13,
-      color: colors.primary,
+      color: colors.studioInk,
     },
     listContent: {
-      paddingTop: 12,
+      paddingTop: 14,
       paddingBottom: Platform.OS === 'web' ? 100 : 90,
     },
     centered: {
@@ -346,53 +379,78 @@ export default function EventsScreen({ embedded = false }: { embedded?: boolean 
       gap: 12,
     },
     emptyTitle: {
-      fontFamily: 'DMSans_600SemiBold',
+      fontFamily: 'DMSans_700Bold',
       fontSize: 16,
-      color: colors.foreground,
+      color: colors.studioInk,
+      textAlign: 'center',
     },
     emptyText: {
       fontFamily: 'DMSans_400Regular',
       fontSize: 14,
-      color: colors.mutedForeground,
+      lineHeight: 20,
+      color: colors.studioMuted,
+      textAlign: 'center',
     },
     retryBtn: {
-      borderWidth: 1,
-      borderColor: colors.border,
-      paddingHorizontal: 20,
-      paddingVertical: 8,
+      minHeight: 44,
+      minWidth: 92,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      borderRadius: 13,
+      backgroundColor: colors.studioYellow,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
     },
     retryText: {
-      fontFamily: 'DMSans_500Medium',
-      fontSize: 14,
-      color: colors.foreground,
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 13,
+      color: colors.studioInk,
     },
     sectionHeader: {
       paddingHorizontal: 16,
-      paddingVertical: 10,
+      paddingTop: 14,
+      paddingBottom: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
     },
     sectionTitle: {
-      fontFamily: 'DMSans_600SemiBold',
-      fontSize: 12,
-      color: colors.mutedForeground,
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 10,
+      color: colors.studioOrangeText,
       textTransform: 'uppercase',
-      letterSpacing: 1,
+      letterSpacing: 1.3,
     },
+    sectionMark: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.studioViolet },
   }), [colors, topPad]);
 
   return (
     <View style={s.container}>
       <View style={s.header}>
-        <Text style={s.headerTitle}>Events</Text>
+        <View style={s.headerHeading}>
+          <View style={s.titleMark}><Feather name="calendar" size={18} color={colors.studioInk} /></View>
+          <View style={s.titleCopy}>
+            <Text style={s.headerEyebrow}>MAKE · SHARE · CONNECT</Text>
+            <Text style={s.headerTitle}>Events</Text>
+          </View>
+        </View>
         <TouchableOpacity
           style={s.scanBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Check in by scanning an event QR code"
           onPress={() => {
             setScanning(true);
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           }}
           testID="scan-qr-button"
         >
-          <Feather name="camera" size={14} color={colors.primary} />
-          <Text style={s.scanBtnText}>Check In</Text>
+          <Feather name="camera" size={14} color={colors.studioInk} />
+      <Text style={s.scanBtnText} numberOfLines={1}>Check In</Text>
         </TouchableOpacity>
       </View>
 
@@ -433,14 +491,15 @@ export default function EventsScreen({ embedded = false }: { embedded?: boolean 
               <TattooBusResidencyCard />
               {events && events.length > 0 && (
                 <View style={s.sectionHeader}>
-                  <Text style={s.sectionTitle}>Upcoming Events</Text>
+                  <View style={s.sectionMark} />
+                  <Text style={s.sectionTitle}>Up Next</Text>
                 </View>
               )}
             </View>
           }
           ListEmptyComponent={
             <View style={s.centered}>
-              <Feather name="calendar" size={32} color={colors.muted} />
+              <Feather name="calendar" size={32} color={colors.studioViolet} />
               <Text style={s.emptyTitle}>More events coming soon</Text>
               <Text style={s.emptyText}>Check back for pop-ups and workshops</Text>
             </View>

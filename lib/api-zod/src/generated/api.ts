@@ -2605,6 +2605,8 @@ export const createTattooBookingDraftBodyPlacementMax = 160;
 
 export const createTattooBookingDraftBodyEstimatedSizeMax = 120;
 
+export const createTattooBookingDraftBodyPreferredArtistMax = 120;
+
 export const createTattooBookingDraftBodyWebsiteMax = 200;
 
 
@@ -2617,7 +2619,7 @@ export const CreateTattooBookingDraftBody = zod.object({
   "idea": zod.string().min(createTattooBookingDraftBodyIdeaMin).max(createTattooBookingDraftBodyIdeaMax),
   "placement": zod.string().min(1).max(createTattooBookingDraftBodyPlacementMax),
   "estimatedSize": zod.string().min(1).max(createTattooBookingDraftBodyEstimatedSizeMax),
-  "preferredArtist": zod.enum(['No preference', 'Poncho The Artist', 'Edwin', 'Ash']),
+  "preferredArtist": zod.string().min(1).max(createTattooBookingDraftBodyPreferredArtistMax),
   "website": zod.string().max(createTattooBookingDraftBodyWebsiteMax).optional().describe('Honeypot field; must remain empty.')
 })
 

@@ -54,43 +54,45 @@ export default function EventCard({ event, onRsvpChange }: EventCardProps) {
 
   const s = useMemo(() => StyleSheet.create({
     card: {
-      backgroundColor: colors.card,
+      backgroundColor: colors.studioPaper,
       borderWidth: 1.5,
-      borderColor: colors.foreground,
-      borderRadius: 22,
+      borderColor: colors.studioInk,
+      borderRadius: 20,
       marginHorizontal: 16,
-      marginBottom: 10,
+      marginBottom: 14,
       padding: 14,
       shadowColor: colors.studioShadow,
-      shadowOffset: { width: 2, height: 3 },
+      shadowOffset: { width: 3, height: 3 },
       shadowOpacity: 1,
       shadowRadius: 0,
-      elevation: 2,
+      elevation: 3,
     },
     featuredBorder: {
-      borderColor: colors.primary,
+      borderColor: colors.studioOrange,
     },
     topRow: {
       flexDirection: 'row',
       alignItems: 'flex-start',
-      gap: 12,
+      gap: 10,
       marginBottom: 8,
     },
     iconBox: {
-      width: 48,
-      height: 48,
+      width: 44,
+      height: 44,
       backgroundColor: colors.studioLavender,
-      borderWidth: 1,
-      borderColor: colors.foreground,
-      borderRadius: 16,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
+      transform: [{ rotate: '-4deg' }],
     },
-    eventInfo: { flex: 1 },
+    eventInfo: { flex: 1, minWidth: 0 },
     title: {
-      fontFamily: 'DMSans_600SemiBold',
+      fontFamily: 'DMSans_700Bold',
       fontSize: 15,
-      color: colors.foreground,
+      lineHeight: 20,
+      color: colors.studioInk,
       marginBottom: 3,
     },
     categoryBadge: {
@@ -98,15 +100,15 @@ export default function EventCard({ event, onRsvpChange }: EventCardProps) {
       paddingHorizontal: 7,
       paddingVertical: 4,
       borderWidth: 1,
-      borderColor: colors.ink,
-      borderRadius: 8,
+      borderColor: colors.studioInk,
+      borderRadius: 10,
       backgroundColor: colors.studioYellow,
       marginBottom: 6,
     },
     categoryText: {
       fontFamily: 'DMSans_500Medium',
       fontSize: 11,
-      color: colors.ink,
+      color: colors.studioInk,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
@@ -119,16 +121,26 @@ export default function EventCard({ event, onRsvpChange }: EventCardProps) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
+      minWidth: 0,
+      flexShrink: 1,
+    },
+    locationMeta: {
+      maxWidth: '100%',
+      minWidth: 0,
+      flexShrink: 1,
     },
     metaText: {
       fontFamily: 'DMSans_400Regular',
       fontSize: 12,
-      color: colors.mutedForeground,
+      lineHeight: 16,
+      color: colors.studioMuted,
+      flexShrink: 1,
     },
     ticketText: {
       fontFamily: 'DMSans_600SemiBold',
       fontSize: 12,
-      color: colors.primary,
+      color: colors.studioVioletText,
+      flexShrink: 1,
     },
     bottomRow: {
       flexDirection: 'row',
@@ -137,22 +149,25 @@ export default function EventCard({ event, onRsvpChange }: EventCardProps) {
       marginTop: 10,
       paddingTop: 10,
       borderTopWidth: 1,
-      borderTopColor: colors.border,
+      borderTopColor: colors.studioLine,
     },
     rsvpCount: {
       fontFamily: 'DMSans_400Regular',
       fontSize: 13,
-      color: colors.mutedForeground,
+      color: colors.studioMuted,
+      minWidth: 0,
+      flexShrink: 1,
     },
     rsvpBtn: {
-      paddingHorizontal: 16,
-      minHeight: 44,
+      minWidth: 84,
+      minHeight: 46,
+      paddingHorizontal: 14,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 8,
       borderWidth: 1.5,
-      borderRadius: 15,
-      borderColor: colors.foreground,
+      borderRadius: 14,
+      borderColor: colors.studioInk,
+      backgroundColor: colors.studioYellow,
       shadowColor: colors.studioShadow,
       shadowOffset: { width: 2, height: 2 },
       shadowOpacity: 1,
@@ -172,9 +187,9 @@ export default function EventCard({ event, onRsvpChange }: EventCardProps) {
           <Feather name={iconName} size={20} color={colors.primary} />
         </View>
         <View style={s.eventInfo}>
-          <Text style={s.title}>{event.title}</Text>
+           <Text style={s.title} numberOfLines={2} ellipsizeMode="tail">{event.title}</Text>
           <View style={s.categoryBadge}>
-            <Text style={s.categoryText}>{event.category}</Text>
+             <Text style={s.categoryText} numberOfLines={1}>{event.category}</Text>
           </View>
           <View style={s.metaRow}>
             <View style={s.metaItem}>
@@ -185,9 +200,9 @@ export default function EventCard({ event, onRsvpChange }: EventCardProps) {
               <Feather name="clock" size={12} color={colors.mutedForeground} />
               <Text style={s.metaText}>{formatEventTime(event.startsAt)}</Text>
             </View>
-            <View style={s.metaItem}>
+            <View style={[s.metaItem, s.locationMeta]}>
               <Feather name="map-pin" size={12} color={colors.mutedForeground} />
-              <Text style={s.metaText}>{event.location}</Text>
+              <Text style={s.metaText} numberOfLines={2}>{event.location}</Text>
             </View>
             {event.eventType === 'ticketed' && (
               <View style={s.metaItem}>
@@ -204,17 +219,19 @@ export default function EventCard({ event, onRsvpChange }: EventCardProps) {
       </View>
 
       <View style={s.bottomRow}>
-        <Text style={s.rsvpCount}>{rsvpCount} going</Text>
+        <Text style={s.rsvpCount} numberOfLines={1}>{rsvpCount} going</Text>
         <TouchableOpacity
           style={[s.rsvpBtn, {
             borderColor: rsvped ? colors.primary : colors.border,
-            backgroundColor: rsvped ? colors.primary : 'transparent',
+            backgroundColor: rsvped ? colors.primary : colors.studioYellow,
           }]}
           onPress={handleRsvp}
           disabled={rsvpMutation.isPending || !ticketPriceReady}
+          accessibilityRole="button"
+          accessibilityLabel={rsvped ? `Cancel RSVP for ${event.title}` : `RSVP to ${event.title}`}
           testID={`rsvp-event-${event.id}`}
         >
-          <Text style={[s.rsvpBtnText, { color: rsvped ? colors.primaryForeground : colors.foreground }]}>
+          <Text style={[s.rsvpBtnText, { color: rsvped ? colors.primaryForeground : colors.studioInk }]}>
             {!ticketPriceReady ? 'Price Pending' : rsvped ? 'Going' : 'RSVP'}
           </Text>
         </TouchableOpacity>

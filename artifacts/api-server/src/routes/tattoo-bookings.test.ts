@@ -80,7 +80,7 @@ describe("tattoo booking intake", () => {
           idea: "An illustrated design for a community arts event",
           placement: requestType === "painting" ? "Canvas" : "Illustration and print",
           estimatedSize: requestType === "painting" ? "24 by 36 inches" : "Needed in six weeks",
-          preferredArtist: "Poncho The Artist",
+          preferredArtist: "River Studio",
           website: "",
         });
 
@@ -91,7 +91,7 @@ describe("tattoo booking intake", () => {
 
       expect(submitted.status).toBe(200);
       expect(sendNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ requestType }),
+        expect.objectContaining({ requestType, preferredArtist: "River Studio" }),
       );
     }
   });
@@ -107,7 +107,7 @@ describe("tattoo booking intake", () => {
         idea: "A geometric black and grey forearm design",
         placement: "Left forearm",
         estimatedSize: "4 x 6 inches",
-        preferredArtist: "Ash",
+        preferredArtist: "Creator Profile",
         website: "",
       });
 
@@ -175,7 +175,7 @@ describe("tattoo booking intake", () => {
           references: unknown[];
         }) =>
           booking.id === draft.body.id &&
-          booking.preferredArtist === "Ash" &&
+          booking.preferredArtist === "Creator Profile" &&
           booking.references.length === 1,
       ),
     ).toBe(true);
@@ -197,7 +197,7 @@ describe("tattoo booking intake", () => {
         idea: "This is long enough to satisfy the minimum",
         placement: "Arm",
         estimatedSize: "Large",
-        preferredArtist: "No preference",
+        preferredArtist: "Spam Test Studio",
         website: "https://spam.example",
       });
 

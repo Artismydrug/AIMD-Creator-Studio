@@ -27,7 +27,10 @@ export default function CreatorCard({ creator, onOpenProfile, onMessage, messagi
   const inquiryAvailable = isPoncho ? !!creator.bookingOpen : !!inquiryLink;
   const openInquiry = async () => {
     if (isPoncho && creator.bookingOpen) {
-      router.push('/commission-inquiry');
+      router.push({
+        pathname: '/commission-inquiry',
+        params: { creatorName: creator.username },
+      });
       return;
     }
     if (!inquiryLink) return;

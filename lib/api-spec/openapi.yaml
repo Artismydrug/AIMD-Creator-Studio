@@ -4428,7 +4428,8 @@ components:
           maxLength: 120
         preferredArtist:
           type: string
-          enum: ["No preference", "Poncho The Artist", "Edwin", "Ash"]
+          minLength: 1
+          maxLength: 120
         website:
           type: string
           maxLength: 200

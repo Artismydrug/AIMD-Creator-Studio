@@ -1529,16 +1529,6 @@ export const TattooBookingInputRequestType = {
   other: 'other',
 } as const;
 
-export type TattooBookingInputPreferredArtist = typeof TattooBookingInputPreferredArtist[keyof typeof TattooBookingInputPreferredArtist];
-
-
-export const TattooBookingInputPreferredArtist = {
-  No_preference: 'No preference',
-  Poncho_The_Artist: 'Poncho The Artist',
-  Edwin: 'Edwin',
-  Ash: 'Ash',
-} as const;
-
 export interface TattooBookingInput {
   requestType: TattooBookingInputRequestType;
   /**
@@ -1568,7 +1558,11 @@ export interface TattooBookingInput {
      * @maxLength 120
      */
   estimatedSize: string;
-  preferredArtist: TattooBookingInputPreferredArtist;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  preferredArtist: string;
   /**
      * Honeypot field; must remain empty.
      * @maxLength 200

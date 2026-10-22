@@ -58,7 +58,7 @@ export async function sendTattooBookingNotification(
     `Client: ${booking.name}`,
     `Email: ${booking.email}`,
     `Phone: ${booking.phone || "Not provided"}`,
-    `Preferred artist: ${booking.preferredArtist}`,
+    `Artist: ${booking.preferredArtist}`,
     `${detailLabels[0]}: ${booking.placement}`,
     `${detailLabels[1]}: ${booking.estimatedSize}`,
     "",
