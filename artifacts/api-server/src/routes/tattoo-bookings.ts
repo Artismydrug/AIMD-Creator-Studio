@@ -13,18 +13,12 @@ import {
 import { and, count, desc, eq, gte, ne } from "drizzle-orm";
 import {
   db,
-  notificationsTable,
   tattooBookingReferencesTable,
   tattooBookingsTable,
-  usersTable,
 } from "@workspace/db";
 import {
   CreateTattooBookingDraftBody,
   CreateTattooBookingDraftResponse,
-  GetCreatorInquiryParams,
-  GetCreatorInquiryReferenceParams,
-  GetCreatorInquiryReferenceResponse,
-  GetCreatorInquiryResponse,
   ListAdminTattooBookingsResponse,
   SubmitTattooBookingBody,
   SubmitTattooBookingParams,
@@ -39,10 +33,7 @@ import {
 import { requireAdmin } from "../middlewares/requireAdmin";
 import { ObjectStorageService } from "../lib/objectStorage";
 import { sanitizeChallengeMedia } from "../lib/sanitizeChallengeMedia";
-import {
-  sendCreatorInquiryNotification,
-  sendTattooBookingNotification,
-} from "../lib/tattooBookingEmail";
+import { sendTattooBookingNotification } from "../lib/tattooBookingEmail";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -241,34 +232,6 @@ router.post("/tattoo-bookings", async (req, res): Promise<void> => {
     return;
   }
 
-  let creator:
-    | { id: number; username: string; email: string | null; bookingOpen: boolean; inquiryOptions: string[] }
-    | undefined;
-  let creatorService: string | undefined;
-  if (parsed.data.creatorUserId !== undefined) {
-    [creator] = await db
-      .select({
-        id: usersTable.id,
-        username: usersTable.username,
-        email: usersTable.email,
-        bookingOpen: usersTable.bookingOpen,
-        inquiryOptions: usersTable.inquiryOptions,
-      })
-      .from(usersTable)
-      .where(eq(usersTable.id, parsed.data.creatorUserId))
-      .limit(1);
-    if (!creator || !creator.bookingOpen) {
-      res.status(404).json({ error: "This creator is not accepting inquiries" });
-      return;
-    }
-    creatorService = creator.inquiryOptions.find((option) =>
-      option.toLocaleLowerCase() === parsed.data.requestType.trim().toLocaleLowerCase());
-    if (!creatorService) {
-      res.status(400).json({ error: "Choose one of this creator’s active inquiry services." });
-      return;
-    }
-  }
-
   const fingerprint = requestFingerprint(req);
   const [recent] = await db
     .select({ value: count() })
@@ -294,16 +257,14 @@ router.post("/tattoo-bookings", async (req, res): Promise<void> => {
   const [booking] = await db
     .insert(tattooBookingsTable)
     .values({
-      requestType: creatorService ?? parsed.data.requestType.trim(),
-      creatorUserId: creator?.id ?? null,
-      creatorNotificationStatus: creator ? "pending" : "not_applicable",
+      requestType: parsed.data.requestType,
       name: parsed.data.name.trim(),
       email: parsed.data.email.trim().toLowerCase(),
       phone: parsed.data.phone?.trim() || null,
       idea: parsed.data.idea.trim(),
       placement: parsed.data.placement.trim(),
       estimatedSize: parsed.data.estimatedSize.trim(),
-      preferredArtist: creator?.username ?? parsed.data.preferredArtist,
+      preferredArtist: parsed.data.preferredArtist,
       uploadTokenHash: hashToken(uploadToken),
       uploadTokenExpiresAt: expiresAt,
       requestFingerprint: fingerprint,
@@ -423,84 +384,20 @@ router.post(
       return;
     }
 
-    const transition = await db.transaction(async (tx) => {
-      let creator:
-        | { id: number; username: string; email: string | null; bookingOpen: boolean }
-        | undefined;
-      if (booking.creatorUserId !== null) {
-        [creator] = await tx
-          .select({
-            id: usersTable.id,
-            username: usersTable.username,
-            email: usersTable.email,
-            bookingOpen: usersTable.bookingOpen,
-          })
-          .from(usersTable)
-          .where(eq(usersTable.id, booking.creatorUserId))
-          .for("update")
-          .limit(1);
-        if (!creator || !creator.bookingOpen) {
-          return { creatorUnavailable: true as const };
-        }
-      }
-
-      const [submitted] = await tx
-        .update(tattooBookingsTable)
-        .set({
-          status: "new",
-          submittedAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(tattooBookingsTable.id, booking.id),
-            eq(tattooBookingsTable.status, "draft"),
-          ),
-        )
-        .returning();
-      if (!submitted) {
-        const [current] = await tx
-          .select()
-          .from(tattooBookingsTable)
-          .where(eq(tattooBookingsTable.id, booking.id))
-          .limit(1);
-        return { current };
-      }
-
-      if (submitted.creatorUserId !== null) {
-        await tx
-          .insert(notificationsTable)
-          .values({
-            recipientUserId: submitted.creatorUserId,
-            type: "commission_inquiry",
-            bookingId: submitted.id,
-          })
-          .onConflictDoNothing();
-      }
-
-      return { submitted, creator };
-    });
-
-    if ("creatorUnavailable" in transition) {
-      res.status(409).json({ error: "This creator is no longer accepting inquiries" });
-      return;
-    }
-    if (!transition.submitted) {
-      if (!transition.current || transition.current.status === "draft") {
-        res.status(404).json({ error: "Booking draft not found" });
-        return;
-      }
-      res.json(
-        SubmitTattooBookingResponse.parse({
-          id: transition.current.id,
-          status: transition.current.status,
-          notificationStatus: transition.current.notificationStatus,
-        }),
-      );
-      return;
-    }
-    const submitted = transition.submitted;
-    const creator = transition.creator;
+    const [submitted] = await db
+      .update(tattooBookingsTable)
+      .set({
+        status: "new",
+        submittedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(tattooBookingsTable.id, booking.id),
+          eq(tattooBookingsTable.status, "draft"),
+        ),
+      )
+      .returning();
 
     let notificationStatus: "sent" | "failed" = "sent";
     try {
@@ -542,49 +439,6 @@ router.post(
         .where(eq(tattooBookingsTable.id, submitted.id));
     }
 
-    if (creator) {
-      try {
-        await sendCreatorInquiryNotification(
-          {
-            id: submitted.id,
-            requestType: submitted.requestType,
-            name: submitted.name,
-            email: submitted.email,
-            phone: submitted.phone,
-            idea: submitted.idea,
-            placement: submitted.placement,
-            estimatedSize: submitted.estimatedSize,
-            preferredArtist: submitted.preferredArtist,
-            references: booking.references,
-          },
-          creator,
-        );
-        await db
-          .update(tattooBookingsTable)
-          .set({
-            creatorNotificationStatus: "sent",
-            creatorNotificationError: null,
-            creatorNotificationSentAt: new Date(),
-            updatedAt: new Date(),
-          })
-          .where(eq(tattooBookingsTable.id, submitted.id));
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Unknown email error";
-        req.log.error(
-          { err: error, bookingId: submitted.id, creatorUserId: creator.id },
-          "Creator inquiry notification failed",
-        );
-        await db
-          .update(tattooBookingsTable)
-          .set({
-            creatorNotificationStatus: "failed",
-            creatorNotificationError: message.slice(0, 1000),
-            updatedAt: new Date(),
-          })
-          .where(eq(tattooBookingsTable.id, submitted.id));
-      }
-    }
-
     res.json(
       SubmitTattooBookingResponse.parse({
         id: submitted.id,
@@ -592,123 +446,6 @@ router.post(
         notificationStatus,
       }),
     );
-  },
-);
-
-router.get(
-  "/creator-inquiries/:bookingId",
-  async (req, res): Promise<void> => {
-    const user = (req as Request & { dbUser?: { id: number } }).dbUser;
-    if (!user) {
-      res.status(401).json({ error: "Authentication required" });
-      return;
-    }
-    const params = GetCreatorInquiryParams.safeParse(req.params);
-    if (!params.success) {
-      res.status(400).json({ error: "Invalid inquiry ID" });
-      return;
-    }
-
-    const booking = await findBookingWithReferences(params.data.bookingId);
-    if (
-      !booking ||
-      booking.status === "draft" ||
-      booking.creatorUserId !== user.id
-    ) {
-      res.status(404).json({ error: "Inquiry not found" });
-      return;
-    }
-
-    res.json(
-      GetCreatorInquiryResponse.parse({
-        id: booking.id,
-        requestType: booking.requestType,
-        name: booking.name,
-        email: booking.email,
-        phone: booking.phone,
-        idea: booking.idea,
-        placement: booking.placement,
-        estimatedSize: booking.estimatedSize,
-        preferredArtist: booking.preferredArtist,
-        submittedAt: booking.submittedAt?.toISOString() ?? null,
-        createdAt: booking.createdAt.toISOString(),
-        references: booking.references.map((reference) => ({
-          id: reference.id,
-          url: `/api/creator-inquiries/${booking.id}/references/${reference.id}`,
-          originalName: reference.originalName,
-          contentType: reference.contentType,
-          sizeBytes: reference.sizeBytes,
-        })),
-      }),
-    );
-  },
-);
-
-router.get(
-  "/creator-inquiries/:bookingId/references/:referenceId",
-  async (req, res): Promise<void> => {
-    const user = (req as Request & { dbUser?: { id: number } }).dbUser;
-    if (!user) {
-      res.status(401).json({ error: "Authentication required" });
-      return;
-    }
-    const params = GetCreatorInquiryReferenceParams.safeParse(req.params);
-    if (!params.success) {
-      res.status(400).json({ error: "Invalid inquiry reference" });
-      return;
-    }
-
-    const [booking] = await db
-      .select({
-        id: tattooBookingsTable.id,
-        creatorUserId: tattooBookingsTable.creatorUserId,
-        status: tattooBookingsTable.status,
-      })
-      .from(tattooBookingsTable)
-      .where(eq(tattooBookingsTable.id, params.data.bookingId))
-      .limit(1);
-    if (
-      !booking ||
-      booking.status === "draft" ||
-      booking.creatorUserId !== user.id
-    ) {
-      res.status(404).json({ error: "Inquiry reference not found" });
-      return;
-    }
-
-    const [reference] = await db
-      .select()
-      .from(tattooBookingReferencesTable)
-      .where(
-        and(
-          eq(tattooBookingReferencesTable.bookingId, booking.id),
-          eq(tattooBookingReferencesTable.id, params.data.referenceId),
-        ),
-      )
-      .limit(1);
-    if (!reference || !ALLOWED_IMAGE_TYPES.has(reference.contentType)) {
-      res.status(404).json({ error: "Inquiry reference not found" });
-      return;
-    }
-
-    const file = await objectStorageService.getObjectEntityFile(reference.objectPath);
-    const storedImage = await objectStorageService.downloadObject(file, 0);
-    if (!storedImage.ok) {
-      res.status(404).json({ error: "Inquiry reference not found" });
-      return;
-    }
-    const imageBytes = Buffer.from(await storedImage.arrayBuffer());
-    GetCreatorInquiryReferenceResponse.parse(imageBytes);
-    res
-      .status(200)
-      .set({
-        "Content-Type": reference.contentType,
-        "Content-Length": String(imageBytes.length),
-        "Cache-Control": "private, no-store",
-        "X-Content-Type-Options": "nosniff",
-        "Content-Disposition": "inline",
-      })
-      .send(imageBytes);
   },
 );
 

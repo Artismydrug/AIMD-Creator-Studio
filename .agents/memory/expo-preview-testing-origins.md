@@ -9,12 +9,6 @@ Do not assume a programmatic tester login on the sibling website also authentica
 
 **How to apply:** Establish client sign-in and a successful current-user API response on the intended Expo origin before testing protected screens or seeding records. HTTP 200 for the HTML alone is not sufficient. If the helper cannot target that origin, report the signed-in verification limitation rather than modifying working app authentication to fit the test tool.
 
-The programmatic login helper's `basePath` is a relative path on its selected development host, not an Expo target-origin override.
-
-**Why:** Its documented options do not include a redirect-origin setting; following a successful sibling-host login with an explicit Expo navigation still left Expo signed out.
-
-**How to apply:** Do not invent a full-host `basePath` or unsupported authentication endpoints to force a session across origins.
-
 Static Expo preview captures can intermittently be white even when browser logs show the sign-in form mounted.
 
 **Why:** A later capture rendered the sign-in page without any code change; other captures remained white despite password-field DOM logs. The cause was not established, so this is not evidence of a native TestFlight failure.

@@ -6,7 +6,6 @@
  * OpenAPI spec version: 0.2.0
  */
 import type { ConversationDestination } from './conversationDestination';
-import type { InquiryDestination } from './inquiryDestination';
 import type { NotificationActor } from './notificationActor';
 import type { NotificationType } from './notificationType';
 import type { PostDestination } from './postDestination';
@@ -21,9 +20,6 @@ export interface Notification {
   postId: number | null;
   conversationDestination: ConversationDestination | null;
   postDestination: PostDestination | null;
-  inquiryDestination: InquiryDestination | null;
-  /** @nullable */
-  inquirySummary: string | null;
   createdAt: Date;
   /** @nullable */
   readAt: Date | null;

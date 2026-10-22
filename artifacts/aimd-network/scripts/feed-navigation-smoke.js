@@ -159,7 +159,7 @@ test('original section tabs collapse while the pager keeps its full viewport', (
   assert.equal(node(h.tree, 'feed-menu-toggle'), undefined, 'section tabs replace the duplicate menu while expanded');
   assert.equal(node(h.tree, 'feed-mode-filters').props.style[1].padding, 3, 'All/Following sits in one segmented sticker control');
   assert.equal(node(h.tree, 'feed-navigation-title').props.style[0].fontSize, 26, 'Feed title matches the Community page header');
-  assert.equal(node(h.tree, 'feed-navigation-subtitle'), undefined, 'omit the repeated tagline');
+  assert.equal(node(h.tree, 'feed-navigation-subtitle').props.style[0].fontSize, 11);
   for (const section of ['feed', 'creators', 'events']) node(h.tree, `community-${section}-tab`).props.onPress();
   assert.deepEqual(calls, [['scope', 'community'], ['section', 'creators'], ['section', 'events']]);
   node(h.tree, 'feed-navigation-overlay').props.onLayout({ nativeEvent: { layout: { height: 230 } } });
@@ -177,14 +177,13 @@ test('original section tabs collapse while the pager keeps its full viewport', (
 test('Your Studio work composer returns to Studio and keeps its category', () => {
   const profile = readFileSync(resolve(__dirname, '../app/profile.tsx'), 'utf8');
   const feed = readFileSync(resolve(__dirname, '../app/feed.tsx'), 'utf8');
-  assert.match(profile, /returnTo: asTab \? 'studio-tab' : 'profile'/);
+  assert.match(profile, /returnTo:\s*'profile'/);
   assert.match(profile, /pathname: '\/feed'/);
   assert.match(profile, /onAddWork=\{\(categoryId, legacyCategoryName\) => router\.push/);
   assert.match(profile, /categoryId !== null \? \{ categoryId: String\(categoryId\) \} : \{\}/);
   assert.match(profile, /legacyCategoryName \? \{ categoryName: legacyCategoryName \} : \{\}/);
   assert.match(feed, /returnTo\?: string/);
-  assert.match(feed, /returnTo === 'studio-tab' \? '\/\(tabs\)\/profile-tab' : '\/profile'/);
-  assert.equal((feed.match(/if \(isStudioComposer\) router\.replace\(studioReturnRoute\)/g) ?? []).length, 2, 'both cancellation and success return to the originating Studio');
+  assert.match(feed, /if \(isStudioComposer\) router\.replace\('\/profile'\)/);
   assert.match(feed, /setTags\(categoryName \?\?/);
   assert.match(feed, /isStudioComposer && portfolioCategoryId !== null \? \{ portfolioCategoryId \} : \{\}/);
 });

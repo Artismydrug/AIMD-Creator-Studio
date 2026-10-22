@@ -239,8 +239,10 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
     titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
      titleMark: { width: 44, height: 44, borderRadius: 15, backgroundColor: colors.studioOrange, borderWidth: 2, borderColor: colors.ink, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-5deg' }], shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
     titleCopy: { flex: 1, minWidth: 0 },
+    eyebrow: { fontFamily: 'DMSans_700Bold', fontSize: 11, letterSpacing: 1.8, textTransform: 'uppercase', color: colors.sunsetCoral },
     title: { fontFamily: 'DMSans_700Bold', fontSize: 26, letterSpacing: -0.6, color: colors.foreground },
-    embeddedTitle: { fontFamily: 'DMSans_700Bold', fontSize: 26, letterSpacing: -0.6, color: colors.foreground },
+    subtitle: { fontFamily: 'DMSans_500Medium', fontSize: 12, letterSpacing: 0.4, color: colors.sunsetCoral },
+    embeddedTitle: { fontFamily: 'DMSans_700Bold', fontSize: 30, letterSpacing: -0.8, color: colors.foreground },
     intro: { fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 21, color: colors.mutedForeground },
     previewGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 20, paddingBottom: 10 },
      previewCard: {
@@ -330,7 +332,8 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
         <View style={s.header}>
           {embedded ? (
             <>
-              <Text style={s.embeddedTitle}>Workshops</Text>
+              <Text style={s.eyebrow}>AIMD Workshops</Text>
+              <Text style={s.embeddedTitle}>One craft. One apprenticeship.</Text>
             </>
           ) : (
             <View style={s.titleRow} testID="workshops-page-heading">
@@ -339,6 +342,7 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
               </View>
               <View style={s.titleCopy}>
                 <Text style={s.title} numberOfLines={1}>Workshops</Text>
+                <Text style={s.subtitle} numberOfLines={1}>One craft. One apprenticeship.</Text>
               </View>
             </View>
           )}
@@ -347,7 +351,7 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
             accessibilityRole="button"
             testID="open-learning-portfolio"
             onPress={() => router.push('/learning-portfolio')}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, alignSelf: 'flex-start' }}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, alignSelf: 'flex-start' }}
           >
             <Feather name="book-open" size={17} color={colors.primary} />
             <Text style={{ color: colors.primary, fontFamily: 'DMSans_600SemiBold', fontSize: 14 }}>My learning portfolio</Text>

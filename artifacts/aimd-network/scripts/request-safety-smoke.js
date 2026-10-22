@@ -300,10 +300,9 @@ test('instructor attribution uses workshop data rather than a fabricated teacher
   assert(workshops.includes('instructorName={workshopDetail?.instructorName ?? selectedWorkshop?.instructorName}'));
 });
 
-test('the solid tab bar reserves normal layout space for feed creator controls', () => {
+test('the frosted tab bar reserves layout space for feed creator controls', () => {
   const source = fs.readFileSync(path.resolve(__dirname, '../components/FrostedTabBar.tsx'), 'utf8');
-  assert.doesNotMatch(source, /position:\s*'absolute'|<BlurView/);
-  assert.match(source, /return content/);
+  assert.match(source, /blur:\s*\{\s*position: 'relative'/);
 });
 
 test('embedded feed rows use the actual scroll viewport instead of a screen estimate', () => {

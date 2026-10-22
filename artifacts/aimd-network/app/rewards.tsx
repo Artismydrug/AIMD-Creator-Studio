@@ -7,9 +7,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getGetRewardsQueryKey } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import MonthlyMemberDrops from '@/components/MonthlyMemberDrops';
-import { withLaunchFeature } from '@/components/LaunchFeatureScreen';
 
-function RewardsScreen() {
+export default function RewardsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -67,5 +66,3 @@ function RewardsScreen() {
     </View>
   );
 }
-
-export default withLaunchFeature('memberDrops', RewardsScreen);

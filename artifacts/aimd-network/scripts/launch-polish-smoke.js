@@ -219,8 +219,7 @@ test('workshop placeholders clearly distinguish sample artwork from unavailable 
   assert.match(workshops, /workshops\.slice\(0, 4\)/);
   assert.match(workshops, /testID="workshops-page-heading"/);
   assert.match(workshops, /<Text style=\{s\.title\} numberOfLines=\{1\}>Workshops<\/Text>/);
-  assert.match(workshops, /<Text style=\{s\.title\} numberOfLines=\{1\}>Workshops<\/Text>/);
-  assert.doesNotMatch(workshops, /One craft\. One apprenticeship\./);
+  assert.match(workshops, /<Text style=\{s\.subtitle\} numberOfLines=\{1\}>One craft\. One apprenticeship\.<\/Text>/);
   assert.match(workshops, /<Text style=\{s\.intro\}>Full lessons require membership or instructor enrollment\.<\/Text>/);
   assert.equal((workshops.match(/Video previews and full lessons aren’t available yet\./g) || []).length, 1);
   assert.doesNotMatch(workshops, /Preview available — full access coming soon/);
@@ -230,17 +229,19 @@ test('workshop placeholders clearly distinguish sample artwork from unavailable 
 });
 
 test('high-traffic cards keep short summaries while preserving action and storage guidance', () => {
+  const stickerJam = source('../components/StickerJamPracticeCard.tsx');
+  assert.match(stickerJam, /Make a little/);
+  assert.match(stickerJam, /TODAY’S PRACTICE/);
+  assert.match(stickerJam, /Your canvas/);
+  assert.match(stickerJam, /Start a sketch/);
+  for (const shortcut of ['habits', 'feed', 'workshops']) {
+    assert.match(stickerJam, new RegExp(`dashboard-shortcut-${shortcut}`));
+  }
   const habits = source('../components/HabitCard.tsx');
   assert.match(habits, /Camera or Photos adds proof; ✓ logs it/);
   assert.match(habits, /Delete also removes history/);
   assert.match(habits, /Free on every plan/);
-  assert.match(habits, /accessibilityLabel="Take a habit proof photo"/);
-  assert.match(habits, /accessibilityLabel="Choose habit proof from Photos"/);
-  const studio = source('../components/CreatorPortfolioView.tsx');
-  assert.match(studio, /creator-profile-add-work/);
-  assert.match(studio, /creator-profile-inquiry-bottom/);
-  assert.match(source('../app/(tabs)/dashboard.tsx'), /withLaunchFeature\('dashboard'/);
-  assert.match(source('../app/mini-habit-studio.tsx'), /withLaunchFeature\('sideQuest'/);
+  assert.match(stickerJam, /accessibilityLabel="Start a 60-second Flash Sketch"/);
 });
 
 test('authentication entry screens follow the app theme instead of a fixed dark palette', () => {

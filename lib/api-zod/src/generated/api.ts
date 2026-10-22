@@ -1481,12 +1481,6 @@ export const GetStoreOrderResponse = zod.object({
 /**
  * @summary Get the current demo user profile
  */
-export const getCurrentUserResponseInquiryOptionsItemMax = 32;
-
-export const getCurrentUserResponseInquiryOptionsMax = 20;
-
-
-
 export const GetCurrentUserResponse = zod.object({
   "id": zod.int(),
   "username": zod.string(),
@@ -1501,10 +1495,6 @@ export const GetCurrentUserResponse = zod.object({
   "location": zod.string().nullish(),
   "bookingOpen": zod.boolean().optional(),
   "portfolioUrl": zod.string().nullish(),
-  "instagramUrl": zod.string().nullish(),
-  "tiktokUrl": zod.string().nullish(),
-  "profileAccentColor": zod.union([zod.literal(null),zod.literal('coral'),zod.literal('violet'),zod.literal('mint'),zod.literal('blue'),zod.literal('rose'),zod.literal('gold')]).nullish(),
-  "inquiryOptions": zod.array(zod.string().min(1).max(getCurrentUserResponseInquiryOptionsItemMax)).max(getCurrentUserResponseInquiryOptionsMax),
   "createdAt": zod.coerce.date()
 })
 
@@ -1521,10 +1511,6 @@ export const DeleteCurrentUserResponse = zod.void()
  */
 export const updateCurrentUserBodyBioMax = 500;
 
-export const updateCurrentUserBodyInquiryOptionsItemMax = 32;
-
-export const updateCurrentUserBodyInquiryOptionsMax = 20;
-
 
 
 export const UpdateCurrentUserBody = zod.object({
@@ -1534,18 +1520,8 @@ export const UpdateCurrentUserBody = zod.object({
   "bio": zod.string().max(updateCurrentUserBodyBioMax).nullish(),
   "location": zod.string().nullish(),
   "bookingOpen": zod.boolean().optional(),
-  "portfolioUrl": zod.string().nullish(),
-  "instagramUrl": zod.string().nullish(),
-  "tiktokUrl": zod.string().nullish(),
-  "profileAccentColor": zod.union([zod.literal(null),zod.literal('coral'),zod.literal('violet'),zod.literal('mint'),zod.literal('blue'),zod.literal('rose'),zod.literal('gold')]).nullish(),
-  "inquiryOptions": zod.array(zod.string().min(1).max(updateCurrentUserBodyInquiryOptionsItemMax)).max(updateCurrentUserBodyInquiryOptionsMax).optional()
+  "portfolioUrl": zod.string().nullish()
 })
-
-export const updateCurrentUserResponseInquiryOptionsItemMax = 32;
-
-export const updateCurrentUserResponseInquiryOptionsMax = 20;
-
-
 
 export const UpdateCurrentUserResponse = zod.object({
   "id": zod.int(),
@@ -1561,10 +1537,6 @@ export const UpdateCurrentUserResponse = zod.object({
   "location": zod.string().nullish(),
   "bookingOpen": zod.boolean().optional(),
   "portfolioUrl": zod.string().nullish(),
-  "instagramUrl": zod.string().nullish(),
-  "tiktokUrl": zod.string().nullish(),
-  "profileAccentColor": zod.union([zod.literal(null),zod.literal('coral'),zod.literal('violet'),zod.literal('mint'),zod.literal('blue'),zod.literal('rose'),zod.literal('gold')]).nullish(),
-  "inquiryOptions": zod.array(zod.string().min(1).max(updateCurrentUserResponseInquiryOptionsItemMax)).max(updateCurrentUserResponseInquiryOptionsMax),
   "createdAt": zod.coerce.date()
 })
 
@@ -1898,12 +1870,6 @@ export const AwardPointsAdminResponse = zod.object({
 /**
  * @summary List community members
  */
-export const listDirectoryResponseInquiryOptionsItemMax = 32;
-
-export const listDirectoryResponseInquiryOptionsMax = 20;
-
-
-
 export const ListDirectoryResponseItem = zod.object({
   "id": zod.int(),
   "username": zod.string(),
@@ -1914,10 +1880,6 @@ export const ListDirectoryResponseItem = zod.object({
   "location": zod.string().nullish(),
   "bookingOpen": zod.boolean(),
   "portfolioUrl": zod.string().nullish(),
-  "instagramUrl": zod.string().nullish(),
-  "tiktokUrl": zod.string().nullish(),
-  "profileAccentColor": zod.union([zod.literal(null),zod.literal('coral'),zod.literal('violet'),zod.literal('mint'),zod.literal('blue'),zod.literal('rose'),zod.literal('gold')]).nullish(),
-  "inquiryOptions": zod.array(zod.string().min(1).max(listDirectoryResponseInquiryOptionsItemMax)).max(listDirectoryResponseInquiryOptionsMax).optional(),
   "badgeCount": zod.int(),
   "postCount": zod.int(),
   "points": zod.int().optional(),
@@ -1941,12 +1903,6 @@ export const GetUserProfileParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
-export const getUserProfileResponseInquiryOptionsItemMax = 32;
-
-export const getUserProfileResponseInquiryOptionsMax = 20;
-
-
-
 export const GetUserProfileResponse = zod.object({
   "id": zod.int(),
   "username": zod.string(),
@@ -1959,10 +1915,6 @@ export const GetUserProfileResponse = zod.object({
   "location": zod.string().nullish(),
   "bookingOpen": zod.boolean(),
   "portfolioUrl": zod.string().nullish(),
-  "instagramUrl": zod.string().nullish(),
-  "tiktokUrl": zod.string().nullish(),
-  "profileAccentColor": zod.union([zod.literal(null),zod.literal('coral'),zod.literal('violet'),zod.literal('mint'),zod.literal('blue'),zod.literal('rose'),zod.literal('gold')]).nullish(),
-  "inquiryOptions": zod.array(zod.string().min(1).max(getUserProfileResponseInquiryOptionsItemMax)).max(getUserProfileResponseInquiryOptionsMax),
   "portfolioCategories": zod.array(zod.object({
   "id": zod.int().nullable(),
   "name": zod.string(),
@@ -2255,7 +2207,7 @@ export const SendMessageResponse = zod.object({
 export const GetNotificationsResponse = zod.object({
   "notifications": zod.array(zod.object({
   "id": zod.int(),
-  "type": zod.enum(['direct_message', 'follow', 'like', 'critique', 'commission_inquiry']),
+  "type": zod.enum(['direct_message', 'follow', 'like', 'critique']),
   "actor": zod.union([zod.object({
   "id": zod.int(),
   "username": zod.string(),
@@ -2269,10 +2221,6 @@ export const GetNotificationsResponse = zod.object({
   "postDestination": zod.union([zod.object({
   "postId": zod.int()
 }),zod.null()]),
-  "inquiryDestination": zod.union([zod.object({
-  "bookingId": zod.int()
-}),zod.null()]),
-  "inquirySummary": zod.string().nullable(),
   "createdAt": zod.coerce.date(),
   "readAt": zod.coerce.date().nullable()
 })),
@@ -2289,7 +2237,7 @@ export const MarkNotificationReadParams = zod.object({
 
 export const MarkNotificationReadResponse = zod.object({
   "id": zod.int(),
-  "type": zod.enum(['direct_message', 'follow', 'like', 'critique', 'commission_inquiry']),
+  "type": zod.enum(['direct_message', 'follow', 'like', 'critique']),
   "actor": zod.union([zod.object({
   "id": zod.int(),
   "username": zod.string(),
@@ -2303,10 +2251,6 @@ export const MarkNotificationReadResponse = zod.object({
   "postDestination": zod.union([zod.object({
   "postId": zod.int()
 }),zod.null()]),
-  "inquiryDestination": zod.union([zod.object({
-  "bookingId": zod.int()
-}),zod.null()]),
-  "inquirySummary": zod.string().nullable(),
   "createdAt": zod.coerce.date(),
   "readAt": zod.coerce.date().nullable()
 })
@@ -2648,8 +2592,6 @@ export const AddPostCommentResponse = zod.void()
 /**
  * @summary Start a public tattoo booking intake
  */
-export const createTattooBookingDraftBodyRequestTypeMax = 32;
-
 export const createTattooBookingDraftBodyNameMax = 120;
 
 export const createTattooBookingDraftBodyEmailMax = 254;
@@ -2670,7 +2612,7 @@ export const createTattooBookingDraftBodyWebsiteMax = 200;
 
 
 export const CreateTattooBookingDraftBody = zod.object({
-  "requestType": zod.string().min(1).max(createTattooBookingDraftBodyRequestTypeMax),
+  "requestType": zod.enum(['tattoo', 'painting', 'other']),
   "name": zod.string().min(1).max(createTattooBookingDraftBodyNameMax),
   "email": zod.email().max(createTattooBookingDraftBodyEmailMax),
   "phone": zod.string().max(createTattooBookingDraftBodyPhoneMax).nullish(),
@@ -2678,7 +2620,6 @@ export const CreateTattooBookingDraftBody = zod.object({
   "placement": zod.string().min(1).max(createTattooBookingDraftBodyPlacementMax),
   "estimatedSize": zod.string().min(1).max(createTattooBookingDraftBodyEstimatedSizeMax),
   "preferredArtist": zod.string().min(1).max(createTattooBookingDraftBodyPreferredArtistMax),
-  "creatorUserId": zod.int().optional().describe('Optional creator owner for a profile-specific inquiry.'),
   "website": zod.string().max(createTattooBookingDraftBodyWebsiteMax).optional().describe('Honeypot field; must remain empty.')
 })
 
@@ -2733,58 +2674,10 @@ export const SubmitTattooBookingResponse = zod.object({
 
 
 /**
- * @summary Get an inquiry submitted to the signed-in creator
- */
-export const GetCreatorInquiryParams = zod.object({
-  "bookingId": zod.coerce.number().int()
-})
-
-export const getCreatorInquiryResponseRequestTypeMax = 32;
-
-
-
-export const GetCreatorInquiryResponse = zod.object({
-  "id": zod.int(),
-  "requestType": zod.string().min(1).max(getCreatorInquiryResponseRequestTypeMax),
-  "name": zod.string(),
-  "email": zod.string(),
-  "phone": zod.string().nullable(),
-  "idea": zod.string(),
-  "placement": zod.string(),
-  "estimatedSize": zod.string(),
-  "preferredArtist": zod.string(),
-  "submittedAt": zod.coerce.date().nullable(),
-  "createdAt": zod.coerce.date(),
-  "references": zod.array(zod.object({
-  "id": zod.int(),
-  "url": zod.string(),
-  "originalName": zod.string(),
-  "contentType": zod.string(),
-  "sizeBytes": zod.int()
-}))
-})
-
-
-/**
- * @summary Stream a private reference image for the signed-in creator
- */
-export const GetCreatorInquiryReferenceParams = zod.object({
-  "bookingId": zod.coerce.number().int(),
-  "referenceId": zod.coerce.number().int()
-})
-
-export const GetCreatorInquiryReferenceResponse = zod.unknown()
-
-
-/**
  * @summary List submitted tattoo bookings for admins
  */
-export const listAdminTattooBookingsResponseRequestTypeMax = 32;
-
-
-
 export const ListAdminTattooBookingsResponseItem = zod.object({
-  "requestType": zod.string().min(1).max(listAdminTattooBookingsResponseRequestTypeMax),
+  "requestType": zod.enum(['tattoo', 'painting', 'other']),
   "id": zod.int(),
   "name": zod.string(),
   "email": zod.string(),
@@ -2821,12 +2714,8 @@ export const UpdateAdminTattooBookingBody = zod.object({
   "status": zod.enum(['new', 'contacted', 'scheduled', 'completed', 'declined'])
 })
 
-export const updateAdminTattooBookingResponseRequestTypeMax = 32;
-
-
-
 export const UpdateAdminTattooBookingResponse = zod.object({
-  "requestType": zod.string().min(1).max(updateAdminTattooBookingResponseRequestTypeMax),
+  "requestType": zod.enum(['tattoo', 'painting', 'other']),
   "id": zod.int(),
   "name": zod.string(),
   "email": zod.string(),

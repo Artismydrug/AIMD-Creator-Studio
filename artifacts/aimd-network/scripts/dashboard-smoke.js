@@ -66,7 +66,7 @@ function printDeviceSmokeFlow() {
 Repeatable native dashboard smoke flow
 1. Open AIMD Network in Expo Go or the TestFlight build on a device/simulator
    using a 400x720 mobile-sized viewport (iPhone SE is a suitable reference).
-2. Start from a cold launch, open Studio, then its dashboard-tools icon, and watch the first render.
+2. Start from a cold launch, open the Dashboard tab, and watch the first render.
 3. Before the progress request resolves, confirm the dashboard header remains
    visible and the in-place loading card with "Loading your dashboard…" appears.
 4. Wait for the progress response. Confirm the loading card is replaced by the

@@ -30,7 +30,6 @@ test('transparent PNG artwork keeps a light backing and readable status in both 
   const imageModule = { exports: {} };
   const react = {
     createElement: (type, props, ...children) => ({ type, props: { ...props, children } }),
-    memo: component => component,
     useState: initial => [initial, () => {}],
   };
   let activePalette = palettes.light;

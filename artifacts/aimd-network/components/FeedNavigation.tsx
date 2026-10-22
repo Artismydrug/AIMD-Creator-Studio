@@ -112,6 +112,7 @@ export default function FeedNavigation({
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.title, { color: colors.foreground }]} testID="feed-navigation-title">Feed</Text>
+                <Text style={[styles.subtitle, { color: colors.sunsetCoral }]} testID="feed-navigation-subtitle">Make · Share · Connect.</Text>
               </View>
               <Pressable accessibilityRole="button" accessibilityLabel="Hide Feed header and expand posts"
                 testID="feed-header-collapse" onPress={() => onExpandedChange?.(false)}
@@ -205,7 +206,7 @@ export default function FeedNavigation({
               ))}
             </ScrollView>
             <Text style={[styles.count, { color: colors.mutedForeground }]}>
-              {postCount ? `Post ${Math.min(activeIndex + 1, postCount)} of ${postCount}` : 'Choose a view'}
+              {postCount ? `Post ${Math.min(activeIndex + 1, postCount)} of ${postCount} · Swipe up to explore` : 'Make · Share · Connect.'}
             </Text>
           </View>
         </View>
@@ -220,6 +221,7 @@ const styles = StyleSheet.create({
   headingRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   titleMark: { width: 44, height: 44, borderRadius: 15, borderWidth: 2, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-5deg' }], shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
   title: { fontFamily: 'DMSans_700Bold', fontSize: 26, letterSpacing: -0.6 },
+  subtitle: { fontFamily: 'DMSans_700Bold', fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', marginTop: 2 },
   sectionTabs: { flexDirection: 'row', gap: 6 },
   sectionTab: { flex: 1, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: 'transparent', borderRadius: 99 },
   sectionText: { fontFamily: 'DMSans_600SemiBold', fontSize: 13 },

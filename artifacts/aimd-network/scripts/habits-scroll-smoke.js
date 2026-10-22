@@ -16,7 +16,7 @@ function jsxTree(file, inspect) {
   return source;
 }
 
-test('daily habit actions and Monthly Streak share one non-sticky scroll without repeated headings', () => {
+test('the Habits tagline, daily habit cards, and Monthly Streak share one non-sticky scroll', () => {
   let flatList, listHeader, habitHeader;
   jsxTree('../app/(tabs)/habits.tsx', node => {
     if (!ts.isJsxSelfClosingElement(node)) return;
@@ -41,8 +41,8 @@ test('daily habit actions and Monthly Streak share one non-sticky scroll without
   assert.equal(habitHeader, true, 'the Habits title/stat cards move away with the content');
   const source = read('../app/(tabs)/habits.tsx');
   assert.doesNotMatch(source, /<Text style=\{s\.headerTitle\}>Habits<\/Text>/, 'avoid repeating Habits beneath the screen title');
-  assert.equal((source.match(/testID="today-habit-heading"/g) ?? []).length, 1);
-  assert.match(source, /accessibilityLabel="Add habit"/, 'the add-habit action stays visible next to Today’s Habit');
+  assert.match(source, /<Text style=\{s\.tagline\}>Discipline Eats Talent<\/Text>/);
+  assert.match(source, /accessibilityLabel="Add habit"/, 'the add-habit action stays visible next to the tagline');
   for (const id of ['today-habit-header', 'habits-scroll-list']) assert.ok(source.includes(id));
   assert.match(source, /ListFooterComponent=\{[\s\S]*?HabitPracticeSummaryCard embedded/);
   assert.match(source, /scrollHeader/);
@@ -53,14 +53,4 @@ test('the Habits & Challenges switcher also scrolls away on the Habits tab', () 
   assert.match(source, /section === 'habits'[\s\S]*?<HabitsScreen embedded scrollHeader=\{sectionHeader\}/);
   assert.match(source, /testID="challenge-habits-scroll-header"/);
   assert.match(source, /sectionHeader\s*=\s*\([\s\S]*?styles\.header/);
-});
-
-test('the daily heading and habit name stand out above secondary card details', () => {
-  const habits = read('../app/(tabs)/habits.tsx');
-  const card = read('../components/HabitCard.tsx');
-  assert.match(habits, /sectionTitle:\s*\{[\s\S]*?fontFamily:\s*'DMSans_700Bold',[\s\S]*?fontSize:\s*23/);
-  assert.match(card, /stickerName:\s*\{[^}]*fontFamily:\s*'DMSans_700Bold'[^}]*fontSize:\s*20/);
-  assert.match(card, /stickerCategoryText:\s*\{[^}]*fontSize:\s*12/);
-  assert.match(card, /streakText:\s*\{[\s\S]*?fontSize:\s*11/);
-  assert.match(card, /target:\s*\{[\s\S]*?fontSize:\s*10/);
 });

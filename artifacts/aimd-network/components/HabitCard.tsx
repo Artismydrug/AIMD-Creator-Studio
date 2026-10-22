@@ -222,8 +222,8 @@ export default function HabitCard({ habit, onLogged, onDeleted, stickerJam = fal
       borderWidth: 2,
       borderColor: colors.studioInk,
       borderRadius: colors.radius + 6,
-      paddingVertical: 14,
-      marginBottom: 12,
+      paddingVertical: 16,
+      marginBottom: 14,
       shadowOffset: { width: 4, height: 5 },
       shadowOpacity: 1,
       shadowRadius: 0,
@@ -239,13 +239,13 @@ export default function HabitCard({ habit, onLogged, onDeleted, stickerJam = fal
       color: colors.foreground,
       marginBottom: 4,
     },
-    stickerName: { fontFamily: 'DMSans_700Bold', fontSize: 20, color: colors.studioInk, letterSpacing: -0.35, lineHeight: 25 },
+    stickerName: { fontFamily: 'DMSans_700Bold', fontSize: 17, color: colors.studioInk, letterSpacing: -0.3 },
     meta: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
     },
-    stickerMeta: { flexWrap: 'wrap', rowGap: 6, columnGap: 8 },
+    stickerMeta: { flexWrap: 'wrap', rowGap: 8 },
     categoryBadge: {
       paddingHorizontal: 8,
       paddingVertical: 3,
@@ -254,8 +254,8 @@ export default function HabitCard({ habit, onLogged, onDeleted, stickerJam = fal
       borderColor: colors.foreground,
     },
     stickerCategoryBadge: {
-      paddingHorizontal: 11,
-      paddingVertical: 6,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
       borderWidth: 1.5,
       borderColor: colors.studioInk,
       borderRadius: 11,
@@ -272,7 +272,7 @@ export default function HabitCard({ habit, onLogged, onDeleted, stickerJam = fal
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
-    stickerCategoryText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 12 },
+    stickerCategoryText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 10 },
     streak: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -280,12 +280,12 @@ export default function HabitCard({ habit, onLogged, onDeleted, stickerJam = fal
     },
     streakText: {
       fontFamily: 'DMSans_500Medium',
-      fontSize: 11,
+      fontSize: 12,
       color: colors.mutedForeground,
     },
     target: {
       fontFamily: 'DMSans_400Regular',
-      fontSize: 10,
+      fontSize: 12,
       color: colors.mutedForeground,
     },
     checkBtn: {

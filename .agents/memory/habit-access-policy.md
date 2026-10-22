@@ -13,7 +13,7 @@ Habits should be the first/default section, with Challenges second, and daily ha
 
 **Why:** The product owner wants daily habits to be the primary focus, rather than challenges, and explicitly chose habit practice history instead of the Dashboard's featured challenge.
 
-**How to apply:** Preserve habits-first ordering and default selection when changing the shared mobile practice screen or its navigation labels. The separate Challenges switcher is temporarily deferred for the lean v1 release; see [launch scope](v1-launch-scope.md).
+**How to apply:** Preserve habits-first ordering and default selection when changing the shared mobile practice screen or its navigation labels.
 
 The earlier rolling-week practice graph and fire-marker presentation were approved at the time, but the owner later replaced that graph with a four-week Monthly Streak goal.
 

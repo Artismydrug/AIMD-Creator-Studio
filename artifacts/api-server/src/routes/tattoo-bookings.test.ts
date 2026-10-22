@@ -19,7 +19,6 @@ const { sendNotification, uploadPrivateObject, sanitizeMedia } = vi.hoisted(() =
 
 vi.mock("../lib/tattooBookingEmail", () => ({
   sendTattooBookingNotification: sendNotification,
-  sendCreatorInquiryNotification: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("../lib/objectStorage", () => ({

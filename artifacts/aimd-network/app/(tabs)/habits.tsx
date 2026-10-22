@@ -99,9 +99,9 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
     header: {
       paddingTop: topPad,
       paddingHorizontal: 16,
-      paddingBottom: 14,
-      backgroundColor: embedded ? colors.background : colors.studioPaper,
-      borderBottomWidth: embedded ? 0 : 1.5,
+      paddingBottom: 16,
+      backgroundColor: colors.studioPaper,
+      borderBottomWidth: 2,
       borderBottomColor: colors.studioInk,
     },
     headerRow: {
@@ -111,8 +111,8 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
       marginBottom: 10,
     },
     addBtn: {
-      width: 44,
-      height: 44,
+      width: 46,
+      height: 46,
       backgroundColor: colors.studioOrange,
       borderWidth: 2,
       borderColor: colors.ink,
@@ -125,28 +125,38 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
       shadowRadius: 0,
       elevation: 2,
     },
-    headerLabel: {
+    tagline: {
       fontFamily: 'DMSans_700Bold',
-      fontSize: 15,
-      color: colors.foreground,
+      fontSize: 11,
+      color: colors.sunsetCoral,
+      letterSpacing: 2,
+      textTransform: 'uppercase',
     },
     actionHelp: {
       fontFamily: 'DMSans_400Regular',
-      fontSize: 11,
+      fontSize: 12,
       lineHeight: 17,
       color: colors.mutedForeground,
-      marginBottom: 8,
+      marginBottom: 12,
     },
     statsRow: {
       flexDirection: 'row',
       gap: 12,
-      paddingVertical: 8,
     },
     statBox: {
       flex: 1,
-      paddingVertical: 4,
+      backgroundColor: colors.studioPaper,
+      padding: 12,
       alignItems: 'center',
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      borderRadius: 17,
       overflow: 'hidden',
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
     },
     statNumber: {
       fontFamily: 'DMSans_700Bold',
@@ -186,8 +196,7 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
       borderWidth: 1,
       borderColor: colors.border,
       paddingHorizontal: 20,
-      minHeight: 44,
-      justifyContent: 'center',
+      paddingVertical: 8,
     },
     retryText: {
       fontFamily: 'DMSans_500Medium',
@@ -220,9 +229,14 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
     },
     sectionTitle: {
       fontFamily: 'DMSans_700Bold',
-      fontSize: 23,
+      fontSize: 20,
       color: colors.studioInk,
-      letterSpacing: -0.55,
+      letterSpacing: -0.4,
+    },
+    sectionHint: {
+      fontFamily: 'DMSans_500Medium',
+      fontSize: 11,
+      color: colors.studioMuted,
     },
     todaySticker: {
       paddingHorizontal: 10,
@@ -314,8 +328,8 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
             <View>
               {scrollHeader}
               <View style={s.header} testID="habits-scroll-header">
-                <View style={s.headerRow} testID="today-habit-header">
-                  <Text style={s.sectionTitle} accessibilityRole="header" testID="today-habit-heading">Today's Habit</Text>
+                <View style={s.headerRow}>
+                  <Text style={s.tagline}>Discipline Eats Talent</Text>
                   <TouchableOpacity
                     style={s.addBtn}
                     onPress={() => {
@@ -323,7 +337,6 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                     }}
                     testID="add-habit-button"
-                    accessibilityRole="button"
                     accessibilityLabel="Add habit"
                   >
                     <Feather name="plus" size={20} color={colors.ink} />
@@ -345,6 +358,18 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
                   </View>
                 </View>
               </View>
+              {!isError && !habitsInvalid && habits.length > 0 ? <View>
+                <View style={s.sectionHeader} testID="today-habit-header">
+                  <View style={s.sectionMark}>
+                    <Feather name="check-circle" size={17} color={colors.ink} />
+                  </View>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Text style={s.sectionTitle} accessibilityRole="header" testID="today-habit-heading">Today's Habit</Text>
+                    <Text style={s.sectionHint}>Small reps. Keep your rhythm.</Text>
+                  </View>
+                  <View style={s.todaySticker}><Text style={s.todayStickerText}>TODAY</Text></View>
+                </View>
+              </View> : null}
             </View>
           }
           ListEmptyComponent={
@@ -356,7 +381,7 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
               <View style={s.centered}>
                 <Feather name="wifi-off" size={40} color={colors.mutedForeground} />
                 <Text style={s.emptyTitle}>Failed to load habits</Text>
-                <TouchableOpacity style={s.retryBtn} onPress={() => refetch()} accessibilityRole="button">
+                <TouchableOpacity style={s.retryBtn} onPress={() => refetch()}>
                   <Text style={s.retryText}>Retry</Text>
                 </TouchableOpacity>
               </View>

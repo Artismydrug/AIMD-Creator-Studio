@@ -9,16 +9,12 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
-import { usersTable } from "./users";
 
 export const tattooBookingsTable = pgTable(
   "tattoo_bookings",
   {
     id: serial("id").primaryKey(),
-    requestType: text("request_type").notNull().default("tattoo"),
-    creatorUserId: integer("creator_user_id").references(() => usersTable.id, {
-      onDelete: "set null",
-    }),
+    requestType: text("request_type").$type<"tattoo" | "painting" | "other">().notNull().default("tattoo"),
     name: text("name").notNull(),
     email: text("email").notNull(),
     phone: text("phone"),
@@ -35,14 +31,6 @@ export const tattooBookingsTable = pgTable(
     notificationStatus: text("notification_status").notNull().default("pending"),
     notificationError: text("notification_error"),
     notificationSentAt: timestamp("notification_sent_at", {
-      withTimezone: true,
-    }),
-    creatorNotificationStatus: text("creator_notification_status")
-      .$type<"not_applicable" | "pending" | "sent" | "failed">()
-      .notNull()
-      .default("not_applicable"),
-    creatorNotificationError: text("creator_notification_error"),
-    creatorNotificationSentAt: timestamp("creator_notification_sent_at", {
       withTimezone: true,
     }),
     submittedAt: timestamp("submitted_at", { withTimezone: true }),

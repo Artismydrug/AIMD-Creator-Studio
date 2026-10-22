@@ -41,7 +41,7 @@ function sketch(id, prompt = `Prompt ${id}`) {
   return { id, createdAt: '2026-10-18T20:00:00.000Z', prompt, paths: ['M10 10 L20 20'] };
 }
 
-test('Dashboard opens Side Quest and preserves the private 60-second sketch flow', () => {
+test('Dashboard leads with the Sticker Jam sketch entry and keeps a 60-second Flash Sketch', () => {
   const dashboard = fs.readFileSync(path.resolve(__dirname, '../app/(tabs)/index.tsx'), 'utf8');
   const card = fs.readFileSync(path.resolve(__dirname, '../components/StickerJamPracticeCard.tsx'), 'utf8');
   const route = fs.readFileSync(path.resolve(__dirname, '../app/mini-habit-studio.tsx'), 'utf8');
@@ -55,49 +55,22 @@ test('Dashboard opens Side Quest and preserves the private 60-second sketch flow
   assert.match(card, /pagingEnabled/);
   assert.match(card, /testID="dashboard-events-slide"/);
   assert.match(card, /onOpenEvents/);
-  assert.match(dashboard, /const openEvents = useCallback\(\(\) => router\.push\('\/\(tabs\)\/events'\), \[router\]\)/);
-  assert.match(dashboard, /onOpenEvents=\{openEvents\}/);
-  assert.match(card, /Try Side Quest/);
-  assert.match(route, />Side Quest</);
+  assert.match(dashboard, /onOpenEvents=\{\(\) => router\.push\('\/\(tabs\)\/events'\)\}/);
+  assert.match(card, /Start a sketch/);
+  assert.match(route, />Creator Arcade</);
   assert.match(route, /const GAME_SECONDS = 60/);
   assert.match(route, /Math\.floor\(secondsLeft \/ 60\)/);
   assert.match(route, /PanResponder\.create/);
   assert.match(route, /miniHabitSketchbook\.save/);
-  assert.match(route, /Private · No points or streaks · Sketches save on-device; photos and audio aren’t uploaded/);
+  assert.match(route, /Sketches stay on this device/);
   assert.match(route, /testID="mini-habit-sketch-done"/);
   assert.match(route, /onPress=\{\(\) => finishSketch\(true\)\}/);
   assert.match(route, /finishSketch\(\);/);
   assert.match(route, /setCompletionReason\(early \? 'early' : 'timeout'\)/);
   assert.match(route, /testID="mini-habit-sketch-next"/);
   assert.match(route, /Move to the next sketch idea/);
-  assert.match(route, /Next challenge/);
-  assert.match(route, /challenge\.input === 'text'/);
-  assert.match(route, /challenge\.input === 'audio'/);
-  assert.match(route, /requestRecordingPermissionsAsync/);
-  assert.match(route, /launchImageLibraryAsync/);
+  assert.match(route, /Next sketch idea/);
   assert.doesNotMatch(route, /useSpinDailyReward|useCheckInProgress|trackEvent/);
-});
-
-test('all five mediums have tailored prompts and matching inputs without immediate repeats', () => {
-  const { SIDE_QUEST_MEDIA, pickSideQuestPrompt } = loadTypeScript('../lib/sideQuestPrompts.ts');
-  assert.deepEqual(SIDE_QUEST_MEDIA.map((medium) => medium.id), ['visual_art', 'fashion', 'music', 'poetry', 'movement']);
-  assert.deepEqual(SIDE_QUEST_MEDIA.map((medium) => medium.input), ['canvas', 'photo', 'audio', 'text', 'photo']);
-  for (const medium of SIDE_QUEST_MEDIA) {
-    assert.ok(medium.prompts.length >= 4);
-    const first = pickSideQuestPrompt(medium.id);
-    const next = pickSideQuestPrompt(medium.id, first.id);
-    assert.equal(next.medium, medium.id);
-    assert.notEqual(next.id, first.id);
-  }
-  const originalRandom = Math.random;
-  try {
-    const seen = new Set();
-    for (const value of [0, 0.2, 0.4, 0.6, 0.8]) {
-      Math.random = () => value;
-      seen.add(pickSideQuestPrompt('mixed').medium);
-    }
-    assert.equal(seen.size, 5);
-  } finally { Math.random = originalRandom; }
 });
 
 test('concurrent local saves are serialized and isolated per signed-in account', async () => {

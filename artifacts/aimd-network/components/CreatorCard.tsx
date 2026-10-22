@@ -1,10 +1,11 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert, Linking, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { getBaseUrl, type DirectoryCreator } from '@workspace/api-client-react';
+import { getStudioInquiryLink } from '@/lib/studioInquiry';
 
 interface CreatorCardProps {
   creator: DirectoryCreator;
@@ -21,14 +22,20 @@ export default function CreatorCard({ creator, onOpenProfile, onMessage, messagi
   const avatarUrl = creator.avatarUrl
     ? (/^https?:\/\//i.test(creator.avatarUrl) ? creator.avatarUrl : `${getBaseUrl() ?? ''}${creator.avatarUrl}`)
     : null;
-  const inquiryAvailable = !!creator.bookingOpen;
-  const openInquiry = () => {
-    if (creator.bookingOpen) {
+  const inquiryLink = getStudioInquiryLink(creator);
+  const isPoncho = creator.username.replace(/^@/, '').toLowerCase() === 'ponchotheartist';
+  const inquiryAvailable = isPoncho ? !!creator.bookingOpen : !!inquiryLink;
+  const openInquiry = async () => {
+    if (isPoncho && creator.bookingOpen) {
       router.push({
         pathname: '/commission-inquiry',
-        params: { creatorId: creator.id, creatorName: creator.username },
+        params: { creatorName: creator.username },
       });
+      return;
     }
+    if (!inquiryLink) return;
+    try { await Linking.openURL(inquiryLink); }
+    catch { Alert.alert('Could not open inquiry link', 'Try messaging this creator instead.'); }
   };
 
   const s = useMemo(() => StyleSheet.create({
@@ -69,14 +76,14 @@ export default function CreatorCard({ creator, onOpenProfile, onMessage, messagi
           activeOpacity={0.75}
         >
           <View style={s.avatar}>
-            {avatarUrl ? <Image source={{ uri: avatarUrl }} style={{ width: 44, height: 44 }} contentFit="cover" cachePolicy="memory-disk" recyclingKey={avatarUrl} allowDownscaling priority="low" /> : (
+            {avatarUrl ? <Image source={{ uri: avatarUrl }} style={{ width: 44, height: 44 }} contentFit="cover" /> : (
               <Text style={s.avatarText}>{initials}</Text>
             )}
           </View>
         </TouchableOpacity>
       ) : (
         <View style={s.avatar}>
-          {avatarUrl ? <Image source={{ uri: avatarUrl }} style={{ width: 44, height: 44 }} contentFit="cover" cachePolicy="memory-disk" recyclingKey={avatarUrl} allowDownscaling priority="low" /> : (
+          {avatarUrl ? <Image source={{ uri: avatarUrl }} style={{ width: 44, height: 44 }} contentFit="cover" /> : (
             <Text style={s.avatarText}>{initials}</Text>
           )}
         </View>
@@ -101,12 +108,17 @@ export default function CreatorCard({ creator, onOpenProfile, onMessage, messagi
           {onOpenProfile && <Feather name="chevron-right" size={15} color={colors.mutedForeground} accessibilityLabel="Open creator studio" />}
         </View>
         {details ? <Text style={s.details} numberOfLines={1}>{details}</Text> : null}
+        {creator.badgeCount > 0 && (
+          <Text style={s.details} numberOfLines={1}>
+            <Feather name="award" size={11} color={colors.mutedForeground} /> {creator.badgeCount} {creator.badgeCount === 1 ? 'badge' : 'badges'}
+          </Text>
+        )}
         {inquiryAvailable ? (
           <TouchableOpacity onPress={openInquiry}
             style={{ minHeight: 44, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 5 }}
             testID={`inquire-creator-${creator.id}`}
-            accessibilityRole="button"
-            accessibilityLabel={`Open an inquiry form for ${creator.username}`}
+            accessibilityRole={isPoncho ? 'button' : 'link'}
+            accessibilityLabel={isPoncho ? 'Open Poncho The Artist inquiry form' : `Open ${creator.username}'s external inquiry link`}
             activeOpacity={0.7}>
             <Text style={[s.details, { color: colors.foreground, fontFamily: 'DMSans_700Bold' }]}>Inquire</Text>
             <Feather name="arrow-up-right" size={14} color={colors.foreground} />

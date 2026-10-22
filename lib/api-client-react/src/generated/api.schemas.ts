@@ -38,21 +38,6 @@ export const UserTier = {
   pro: 'pro',
 } as const;
 
-/**
- * @nullable
- */
-export type UserProfileAccentColor = typeof UserProfileAccentColor[keyof typeof UserProfileAccentColor] | null;
-
-
-export const UserProfileAccentColor = {
-  coral: 'coral',
-  violet: 'violet',
-  mint: 'mint',
-  blue: 'blue',
-  rose: 'rose',
-  gold: 'gold',
-} as const;
-
 export interface User {
   id: number;
   username: string;
@@ -72,18 +57,6 @@ export interface User {
   bookingOpen?: boolean;
   /** @nullable */
   portfolioUrl?: string | null;
-  /** @nullable */
-  instagramUrl?: string | null;
-  /** @nullable */
-  tiktokUrl?: string | null;
-  /** @nullable */
-  profileAccentColor?: UserProfileAccentColor;
-  /**
-     * @maxItems 20
-     * @items.minLength 1
-     * @items.maxLength 32
-     */
-  inquiryOptions: string[];
   createdAt: string;
 }
 
@@ -287,21 +260,6 @@ export interface PointAwardResult {
   points: number;
 }
 
-/**
- * @nullable
- */
-export type UserUpdateProfileAccentColor = typeof UserUpdateProfileAccentColor[keyof typeof UserUpdateProfileAccentColor] | null;
-
-
-export const UserUpdateProfileAccentColor = {
-  coral: 'coral',
-  violet: 'violet',
-  mint: 'mint',
-  blue: 'blue',
-  rose: 'rose',
-  gold: 'gold',
-} as const;
-
 export interface UserUpdate {
   username?: string;
   /** @nullable */
@@ -318,18 +276,6 @@ export interface UserUpdate {
   bookingOpen?: boolean;
   /** @nullable */
   portfolioUrl?: string | null;
-  /** @nullable */
-  instagramUrl?: string | null;
-  /** @nullable */
-  tiktokUrl?: string | null;
-  /** @nullable */
-  profileAccentColor?: UserUpdateProfileAccentColor;
-  /**
-     * @maxItems 20
-     * @items.minLength 1
-     * @items.maxLength 32
-     */
-  inquiryOptions?: string[];
 }
 
 export interface PortfolioCategory {
@@ -1210,21 +1156,6 @@ export interface StorePaymentIntent {
   order: StoreOrder;
 }
 
-/**
- * @nullable
- */
-export type DirectoryCreatorProfileAccentColor = typeof DirectoryCreatorProfileAccentColor[keyof typeof DirectoryCreatorProfileAccentColor] | null;
-
-
-export const DirectoryCreatorProfileAccentColor = {
-  coral: 'coral',
-  violet: 'violet',
-  mint: 'mint',
-  blue: 'blue',
-  rose: 'rose',
-  gold: 'gold',
-} as const;
-
 export type DirectoryCreatorRecentBadgesItem = {
   id?: number;
   name?: string;
@@ -1250,18 +1181,6 @@ export interface DirectoryCreator {
   bookingOpen: boolean;
   /** @nullable */
   portfolioUrl?: string | null;
-  /** @nullable */
-  instagramUrl?: string | null;
-  /** @nullable */
-  tiktokUrl?: string | null;
-  /** @nullable */
-  profileAccentColor?: DirectoryCreatorProfileAccentColor;
-  /**
-     * @maxItems 20
-     * @items.minLength 1
-     * @items.maxLength 32
-     */
-  inquiryOptions?: string[];
   badgeCount: number;
   postCount: number;
   points?: number;
@@ -1269,21 +1188,6 @@ export interface DirectoryCreator {
   workshopsEnrolled?: number;
   recentBadges?: DirectoryCreatorRecentBadgesItem[];
 }
-
-/**
- * @nullable
- */
-export type PublicCreatorProfileProfileAccentColor = typeof PublicCreatorProfileProfileAccentColor[keyof typeof PublicCreatorProfileProfileAccentColor] | null;
-
-
-export const PublicCreatorProfileProfileAccentColor = {
-  coral: 'coral',
-  violet: 'violet',
-  mint: 'mint',
-  blue: 'blue',
-  rose: 'rose',
-  gold: 'gold',
-} as const;
 
 export type PublicCreatorProfileRecentBadgesItem = {
   id: number;
@@ -1312,18 +1216,6 @@ export interface PublicCreatorProfile {
   bookingOpen: boolean;
   /** @nullable */
   portfolioUrl?: string | null;
-  /** @nullable */
-  instagramUrl?: string | null;
-  /** @nullable */
-  tiktokUrl?: string | null;
-  /** @nullable */
-  profileAccentColor?: PublicCreatorProfileProfileAccentColor;
-  /**
-     * @maxItems 20
-     * @items.minLength 1
-     * @items.maxLength 32
-     */
-  inquiryOptions: string[];
   portfolioCategories: PortfolioCategory[];
   postCount: number;
   badgesEarned: number;
@@ -1523,10 +1415,6 @@ export interface PostDestination {
   postId: number;
 }
 
-export interface InquiryDestination {
-  bookingId: number;
-}
-
 export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
 
 
@@ -1535,7 +1423,6 @@ export const NotificationType = {
   follow: 'follow',
   like: 'like',
   critique: 'critique',
-  commission_inquiry: 'commission_inquiry',
 } as const;
 
 export interface Notification {
@@ -1548,9 +1435,6 @@ export interface Notification {
   postId: number | null;
   conversationDestination: ConversationDestination | null;
   postDestination: PostDestination | null;
-  inquiryDestination: InquiryDestination | null;
-  /** @nullable */
-  inquirySummary: string | null;
   createdAt: string;
   /** @nullable */
   readAt: string | null;
@@ -1636,12 +1520,17 @@ export const TattooBookingNotificationStatus = {
   failed: 'failed',
 } as const;
 
+export type TattooBookingInputRequestType = typeof TattooBookingInputRequestType[keyof typeof TattooBookingInputRequestType];
+
+
+export const TattooBookingInputRequestType = {
+  tattoo: 'tattoo',
+  painting: 'painting',
+  other: 'other',
+} as const;
+
 export interface TattooBookingInput {
-  /**
-     * @minLength 1
-     * @maxLength 32
-     */
-  requestType: string;
+  requestType: TattooBookingInputRequestType;
   /**
      * @minLength 1
      * @maxLength 120
@@ -1674,8 +1563,6 @@ export interface TattooBookingInput {
      * @maxLength 120
      */
   preferredArtist: string;
-  /** Optional creator owner for a profile-specific inquiry. */
-  creatorUserId?: number;
   /**
      * Honeypot field; must remain empty.
      * @maxLength 200
@@ -1702,35 +1589,6 @@ export interface TattooBookingReference {
   sizeBytes: number;
 }
 
-export interface CreatorInquiryReference {
-  id: number;
-  url: string;
-  originalName: string;
-  contentType: string;
-  sizeBytes: number;
-}
-
-export interface CreatorInquiryDetails {
-  id: number;
-  /**
-     * @minLength 1
-     * @maxLength 32
-     */
-  requestType: string;
-  name: string;
-  email: string;
-  /** @nullable */
-  phone: string | null;
-  idea: string;
-  placement: string;
-  estimatedSize: string;
-  preferredArtist: string;
-  /** @nullable */
-  submittedAt: string | null;
-  createdAt: string;
-  references: CreatorInquiryReference[];
-}
-
 export interface TattooBookingFinalizeInput {
   /** @minLength 32 */
   uploadToken: string;
@@ -1742,12 +1600,17 @@ export interface TattooBookingSubmissionResult {
   notificationStatus: TattooBookingNotificationStatus;
 }
 
+export type TattooBookingRequestType = typeof TattooBookingRequestType[keyof typeof TattooBookingRequestType];
+
+
+export const TattooBookingRequestType = {
+  tattoo: 'tattoo',
+  painting: 'painting',
+  other: 'other',
+} as const;
+
 export interface TattooBooking {
-  /**
-     * @minLength 1
-     * @maxLength 32
-     */
-  requestType: string;
+  requestType: TattooBookingRequestType;
   id: number;
   name: string;
   email: string;

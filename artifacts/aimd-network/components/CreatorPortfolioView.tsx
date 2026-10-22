@@ -1,8 +1,7 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
   Linking,
   Modal,
   Platform,
@@ -21,7 +20,6 @@ import type { StudioPost } from '@workspace/api-client-react';
 import { getBaseUrl } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import { normalizeStudioLink } from '@/lib/studioInquiry';
-import { normalizeSocialProfileUrl, profileAccentColor } from '@/lib/profileBranding';
 import StudioImage from '@/components/StudioImage';
 import StudioVideo from '@/components/StudioVideo';
 import AudioTrackPlayer from '@/components/AudioTrackPlayer';
@@ -36,9 +34,6 @@ export type CreatorPortfolioProfile = {
   discipline?: string | null;
   location?: string | null;
   portfolioUrl?: string | null;
-  instagramUrl?: string | null;
-  tiktokUrl?: string | null;
-  profileAccentColor?: string | null;
   bookingOpen?: boolean | null;
   followerCount?: number;
   followingCount?: number;
@@ -69,10 +64,6 @@ type Props = {
   onRetry?: () => void;
   onEdit?: () => void;
   onBack?: () => void;
-  hideBack?: boolean;
-  onDashboard?: () => void;
-  onInbox?: () => void;
-  unreadCount?: number;
   onAddWork?: (categoryId: number | null, legacyCategoryName?: string) => void;
   onSaveCategories?: (categories: CreatorPortfolioCategoryInput[]) => Promise<CreatorPortfolioCategory[]>;
   onAssignWorkCategory?: (postId: number, categoryId: number | null) => Promise<void>;
@@ -82,18 +73,6 @@ type Props = {
   messageBusy?: boolean;
   inquiryAvailable?: boolean;
   onInquiry?: () => void;
-};
-
-type PortfolioTile = {
-  post: StudioPost;
-  index: number;
-  width: number;
-  featured: boolean;
-};
-
-type PortfolioRow = {
-  key: string;
-  items: PortfolioTile[];
 };
 
 function resolveImageUrl(url: string | null | undefined): string | null {
@@ -121,10 +100,6 @@ export default function CreatorPortfolioView({
   onRetry,
   onEdit,
   onBack,
-  hideBack = false,
-  onDashboard,
-  onInbox,
-  unreadCount = 0,
   onAddWork,
   onSaveCategories,
   onAssignWorkCategory,
@@ -153,10 +128,6 @@ export default function CreatorPortfolioView({
   const profileLabel = [creator.discipline?.trim().toUpperCase(), creator.location?.trim()].filter(Boolean).join(' · ');
   const isPoncho = safeName.toLowerCase() === 'ponchotheartist';
   const website = normalizeStudioLink(creator.portfolioUrl) || (isPoncho ? 'https://ponchotheartist.com' : null);
-  const instagramUrl = normalizeSocialProfileUrl('instagram', creator.instagramUrl ?? '') ||
-    (isPoncho ? 'https://www.instagram.com/ponchotheartist/' : null);
-  const tiktokUrl = normalizeSocialProfileUrl('tiktok', creator.tiktokUrl ?? '');
-  const accent = profileAccentColor(creator.profileAccentColor);
   const topInsetFallback = Platform.OS === 'web' && windowWidth <= 500 ? 56 : 8;
   const categories = useMemo(() => {
     const tags = new Set<string>();
@@ -203,7 +174,7 @@ export default function CreatorPortfolioView({
       paddingBottom: 10,
       marginBottom: 0,
     },
-    backButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+    backButton: { width: 30, height: 44, alignItems: 'center', justifyContent: 'center' },
     mark: {
       width: 34, height: 34, borderRadius: 11, borderWidth: 1.5,
       borderColor: colors.studioInk, backgroundColor: colors.studioOrange,
@@ -211,9 +182,6 @@ export default function CreatorPortfolioView({
     },
     headerBrand: { flex: 1, minWidth: 0 },
     headerLabel: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 0.7 },
-    studioTitle: { color: colors.foreground, fontFamily: 'DMSans_700Bold', fontSize: 22, letterSpacing: -0.6 },
-    unreadBadge: { position: 'absolute', right: -3, top: -4, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 3, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.studioYellow, borderWidth: 1, borderColor: colors.studioInk },
-    unreadText: { fontFamily: 'DMSans_700Bold', fontSize: 10, color: colors.ink },
     headerByline: { color: colors.studioMuted, fontFamily: 'DMSans_500Medium', fontSize: 9, marginTop: 3 },
     headerAction: {
       width: 44, minHeight: 44, borderRadius: 99, borderWidth: 1.5,
@@ -394,7 +362,7 @@ export default function CreatorPortfolioView({
   const activeCategory = selectedCategory === 'all'
     ? undefined
     : workCategories.find((category) => categoryKey(category) === selectedCategory);
-  const filteredPosts = useMemo(() => !activeCategory
+  const filteredPosts = !activeCategory
     ? posts
     : posts.filter((post) => activeCategory.id !== null
       ? post.portfolioCategoryId === activeCategory.id
@@ -405,39 +373,7 @@ export default function CreatorPortfolioView({
           if (name === 'painting') return value.includes('paint');
           if (name === 'mural') return value.includes('mural');
           return value === activeCategory.name.toLowerCase();
-        })), [activeCategory, posts]);
-  const galleryRows = useMemo<PortfolioRow[]>(() => {
-    const rows: PortfolioRow[] = [];
-    if (desktopGrid) {
-      for (let index = 0; index < filteredPosts.length; index += 3) {
-        const items = filteredPosts.slice(index, index + 3).map((post, offset) => ({
-          post,
-          index: index + offset,
-          width: tileWidth,
-          featured: false,
         }));
-        rows.push({ key: items.map((item) => item.post.id).join(':'), items });
-      }
-      return rows;
-    }
-    for (let index = 0; index < filteredPosts.length; index += 3) {
-      const pair = filteredPosts.slice(index, index + 2).map((post, offset) => ({
-        post,
-        index: index + offset,
-        width: tileWidth,
-        featured: false,
-      }));
-      if (pair.length) rows.push({ key: pair.map((item) => item.post.id).join(':'), items: pair });
-      const featuredPost = filteredPosts[index + 2];
-      if (featuredPost) {
-        rows.push({
-          key: String(featuredPost.id),
-          items: [{ post: featuredPost, index: index + 2, width: contentWidth, featured: true }],
-        });
-      }
-    }
-    return rows;
-  }, [contentWidth, desktopGrid, filteredPosts, tileWidth]);
 
   const openCategoryEditor = () => {
     setCategoryDrafts(workCategories.map((category) => ({
@@ -536,80 +472,27 @@ export default function CreatorPortfolioView({
   const openLink = (url: string) => {
     void Linking.openURL(url).catch(() => Alert.alert('Could not open link', 'Please check the link and try again.'));
   };
-  const renderGalleryRow = useCallback(({ item }: { item: PortfolioRow }) => (
-    <View style={[styles.grid, { width: contentWidth }]}>
-      {item.items.map(({ post, width, featured }) => {
-        const mediaUrl = resolveImageUrl(post.imageUrl);
-        const imagePost = !!mediaUrl && post.mediaType !== 'video' && post.mediaType !== 'audio';
-        const mediaStyle = [styles.media, featured && styles.featuredMedia];
-        return (
-          <View key={post.id} style={[styles.tile, { width }]} testID={`creator-work-${post.id}`}>
-            {mediaUrl && post.mediaType === 'audio' ? (
-              <AudioTrackPlayer uri={mediaUrl} />
-            ) : mediaUrl && post.mediaType === 'video' ? (
-              <StudioVideo uri={mediaUrl} active={false} reducedMotion muted={videosMuted} onMutedChange={setVideosMuted} style={mediaStyle} />
-            ) : mediaUrl ? (
-              <Pressable accessibilityRole="button" accessibilityLabel={`View artwork: ${post.caption || 'Untitled work'}`} onPress={() => setSelectedPost(post)} testID={`creator-artwork-${post.id}`}>
-                <StudioImage uri={mediaUrl} style={mediaStyle} priority="low" />
-              </Pressable>
-            ) : (
-              <View style={[...mediaStyle, { padding: 13, justifyContent: 'center' }]}>
-                <Text style={styles.caption} numberOfLines={7}>{post.caption || 'A work in progress'}</Text>
-              </View>
-            )}
-            {!imagePost && (
-              <>
-                {post.caption && mediaUrl ? <View style={styles.postCopy}><Text style={styles.caption} numberOfLines={2}>{post.caption}</Text></View> : null}
-                {post.tags?.length ? <View style={[styles.tags, { paddingHorizontal: 10, paddingBottom: 8 }]}>{post.tags.slice(0, 2).map((tag) => <Text key={tag} style={styles.tag}>#{tag}</Text>)}</View> : null}
-                <View style={styles.postActions}>
-                  <Text style={styles.date}>{new Date(post.createdAt).toLocaleDateString()}</Text>
-                  {isOwner && currentUserId ? (
-                    <PostOwnerActions
-                      post={post}
-                      currentUserId={currentUserId}
-                      onAssignCategory={onAssignWorkCategory ? () => {
-                        setCategoryAssignmentError(null);
-                        setAssigningPostId(post.id);
-                      } : undefined}
-                    />
-                  ) : null}
-                </View>
-              </>
-            )}
-          </View>
-        );
-      })}
-    </View>
-  ), [contentWidth, currentUserId, isOwner, onAssignWorkCategory, styles, videosMuted]);
-  const renderGallerySeparator = useCallback(
-    () => <View style={{ height: gridGap }} />,
-    [gridGap],
-  );
 
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
-        {!hideBack && <Pressable
+        <Pressable
           accessibilityRole="button"
-          accessibilityLabel={onDashboard ? 'Open dashboard tools' : 'Go back'}
-          onPress={onDashboard ?? onBack}
+          accessibilityLabel="Go back"
+          onPress={onBack}
           style={styles.backButton}
           testID="creator-profile-back"
         >
-          <Feather name={onDashboard ? 'grid' : 'arrow-left'} size={20} color={colors.studioInk} />
-        </Pressable>}
+          <Feather name="arrow-left" size={20} color={colors.studioInk} />
+        </Pressable>
+        <View style={styles.mark}><Feather name="aperture" size={19} color={colors.ink} /></View>
         <View style={styles.headerBrand}>
-          <Text style={isOwner ? styles.studioTitle : styles.headerLabel}>{isOwner ? 'Your Studio' : 'CREATOR STUDIO'}</Text>
-          {!isOwner && <Text style={styles.headerByline}>by AIMD</Text>}
+          <Text style={styles.headerLabel}>{isOwner ? 'YOUR STUDIO' : 'CREATOR STUDIO'}</Text>
+          <Text style={styles.headerByline}>by AIMD</Text>
         </View>
         {isOwner ? (
           <>
-            {onInbox ? (
-              <Pressable accessibilityRole="button" accessibilityLabel={`Open notifications and inquiries${unreadCount ? `, ${unreadCount} unread` : ''}`} onPress={onInbox} style={styles.headerAction} testID="creator-profile-inbox">
-                <Feather name="bell" size={19} color={colors.studioInk} />
-                {unreadCount > 0 && <View style={styles.unreadBadge}><Text style={styles.unreadText}>{unreadCount > 99 ? '99+' : unreadCount}</Text></View>}
-              </Pressable>
-            ) : inquiryAvailable && (
+            {inquiryAvailable && (
               <Pressable accessibilityRole="button" accessibilityLabel="Open inquiry form" onPress={onInquiry} style={styles.inquiryPill} testID="creator-profile-inquiry">
                 <Text style={styles.inquiryPillText}>Inquiry</Text>
                 <Feather name="arrow-up-right" size={13} color={colors.studioInquiryForeground} />
@@ -641,58 +524,35 @@ export default function CreatorPortfolioView({
         )}
       </View>
 
-      <FlatList
-        testID="creator-work-grid"
-        data={isLoading || isError ? [] : galleryRows}
-        keyExtractor={(item) => item.key}
-        renderItem={renderGalleryRow}
-        contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(insets.bottom, 24) + 30 }]}
+      <ScrollView
         showsVerticalScrollIndicator={false}
-        initialNumToRender={4}
-        maxToRenderPerBatch={4}
-        updateCellsBatchingPeriod={40}
-        windowSize={5}
-        removeClippedSubviews={Platform.OS === 'android'}
-        ListHeaderComponent={
+        contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(insets.bottom, 24) + 30 }]}
+      >
         <View style={styles.content}>
           <View style={styles.hero}>
             <View style={styles.avatarFrame}>
               {resolveImageUrl(creator.avatarUrl) ? (
-                <Image
-                  source={{ uri: resolveImageUrl(creator.avatarUrl)! }}
-                  style={styles.avatar}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
-                  recyclingKey={creator.avatarUrl ?? ''}
-                  allowDownscaling
-                  priority="low"
-                />
+                <Image source={{ uri: resolveImageUrl(creator.avatarUrl)! }} style={styles.avatar} contentFit="cover" />
               ) : (
                 <Text style={styles.initials}>{avatarInitials(safeName)}</Text>
               )}
             </View>
             <View style={styles.heroCopy}>
-              {!!profileLabel && <Text style={[styles.eyebrow, { borderColor: accent, color: accent }]} testID="creator-profile-label">{profileLabel}</Text>}
+              {!!profileLabel && <Text style={styles.eyebrow} testID="creator-profile-label">{profileLabel}</Text>}
               <Text style={styles.name} accessibilityRole="header">{displayName}</Text>
               {creator.bio?.trim() ? <Text style={styles.bio}>{creator.bio.trim()}</Text> : null}
-              {!isOwner && (website || instagramUrl || tiktokUrl) && (
+              {!isOwner && (website || isPoncho) && (
                 <View style={styles.linkRow}>
                   {website && (
-                    <Pressable accessibilityRole="link" accessibilityLabel="Visit artist website or portfolio" onPress={() => openLink(website)} style={[styles.link, { borderColor: accent }]} testID="creator-website-link">
+                    <Pressable accessibilityRole="link" accessibilityLabel="Visit artist website" onPress={() => openLink(website)} style={styles.link} testID="creator-website-link">
                       <Text style={styles.linkText}>Website</Text>
-                      <Feather name="arrow-up-right" size={13} color={accent} />
+                      <Feather name="arrow-up-right" size={13} color={colors.studioInk} />
                     </Pressable>
                   )}
-                  {instagramUrl && (
-                    <Pressable accessibilityRole="link" accessibilityLabel={`Visit ${creator.username} on Instagram`} onPress={() => openLink(instagramUrl)} style={[styles.link, { borderColor: accent }]} testID="creator-instagram-link">
-                      <Feather name="instagram" size={13} color={accent} />
+                  {isPoncho && !isOwner && (
+                    <Pressable accessibilityRole="link" accessibilityLabel="Visit Poncho on Instagram" onPress={() => openLink('https://www.instagram.com/ponchotheartist/')} style={styles.link} testID="creator-instagram-link">
+                      <Feather name="instagram" size={13} color={colors.studioInk} />
                       <Text style={styles.linkText}>Instagram</Text>
-                    </Pressable>
-                  )}
-                  {tiktokUrl && (
-                    <Pressable accessibilityRole="link" accessibilityLabel={`Visit ${creator.username} on TikTok`} onPress={() => openLink(tiktokUrl)} style={[styles.link, { borderColor: accent }]} testID="creator-tiktok-link">
-                      <Feather name="music" size={13} color={accent} />
-                      <Text style={styles.linkText}>TikTok</Text>
                     </Pressable>
                   )}
                 </View>
@@ -706,21 +566,15 @@ export default function CreatorPortfolioView({
                   testID="creator-profile-owner-links"
                 >
                   {website && (
-                    <Pressable accessibilityRole="link" accessibilityLabel="Visit artist website or portfolio" onPress={() => openLink(website)} style={[styles.link, { borderColor: accent }]} testID="creator-website-link">
+                    <Pressable accessibilityRole="link" accessibilityLabel="Visit artist website" onPress={() => openLink(website)} style={styles.link} testID="creator-website-link">
                       <Text style={styles.linkText}>Website</Text>
-                      <Feather name="arrow-up-right" size={13} color={accent} />
+                      <Feather name="arrow-up-right" size={13} color={colors.studioInk} />
                     </Pressable>
                   )}
-                  {instagramUrl && (
-                    <Pressable accessibilityRole="link" accessibilityLabel={`Visit ${creator.username} on Instagram`} onPress={() => openLink(instagramUrl)} style={[styles.link, { borderColor: accent }]} testID="creator-instagram-link">
-                      <Feather name="instagram" size={13} color={accent} />
+                  {isPoncho && (
+                    <Pressable accessibilityRole="link" accessibilityLabel="Visit Poncho on Instagram" onPress={() => openLink('https://www.instagram.com/ponchotheartist/')} style={styles.link} testID="creator-instagram-link">
+                      <Feather name="instagram" size={13} color={colors.studioInk} />
                       <Text style={styles.linkText}>Instagram</Text>
-                    </Pressable>
-                  )}
-                  {tiktokUrl && (
-                    <Pressable accessibilityRole="link" accessibilityLabel={`Visit ${creator.username} on TikTok`} onPress={() => openLink(tiktokUrl)} style={[styles.link, { borderColor: accent }]} testID="creator-tiktok-link">
-                      <Feather name="music" size={13} color={accent} />
-                      <Text style={styles.linkText}>TikTok</Text>
                     </Pressable>
                   )}
                   <Pressable
@@ -833,22 +687,66 @@ export default function CreatorPortfolioView({
               <Text style={styles.emptyTitle}>{isOwner ? 'Your first piece is waiting.' : 'Work is coming soon.'}</Text>
               {isOwner ? <Text style={styles.emptyText}>Share a piece and it will live here.</Text> : null}
             </View>
-          ) : null}
+          ) : (
+            <View style={styles.grid} testID="creator-work-grid">
+              {filteredPosts.map((post, index) => {
+                const mediaUrl = resolveImageUrl(post.imageUrl);
+                const featured = !desktopGrid && index % 3 === 2;
+                const imagePost = !!mediaUrl && post.mediaType !== 'video' && post.mediaType !== 'audio';
+                const mediaStyle = [styles.media, featured && styles.featuredMedia];
+                return (
+                  <View key={post.id} style={[styles.tile, { width: featured ? contentWidth : tileWidth }]} testID={`creator-work-${post.id}`}>
+                    {mediaUrl && post.mediaType === 'audio' ? (
+                      <AudioTrackPlayer uri={mediaUrl} />
+                    ) : mediaUrl && post.mediaType === 'video' ? (
+                      <StudioVideo uri={mediaUrl} active={false} reducedMotion muted={videosMuted} onMutedChange={setVideosMuted} style={mediaStyle} />
+                    ) : mediaUrl ? (
+                      <Pressable accessibilityRole="button" accessibilityLabel={`View artwork: ${post.caption || 'Untitled work'}`} onPress={() => setSelectedPost(post)} testID={`creator-artwork-${post.id}`}>
+                        <StudioImage uri={mediaUrl} style={mediaStyle} />
+                      </Pressable>
+                    ) : (
+                      <View style={[...mediaStyle, { padding: 13, justifyContent: 'center' }]}>
+                        <Text style={styles.caption} numberOfLines={7}>{post.caption || 'A work in progress'}</Text>
+                      </View>
+                    )}
+                    {imagePost ? (
+                      null
+                    ) : (
+                      <>
+                        {post.caption && mediaUrl ? <View style={styles.postCopy}><Text style={styles.caption} numberOfLines={2}>{post.caption}</Text></View> : null}
+                        {post.tags?.length ? <View style={[styles.tags, { paddingHorizontal: 10, paddingBottom: 8 }]}>{post.tags.slice(0, 2).map((tag) => <Text key={tag} style={styles.tag}>#{tag}</Text>)}</View> : null}
+                        <View style={styles.postActions}>
+                          <Text style={styles.date}>{new Date(post.createdAt).toLocaleDateString()}</Text>
+                          {isOwner && currentUserId ? (
+                            <PostOwnerActions
+                              post={post}
+                              currentUserId={currentUserId}
+                              onAssignCategory={onAssignWorkCategory ? () => {
+                                setCategoryAssignmentError(null);
+                                setAssigningPostId(post.id);
+                              } : undefined}
+                            />
+                          ) : null}
+                        </View>
+                      </>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+          )}
           </View>
-        </View>
-        }
-        ItemSeparatorComponent={renderGallerySeparator}
-        ListFooterComponent={inquiryAvailable ? (
-          <View style={[styles.content, { marginTop: 20 }]}>
+
+          {inquiryAvailable && (
             <View style={styles.contact} testID="creator-contact-block">
               <Pressable accessibilityRole="button" onPress={onInquiry} style={styles.contactButton} testID="creator-profile-inquiry-bottom">
                 <Text style={styles.contactButtonText}>{isPoncho ? 'Start a Commission Inquiry' : 'Start an inquiry'}</Text>
                 <Feather name="arrow-up-right" size={17} color={colors.studioInquiryForeground} />
               </Pressable>
             </View>
-          </View>
-        ) : null}
-      />
+          )}
+        </View>
+      </ScrollView>
 
       <Modal visible={selectedPost !== null} animationType="fade" onRequestClose={() => setSelectedPost(null)}>
         <View style={styles.lightbox} accessibilityViewIsModal testID="creator-artwork-preview">

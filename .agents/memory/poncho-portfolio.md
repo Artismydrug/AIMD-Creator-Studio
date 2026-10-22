@@ -44,9 +44,3 @@ Work categories belong to the creator, not a fixed set of disciplines. Creators 
 **Why:** The owner explicitly chose editable categories and work assignment so each member can organize their own practice, rather than inheriting Poncho's tattoo/painting/mural labels.
 
 **How to apply:** Do not show a separate “All work” filter. With no category selected, show the full gallery; tapping a category filters it, and tapping that same category again returns to all work. Keep tag and overflow controls off gallery tiles; put owner edits and category assignment in the artwork options view. Category renames must preserve assignments, and removing a category must never delete artwork or silently recreate a tab from old post tags.
-
-Creators may edit the website/portfolio link, Instagram and TikTok profile links, and a curated accent color for their public Studio, alongside their bio and avatar. These settings belong to each creator and render on that creator's public profile; they must not alter the device-local app appearance or expose private account email.
-
-**Why:** The owner asked for individual social/portfolio links and branding colors to persist with each creator profile and open from the public Studio.
-
-**How to apply:** Save these as profile fields, validate external destinations against web protocols and the selected social platform, and use only the supported accent palette. Keep the in-app inquiry availability and service options in their separate inquiry settings.

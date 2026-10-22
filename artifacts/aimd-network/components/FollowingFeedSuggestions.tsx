@@ -1,6 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Image } from 'expo-image';
+import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
@@ -159,7 +158,7 @@ export default function FollowingFeedSuggestions({ currentUserId }: { currentUse
                     activeOpacity={0.75}
                   >
                     <View style={s.avatar}>
-                      {avatarUrl ? <Image source={{ uri: avatarUrl }} style={s.avatarImage} contentFit="cover" cachePolicy="memory-disk" recyclingKey={avatarUrl} allowDownscaling priority="low" /> : (
+                      {avatarUrl ? <Image source={{ uri: avatarUrl }} style={s.avatarImage} /> : (
                         <Text style={s.initials}>{creator.username.slice(0, 2).toUpperCase()}</Text>
                       )}
                     </View>

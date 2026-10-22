@@ -20,7 +20,6 @@ import { useColors } from '@/hooks/useColors';
 import ChallengeCameraCapture from '@/components/ChallengeCameraCapture';
 import HabitCard, { HABIT_ACTION_HELP } from '@/components/HabitCard';
 import { safeImpact } from '@/lib/haptics';
-import { withLaunchFeature } from '@/components/LaunchFeatureScreen';
 import {
   getGetCurrentChallengeQueryKey,
   getGetDashboardSummaryQueryKey,
@@ -34,7 +33,7 @@ import {
   uploadChallengeProof,
 } from '@/lib/challengeProof';
 
-function ChallengesScreen({ embedded = false }: { embedded?: boolean }) {
+export default function ChallengesScreen({ embedded = false }: { embedded?: boolean }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -295,5 +294,3 @@ function ChallengesScreen({ embedded = false }: { embedded?: boolean }) {
     </View>
   );
 }
-
-export default withLaunchFeature('challenges', ChallengesScreen);
