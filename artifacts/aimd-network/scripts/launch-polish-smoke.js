@@ -254,3 +254,14 @@ test('authentication entry screens follow the app theme instead of a fixed dark 
   }
   assert.match(source('../app/(auth)/_layout.tsx'), /backgroundColor: colors\.background/);
 });
+
+test('feed replaces the ink-black post stage with a light Sticker Jam media frame', () => {
+  const feed = source('../app/feed.tsx');
+  const posts = source('../components/PostCard.tsx');
+  assert.match(feed, /scope === 'community' && \{\s*backgroundColor: colors\.background\s*\}/);
+  assert.match(posts, /immersiveCard:\s*\{[\s\S]*?borderColor: colors\.studioInk/);
+  assert.match(posts, /immersiveCard:\s*\{[\s\S]*?borderTopColor: colors\.studioOrange/);
+  assert.match(posts, /mediaSurface:\s*\{[\s\S]*?backgroundColor: colors\.mediaPaper/);
+  assert.doesNotMatch(posts, /immersiveCard:\s*\{[\s\S]*?backgroundColor: colors\.ink/);
+  assert.doesNotMatch(posts, /mediaSurface:\s*\{[\s\S]*?backgroundColor: colors\.ink/);
+});

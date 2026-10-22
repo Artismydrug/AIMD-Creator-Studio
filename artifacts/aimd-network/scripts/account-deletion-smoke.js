@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const profilePath = path.resolve(__dirname, '..', 'app', 'profile.tsx');
+const editorPath = path.resolve(__dirname, '..', 'app', 'edit-profile.tsx');
 
 function assertIncludes(source, value, description) {
   if (!source.includes(value)) {
@@ -9,8 +10,12 @@ function assertIncludes(source, value, description) {
   }
 }
 
-function assertAccountDeletionSmokeContract() {
-  const source = fs.readFileSync(profilePath, 'utf8');
+function assertAccountDeletionSmokeContract({
+  profile = fs.readFileSync(profilePath, 'utf8'),
+  editor: source = fs.readFileSync(editorPath, 'utf8'),
+} = {}) {
+  assertIncludes(profile, "onEdit={() => router.push('/edit-profile')}", 'Your Studio link to Edit Profile');
+  assertIncludes(source, 'testID="profile-basics-editor"', 'Edit Profile screen');
 
   assertIncludes(source, 'useDeleteCurrentUser', 'generated deletion mutation');
   assertIncludes(source, 'testID="delete-account"', 'visible delete action');

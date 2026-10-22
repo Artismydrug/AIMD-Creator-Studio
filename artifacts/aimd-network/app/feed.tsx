@@ -815,7 +815,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
   );
 
   return (
-    <View style={[s.container, scope === 'community' && { backgroundColor: colors.ink }]}>
+    <View style={[s.container, scope === 'community' && { backgroundColor: colors.background }]}>
       {scope !== 'community' && <><View style={s.header}>
          {!embedded && (
            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Back to community"

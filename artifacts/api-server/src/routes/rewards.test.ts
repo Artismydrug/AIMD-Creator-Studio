@@ -53,7 +53,7 @@ describe("lifetime points and independent member drops", () => {
     expect(query).not.toHaveBeenCalled();
   });
 
-  it("shows account-only monthly requests and refreshes mobile points after earning", () => {
+  it("shows account-only monthly requests without checkout", () => {
     const card = readFileSync(new URL("../../../aimd-network/components/MonthlyMemberDrops.tsx", import.meta.url), "utf8");
     const home = readFileSync(new URL("../../../aimd-network/app/(tabs)/index.tsx", import.meta.url), "utf8");
     const web = readFileSync(new URL("../../../aimd-academy/src/pages/StudioLog.tsx", import.meta.url), "utf8");
@@ -68,7 +68,8 @@ describe("lifetime points and independent member drops", () => {
     expect(card).toContain("setConfirmation(null)");
     expect(card).not.toContain("checkout");
     expect(home).toContain("<MonthlyMemberDrops compact");
-    expect(home.match(/invalidateQueries\(\{ queryKey: getGetRewardsQueryKey/g)?.length).toBeGreaterThanOrEqual(4);
+    // Actual earning callbacks and pull-to-refresh are exercised by
+    // native-dashboard-data-smoke; counting source occurrences missed which action refreshed.
     expect(web).toContain("<MonthlyMemberDrops");
     expect(web).not.toContain("Rewards are claimed in person");
   });

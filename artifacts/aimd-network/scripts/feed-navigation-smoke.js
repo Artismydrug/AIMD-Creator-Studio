@@ -179,11 +179,13 @@ test('Your Studio work composer returns to Studio and keeps its category', () =>
   const feed = readFileSync(resolve(__dirname, '../app/feed.tsx'), 'utf8');
   assert.match(profile, /returnTo:\s*'profile'/);
   assert.match(profile, /pathname: '\/feed'/);
-  assert.match(profile, /category && category !== 'all' \? \{ category \} : \{\}/);
-  assert.match(profile, /onAddWork=\{\(category\) => router\.push/);
+  assert.match(profile, /onAddWork=\{\(categoryId, legacyCategoryName\) => router\.push/);
+  assert.match(profile, /categoryId !== null \? \{ categoryId: String\(categoryId\) \} : \{\}/);
+  assert.match(profile, /legacyCategoryName \? \{ categoryName: legacyCategoryName \} : \{\}/);
   assert.match(feed, /returnTo\?: string/);
   assert.match(feed, /if \(isStudioComposer\) router\.replace\('\/profile'\)/);
-  assert.match(feed, /setTags\(categoryTag/);
+  assert.match(feed, /setTags\(categoryName \?\?/);
+  assert.match(feed, /isStudioComposer && portfolioCategoryId !== null \? \{ portfolioCategoryId \} : \{\}/);
 });
 
 test('Feed title and icon stay below the web status area and align to the app header inset', () => {

@@ -18,6 +18,7 @@ function render(responses = {}, overrides = {}) {
   const captures = [];
   const routes = [];
   const mutations = {};
+  const invalidations = [];
   let profileRefreshes = 0;
   const React = {
     useMemo: callback => callback(), useCallback: callback => callback,
@@ -59,7 +60,7 @@ function render(responses = {}, overrides = {}) {
         KeyboardAvoidingView: 'KeyboardAvoidingView', Image: 'Image', TextInput: 'TextInput',
         StyleSheet: { create: value => value }, Platform: { OS: 'ios' },
         useWindowDimensions: () => ({ width: 390, height: 844 }),
-        Animated: { Value: class { interpolate() { return 0; } } }, Easing: {},
+        Animated: { Value: class { interpolate() { return 0; } stopAnimation() {} } }, Easing: {},
         Alert: { alert: () => {} }, Linking: {}, AccessibilityInfo: {},
       };
       if (name === '@/hooks/useColors') return { useColors: () => ({ radius: 12 }) };
@@ -68,7 +69,9 @@ function render(responses = {}, overrides = {}) {
       if (name === 'expo-haptics') return { notificationAsync: async () => {}, NotificationFeedbackType: { Success: 'success' } };
       if (name === 'expo-image-picker') return {};
       if (name === 'expo-router') return { useRouter: () => ({ push: route => routes.push(route) }) };
-      if (name === '@tanstack/react-query') return { useQueryClient: () => ({ invalidateQueries: async () => {} }) };
+      if (name === '@tanstack/react-query') return {
+        useQueryClient: () => ({ invalidateQueries: async ({ queryKey }) => { invalidations.push(queryKey); } }),
+      };
       if (name === '@workspace/api-client-react') return api;
       if (name === '@/lib/telemetry') return { trackEvent: (...args) => captures.push(args) };
       if (name === '@/lib/challengeProof') return {};
@@ -78,7 +81,7 @@ function render(responses = {}, overrides = {}) {
   };
   vm.runInNewContext(compiled, sandbox);
   const tree = sandbox.exports.default();
-  return { tree, requests, captures, routes, mutations, profileRefreshes: () => profileRefreshes };
+  return { tree, requests, captures, routes, mutations, invalidations, profileRefreshes: () => profileRefreshes };
 }
 function find(node, testID) {
   if (!node || typeof node !== 'object') return null;
@@ -88,6 +91,40 @@ function find(node, testID) {
   }
   return node.props?.testID === testID ? node : find(node.props?.children, testID);
 }
+function findType(node, type) {
+  if (!node || typeof node !== 'object') return null;
+  if (Array.isArray(node)) {
+    for (const child of node) { const found = findType(child, type); if (found) return found; }
+    return null;
+  }
+  return node.type === type ? node
+    : findType(node.props?.refreshControl, type) || findType(node.props?.children, type);
+}
+
+test('check-in and daily-spin success each refresh points; failures do not', () => {
+  for (const [hook, result] of [
+    ['useCheckInProgress', { checkedInToday: true }],
+    ['useSpinDailyReward', { alreadySpun: false, pointsAwarded: 10 }],
+  ]) {
+    const h = render();
+    assert.equal(typeof h.mutations[hook]?.onSuccess, 'function', `${hook} must register success`);
+    h.mutations[hook].onSuccess(result);
+    assert.equal(h.invalidations.filter(key => key[0] === 'getGetRewardsQueryKey').length, 1, hook);
+    h.invalidations.length = 0;
+    h.mutations[hook].onError(new Error('offline'));
+    assert.equal(h.invalidations.length, 0, `${hook} failure must not refresh as though points were earned`);
+  }
+});
+
+test('Dashboard pull-to-refresh invalidates points and habit history', async () => {
+  const h = render();
+  const refreshControl = findType(h.tree, 'RefreshControl');
+  assert.ok(refreshControl, 'Dashboard exposes pull-to-refresh');
+  await refreshControl.props.onRefresh();
+  for (const name of ['getGetRewardsQueryKey', 'getListHabitsQueryKey', 'getListHabitLogsQueryKey']) {
+    assert.equal(h.invalidations.filter(key => key[0] === name).length, 1, name);
+  }
+});
 const challenge = { challenge: { theme: 'Practice', deadline: '2026-11-13', status: 'upcoming' } };
 test('Dashboard survives all hook initialization orders, including missing username', () => {
   for (const progress of [undefined, null, {}, { recentBadges: null }, { recentBadges: [] }]) {

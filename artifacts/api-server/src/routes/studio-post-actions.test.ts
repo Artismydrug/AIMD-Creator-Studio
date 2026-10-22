@@ -129,5 +129,7 @@ it("keeps owner controls in feed and profile, with explicit cancellation that ne
   expect(cards.match(/<PostOwnerActions/g)).toHaveLength(2);
   expect(profile).toContain("<CreatorPortfolioView");
   expect(ownStudio).toContain("<CreatorPortfolioView");
-  expect(portfolio).toContain("<PostOwnerActions post={post} currentUserId={currentUserId}");
+  // Gallery tiles no longer carry owner buttons; opening a work reveals them.
+  expect(portfolio).toContain("selectedPost && isOwner && currentUserId");
+  expect(portfolio).toMatch(/<PostOwnerActions\s+post=\{selectedPost\}\s+currentUserId=\{currentUserId\}/);
 });

@@ -55,9 +55,12 @@ test('inquiry settings are editable and creator cards link to the member portfol
   assert.match(editor, /testID="profile-basics-editor"/);
   assert.match(editor, /testID="delete-account"/);
   assert.match(studio, /inquiryAvailable/);
-  assert.match(studio, /value: 'tattoo'/);
-  assert.match(studio, /value: 'painting'/);
-  assert.match(studio, /value: 'murals'/);
+  // Categories are member-owned records, not a hard-coded list of art media.
+  // Add/rename/remove, assignment and toggle behavior execute in studio-profile-layout-smoke.
+  assert.match(studio, /workCategories\.map/);
+  assert.match(studio, /post\.portfolioCategoryId === activeCategory\.id/);
+  assert.match(ownerStudio, /useUpdatePortfolioCategories/);
+  assert.match(ownerStudio, /useUpdateStudioPostCategory/);
   assert.match(studio, /testID="creator-work-tabs"/);
   assert.match(studio, /accessibilityRole="tab"/);
   assert.match(studio, /testID="creator-profile-inquiry-bottom"/);
