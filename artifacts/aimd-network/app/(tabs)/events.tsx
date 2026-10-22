@@ -307,38 +307,9 @@ export default function EventsScreen({ embedded = false }: { embedded?: boolean 
       justifyContent: 'space-between',
       gap: 12,
     },
-    headerHeading: {
+    headerTitle: {
       flex: 1,
       minWidth: 0,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-    },
-    titleMark: {
-      width: 38,
-      height: 38,
-      borderWidth: 1.5,
-      borderColor: colors.studioInk,
-      borderRadius: 13,
-      backgroundColor: colors.studioOrange,
-      alignItems: 'center',
-      justifyContent: 'center',
-      transform: [{ rotate: '-5deg' }],
-      shadowColor: colors.studioShadow,
-      shadowOffset: { width: 2, height: 2 },
-      shadowOpacity: 1,
-      shadowRadius: 0,
-      elevation: 2,
-    },
-    titleCopy: { flex: 1, minWidth: 0, gap: 1 },
-    headerEyebrow: {
-      flexShrink: 1,
-      fontFamily: 'DMSans_700Bold',
-      fontSize: 9,
-      color: colors.studioOrangeText,
-      letterSpacing: 1.3,
-    },
-    headerTitle: {
       fontFamily: 'DMSans_700Bold',
       fontSize: 24,
       lineHeight: 29,
@@ -432,13 +403,7 @@ export default function EventsScreen({ embedded = false }: { embedded?: boolean 
   return (
     <View style={s.container}>
       <View style={s.header}>
-        <View style={s.headerHeading}>
-          <View style={s.titleMark}><Feather name="calendar" size={18} color={colors.studioInk} /></View>
-          <View style={s.titleCopy}>
-            <Text style={s.headerEyebrow}>MAKE · SHARE · CONNECT</Text>
-            <Text style={s.headerTitle}>Events</Text>
-          </View>
-        </View>
+        <Text style={s.headerTitle}>Events</Text>
         <TouchableOpacity
           style={s.scanBtn}
           accessibilityRole="button"
