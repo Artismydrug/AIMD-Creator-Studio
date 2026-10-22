@@ -18,6 +18,11 @@ function assertAuthHandoffSmokeContract() {
   assertIncludes(source, 'queryClient.clear()', 'stale query cleanup');
   assertIncludes(source, 'testID="session-preparation-screen"', 'visible preparation screen');
   assertIncludes(source, 'testID="session-preparation-retry"', 'visible retry action');
+  assertIncludes(source, 'testID="session-preparation-reset"', 'user-initiated stale session reset');
+  assertIncludes(source, 'await signOut()', 'Clerk-managed secure session cleanup');
+  assertIncludes(source, 'setAuthTokenGetter(null)', 'authenticated API token getter cleanup');
+  assertIncludes(source, 'queryClient.clear()', 'authenticated query cache cleanup');
+  assertIncludes(source, 'setResetError(', 'visible recovery failure state');
   assertIncludes(source, 'TOKEN_ATTEMPTS', 'bounded token retry behavior');
   assertIncludes(source, 'TOKEN_TIMEOUT_MS', 'per-attempt token timeout');
   assertIncludes(source, 'TOKEN_BOOTSTRAP_LEASE_MS', 'prepared-token bootstrap lease');

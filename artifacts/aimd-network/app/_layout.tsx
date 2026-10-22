@@ -121,18 +121,29 @@ async function verifyAuthenticatedApiSession(token: string): Promise<boolean> {
 function SessionPreparationScreen({
   error,
   onRetry,
+  onResetSession,
+  resettingSession = false,
+  resetError,
 }: {
   error: string | null;
   onRetry: () => void;
+  onResetSession?: () => void;
+  resettingSession?: boolean;
+  resetError?: string | null;
 }) {
   return (
     <View style={sessionStyles.container} testID="session-preparation-screen">
       {error ? (
         <>
-          <Text style={sessionStyles.title}>Couldn’t finish signing you in</Text>
+          <Text style={sessionStyles.title}>Your saved sign-in needs a refresh</Text>
           <Text style={sessionStyles.body}>
-            Your account is safe. Check your connection and try loading Creator Studio again.
+            We couldn’t verify this session with Creator Studio. Try again, or reset it and sign in again.
           </Text>
+          {!!resetError && (
+            <Text style={sessionStyles.resetError} accessibilityRole="alert">
+              {resetError}
+            </Text>
+          )}
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Retry opening Creator Studio"
@@ -145,6 +156,23 @@ function SessionPreparationScreen({
           >
             <Text style={sessionStyles.retryText}>Try Again</Text>
           </Pressable>
+          {onResetSession && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Clear the saved sign-in and return to sign in"
+              disabled={resettingSession}
+              onPress={() => void onResetSession()}
+              style={({ pressed }) => [
+                sessionStyles.resetButton,
+                pressed && !resettingSession && sessionStyles.retryButtonPressed,
+              ]}
+              testID="session-preparation-reset"
+            >
+              {resettingSession
+                ? <ActivityIndicator color={palette.light.foreground} />
+                : <Text style={sessionStyles.resetText}>Reset saved sign-in</Text>}
+            </Pressable>
+          )}
         </>
       ) : (
         <>
@@ -197,6 +225,26 @@ const sessionStyles = StyleSheet.create({
     fontFamily: 'DMSans_700Bold',
     fontSize: 15,
   },
+  resetButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
+  resetText: {
+    color: palette.light.foreground,
+    fontFamily: 'DMSans_600SemiBold',
+    fontSize: 14,
+    textDecorationLine: 'underline',
+  },
+  resetError: {
+    color: palette.light.destructive,
+    fontFamily: 'DMSans_500Medium',
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
+  },
 });
 
 function ClerkStartupScreen() {
@@ -221,7 +269,7 @@ function ClerkStartupScreen() {
 }
 
 function AuthSessionBridge({ children }: { children: ReactNode }) {
-  const { getToken, isLoaded, userId } = useAuth();
+  const { getToken, isLoaded, signOut, userId } = useAuth();
   const getTokenRef = useRef(getToken);
   const previousUserId = useRef<string | null | undefined>(undefined);
   const preparedToken = useRef<{
@@ -231,12 +279,40 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
   } | null>(null);
   const [readyUserId, setReadyUserId] = useState<string | null>(null);
   const [preparationError, setPreparationError] = useState<string | null>(null);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resettingSession, setResettingSession] = useState(false);
   const [retryNonce, setRetryNonce] = useState(0);
 
   // Clerk may return a new getToken function identity while auth state settles.
   // Keep the shared API client's getter installed across those renders so the
   // first protected queries cannot slip through without an Authorization header.
   getTokenRef.current = getToken;
+
+  async function resetStaleSession() {
+    if (resettingSession) return;
+    setResettingSession(true);
+    setResetError(null);
+    preparedToken.current = null;
+    setAuthTokenGetter(null);
+    queryClient.clear();
+
+    try {
+      // Clerk's signOut clears its own secure token-cache entry. Keep this
+      // explicit recovery action user-initiated; do not discard valid sessions
+      // automatically when a temporary API/network check fails.
+      await signOut();
+      setReadyUserId(null);
+      setPreparationError(null);
+    } catch (error) {
+      console.warn(
+        'Could not reset the saved Clerk session',
+        error instanceof Error ? error.name : 'Unknown error',
+      );
+      setResetError('Could not reset the saved sign-in. Check your connection and try again.');
+    } finally {
+      setResettingSession(false);
+    }
+  }
 
   useEffect(() => {
     if (!isLoaded || !userId) {
@@ -306,6 +382,7 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
       preparedToken.current = null;
       setReadyUserId(null);
       setPreparationError(null);
+      setResetError(null);
       return;
     }
 
@@ -360,6 +437,9 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
       <SessionPreparationScreen
         error={preparationError}
         onRetry={() => setRetryNonce((value) => value + 1)}
+        onResetSession={resetStaleSession}
+        resettingSession={resettingSession}
+        resetError={resetError}
       />
     );
   }

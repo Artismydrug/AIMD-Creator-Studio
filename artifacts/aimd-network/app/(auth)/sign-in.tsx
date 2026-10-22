@@ -144,8 +144,11 @@ export default function SignInScreen() {
         setOauthError(`${providerName} sign-in did not finish. Please try again.`);
       }
     } catch (err) {
-      console.error('OAuth error:', JSON.stringify(err, null, 2));
-      setOauthError(`${providerName} sign-in is temporarily unavailable. Please try again.`);
+      console.warn(
+        `${providerName} OAuth flow did not complete`,
+        err instanceof Error ? err.name : 'Unknown error',
+      );
+      setOauthError(`${providerName} sign-in didn’t finish. Try again or use email and password.`);
     } finally {
       setOauthLoading(null);
     }
