@@ -262,7 +262,7 @@ export default function StickerJamPracticeCard({
       <View style={styles.intro}>
         <View style={styles.eyebrowRow}>
           <View style={styles.eyebrowDot} />
-          <Text style={styles.eyebrow}>TODAY’S PRACTICE · CREATOR ARCADE</Text>
+          <Text style={styles.eyebrow}>TODAY’S PRACTICE</Text>
         </View>
         <View style={styles.headlineRow}>
           <Text style={styles.headline}>Make a little{'\n'}noise.</Text>

@@ -49,7 +49,8 @@ test('Dashboard leads with the Sticker Jam sketch entry and keeps a 60-second Fl
   const studioIndex = dashboard.indexOf('<StickerJamPracticeCard');
   assert.ok(studioIndex >= 0 && habitsIndex > studioIndex);
   assert.match(dashboard, /router\.push\('\/mini-habit-studio'\)/);
-  assert.match(card, /CREATOR ARCADE/);
+  assert.match(card, /TODAY’S PRACTICE/);
+  assert.doesNotMatch(card, /CREATOR ARCADE/);
   assert.match(card, /Start a sketch/);
   assert.match(route, />Creator Arcade</);
   assert.match(route, /const GAME_SECONDS = 60/);
