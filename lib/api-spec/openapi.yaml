@@ -418,6 +418,37 @@ paths:
         "204":
           description: Deleted
 
+  /studio-posts/{id}/category:
+    patch:
+      operationId: updateStudioPostCategory
+      tags: [studio-posts]
+      summary: Assign an owned studio post to a portfolio category
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStudioPostCategoryInput"
+      responses:
+        "200":
+          description: Updated studio post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudioPost"
+        "400":
+          description: Invalid category
+        "401":
+          description: Authentication required
+        "404":
+          description: Post not found or not owned by the caller
+
   /studio-posts/{id}/like:
     post:
       operationId: likeStudioPost
@@ -1298,6 +1329,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/User"
 
+  /users/me/portfolio-categories:
+    put:
+      operationId: updatePortfolioCategories
+      tags: [users]
+      summary: Add, rename, reorder, or remove the current user's portfolio categories
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortfolioCategoriesInput"
+      responses:
+        "200":
+          description: Saved portfolio categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PortfolioCategory"
+        "400":
+          description: Invalid or duplicate category
+        "401":
+          description: Authentication required
+
   /rewards:
     get:
       operationId: getRewards
@@ -1741,6 +1797,29 @@ paths:
                 $ref: "#/components/schemas/NotificationsResponse"
         "401":
           description: Authentication required
+
+  /studio-inquiries/{bookingId}:
+    get:
+      operationId: getStudioInquiry
+      tags: [tattoo-bookings]
+      summary: Get a creator's private commission inquiry
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Inquiry details for its assigned creator
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudioInquiry"
+        "401":
+          description: Authentication required
+        "404":
+          description: Inquiry not found
   /notifications/{id}/read:
     patch:
       operationId: markNotificationRead
@@ -2807,6 +2886,53 @@ components:
         portfolioUrl:
           type: ["string", "null"]
 
+    PortfolioCategory:
+      type: object
+      required: [id, name, position]
+      properties:
+        id:
+          type: ["integer", "null"]
+        name:
+          type: string
+        position:
+          type: integer
+
+    PortfolioCategoryInput:
+      type: object
+      required: [name]
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        legacyName:
+          type: string
+          maxLength: 32
+        name:
+          type: string
+          minLength: 1
+          maxLength: 32
+
+    PortfolioCategoriesInput:
+      type: object
+      required: [categories]
+      additionalProperties: false
+      properties:
+        categories:
+          type: array
+          maxItems: 12
+          items:
+            $ref: "#/components/schemas/PortfolioCategoryInput"
+
+    UpdateStudioPostCategoryInput:
+      type: object
+      required: [portfolioCategoryId]
+      additionalProperties: false
+      properties:
+        portfolioCategoryId:
+          type: ["integer", "null"]
+          minimum: 1
+
     # ── Dashboard ─────────────────────────────────────────────────────────
     DashboardSummary:
       type: object
@@ -2977,7 +3103,7 @@ components:
     # ── Studio Posts ──────────────────────────────────────────────────────
     StudioPost:
       type: object
-      required: [id, userId, mediaType, caption, likes, createdAt, followerCount, followingCount, followedByMe]
+      required: [id, userId, mediaType, caption, likes, createdAt, followerCount, followingCount, followedByMe, portfolioCategoryId]
       properties:
         id:
           type: integer
@@ -3006,6 +3132,8 @@ components:
           type: array
           items:
             type: string
+        portfolioCategoryId:
+          type: ["integer", "null"]
         likes:
           type: integer
           deprecated: true
@@ -3042,6 +3170,8 @@ components:
           type: array
           items:
             type: string
+        portfolioCategoryId:
+          type: ["integer", "null"]
 
     UpdateStudioPostInput:
       type: object
@@ -3841,7 +3971,7 @@ components:
       type: object
       required:
         [id, username, tier, bookingOpen, postCount, badgesEarned, currentStreak,
-         workshopsEnrolled, followerCount, followingCount, followedByMe, blockedByMe, recentBadges]
+         workshopsEnrolled, followerCount, followingCount, followedByMe, blockedByMe, recentBadges, portfolioCategories]
       properties:
         id:
           type: integer
@@ -3865,6 +3995,10 @@ components:
           type: boolean
         portfolioUrl:
           type: ["string", "null"]
+        portfolioCategories:
+          type: array
+          items:
+            $ref: "#/components/schemas/PortfolioCategory"
         postCount:
           type: integer
         badgesEarned:
@@ -4154,13 +4288,13 @@ components:
 
     Notification:
       type: object
-      required: [id, type, actor, conversationId, postId, conversationDestination, postDestination, createdAt, readAt]
+      required: [id, type, actor, conversationId, postId, conversationDestination, postDestination, commissionInquirySummary, commissionInquiryDestination, createdAt, readAt]
       properties:
         id:
           type: integer
         type:
           type: string
-          enum: [direct_message, follow, like, critique]
+          enum: [direct_message, follow, like, critique, commission_inquiry]
         actor:
           anyOf:
             - $ref: "#/components/schemas/NotificationActor"
@@ -4176,6 +4310,14 @@ components:
         postDestination:
           anyOf:
             - $ref: "#/components/schemas/PostDestination"
+            - type: "null"
+        commissionInquirySummary:
+          anyOf:
+            - $ref: "#/components/schemas/CommissionInquiryNotificationSummary"
+            - type: "null"
+        commissionInquiryDestination:
+          anyOf:
+            - $ref: "#/components/schemas/CommissionInquiryDestination"
             - type: "null"
         createdAt:
           type: string
@@ -4193,6 +4335,21 @@ components:
           items:
             $ref: "#/components/schemas/Notification"
         unreadCount:
+          type: integer
+    CommissionInquiryNotificationSummary:
+      type: object
+      required: [clientName, requestType]
+      properties:
+        clientName:
+          type: string
+        requestType:
+          type: string
+          enum: [tattoo, painting, other]
+    CommissionInquiryDestination:
+      type: object
+      required: [bookingId]
+      properties:
+        bookingId:
           type: integer
     NotificationPreferences:
       type: object
@@ -4317,6 +4474,10 @@ components:
         preferredArtist:
           type: string
           enum: ["No preference", "Poncho The Artist", "Edwin", "Ash"]
+        creatorUserId:
+          type: integer
+          minimum: 1
+          description: Optional creator owner for in-app studio inquiry routing.
         website:
           type: string
           maxLength: 200
@@ -4429,6 +4590,39 @@ components:
           format: date-time
         updatedAt:
           type: string
+          format: date-time
+
+    StudioInquiry:
+      type: object
+      required: [id, requestType, name, email, phone, idea, placement, estimatedSize, preferredArtist, status, references, submittedAt]
+      properties:
+        id:
+          type: integer
+        requestType:
+          type: string
+          enum: ["tattoo", "painting", "other"]
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: ["string", "null"]
+        idea:
+          type: string
+        placement:
+          type: string
+        estimatedSize:
+          type: string
+        preferredArtist:
+          type: string
+        status:
+          $ref: "#/components/schemas/TattooBookingStatus"
+        references:
+          type: array
+          items:
+            $ref: "#/components/schemas/TattooBookingReference"
+        submittedAt:
+          type: ["string", "null"]
           format: date-time
 
     TattooBookingUpdate:

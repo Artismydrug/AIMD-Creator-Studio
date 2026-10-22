@@ -15,10 +15,13 @@ import {
   db,
   tattooBookingReferencesTable,
   tattooBookingsTable,
+  usersTable,
 } from "@workspace/db";
 import {
   CreateTattooBookingDraftBody,
   CreateTattooBookingDraftResponse,
+  GetStudioInquiryParams,
+  GetStudioInquiryResponse,
   ListAdminTattooBookingsResponse,
   SubmitTattooBookingBody,
   SubmitTattooBookingParams,
@@ -231,6 +234,17 @@ router.post("/tattoo-bookings", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Unable to accept this booking request" });
     return;
   }
+  if (parsed.data.creatorUserId) {
+    const [creator] = await db
+      .select({ bookingOpen: usersTable.bookingOpen })
+      .from(usersTable)
+      .where(eq(usersTable.id, parsed.data.creatorUserId))
+      .limit(1);
+    if (!creator?.bookingOpen) {
+      res.status(404).json({ error: "This creator is not accepting in-app inquiries." });
+      return;
+    }
+  }
 
   const fingerprint = requestFingerprint(req);
   const [recent] = await db
@@ -257,6 +271,7 @@ router.post("/tattoo-bookings", async (req, res): Promise<void> => {
   const [booking] = await db
     .insert(tattooBookingsTable)
     .values({
+      creatorUserId: parsed.data.creatorUserId ?? null,
       requestType: parsed.data.requestType,
       name: parsed.data.name.trim(),
       email: parsed.data.email.trim().toLowerCase(),
@@ -384,20 +399,54 @@ router.post(
       return;
     }
 
-    const [submitted] = await db
-      .update(tattooBookingsTable)
-      .set({
-        status: "new",
-        submittedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(tattooBookingsTable.id, booking.id),
-          eq(tattooBookingsTable.status, "draft"),
-        ),
-      )
-      .returning();
+    const submittedAt = new Date();
+    const submission = await db.transaction(async (tx) => {
+      const [submitted] = await tx
+        .update(tattooBookingsTable)
+        .set({
+          status: "new",
+          submittedAt,
+          updatedAt: submittedAt,
+        })
+        .where(
+          and(
+            eq(tattooBookingsTable.id, booking.id),
+            eq(tattooBookingsTable.status, "draft"),
+          ),
+        )
+        .returning();
+      if (!submitted) {
+        const [current] = await tx
+          .select()
+          .from(tattooBookingsTable)
+          .where(eq(tattooBookingsTable.id, booking.id))
+          .limit(1);
+        return { booking: current, firstSubmission: false };
+      }
+      if (booking.creatorUserId) {
+        await tx.execute(sql`
+          INSERT INTO notifications (recipient_user_id, type, booking_id)
+          VALUES (${booking.creatorUserId}, 'commission_inquiry', ${booking.id})
+          ON CONFLICT (booking_id) DO NOTHING
+        `);
+      }
+      return { booking: submitted, firstSubmission: true };
+    });
+    if (!submission.booking) {
+      res.status(404).json({ error: "Booking draft not found" });
+      return;
+    }
+    if (!submission.firstSubmission) {
+      res.json(
+        SubmitTattooBookingResponse.parse({
+          id: submission.booking.id,
+          status: submission.booking.status,
+          notificationStatus: submission.booking.notificationStatus,
+        }),
+      );
+      return;
+    }
+    const submitted = submission.booking;
 
     let notificationStatus: "sent" | "failed" = "sent";
     try {
@@ -446,6 +495,44 @@ router.post(
         notificationStatus,
       }),
     );
+  },
+);
+
+router.get(
+  "/studio-inquiries/:bookingId",
+  async (req, res): Promise<void> => {
+    if (!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+    const params = GetStudioInquiryParams.safeParse(req.params);
+    if (!params.success) { res.status(400).json({ error: "Invalid inquiry ID" }); return; }
+    const booking = await findBookingWithReferences(params.data.bookingId);
+    if (
+      !booking ||
+      booking.creatorUserId !== req.dbUser.id ||
+      booking.status === "draft"
+    ) {
+      res.status(404).json({ error: "Inquiry not found" });
+      return;
+    }
+    res.json(GetStudioInquiryResponse.parse({
+      id: booking.id,
+      requestType: booking.requestType,
+      name: booking.name,
+      email: booking.email,
+      phone: booking.phone,
+      idea: booking.idea,
+      placement: booking.placement,
+      estimatedSize: booking.estimatedSize,
+      preferredArtist: booking.preferredArtist,
+      status: booking.status,
+      references: booking.references.map((reference) => ({
+        id: reference.id,
+        url: `/api/storage${reference.objectPath}`,
+        originalName: reference.originalName,
+        contentType: reference.contentType,
+        sizeBytes: reference.sizeBytes,
+      })),
+      submittedAt: booking.submittedAt,
+    }));
   },
 );
 

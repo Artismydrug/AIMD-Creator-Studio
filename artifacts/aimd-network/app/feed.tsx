@@ -69,13 +69,18 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { getToken } = useAuth();
-  const { compose, returnTo, category } = useLocalSearchParams<{
+  const { compose, returnTo, category, categoryId: rawCategoryId, categoryName: rawCategoryName } = useLocalSearchParams<{
     compose?: string;
     returnTo?: string;
     category?: string;
+    categoryId?: string | string[];
+    categoryName?: string | string[];
   }>();
   const isStudioComposer = !embedded && returnTo === 'profile';
   const categoryTag = typeof category === 'string' ? category : category?.[0];
+  const categoryName = typeof rawCategoryName === 'string' ? rawCategoryName : rawCategoryName?.[0];
+  const categoryIdValue = typeof rawCategoryId === 'string' ? rawCategoryId : rawCategoryId?.[0];
+  const portfolioCategoryId = categoryIdValue && /^\d+$/.test(categoryIdValue) ? Number(categoryIdValue) : null;
   const queryClient = useQueryClient();
   const feedRef = useRef<FlatList<StudioPost>>(null);
   const [composing, setComposing] = useState(false);
@@ -131,10 +136,10 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
       setScope('community');
       setComposing(true);
       if (isStudioComposer) {
-        setTags(categoryTag && ['tattoo', 'painting', 'murals'].includes(categoryTag) ? categoryTag : '');
+        setTags(categoryName ?? (categoryTag && ['tattoo', 'painting', 'murals'].includes(categoryTag) ? categoryTag : ''));
       }
     }
-  }, [compose, embedded, isStudioComposer, categoryTag]);
+  }, [compose, embedded, isStudioComposer, categoryTag, categoryName]);
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -443,6 +448,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
             data: {
               caption: caption.trim(),
               tags: tagList,
+              ...(isStudioComposer && portfolioCategoryId !== null ? { portfolioCategoryId } : {}),
               ...(selectedMedia ? { imageUrl, mediaType: selectedMedia.mediaType } : {}),
             },
           });

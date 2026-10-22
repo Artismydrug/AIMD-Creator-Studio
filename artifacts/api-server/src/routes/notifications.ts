@@ -25,9 +25,20 @@ router.get("/notifications", async (req, res): Promise<void> => {
            CASE WHEN n.post_id IS NULL THEN NULL ELSE json_build_object(
              'postId', n.post_id
            ) END AS "postDestination",
+            CASE WHEN inquiry.id IS NULL THEN NULL ELSE json_build_object(
+              'clientName', inquiry.name,
+              'requestType', inquiry.request_type
+            ) END AS "commissionInquirySummary",
+            CASE WHEN inquiry.id IS NULL THEN NULL ELSE json_build_object(
+              'bookingId', inquiry.id
+            ) END AS "commissionInquiryDestination",
            COUNT(*) FILTER (WHERE n.read_at IS NULL) OVER ()::int AS "unreadCount"
     FROM notifications n
     LEFT JOIN users actor ON actor.id = n.actor_user_id
+    LEFT JOIN tattoo_bookings inquiry
+      ON inquiry.id = n.booking_id
+     AND inquiry.creator_user_id = n.recipient_user_id
+     AND inquiry.status <> 'draft'
     WHERE n.recipient_user_id = ${userId}
       AND n.type NOT IN ('like', 'critique')
     ORDER BY n.created_at DESC
@@ -61,8 +72,19 @@ router.patch("/notifications/:id/read", async (req, res): Promise<void> => {
       CASE WHEN n.post_id IS NULL THEN NULL ELSE json_build_object(
         'postId', n.post_id
       ) END AS "postDestination"
+      , CASE WHEN inquiry.id IS NULL THEN NULL ELSE json_build_object(
+        'clientName', inquiry.name,
+        'requestType', inquiry.request_type
+      ) END AS "commissionInquirySummary"
+      , CASE WHEN inquiry.id IS NULL THEN NULL ELSE json_build_object(
+        'bookingId', inquiry.id
+      ) END AS "commissionInquiryDestination"
     FROM updated n
     LEFT JOIN users actor ON actor.id = n.actor_user_id
+    LEFT JOIN tattoo_bookings inquiry
+      ON inquiry.id = n.booking_id
+     AND inquiry.creator_user_id = n.recipient_user_id
+     AND inquiry.status <> 'draft'
   `);
   if (!result.rows[0]) { res.status(404).json({ error: "Notification not found" }); return; }
   res.json(MarkNotificationReadResponse.parse(result.rows[0]));

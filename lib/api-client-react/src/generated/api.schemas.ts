@@ -278,6 +278,38 @@ export interface UserUpdate {
   portfolioUrl?: string | null;
 }
 
+export interface PortfolioCategory {
+  /** @nullable */
+  id: number | null;
+  name: string;
+  position: number;
+}
+
+export interface PortfolioCategoryInput {
+  /** @minimum 1 */
+  id?: number;
+  /** @maxLength 32 */
+  legacyName?: string;
+  /**
+     * @minLength 1
+     * @maxLength 32
+     */
+  name: string;
+}
+
+export interface PortfolioCategoriesInput {
+  /** @maxItems 12 */
+  categories: PortfolioCategoryInput[];
+}
+
+export interface UpdateStudioPostCategoryInput {
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  portfolioCategoryId: number | null;
+}
+
 export interface DashboardSummary {
   totalHabits: number;
   currentStreakDays: number;
@@ -433,6 +465,8 @@ export interface StudioPost {
   mediaType: StudioPostMediaType;
   caption: string;
   tags?: string[];
+  /** @nullable */
+  portfolioCategoryId: number | null;
   /**
      * Legacy compatibility field; always zero. Feed likes are retired.
      * @deprecated
@@ -466,6 +500,8 @@ export interface StudioPostInput {
   /** @minLength 1 */
   caption: string;
   tags?: string[];
+  /** @nullable */
+  portfolioCategoryId?: number | null;
 }
 
 export interface UpdateStudioPostInput {
@@ -1180,6 +1216,7 @@ export interface PublicCreatorProfile {
   bookingOpen: boolean;
   /** @nullable */
   portfolioUrl?: string | null;
+  portfolioCategories: PortfolioCategory[];
   postCount: number;
   badgesEarned: number;
   currentStreak: number;
@@ -1386,7 +1423,26 @@ export const NotificationType = {
   follow: 'follow',
   like: 'like',
   critique: 'critique',
+  commission_inquiry: 'commission_inquiry',
 } as const;
+
+export type CommissionInquiryNotificationSummaryRequestType = typeof CommissionInquiryNotificationSummaryRequestType[keyof typeof CommissionInquiryNotificationSummaryRequestType];
+
+
+export const CommissionInquiryNotificationSummaryRequestType = {
+  tattoo: 'tattoo',
+  painting: 'painting',
+  other: 'other',
+} as const;
+
+export interface CommissionInquiryNotificationSummary {
+  clientName: string;
+  requestType: CommissionInquiryNotificationSummaryRequestType;
+}
+
+export interface CommissionInquiryDestination {
+  bookingId: number;
+}
 
 export interface Notification {
   id: number;
@@ -1398,6 +1454,8 @@ export interface Notification {
   postId: number | null;
   conversationDestination: ConversationDestination | null;
   postDestination: PostDestination | null;
+  commissionInquirySummary: CommissionInquiryNotificationSummary | null;
+  commissionInquiryDestination: CommissionInquiryDestination | null;
   createdAt: string;
   /** @nullable */
   readAt: string | null;
@@ -1533,6 +1591,11 @@ export interface TattooBookingInput {
   estimatedSize: string;
   preferredArtist: TattooBookingInputPreferredArtist;
   /**
+     * Optional creator owner for in-app studio inquiry routing.
+     * @minimum 1
+     */
+  creatorUserId?: number;
+  /**
      * Honeypot field; must remain empty.
      * @maxLength 200
      */
@@ -1598,6 +1661,32 @@ export interface TattooBooking {
   submittedAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export type StudioInquiryRequestType = typeof StudioInquiryRequestType[keyof typeof StudioInquiryRequestType];
+
+
+export const StudioInquiryRequestType = {
+  tattoo: 'tattoo',
+  painting: 'painting',
+  other: 'other',
+} as const;
+
+export interface StudioInquiry {
+  id: number;
+  requestType: StudioInquiryRequestType;
+  name: string;
+  email: string;
+  /** @nullable */
+  phone: string | null;
+  idea: string;
+  placement: string;
+  estimatedSize: string;
+  preferredArtist: string;
+  status: TattooBookingStatus;
+  references: TattooBookingReference[];
+  /** @nullable */
+  submittedAt: string | null;
 }
 
 export interface TattooBookingUpdate {

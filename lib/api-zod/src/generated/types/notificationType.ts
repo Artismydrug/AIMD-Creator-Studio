@@ -14,4 +14,5 @@ export const NotificationType = {
   follow: 'follow',
   like: 'like',
   critique: 'critique',
+  commission_inquiry: 'commission_inquiry',
 } as const;

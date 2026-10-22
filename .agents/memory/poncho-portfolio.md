@@ -21,8 +21,14 @@ Use the approved artist-portfolio mockup as the visual reference for Your Studio
 
 **How to apply:** Match the reference's layout using real member data and existing inquiry actions, not its decorative copy. The owner explicitly removed “Selected Work” and “Made to stay with you”; keep the gallery focused on artwork and category controls. Keep owner editing available without exposing account settings in the public presentation; never populate member galleries with the mockup's sample artwork.
 
-For the owner-facing portfolio, keep the main surface work-first: the header's icon-only add control starts new work, Edit Profile sits beside the social link, and work/follower/following counts sit below the gallery.
+For the owner-facing portfolio, keep the main surface work-first: the header's icon-only add control starts new work, website/social/Edit Profile stay on one row, and profile counts sit above category filters and artwork.
 
-**Why:** The owner asked to make new work immediately accessible while moving account editing out of the header and reducing profile-metric clutter above the artwork.
+**Why:** The owner asked to make new work immediately accessible while keeping profile links together, reducing text on Edit Profile, and placing Works/Followers/Following above the category tabs.
 
-**How to apply:** Keep posting mapped to the currently selected work category. Keep Edit Profile in the profile-link area and preserve the counts below the work grid unless the owner requests another layout.
+**How to apply:** Keep posting mapped to the currently selected work category. Keep owner links in one horizontal row, allowing horizontal scrolling only on narrow screens. Put counts above the category tabs unless the owner requests another layout.
+
+Work categories belong to the creator, not a fixed set of disciplines. Creators can add, rename, remove, reorder tabs, and assign their own artwork.
+
+**Why:** The owner explicitly chose editable categories and work assignment so each member can organize their own practice, rather than inheriting Poncho's tattoo/painting/mural labels.
+
+**How to apply:** Keep All work as the complete gallery. A category rename must preserve its artwork assignments, and removing a category must never delete artwork or silently recreate the removed tab from old post tags.

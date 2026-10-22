@@ -284,6 +284,7 @@ export const ListStudioPostsResponseItem = zod.object({
   "mediaType": zod.enum(['image', 'video', 'audio']).default(listStudioPostsResponseMediaTypeDefault).describe('Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB.'),
   "caption": zod.string(),
   "tags": zod.array(zod.string()).optional(),
+  "portfolioCategoryId": zod.int().nullable(),
   "likes": zod.int().describe('Legacy compatibility field; always zero. Feed likes are retired.'),
   "likedByMe": zod.boolean().optional().describe('Legacy compatibility field; always false.'),
   "createdAt": zod.coerce.date()
@@ -301,7 +302,8 @@ export const CreateStudioPostBody = zod.object({
   "imageUrl": zod.string().nullish(),
   "mediaType": zod.enum(['image', 'video', 'audio']).default(createStudioPostBodyMediaTypeDefault),
   "caption": zod.string().min(1),
-  "tags": zod.array(zod.string()).optional()
+  "tags": zod.array(zod.string()).optional(),
+  "portfolioCategoryId": zod.int().nullish()
 })
 
 export const createStudioPostResponseMediaTypeDefault = `image`;
@@ -318,6 +320,7 @@ export const CreateStudioPostResponse = zod.object({
   "mediaType": zod.enum(['image', 'video', 'audio']).default(createStudioPostResponseMediaTypeDefault).describe('Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB.'),
   "caption": zod.string(),
   "tags": zod.array(zod.string()).optional(),
+  "portfolioCategoryId": zod.int().nullable(),
   "likes": zod.int().describe('Legacy compatibility field; always zero. Feed likes are retired.'),
   "likedByMe": zod.boolean().optional().describe('Legacy compatibility field; always false.'),
   "createdAt": zod.coerce.date()
@@ -345,6 +348,7 @@ export const GetStudioPostResponse = zod.object({
   "mediaType": zod.enum(['image', 'video', 'audio']).default(getStudioPostResponseMediaTypeDefault).describe('Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB.'),
   "caption": zod.string(),
   "tags": zod.array(zod.string()).optional(),
+  "portfolioCategoryId": zod.int().nullable(),
   "likes": zod.int().describe('Legacy compatibility field; always zero. Feed likes are retired.'),
   "likedByMe": zod.boolean().optional().describe('Legacy compatibility field; always false.'),
   "createdAt": zod.coerce.date()
@@ -380,6 +384,7 @@ export const UpdateStudioPostResponse = zod.object({
   "mediaType": zod.enum(['image', 'video', 'audio']).default(updateStudioPostResponseMediaTypeDefault).describe('Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB.'),
   "caption": zod.string(),
   "tags": zod.array(zod.string()).optional(),
+  "portfolioCategoryId": zod.int().nullable(),
   "likes": zod.int().describe('Legacy compatibility field; always zero. Feed likes are retired.'),
   "likedByMe": zod.boolean().optional().describe('Legacy compatibility field; always false.'),
   "createdAt": zod.coerce.date()
@@ -394,6 +399,41 @@ export const DeleteStudioPostParams = zod.object({
 })
 
 export const DeleteStudioPostResponse = zod.void()
+
+
+/**
+ * @summary Assign an owned studio post to a portfolio category
+ */
+export const UpdateStudioPostCategoryParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+
+
+
+export const UpdateStudioPostCategoryBody = zod.object({
+  "portfolioCategoryId": zod.int().min(1).nullable()
+})
+
+export const updateStudioPostCategoryResponseMediaTypeDefault = `image`;
+
+export const UpdateStudioPostCategoryResponse = zod.object({
+  "id": zod.int(),
+  "userId": zod.int(),
+  "username": zod.string().optional(),
+  "userAvatarUrl": zod.string().nullish(),
+  "followerCount": zod.int(),
+  "followingCount": zod.int(),
+  "followedByMe": zod.boolean(),
+  "imageUrl": zod.string().nullish(),
+  "mediaType": zod.enum(['image', 'video', 'audio']).default(updateStudioPostCategoryResponseMediaTypeDefault).describe('Rendering type for the media URL in imageUrl (legacy field name). Videos are limited to 60 seconds and 50 MB. Audio supports MP3, M4A, AAC, and WAV, up to 10 minutes and 25 MB.'),
+  "caption": zod.string(),
+  "tags": zod.array(zod.string()).optional(),
+  "portfolioCategoryId": zod.int().nullable(),
+  "likes": zod.int().describe('Legacy compatibility field; always zero. Feed likes are retired.'),
+  "likedByMe": zod.boolean().optional().describe('Legacy compatibility field; always false.'),
+  "createdAt": zod.coerce.date()
+})
 
 
 /**
@@ -1502,6 +1542,34 @@ export const UpdateCurrentUserResponse = zod.object({
 
 
 /**
+ * @summary Add, rename, reorder, or remove the current user's portfolio categories
+ */
+
+export const updatePortfolioCategoriesBodyCategoriesItemLegacyNameMax = 32;
+
+export const updatePortfolioCategoriesBodyCategoriesItemNameMax = 32;
+
+export const updatePortfolioCategoriesBodyCategoriesMax = 12;
+
+
+
+export const UpdatePortfolioCategoriesBody = zod.object({
+  "categories": zod.array(zod.object({
+  "id": zod.int().min(1).optional(),
+  "legacyName": zod.string().max(updatePortfolioCategoriesBodyCategoriesItemLegacyNameMax).optional(),
+  "name": zod.string().min(1).max(updatePortfolioCategoriesBodyCategoriesItemNameMax)
+})).max(updatePortfolioCategoriesBodyCategoriesMax)
+})
+
+export const UpdatePortfolioCategoriesResponseItem = zod.object({
+  "id": zod.int().nullable(),
+  "name": zod.string(),
+  "position": zod.int()
+})
+export const UpdatePortfolioCategoriesResponse = zod.array(UpdatePortfolioCategoriesResponseItem)
+
+
+/**
  * @summary Lifetime points and account-only monthly member drops; no point redemption
  */
 
@@ -1847,6 +1915,11 @@ export const GetUserProfileResponse = zod.object({
   "location": zod.string().nullish(),
   "bookingOpen": zod.boolean(),
   "portfolioUrl": zod.string().nullish(),
+  "portfolioCategories": zod.array(zod.object({
+  "id": zod.int().nullable(),
+  "name": zod.string(),
+  "position": zod.int()
+})),
   "postCount": zod.int(),
   "badgesEarned": zod.int(),
   "currentStreak": zod.int(),
@@ -2134,7 +2207,7 @@ export const SendMessageResponse = zod.object({
 export const GetNotificationsResponse = zod.object({
   "notifications": zod.array(zod.object({
   "id": zod.int(),
-  "type": zod.enum(['direct_message', 'follow', 'like', 'critique']),
+  "type": zod.enum(['direct_message', 'follow', 'like', 'critique', 'commission_inquiry']),
   "actor": zod.union([zod.object({
   "id": zod.int(),
   "username": zod.string(),
@@ -2148,10 +2221,46 @@ export const GetNotificationsResponse = zod.object({
   "postDestination": zod.union([zod.object({
   "postId": zod.int()
 }),zod.null()]),
+  "commissionInquirySummary": zod.union([zod.object({
+  "clientName": zod.string(),
+  "requestType": zod.enum(['tattoo', 'painting', 'other'])
+}),zod.null()]),
+  "commissionInquiryDestination": zod.union([zod.object({
+  "bookingId": zod.int()
+}),zod.null()]),
   "createdAt": zod.coerce.date(),
   "readAt": zod.coerce.date().nullable()
 })),
   "unreadCount": zod.int()
+})
+
+
+/**
+ * @summary Get a creator's private commission inquiry
+ */
+export const GetStudioInquiryParams = zod.object({
+  "bookingId": zod.coerce.number().int()
+})
+
+export const GetStudioInquiryResponse = zod.object({
+  "id": zod.int(),
+  "requestType": zod.enum(['tattoo', 'painting', 'other']),
+  "name": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().nullable(),
+  "idea": zod.string(),
+  "placement": zod.string(),
+  "estimatedSize": zod.string(),
+  "preferredArtist": zod.string(),
+  "status": zod.enum(['new', 'contacted', 'scheduled', 'completed', 'declined']),
+  "references": zod.array(zod.object({
+  "id": zod.int(),
+  "url": zod.string(),
+  "originalName": zod.string(),
+  "contentType": zod.string(),
+  "sizeBytes": zod.int()
+})),
+  "submittedAt": zod.coerce.date().nullable()
 })
 
 
@@ -2164,7 +2273,7 @@ export const MarkNotificationReadParams = zod.object({
 
 export const MarkNotificationReadResponse = zod.object({
   "id": zod.int(),
-  "type": zod.enum(['direct_message', 'follow', 'like', 'critique']),
+  "type": zod.enum(['direct_message', 'follow', 'like', 'critique', 'commission_inquiry']),
   "actor": zod.union([zod.object({
   "id": zod.int(),
   "username": zod.string(),
@@ -2177,6 +2286,13 @@ export const MarkNotificationReadResponse = zod.object({
 }),zod.null()]),
   "postDestination": zod.union([zod.object({
   "postId": zod.int()
+}),zod.null()]),
+  "commissionInquirySummary": zod.union([zod.object({
+  "clientName": zod.string(),
+  "requestType": zod.enum(['tattoo', 'painting', 'other'])
+}),zod.null()]),
+  "commissionInquiryDestination": zod.union([zod.object({
+  "bookingId": zod.int()
 }),zod.null()]),
   "createdAt": zod.coerce.date(),
   "readAt": zod.coerce.date().nullable()
@@ -2532,6 +2648,7 @@ export const createTattooBookingDraftBodyPlacementMax = 160;
 
 export const createTattooBookingDraftBodyEstimatedSizeMax = 120;
 
+
 export const createTattooBookingDraftBodyWebsiteMax = 200;
 
 
@@ -2545,6 +2662,7 @@ export const CreateTattooBookingDraftBody = zod.object({
   "placement": zod.string().min(1).max(createTattooBookingDraftBodyPlacementMax),
   "estimatedSize": zod.string().min(1).max(createTattooBookingDraftBodyEstimatedSizeMax),
   "preferredArtist": zod.enum(['No preference', 'Poncho The Artist', 'Edwin', 'Ash']),
+  "creatorUserId": zod.int().min(1).optional().describe('Optional creator owner for in-app studio inquiry routing.'),
   "website": zod.string().max(createTattooBookingDraftBodyWebsiteMax).optional().describe('Honeypot field; must remain empty.')
 })
 

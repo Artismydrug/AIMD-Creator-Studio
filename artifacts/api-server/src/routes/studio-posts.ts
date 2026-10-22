@@ -4,6 +4,7 @@ import {
   db,
   studioPostsTable,
   studioPostMediaUploadsTable,
+  creatorPortfolioCategoriesTable,
   usersTable,
 } from "@workspace/db";
 import {
@@ -16,6 +17,9 @@ import {
   UpdateStudioPostParams,
   UpdateStudioPostBody,
   UpdateStudioPostResponse,
+  UpdateStudioPostCategoryParams,
+  UpdateStudioPostCategoryBody,
+  UpdateStudioPostCategoryResponse,
   DeleteStudioPostParams,
 } from "@workspace/api-zod";
 import { communityMemberVisibility } from "../lib/communityMemberVisibility";
@@ -34,6 +38,7 @@ function buildPostSelect(viewerUserId: number) {
     mediaType: studioPostsTable.mediaType,
     caption: studioPostsTable.caption,
     tags: studioPostsTable.tags,
+    portfolioCategoryId: studioPostsTable.portfolioCategoryId,
     // Keep the legacy response shape without exposing archived engagement counts.
     likes: sql<number>`0`,
     createdAt: studioPostsTable.createdAt,
@@ -136,6 +141,20 @@ router.post("/studio-posts", async (req, res): Promise<void> => {
     res.status(400).json({ error: `${mediaLabel} posts require an uploaded ${parsed.data.mediaType}` });
     return;
   }
+  if (parsed.data.portfolioCategoryId != null) {
+    const [category] = await db
+      .select({ id: creatorPortfolioCategoriesTable.id })
+      .from(creatorPortfolioCategoriesTable)
+      .where(and(
+        eq(creatorPortfolioCategoriesTable.id, parsed.data.portfolioCategoryId),
+        eq(creatorPortfolioCategoriesTable.userId, userId),
+      ))
+      .limit(1);
+    if (!category) {
+      res.status(400).json({ error: "Choose one of your own portfolio categories." });
+      return;
+    }
+  }
   const mediaObjectPath =
     requiresVerifiedMedia && parsed.data.imageUrl?.startsWith("/api/storage/objects/")
       ? parsed.data.imageUrl.slice("/api/storage".length)
@@ -221,6 +240,61 @@ router.get("/studio-posts/:id", async (req, res): Promise<void> => {
   }
 
   res.json(GetStudioPostResponse.parse({ ...post, likedByMe: false }));
+});
+
+router.patch("/studio-posts/:id/category", async (req, res): Promise<void> => {
+  if (!req.dbUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const userId = req.dbUser.id;
+  const params = UpdateStudioPostCategoryParams.safeParse(req.params);
+  const body = UpdateStudioPostCategoryBody.safeParse(req.body);
+  if (!params.success || !body.success) {
+    res.status(400).json({ error: "Choose a valid portfolio category." });
+    return;
+  }
+
+  const result = await db.transaction(async (tx) => {
+    const [ownedPost] = await tx.select({ id: studioPostsTable.id })
+      .from(studioPostsTable)
+      .where(and(eq(studioPostsTable.id, params.data.id), eq(studioPostsTable.userId, userId)))
+      .limit(1);
+    if (!ownedPost) return { status: "missing" as const };
+
+    if (body.data.portfolioCategoryId !== null) {
+      const [category] = await tx.select({ id: creatorPortfolioCategoriesTable.id })
+        .from(creatorPortfolioCategoriesTable)
+        .where(and(
+          eq(creatorPortfolioCategoriesTable.id, body.data.portfolioCategoryId),
+          eq(creatorPortfolioCategoriesTable.userId, userId),
+        ))
+        .limit(1);
+      if (!category) return { status: "invalid-category" as const };
+    }
+
+    await tx.update(studioPostsTable)
+      .set({ portfolioCategoryId: body.data.portfolioCategoryId })
+      .where(and(eq(studioPostsTable.id, ownedPost.id), eq(studioPostsTable.userId, userId)));
+    return { status: "updated" as const, id: ownedPost.id };
+  });
+
+  if (result.status === "missing") {
+    res.status(404).json({ error: "Post not found." });
+    return;
+  }
+  if (result.status === "invalid-category") {
+    res.status(400).json({ error: "Choose one of your own portfolio categories." });
+    return;
+  }
+
+  const [post] = await db.select(buildPostSelect(userId))
+    .from(studioPostsTable)
+    .innerJoin(usersTable, eq(studioPostsTable.userId, usersTable.id))
+    .where(eq(studioPostsTable.id, result.id));
+  if (!post) {
+    res.status(404).json({ error: "Post not found." });
+    return;
+  }
+  res.set("Cache-Control", "no-store");
+  res.json(UpdateStudioPostCategoryResponse.parse({ ...post, likedByMe: false }));
 });
 
 router.patch("/studio-posts/:id", async (req, res): Promise<void> => {

@@ -115,8 +115,9 @@ describe("owner-only post actions", () => {
 it("keeps owner controls in feed and profile, with explicit cancellation that never submits", () => {
   const actions = readFileSync(new URL("../../../aimd-network/components/PostOwnerActions.tsx", import.meta.url), "utf8");
   const cards = readFileSync(new URL("../../../aimd-network/components/PostCard.tsx", import.meta.url), "utf8");
-  const profile = readFileSync(new URL("../../../aimd-network/app/creator/[id].tsx", import.meta.url), "utf8");
+  const profile = readFileSync(new URL("../../../aimd-network/app/creator/[creatorId].tsx", import.meta.url), "utf8");
   const ownStudio = readFileSync(new URL("../../../aimd-network/app/profile.tsx", import.meta.url), "utf8");
+  const portfolio = readFileSync(new URL("../../../aimd-network/components/CreatorPortfolioView.tsx", import.meta.url), "utf8");
   expect(actions).toContain("if (!isOwner) return null");
   expect(actions).toContain("dialog !== 'delete' || submitting.current");
   expect(actions).toContain("testID={`cancel-post-action-${post.id}`}");
@@ -126,6 +127,7 @@ it("keeps owner controls in feed and profile, with explicit cancellation that ne
   expect(close).not.toContain("mutate");
   expect(actions).not.toContain("window.confirm");
   expect(cards.match(/<PostOwnerActions/g)).toHaveLength(2);
-  expect(profile).toContain("<PostOwnerActions post={post} currentUserId={me?.id}");
-  expect(ownStudio).toContain("<PostOwnerActions post={post} currentUserId={me.id}");
+  expect(profile).toContain("<CreatorPortfolioView");
+  expect(ownStudio).toContain("<CreatorPortfolioView");
+  expect(portfolio).toContain("<PostOwnerActions post={post} currentUserId={currentUserId}");
 });

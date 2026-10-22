@@ -14,4 +14,6 @@ export interface StudioPostInput {
   /** @minLength 1 */
   caption: string;
   tags?: string[];
+  /** @nullable */
+  portfolioCategoryId?: number | null;
 }

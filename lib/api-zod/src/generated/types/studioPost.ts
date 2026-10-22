@@ -22,6 +22,8 @@ export interface StudioPost {
   mediaType: StudioPostMediaType;
   caption: string;
   tags?: string[];
+  /** @nullable */
+  portfolioCategoryId: number | null;
   /**
      * Legacy compatibility field; always zero. Feed likes are retired.
      * @deprecated

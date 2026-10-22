@@ -2,6 +2,7 @@ import { pgTable, serial, integer, text, timestamp, index } from "drizzle-orm/pg
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
+import { creatorPortfolioCategoriesTable } from "./creator-portfolio-categories";
 
 export const studioPostsTable = pgTable("studio_posts", {
   id: serial("id").primaryKey(),
@@ -11,11 +12,13 @@ export const studioPostsTable = pgTable("studio_posts", {
   mediaType: text("media_type").$type<"image" | "video" | "audio">().notNull().default("image"),
   caption: text("caption").notNull(),
   tags: text("tags").array().notNull().default([]),
+  portfolioCategoryId: integer("portfolio_category_id").references(() => creatorPortfolioCategoriesTable.id, { onDelete: "set null" }),
   likes: integer("likes").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
   index("studio_posts_created_idx").on(table.createdAt),
   index("studio_posts_user_created_idx").on(table.userId, table.createdAt),
+  index("studio_posts_portfolio_category_idx").on(table.portfolioCategoryId),
 ]);
 
 export const postLikesTable = pgTable("post_likes", {

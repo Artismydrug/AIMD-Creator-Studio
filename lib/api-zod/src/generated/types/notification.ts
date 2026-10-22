@@ -5,6 +5,8 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+import type { CommissionInquiryDestination } from './commissionInquiryDestination';
+import type { CommissionInquiryNotificationSummary } from './commissionInquiryNotificationSummary';
 import type { ConversationDestination } from './conversationDestination';
 import type { NotificationActor } from './notificationActor';
 import type { NotificationType } from './notificationType';
@@ -20,6 +22,8 @@ export interface Notification {
   postId: number | null;
   conversationDestination: ConversationDestination | null;
   postDestination: PostDestination | null;
+  commissionInquirySummary: CommissionInquiryNotificationSummary | null;
+  commissionInquiryDestination: CommissionInquiryDestination | null;
   createdAt: Date;
   /** @nullable */
   readAt: Date | null;

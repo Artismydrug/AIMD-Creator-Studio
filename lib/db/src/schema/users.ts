@@ -17,6 +17,7 @@ export const usersTable = pgTable("users", {
   location: text("location"),
   bookingOpen: boolean("booking_open").notNull().default(false),
   portfolioUrl: text("portfolio_url"),
+  portfolioCategoriesConfigured: boolean("portfolio_categories_configured").notNull().default(false),
   // Replit Auth: links Replit OIDC sub claim to this integer-id user row
   replitId: text("replit_id").unique(),
   // Clerk Auth: links Clerk user ID to this integer-id user row

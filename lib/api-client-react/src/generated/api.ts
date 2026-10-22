@@ -104,6 +104,8 @@ import type {
   NotificationsResponse,
   Plan,
   PointAwardResult,
+  PortfolioCategoriesInput,
+  PortfolioCategory,
   PracticeMilestones,
   ProgressDayInput,
   ProgressSummary,
@@ -121,6 +123,7 @@ import type {
   StorePaymentIntent,
   StorePaymentIntentInput,
   StoreProduct,
+  StudioInquiry,
   StudioPost,
   StudioPostInput,
   TattooBooking,
@@ -130,6 +133,7 @@ import type {
   TattooBookingReference,
   TattooBookingSubmissionResult,
   TattooBookingUpdate,
+  UpdateStudioPostCategoryInput,
   UpdateStudioPostInput,
   User,
   UserUpdate,
@@ -1542,6 +1546,78 @@ export const useDeleteStudioPost = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteStudioPostMutationOptions(options));
+    }
+
+export const getUpdateStudioPostCategoryUrl = (id: number,) => {
+
+
+
+
+  return `/api/studio-posts/${id}/category`
+}
+
+/**
+ * @summary Assign an owned studio post to a portfolio category
+ */
+export const updateStudioPostCategory = async (id: number,
+    updateStudioPostCategoryInput: UpdateStudioPostCategoryInput, options?: Parameters<typeof customFetch>[1]): Promise<StudioPost> => {
+
+  return customFetch<StudioPost>(getUpdateStudioPostCategoryUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateStudioPostCategoryInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateStudioPostCategoryMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateStudioPostCategory>>, TError,{id: number;data: BodyType<UpdateStudioPostCategoryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateStudioPostCategory>>, TError,{id: number;data: BodyType<UpdateStudioPostCategoryInput>}, TContext> => {
+
+const mutationKey = ['updateStudioPostCategory'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateStudioPostCategory>>, {id: number;data: BodyType<UpdateStudioPostCategoryInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateStudioPostCategory(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateStudioPostCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof updateStudioPostCategory>>>
+    export type UpdateStudioPostCategoryMutationBody = BodyType<UpdateStudioPostCategoryInput>
+    export type UpdateStudioPostCategoryMutationError = ErrorType<void>
+
+    /**
+ * @summary Assign an owned studio post to a portfolio category
+ */
+export const useUpdateStudioPostCategory = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateStudioPostCategory>>, TError,{id: number;data: BodyType<UpdateStudioPostCategoryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateStudioPostCategory>>,
+        TError,
+        {id: number;data: BodyType<UpdateStudioPostCategoryInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateStudioPostCategoryMutationOptions(options));
     }
 
 export const getLikeStudioPostUrl = (id: number,) => {
@@ -4777,6 +4853,77 @@ export const useUpdateCurrentUser = <TError = ErrorType<unknown>,
       return useMutation(getUpdateCurrentUserMutationOptions(options));
     }
 
+export const getUpdatePortfolioCategoriesUrl = () => {
+
+
+
+
+  return `/api/users/me/portfolio-categories`
+}
+
+/**
+ * @summary Add, rename, reorder, or remove the current user's portfolio categories
+ */
+export const updatePortfolioCategories = async (portfolioCategoriesInput: PortfolioCategoriesInput, options?: Parameters<typeof customFetch>[1]): Promise<PortfolioCategory[]> => {
+
+  return customFetch<PortfolioCategory[]>(getUpdatePortfolioCategoriesUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(portfolioCategoriesInput)
+  }
+);}
+
+
+
+
+
+export const getUpdatePortfolioCategoriesMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePortfolioCategories>>, TError,{data: BodyType<PortfolioCategoriesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePortfolioCategories>>, TError,{data: BodyType<PortfolioCategoriesInput>}, TContext> => {
+
+const mutationKey = ['updatePortfolioCategories'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePortfolioCategories>>, {data: BodyType<PortfolioCategoriesInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updatePortfolioCategories(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePortfolioCategoriesMutationResult = NonNullable<Awaited<ReturnType<typeof updatePortfolioCategories>>>
+    export type UpdatePortfolioCategoriesMutationBody = BodyType<PortfolioCategoriesInput>
+    export type UpdatePortfolioCategoriesMutationError = ErrorType<void>
+
+    /**
+ * @summary Add, rename, reorder, or remove the current user's portfolio categories
+ */
+export const useUpdatePortfolioCategories = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePortfolioCategories>>, TError,{data: BodyType<PortfolioCategoriesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePortfolioCategories>>,
+        TError,
+        {data: BodyType<PortfolioCategoriesInput>},
+        TContext
+      > => {
+      return useMutation(getUpdatePortfolioCategoriesMutationOptions(options));
+    }
+
 export const getGetRewardsUrl = () => {
 
 
@@ -6469,6 +6616,83 @@ export function useGetNotifications<TData = Awaited<ReturnType<typeof getNotific
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetNotificationsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetStudioInquiryUrl = (bookingId: number,) => {
+
+
+
+
+  return `/api/studio-inquiries/${bookingId}`
+}
+
+/**
+ * @summary Get a creator's private commission inquiry
+ */
+export const getStudioInquiry = async (bookingId: number, options?: Parameters<typeof customFetch>[1]): Promise<StudioInquiry> => {
+
+  return customFetch<StudioInquiry>(getGetStudioInquiryUrl(bookingId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStudioInquiryQueryKey = (bookingId: number,) => {
+    return [
+    `/api/studio-inquiries/${bookingId}`
+    ] as const;
+    }
+
+
+export const getGetStudioInquiryQueryOptions = <TData = Awaited<ReturnType<typeof getStudioInquiry>>, TError = ErrorType<void>>(bookingId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStudioInquiry>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStudioInquiryQueryKey(bookingId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStudioInquiry>>> = ({ signal }) => getStudioInquiry(bookingId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: bookingId !== null && bookingId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStudioInquiry>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetStudioInquiryQueryResult = NonNullable<Awaited<ReturnType<typeof getStudioInquiry>>>
+export type GetStudioInquiryQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get a creator's private commission inquiry
+ */
+
+export function useGetStudioInquiry<TData = Awaited<ReturnType<typeof getStudioInquiry>>, TError = ErrorType<void>>(
+ bookingId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStudioInquiry>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetStudioInquiryQueryOptions(bookingId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

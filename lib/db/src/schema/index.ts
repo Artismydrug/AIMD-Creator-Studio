@@ -5,6 +5,7 @@ export * from "./user-follows";
 export * from "./auth";
 export * from "./habits";
 export * from "./studio-posts";
+export * from "./creator-portfolio-categories";
 export * from "./notifications";
 export * from "./message-send-receipts";
 export * from "./notification-preferences";

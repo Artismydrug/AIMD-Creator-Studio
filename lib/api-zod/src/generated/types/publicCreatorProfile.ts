@@ -5,6 +5,7 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+import type { PortfolioCategory } from './portfolioCategory';
 import type { PublicCreatorProfileRecentBadgesItem } from './publicCreatorProfileRecentBadgesItem';
 
 export interface PublicCreatorProfile {
@@ -24,6 +25,7 @@ export interface PublicCreatorProfile {
   bookingOpen: boolean;
   /** @nullable */
   portfolioUrl?: string | null;
+  portfolioCategories: PortfolioCategory[];
   postCount: number;
   badgesEarned: number;
   currentStreak: number;
