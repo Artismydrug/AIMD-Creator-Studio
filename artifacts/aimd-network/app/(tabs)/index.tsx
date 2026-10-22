@@ -827,6 +827,7 @@ export default function ProgressScreen() {
             onOpenHabits={() => router.push('/(tabs)/challenge-habits')}
             onOpenFeed={() => router.push('/(tabs)/community')}
             onOpenWorkshops={() => router.push('/(tabs)/workshops')}
+            onOpenEvents={() => router.push('/(tabs)/events')}
           />
 
           {progressLoading && !progress && (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 
@@ -11,7 +11,7 @@ export default function TattooBusResidencyCard() {
     card: {
       marginHorizontal: 16,
       marginBottom: 12,
-      padding: 16,
+      padding: 14,
       gap: 12,
       backgroundColor: colors.card,
       borderWidth: 1,
@@ -24,20 +24,44 @@ export default function TattooBusResidencyCard() {
       textTransform: 'uppercase',
       letterSpacing: 1,
     },
-    titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-    icon: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.muted,
+    posterRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+    flyerFrame: {
+      width: 108,
+      aspectRatio: 1134 / 1542,
+      overflow: 'hidden',
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      borderRadius: 12,
+      backgroundColor: colors.studioPaper,
+      transform: [{ rotate: '-2deg' }],
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
     },
-    titleCopy: { flex: 1, gap: 4 },
+    flyerImage: { width: '100%', height: '100%' },
+    posterCopy: { flex: 1, minWidth: 0, gap: 7 },
     title: {
       fontFamily: 'DMSans_700Bold',
-      fontSize: 17,
-      lineHeight: 22,
+      fontSize: 16,
+      lineHeight: 20,
       color: colors.foreground,
+    },
+    walkInTag: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: 8,
+      paddingVertical: 5,
+      borderWidth: 1,
+      borderColor: colors.studioInk,
+      borderRadius: 10,
+      backgroundColor: colors.studioYellow,
+    },
+    walkInTagText: {
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 9,
+      letterSpacing: 0.5,
+      color: colors.studioInk,
     },
     facts: { gap: 8 },
     factRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
@@ -47,12 +71,6 @@ export default function TattooBusResidencyCard() {
       fontSize: 13,
       lineHeight: 19,
       color: colors.mutedForeground,
-    },
-    description: {
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 14,
-      lineHeight: 21,
-      color: colors.foreground,
     },
     bookButton: {
       minHeight: 48,
@@ -79,12 +97,21 @@ export default function TattooBusResidencyCard() {
   return (
     <View style={styles.card} testID="los-feliz-flea-residency">
       <Text style={styles.eyebrow}>Weekly residency</Text>
-      <View style={styles.titleRow}>
-        <View style={styles.icon}>
-          <Feather name="truck" size={20} color={colors.primary} />
+      <View style={styles.posterRow}>
+        <View style={styles.flyerFrame}>
+          <Image
+            source={require('../assets/images/los-feliz-flea-flyer.jpg')}
+            style={styles.flyerImage}
+            resizeMode="contain"
+            accessible
+            accessibilityLabel="Art Is My Drug Tattoo Studio flyer for the Los Feliz Flea, every Saturday from 11 AM to 5 PM"
+          />
         </View>
-        <View style={styles.titleCopy}>
+        <View style={styles.posterCopy}>
           <Text style={styles.title}>AIMD Tattoo Bus at Los Feliz Flea</Text>
+          <View style={styles.walkInTag}>
+            <Text style={styles.walkInTagText}>WALK-INS WELCOME</Text>
+          </View>
         </View>
       </View>
 
@@ -103,10 +130,6 @@ export default function TattooBusResidencyCard() {
           </Text>
         </View>
       </View>
-
-      <Text style={styles.description}>
-        Walk-ins welcome or book ahead at artismydrug.com/tattoo. Featuring our mobile tattoo bus, live art, and pop-up experience.
-      </Text>
 
       <TouchableOpacity
         style={styles.bookButton}

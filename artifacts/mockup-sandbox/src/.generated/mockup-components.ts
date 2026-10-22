@@ -17,5 +17,6 @@ export const modules: ModuleMap = {
   "./components/mockups/canvas-board-art/StreakOrbit.tsx": () => import("../components/mockups/canvas-board-art/StreakOrbit.tsx"),
   "./components/mockups/canvas-board-art/StudioFrequency.tsx": () => import("../components/mockups/canvas-board-art/StudioFrequency.tsx"),
   "./components/mockups/canvas-board-art/WorkshopAtelier.tsx": () => import("../components/mockups/canvas-board-art/WorkshopAtelier.tsx"),
-  "./components/mockups/canvas-board-art/WorkshopBadges.tsx": () => import("../components/mockups/canvas-board-art/WorkshopBadges.tsx")
+  "./components/mockups/canvas-board-art/WorkshopBadges.tsx": () => import("../components/mockups/canvas-board-art/WorkshopBadges.tsx"),
+  "./components/mockups/creator-arcade/FlashChallenge.tsx": () => import("../components/mockups/creator-arcade/FlashChallenge.tsx")
 };

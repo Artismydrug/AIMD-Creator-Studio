@@ -8,6 +8,9 @@ const dashboardPath = path.resolve(
   '(tabs)',
   'index.tsx',
 );
+const practiceCardPath = path.resolve(__dirname, '..', 'components', 'StickerJamPracticeCard.tsx');
+const residencyCardPath = path.resolve(__dirname, '..', 'components', 'TattooBusResidencyCard.tsx');
+const flyerPath = path.resolve(__dirname, '..', 'assets', 'images', 'los-feliz-flea-flyer.jpg');
 
 const MOBILE_VIEWPORT = {
   width: 400,
@@ -26,6 +29,8 @@ function assertIncludes(source, value, description) {
 
 function assertDashboardSmokeContract() {
   const source = readDashboardSource();
+  const practiceCard = fs.readFileSync(practiceCardPath, 'utf8');
+  const residencyCard = fs.readFileSync(residencyCardPath, 'utf8');
   const loadingState = source.indexOf('testID="dashboard-loading-state"');
   const loadedState = source.indexOf('testID="dashboard-loaded-state"');
 
@@ -34,6 +39,11 @@ function assertDashboardSmokeContract() {
   assertIncludes(source, '{progress && (', 'resolved dashboard condition');
   assertIncludes(source, 'Loading your dashboard…', 'loading copy');
   assertIncludes(source, '<StickerJamPracticeCard', 'Sticker Jam practice card');
+  assertIncludes(practiceCard, 'los-feliz-flea-flyer.jpg', 'Los Feliz flyer in the home carousel');
+  assertIncludes(residencyCard, 'los-feliz-flea-flyer.jpg', 'Los Feliz flyer in the event listing');
+  if (!fs.existsSync(flyerPath)) {
+    throw new Error(`Dashboard smoke contract could not find the event flyer: ${flyerPath}`);
+  }
 
   if (loadingState === -1 || loadedState === -1) {
     throw new Error('Dashboard smoke contract is missing state test IDs');
