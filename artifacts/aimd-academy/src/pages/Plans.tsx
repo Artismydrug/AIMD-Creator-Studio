@@ -24,7 +24,7 @@ const TIER_CONTENT = {
     description: 'Learn deeper. Get real feedback.',
     icon: Layers3,
     features: [
-      { icon: BookOpen, label: 'Masterclasses' },
+      { icon: BookOpen, label: 'Workshops' },
       { icon: Users, label: 'Instructor feedback' },
       { icon: Sparkles, label: 'Badges & priority events' },
     ],

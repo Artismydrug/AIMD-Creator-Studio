@@ -160,24 +160,22 @@ export default function CreatorPortfolioView({
     },
     name: { color: colors.studioInk, fontFamily: portfolioSerif, fontWeight: '700', fontSize: 27, lineHeight: 29, letterSpacing: -0.8 },
     bio: { color: colors.studioMuted, fontFamily: 'DMSans_400Regular', fontSize: 12, lineHeight: 18 },
-    ownerLinkRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
-    link: {
-      minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 7,
-      borderRadius: 99, borderWidth: 1.5, borderColor: colors.studioInk, backgroundColor: colors.studioPaper,
-      shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2,
-    },
-    editProfileLink: {
-      minWidth: 44, height: 44, paddingHorizontal: 12, justifyContent: 'center',
-      backgroundColor: colors.studioYellow,
-    },
     stats: {
       flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around',
-      paddingVertical: 8, borderTopWidth: 1, borderBottomWidth: 1,
+      gap: 8, paddingVertical: 8, borderTopWidth: 1, borderBottomWidth: 1,
       borderColor: colors.border,
     },
-    statItem: { alignItems: 'center', gap: 2, minWidth: 70 },
+    statItem: { flex: 1, minWidth: 0, alignItems: 'center', gap: 2 },
     statValue: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 14 },
     statLabel: { color: colors.studioMuted, fontFamily: 'DMSans_700Bold', fontSize: 9, letterSpacing: 0.5 },
+    editProfileInline: {
+      flex: 1, minWidth: 0, minHeight: 42, flexDirection: 'row', alignItems: 'center',
+      justifyContent: 'center', gap: 6, paddingHorizontal: 6, borderWidth: 1.5,
+      borderColor: colors.studioInk, borderRadius: 99, backgroundColor: colors.studioYellow,
+      shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1, shadowRadius: 0, elevation: 2,
+    },
+    editProfileInlineText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 10 },
     actions: { flexDirection: 'row', gap: 9, flexWrap: 'wrap' },
     action: {
       minHeight: 44, paddingHorizontal: 12,
@@ -279,20 +277,6 @@ export default function CreatorPortfolioView({
               <Text style={styles.name} accessibilityRole="header">{displayName}</Text>
               {!!profileLabel && <Text style={styles.eyebrow} testID="creator-profile-label">{profileLabel}</Text>}
               {creator.bio?.trim() ? <Text style={styles.bio}>{creator.bio.trim()}</Text> : null}
-              {isOwner && (
-                <View style={styles.ownerLinkRow} testID="creator-profile-owner-links">
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Edit profile"
-                    onPress={onEdit}
-                    style={[styles.link, styles.editProfileLink]}
-                    testID="edit-profile-navigation"
-                  >
-                    <Feather name="edit-2" size={13} color={colors.studioInk} />
-                    <Text style={styles.actionText}>Edit Profile</Text>
-                  </Pressable>
-                </View>
-              )}
             </View>
           </View>
 
@@ -321,6 +305,18 @@ export default function CreatorPortfolioView({
                 <Text style={styles.statValue}>{creator.followingCount ?? 0}</Text>
                 <Text style={styles.statLabel}>FOLLOWING</Text>
               </View>
+              {isOwner && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Edit profile"
+                  onPress={onEdit}
+                  style={styles.editProfileInline}
+                  testID="edit-profile-navigation"
+                >
+                  <Feather name="edit-2" size={13} color={colors.studioInk} />
+                  <Text style={styles.editProfileInlineText}>Edit Profile</Text>
+                </Pressable>
+              )}
             </View>
 
           {isLoading ? (

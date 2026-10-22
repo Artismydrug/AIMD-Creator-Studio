@@ -41,7 +41,7 @@ function sketch(id, prompt = `Prompt ${id}`) {
   return { id, createdAt: '2026-10-18T20:00:00.000Z', prompt, paths: ['M10 10 L20 20'] };
 }
 
-test('Dashboard leads with Today’s Habit and a Coming Soon masterclass, while retaining the canvas and event slides', () => {
+test('Dashboard leads with Today’s Habit and Coming Soon Workshops, while retaining the canvas and event slides', () => {
   const dashboard = fs.readFileSync(path.resolve(__dirname, '../app/(tabs)/index.tsx'), 'utf8');
   const card = fs.readFileSync(path.resolve(__dirname, '../components/StickerJamPracticeCard.tsx'), 'utf8');
   const route = fs.readFileSync(path.resolve(__dirname, '../app/mini-habit-studio.tsx'), 'utf8');
@@ -54,12 +54,13 @@ test('Dashboard leads with Today’s Habit and a Coming Soon masterclass, while 
   assert.match(card, /testID="dashboard-canvas-carousel"/);
   assert.match(card, /pagingEnabled/);
   assert.match(card, /testID="dashboard-active-habit-slide"/);
-  assert.match(card, /testID="dashboard-masterclass-slide"/);
+  assert.match(card, /testID="dashboard-workshop-slide"/);
   assert.match(card, /COMING SOON/);
   assert.match(card, /testID="dashboard-events-slide"/);
-  assert.ok(card.indexOf('testID="dashboard-active-habit-slide"') < card.indexOf('testID="dashboard-masterclass-slide"'));
-  assert.ok(card.indexOf('testID="dashboard-masterclass-slide"') < card.indexOf("sticker-jam-sketchbook.jpg"));
-  assert.ok(card.indexOf("sticker-jam-sketchbook.jpg") < card.indexOf('testID="dashboard-events-slide"'));
+  assert.ok(card.indexOf('testID="dashboard-active-habit-slide"') < card.indexOf('testID="dashboard-workshop-slide"'));
+  assert.ok(card.indexOf('testID="dashboard-workshop-slide"') < card.indexOf('testID="dashboard-mini-habit-studio-open"'));
+  assert.ok(card.indexOf('testID="dashboard-mini-habit-studio-open"') < card.indexOf('testID="dashboard-events-slide"'));
+  assert.match(card, /workshop-preview\.jpg/);
   assert.match(card, /onOpenEvents/);
   assert.match(dashboard, /onOpenEvents=\{\(\) => router\.push\('\/\(tabs\)\/events'\)\}/);
   assert.match(card, /Start a sketch/);

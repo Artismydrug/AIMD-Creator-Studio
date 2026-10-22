@@ -1710,7 +1710,7 @@ export const getListWorkshopsUrl = (params?: ListWorkshopsParams,) => {
 }
 
 /**
- * @summary List available workshops & masterclasses
+ * @summary List available workshops
  */
 export const listWorkshops = async (params?: ListWorkshopsParams, options?: Parameters<typeof customFetch>[1]): Promise<Workshop[]> => {
 
@@ -1757,7 +1757,7 @@ export type ListWorkshopsQueryError = ErrorType<unknown>
 
 
 /**
- * @summary List available workshops & masterclasses
+ * @summary List available workshops
  */
 
 export function useListWorkshops<TData = Awaited<ReturnType<typeof listWorkshops>>, TError = ErrorType<unknown>>(

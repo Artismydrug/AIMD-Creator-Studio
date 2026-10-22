@@ -8,7 +8,7 @@ export default function Slide9() {
         <div style={{borderTop:'3px solid #FF4D00',paddingTop:'2vh'}}><div style={{fontSize:'3.2vw',fontWeight:700}}>02</div><div style={{fontSize:'1.55vw',fontWeight:700,marginTop:'1vh'}}>Map the promise, modules, lessons, drills, and review moments</div></div>
         <div style={{borderTop:'3px solid #FF4D00',paddingTop:'2vh'}}><div style={{fontSize:'3.2vw',fontWeight:700}}>03</div><div style={{fontSize:'1.55vw',fontWeight:700,marginTop:'1vh'}}>Invite a small group of artists into the experience</div></div>
         <div style={{borderTop:'3px solid #FF4D00',paddingTop:'2vh'}}><div style={{fontSize:'3.2vw',fontWeight:700}}>04</div><div style={{fontSize:'1.55vw',fontWeight:700,marginTop:'1vh'}}>Review learner questions and submissions with the AIMD team</div></div>
-        <div style={{borderTop:'3px solid #FF4D00',paddingTop:'2vh'}}><div style={{fontSize:'3.2vw',fontWeight:700}}>05</div><div style={{fontSize:'1.55vw',fontWeight:700,marginTop:'1vh'}}>Refine the path before expanding into a larger masterclass or career pipeline</div></div>
+        <div style={{borderTop:'3px solid #FF4D00',paddingTop:'2vh'}}><div style={{fontSize:'3.2vw',fontWeight:700}}>05</div><div style={{fontSize:'1.55vw',fontWeight:700,marginTop:'1vh'}}>Refine the path before expanding into a larger workshop program or career pipeline</div></div>
       </div></div>
       <div className="flex justify-between" style={{fontSize:'0.9vw',color:'#999',textTransform:'uppercase',letterSpacing:'0.1em'}}><span>Creator Studio by AIMD</span><span>09</span></div>
     </div>

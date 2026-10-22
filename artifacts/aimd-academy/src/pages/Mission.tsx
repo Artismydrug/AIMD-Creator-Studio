@@ -29,7 +29,7 @@ const PILLARS = [
     title: 'Workshops & Mentorship',
     tag: 'Phase 2',
     description:
-      'Structured video masterclasses taught by working professionals — with real assignment feedback, skill milestone badges, and a clear certification path.',
+      'Structured video workshops led by working professionals — with real assignment feedback, skill milestone badges, and a clear certification path.',
     bullets: [
       'Tattooing, fine art, mural & media tracks',
       'Instructor-reviewed assignment submissions',

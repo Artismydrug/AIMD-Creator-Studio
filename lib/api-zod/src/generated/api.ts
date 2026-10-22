@@ -449,7 +449,7 @@ export const LikeStudioPostResponse = zod.void()
 
 
 /**
- * @summary List available workshops & masterclasses
+ * @summary List available workshops
  */
 export const ListWorkshopsQueryParams = zod.object({
   "tier": zod.union([zod.literal('free'),zod.literal('workshop'),zod.literal('academy'),zod.literal('pro'),zod.literal(null)]).nullish(),

@@ -188,7 +188,7 @@ test('owners and visitors see the Following count but no follower count or socia
   }
 });
 
-test('studio keeps specialization below the name, Following above the unified grid, and inquiry near the portfolio', () => {
+test('studio keeps profile actions and counts in one row above the unified grid', () => {
   const h = harness({ creator: { id: 16, username: 'ponchotheartist', discipline: 'Tattooing', location: 'Los Angeles', followingCount: 4 } });
   const tree = h.render();
   assert.equal(get(tree, 'creator-profile-label').props.children[0], 'Tattooing · Los Angeles');
@@ -205,14 +205,14 @@ test('studio keeps specialization below the name, Following above the unified gr
   add.props.onPress();
   assert.deepEqual(h.calls.add, [[]]);
 
-  const ownerLinks = allNodes(get(tree, 'creator-profile-owner-links'));
-  const editIndex = ownerLinks.findIndex(node => node.props?.testID === 'edit-profile-navigation');
-  assert.ok(editIndex >= 0);
-  assert.equal(flattenStyle(get(tree, 'creator-profile-owner-links').props.style).flexDirection, 'row');
+  const stats = get(tree, 'creator-profile-stats');
   const edit = get(tree, 'edit-profile-navigation');
+  assert.ok(allNodes(stats).some(node => node.props?.testID === 'edit-profile-navigation'),
+    'Edit Profile is aligned in the Works and Following row');
   assert.ok(allNodes(edit).some(node =>
     node.type === 'Text' && [].concat(node.props.children).includes('Edit Profile')));
-  assert.ok(flattenStyle(edit.props.style).minWidth >= 44, 'the labelled edit control keeps a comfortable touch target');
+  assert.equal(flattenStyle(edit.props.style).flex, 1, 'Edit Profile shares the row evenly with both stats');
+  assert.ok(flattenStyle(edit.props.style).minHeight >= 42, 'the labelled edit control keeps a comfortable touch target');
   edit.props.onPress();
   assert.equal(h.calls.edit, 1);
   const nodes = allNodes(tree);

@@ -32,9 +32,9 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    heading: 'Workshops & Masterclasses',
+    heading: 'Workshops',
     items: [
-      { href: '/workshops',   label: 'Workshops & Masterclasses',         icon: GraduationCap },
+      { href: '/workshops',   label: 'Workshops',                         icon: GraduationCap },
       { href: '/plans',       label: 'Membership',                       icon: Sparkles },
       { href: '/badges',      label: 'Certifications & Badges',  icon: Award },
     ],

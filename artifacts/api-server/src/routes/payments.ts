@@ -14,7 +14,7 @@ const PAID_MEMBERSHIPS_COMING_SOON = true;
 //
 // Plan names reflect the Creator Studio positioning:
 //   Discovering Artist (free)     — start your creative practice
-//   Dedicated Artist   ($39/mo, $399/yr) — full workshop & masterclass access
+//   Dedicated Artist   ($39/mo, $399/yr) — full workshop access
 //   Professional Artist ($99/mo, $999/yr) — career pipeline + verified placement
 //
 // Legacy tiers "workshop" and "academy" are preserved via TIER_RANK in
@@ -34,7 +34,7 @@ const PLANS = [
     features: [
       "Up to 3 active habits & basic focus timers",
       "Full Studio Feed — share work & message creators",
-      "Module 1 + free previews across all Workshops & Masterclasses",
+      "Module 1 + free previews across Workshops",
       "Community event access & RSVPs",
       "AIMD community Discord",
     ],
@@ -49,10 +49,10 @@ const PLANS = [
     priceMonthly: 39,
     priceAnnual: 399,
     featured: true,
-    description: "Full access to AIMD's Workshops & Masterclasses curriculum.",
+    description: "Full access to AIMD's Workshops curriculum.",
     features: [
       "Unlimited habits, visual heatmaps & session analytics",
-      "All workshop & masterclass videos, modules & content",
+      "All workshop videos, modules & content",
       "Assignment submission & instructor feedback",
       "Milestone badges & certification path",
       "Priority event access",

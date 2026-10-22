@@ -73,7 +73,7 @@ const PRODUCTS: ProductSpec[] = [
   {
     name: 'Dedicated Artist',
     oldName: 'Workshop Academy',          // preserve existing Stripe product
-    description: 'Full access to AIMD\'s Workshops & Masterclasses curriculum.',
+    description: 'Full access to AIMD\'s Workshops curriculum.',
     unitAmount: 3900,                     // $39.00/month
     interval: 'month',
     metadata: { tier: 'academy', plan_id: 'plan_academy' },

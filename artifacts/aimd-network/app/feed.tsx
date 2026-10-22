@@ -826,8 +826,8 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
          )}
         <View style={s.headerCopy}>
           {!embedded && <Text style={s.headerEyebrow}>Creator Studio</Text>}
-          <Text style={s.headerTitle}>{scope === 'masterclasses' ? 'Masterclasses' : 'My challenges'}</Text>
-          {!embedded && <Text style={s.headerHint}>{scope === 'masterclasses' ? 'Learn from working creators' : 'Your creative practice'}</Text>}
+          <Text style={s.headerTitle}>{scope === 'workshops' ? 'Workshops' : 'My challenges'}</Text>
+          {!embedded && <Text style={s.headerHint}>{scope === 'workshops' ? 'Learn from working creators' : 'Your creative practice'}</Text>}
         </View>
         <TouchableOpacity
           accessibilityRole="button"
@@ -840,7 +840,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
         </TouchableOpacity>
       </View>
       <FeedScopeTabs scope={scope} onChange={(next) => { setScope(next); setActiveIndex(0); }} /></>}
-      {scope === 'masterclasses' ? <WorkshopsScreen embedded /> : scope === 'challenges' ? <ChallengesScreen embedded /> : <>
+      {scope === 'workshops' ? <WorkshopsScreen embedded /> : scope === 'challenges' ? <ChallengesScreen embedded /> : <>
       <FeedNavigation mode={feedMode} onModeChange={handleFeedModeChange}
         menuOpen={navigationOpen} onMenuOpenChange={setNavigationOpen}
         onScopeChange={(next) => { setScope(next); setActiveIndex(0); }}

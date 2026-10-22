@@ -3,10 +3,10 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 
-export type FeedScope = 'community' | 'masterclasses' | 'challenges';
+export type FeedScope = 'community' | 'workshops' | 'challenges';
 const SCOPES = [
   { value: 'community', label: 'Feed', icon: 'users' },
-  { value: 'masterclasses', label: 'Masterclasses', icon: 'play-circle' },
+  { value: 'workshops', label: 'Workshops', icon: 'play-circle' },
   { value: 'challenges', label: 'My challenges', icon: 'target' },
 ] as const;
 

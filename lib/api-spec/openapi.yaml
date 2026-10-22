@@ -475,7 +475,7 @@ paths:
     get:
       operationId: listWorkshops
       tags: [workshops]
-      summary: List available workshops & masterclasses
+      summary: List available workshops
       parameters:
         - name: tier
           in: query

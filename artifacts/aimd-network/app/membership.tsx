@@ -29,7 +29,7 @@ const discoveringBenefits: MembershipBenefit[] = [
 ];
 
 const dedicatedBenefits: MembershipBenefit[] = [
-  { icon: 'play-circle', label: 'Masterclasses' },
+  { icon: 'play-circle', label: 'Workshops' },
   { icon: 'message-circle', label: 'Instructor feedback' },
   { icon: 'award', label: 'Badges & priority events' },
 ];

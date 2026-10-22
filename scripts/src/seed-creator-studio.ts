@@ -505,7 +505,7 @@ async function seedCreatorStudio() {
       instructorIds[instructor.mentorSlug] = await ensureInstructor(client, instructor);
     }
 
-    console.log("\n── Seeding workshops & masterclasses ───────────────────────────");
+    console.log("\n── Seeding workshops ───────────────────────────────────────────");
     // Map verified instructor slugs so every workshop can be validated as
     // belonging to a verified instructor profile before it is seeded.
     const verifiedSlugs = new Set(

@@ -174,7 +174,7 @@ router.post("/assignments", async (req, res): Promise<void> => {
   // The submissionUrl must be a private served-object reference.
   const objectPath = submissionUrlToObjectPath(parsed.data.submissionUrl);
   if (!objectPath) {
-    res.status(400).json({ error: "Assignment footage must be uploaded through the Workshops & Masterclasses upload service" });
+    res.status(400).json({ error: "Assignment footage must be uploaded through the Workshops upload service" });
     return;
   }
 

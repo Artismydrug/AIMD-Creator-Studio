@@ -182,7 +182,7 @@ function CreateEventCard() {
 
 const TIER_LABELS: Record<string, string> = {
   free: 'Starter',
-  workshop: 'Workshops & Masterclasses',
+  workshop: 'Workshops',
   pro: 'Pro',
 };
 

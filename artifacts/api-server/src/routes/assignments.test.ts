@@ -142,7 +142,7 @@ describe("assignment drill-gate integrity", () => {
       .post("/api/assignments")
       .send({ workshopId, moduleId, submissionUrl: "https://evil.example.com/x.mp4" });
     expect(res.status).toBe(400);
-    expect(res.body.error).toContain("Workshops & Masterclasses");
+    expect(res.body.error).toContain("Workshops");
   });
 
   it("rejects a private object that was never recorded as a drill upload", async () => {

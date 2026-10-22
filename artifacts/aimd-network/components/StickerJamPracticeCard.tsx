@@ -13,7 +13,7 @@ import type { ComponentProps } from 'react';
 import { useColors } from '@/hooks/useColors';
 import { useListEvents, useListHabits } from '@workspace/api-client-react';
 
-const SLIDE_LABELS = ['Today’s Habit', 'Masterclass', 'Your canvas', 'Events'] as const;
+const SLIDE_LABELS = ['Today’s Habit', 'Workshops', 'Your canvas', 'Events'] as const;
 
 type Shortcut = {
   label: string;
@@ -216,8 +216,17 @@ export default function StickerJamPracticeCard({
       borderRadius: 99, backgroundColor: colors.studioYellow,
     },
     habitStatusText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 9, letterSpacing: 0.7 },
-    habitName: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 25, lineHeight: 30, letterSpacing: -0.5 },
-    habitDetails: { color: colors.studioInk, fontFamily: 'DMSans_500Medium', fontSize: 13, lineHeight: 19 },
+    habitContentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 98 },
+    habitCopy: { flex: 1, minWidth: 0, gap: 4 },
+    habitName: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 21, lineHeight: 25, letterSpacing: -0.4 },
+    habitDetails: { color: colors.studioInk, fontFamily: 'DMSans_500Medium', fontSize: 11, lineHeight: 15 },
+    habitArtFrame: {
+      width: 82, height: 94, overflow: 'hidden', borderWidth: 2, borderColor: colors.studioInk,
+      borderRadius: 15, backgroundColor: colors.studioPaper, transform: [{ rotate: '3deg' }],
+      shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1, shadowRadius: 0, elevation: 2,
+    },
+    habitArtImage: { width: '100%', height: '100%' },
     habitAction: {
       minHeight: 42, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
       gap: 7, paddingHorizontal: 14, borderWidth: 2, borderColor: colors.studioInk, borderRadius: 15,
@@ -225,7 +234,7 @@ export default function StickerJamPracticeCard({
       shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2,
     },
     habitActionText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 12 },
-    masterclassFrame: {
+    workshopFrame: {
       height: 228,
       width: '100%',
       justifyContent: 'space-between',
@@ -241,24 +250,33 @@ export default function StickerJamPracticeCard({
       shadowRadius: 0,
       elevation: 4,
     },
-    masterclassMark: {
+    workshopMark: {
       width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5,
       borderColor: colors.studioInk, borderRadius: 14, backgroundColor: colors.studioYellow,
     },
-    masterclassBadge: {
+    workshopBadge: {
       paddingHorizontal: 9, paddingVertical: 5, borderWidth: 1.5, borderColor: colors.studioInk,
       borderRadius: 99, backgroundColor: colors.studioOrange,
     },
-    masterclassBadgeText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 9, letterSpacing: 0.7 },
-    masterclassTitle: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 25, lineHeight: 30, letterSpacing: -0.5 },
-    masterclassDetails: { color: colors.studioInk, fontFamily: 'DMSans_500Medium', fontSize: 13, lineHeight: 19 },
-    masterclassAction: {
+    workshopBadgeText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 9, letterSpacing: 0.7 },
+    workshopContentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 98 },
+    workshopCopy: { flex: 1, minWidth: 0, gap: 4 },
+    workshopTitle: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 21, lineHeight: 25, letterSpacing: -0.4 },
+    workshopDetails: { color: colors.studioInk, fontFamily: 'DMSans_500Medium', fontSize: 11, lineHeight: 15 },
+    workshopArtFrame: {
+      width: 82, height: 94, overflow: 'hidden', borderWidth: 2, borderColor: colors.studioInk,
+      borderRadius: 15, backgroundColor: colors.studioPaper, transform: [{ rotate: '-3deg' }],
+      shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1, shadowRadius: 0, elevation: 2,
+    },
+    workshopArtImage: { width: '100%', height: '100%' },
+    workshopAction: {
       minHeight: 42, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
       gap: 7, paddingHorizontal: 14, borderWidth: 2, borderColor: colors.studioInk, borderRadius: 15,
       backgroundColor: colors.studioPaper, shadowColor: colors.studioShadow,
       shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2,
     },
-    masterclassActionText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 12 },
+    workshopActionText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 12 },
     eventsPosterFrame: {
       overflow: 'hidden',
       borderWidth: 1.5,
@@ -527,15 +545,20 @@ export default function StickerJamPracticeCard({
                   </Text>
                 </View>
               </View>
-              <View>
-                <Text style={styles.habitName} numberOfLines={2}>
-                  {activeHabit?.name ?? (habitsLoading ? 'Loading your habit…' : habitsError ? 'Your habit is unavailable' : 'Choose a habit to begin')}
-                </Text>
-                <Text style={styles.habitDetails}>
-                  {activeHabit
-                    ? `${activeHabit.category} · ${activeHabit.targetMinutes} min · ${activeHabit.currentStreak} day streak`
-                    : habitsError ? 'Open Habits to try again.' : 'Build a small creative practice, one day at a time.'}
-                </Text>
+              <View style={styles.habitContentRow}>
+                <View style={styles.habitCopy}>
+                  <Text style={styles.habitName} numberOfLines={2}>
+                    {activeHabit?.name ?? (habitsLoading ? 'Loading your habit…' : habitsError ? 'Your habit is unavailable' : 'Choose a habit to begin')}
+                  </Text>
+                  <Text style={styles.habitDetails} numberOfLines={2}>
+                    {activeHabit
+                      ? `${activeHabit.category} · ${activeHabit.targetMinutes} min · ${activeHabit.currentStreak} day streak`
+                      : habitsError ? 'Open Habits to try again.' : 'Build a small creative practice, one day at a time.'}
+                  </Text>
+                </View>
+                <View style={styles.habitArtFrame}>
+                  <Image source={require('../assets/images/sticker-jam-sketchbook.jpg')} style={styles.habitArtImage} resizeMode="cover" accessible={false} />
+                </View>
               </View>
               <View style={styles.habitAction}>
                 <Text style={styles.habitActionText}>
@@ -547,22 +570,27 @@ export default function StickerJamPracticeCard({
           </View>
           <View style={{ width: slideWidth }}>
             <TouchableOpacity
-              style={styles.masterclassFrame}
+              style={styles.workshopFrame}
               onPress={onOpenWorkshops}
               accessibilityRole="button"
-              accessibilityLabel="Masterclasses coming soon. Explore workshops."
-              testID="dashboard-masterclass-slide"
+              accessibilityLabel="Workshops coming soon. Explore available workshops."
+              testID="dashboard-workshop-slide"
             >
               <View style={styles.habitTopline}>
-                <View style={styles.masterclassMark}><Feather name="play-circle" size={20} color={colors.studioInk} /></View>
-                <View style={styles.masterclassBadge}><Text style={styles.masterclassBadgeText}>COMING SOON</Text></View>
+                <View style={styles.workshopMark}><Feather name="play-circle" size={20} color={colors.studioInk} /></View>
+                <View style={styles.workshopBadge}><Text style={styles.workshopBadgeText}>COMING SOON</Text></View>
               </View>
-              <View>
-                <Text style={styles.masterclassTitle}>Masterclass Studio</Text>
-                <Text style={styles.masterclassDetails}>New artist-led classes are on the way. Explore workshops available now.</Text>
+              <View style={styles.workshopContentRow}>
+                <View style={styles.workshopCopy}>
+                  <Text style={styles.workshopTitle}>Workshop Studio</Text>
+                  <Text style={styles.workshopDetails} numberOfLines={3}>New artist-led classes are on the way. Explore workshops available now.</Text>
+                </View>
+                <View style={styles.workshopArtFrame}>
+                  <Image source={require('../assets/images/workshop-preview.jpg')} style={styles.workshopArtImage} resizeMode="cover" accessible={false} />
+                </View>
               </View>
-              <View style={styles.masterclassAction}>
-                <Text style={styles.masterclassActionText}>Explore workshops</Text>
+              <View style={styles.workshopAction}>
+                <Text style={styles.workshopActionText}>Explore workshops</Text>
                 <Feather name="arrow-up-right" size={15} color={colors.studioInk} />
               </View>
             </TouchableOpacity>
