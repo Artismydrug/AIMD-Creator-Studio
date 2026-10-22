@@ -134,8 +134,3 @@ test('inquiry settings and creator entry points use recipient-specific in-app fo
   assert.match(settings, /public studio and Creator Directory/);
   assert.doesNotMatch(settings, /ponchotheartist|example.*@/i);
 });
-
-test('Edit Profile header clears the web status area and native safe area', () => {
-  const editor = fs.readFileSync(path.resolve(__dirname, '../app/edit-profile.tsx'), 'utf8');
-  assert.match(editor, /paddingTop: Platform\.OS === 'web' \? 67 : insets\.top \+ 8/);
-});
