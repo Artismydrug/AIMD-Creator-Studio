@@ -1798,28 +1798,6 @@ paths:
         "401":
           description: Authentication required
 
-  /studio-inquiries/{bookingId}:
-    get:
-      operationId: getStudioInquiry
-      tags: [tattoo-bookings]
-      summary: Get a creator's private commission inquiry
-      parameters:
-        - name: bookingId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Inquiry details for its assigned creator
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StudioInquiry"
-        "401":
-          description: Authentication required
-        "404":
-          description: Inquiry not found
   /notifications/{id}/read:
     patch:
       operationId: markNotificationRead
@@ -4288,13 +4266,13 @@ components:
 
     Notification:
       type: object
-      required: [id, type, actor, conversationId, postId, conversationDestination, postDestination, commissionInquirySummary, commissionInquiryDestination, createdAt, readAt]
+      required: [id, type, actor, conversationId, postId, conversationDestination, postDestination, createdAt, readAt]
       properties:
         id:
           type: integer
         type:
           type: string
-          enum: [direct_message, follow, like, critique, commission_inquiry]
+          enum: [direct_message, follow, like, critique]
         actor:
           anyOf:
             - $ref: "#/components/schemas/NotificationActor"
@@ -4310,14 +4288,6 @@ components:
         postDestination:
           anyOf:
             - $ref: "#/components/schemas/PostDestination"
-            - type: "null"
-        commissionInquirySummary:
-          anyOf:
-            - $ref: "#/components/schemas/CommissionInquiryNotificationSummary"
-            - type: "null"
-        commissionInquiryDestination:
-          anyOf:
-            - $ref: "#/components/schemas/CommissionInquiryDestination"
             - type: "null"
         createdAt:
           type: string
@@ -4335,21 +4305,6 @@ components:
           items:
             $ref: "#/components/schemas/Notification"
         unreadCount:
-          type: integer
-    CommissionInquiryNotificationSummary:
-      type: object
-      required: [clientName, requestType]
-      properties:
-        clientName:
-          type: string
-        requestType:
-          type: string
-          enum: [tattoo, painting, other]
-    CommissionInquiryDestination:
-      type: object
-      required: [bookingId]
-      properties:
-        bookingId:
           type: integer
     NotificationPreferences:
       type: object
@@ -4474,10 +4429,6 @@ components:
         preferredArtist:
           type: string
           enum: ["No preference", "Poncho The Artist", "Edwin", "Ash"]
-        creatorUserId:
-          type: integer
-          minimum: 1
-          description: Optional creator owner for in-app studio inquiry routing.
         website:
           type: string
           maxLength: 200
@@ -4590,39 +4541,6 @@ components:
           format: date-time
         updatedAt:
           type: string
-          format: date-time
-
-    StudioInquiry:
-      type: object
-      required: [id, requestType, name, email, phone, idea, placement, estimatedSize, preferredArtist, status, references, submittedAt]
-      properties:
-        id:
-          type: integer
-        requestType:
-          type: string
-          enum: ["tattoo", "painting", "other"]
-        name:
-          type: string
-        email:
-          type: string
-        phone:
-          type: ["string", "null"]
-        idea:
-          type: string
-        placement:
-          type: string
-        estimatedSize:
-          type: string
-        preferredArtist:
-          type: string
-        status:
-          $ref: "#/components/schemas/TattooBookingStatus"
-        references:
-          type: array
-          items:
-            $ref: "#/components/schemas/TattooBookingReference"
-        submittedAt:
-          type: ["string", "null"]
           format: date-time
 
     TattooBookingUpdate:

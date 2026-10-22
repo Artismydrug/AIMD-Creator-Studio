@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -10,6 +10,8 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import { PreviewNotificationLink } from "./_shared/PreviewNotificationLink";
+import { SANDBOX_CREATOR_ID, sandboxPaths, submitSandboxInquiry } from "./_shared/inquiryPreviewStore";
 
 type Attachment = {
   id: string;
@@ -27,16 +29,25 @@ export function PonchoCommissionInquiry() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [attachmentError, setAttachmentError] = useState("");
+  const [fields, setFields] = useState({ name: "", email: "", phone: "", idea: "", budget: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [submittedId, setSubmittedId] = useState("");
+  const submissionId = useRef("");
+  const submissionLock = useRef(false);
+  const attachmentRef = useRef(attachments);
+  attachmentRef.current = attachments;
+  useEffect(() => () => attachmentRef.current.forEach((item) => URL.revokeObjectURL(item.url)), []);
 
   const addFiles = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
     const available = Math.max(0, 4 - attachments.length);
     const accepted = files
-      .filter((file) => file.type.startsWith("image/"))
+      .filter((file) => ["image/jpeg", "image/png", "image/webp"].includes(file.type) && file.size <= 8 * 1024 * 1024)
       .slice(0, available)
       .map((file) => ({ id: `${file.name}-${file.lastModified}-${Math.random()}`, file, url: URL.createObjectURL(file) }));
     setAttachments((current) => [...current, ...accepted]);
-    setAttachmentError(files.some((file) => !file.type.startsWith("image/")) ? "Please choose image files only." : "");
+    setAttachmentError(files.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 8 * 1024 * 1024) ? "Choose JPG, PNG or WEBP images, up to 8 MB each." : "");
     if (files.length > available) setAttachmentError("You can attach up to four reference photos.");
     event.target.value = "";
   };
@@ -49,9 +60,35 @@ export function PonchoCommissionInquiry() {
     });
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSubmitted(true);
+    if (submissionLock.current) return;
+    submissionLock.current = true;
+    setSubmitting(true);
+    setSubmitError("");
+    if (!submissionId.current) submissionId.current = crypto.randomUUID();
+    try {
+      const inquiry = await submitSandboxInquiry({
+        creatorId: SANDBOX_CREATOR_ID,
+        clientName: fields.name,
+        email: fields.email,
+        phone: fields.phone,
+        category: commission === "Custom tattoo" ? "Tattoo" : commission === "Painting" ? "Painting" : "Other",
+        description: fields.idea,
+        budget: fields.budget,
+        timing,
+        references: attachments.map((item) => ({
+          id: item.id, name: item.file.name, type: item.file.type, blob: item.file,
+        })),
+      }, submissionId.current);
+      setSubmittedId(inquiry.id);
+      setSubmitted(true);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Could not save your preview. Please try again.");
+    } finally {
+      submissionLock.current = false;
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -108,6 +145,9 @@ export function PonchoCommissionInquiry() {
         .pc-thumb-remove { position:absolute; top:4px; right:4px; width:22px; height:22px; display:grid; place-items:center; border:1px solid var(--pc-ink); border-radius:50%; background:#fffaf1; color:var(--pc-ink); cursor:pointer; }
         .pc-file-name { overflow:hidden; position:absolute; left:0; right:0; bottom:0; padding:14px 5px 5px; background:linear-gradient(transparent,rgba(26,23,33,.75)); color:white; font-size:7px; text-overflow:ellipsis; white-space:nowrap; }
         .pc-error { margin:7px 0 0; color:#b3334f; font-size:9px; }
+        .pc-sandbox { margin:12px 0 0; font-size:10px; line-height:1.5; color:#625b67; }
+        .pc-submit:disabled { opacity:.65; cursor:wait; }
+        .pc-inbox-link { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 16px; border:1.5px solid var(--pc-ink); border-radius:99px; background:var(--pc-yellow); color:var(--pc-ink); font-size:11px; font-weight:800; text-decoration:none; }
         .pc-submit { width:100%; min-height:47px; display:flex; align-items:center; justify-content:center; gap:15px; border:2px solid var(--pc-ink); border-radius:13px; background:var(--pc-pink); color:#fffaf1; box-shadow:3px 3px 0 var(--pc-ink); font:inherit; font-size:11px; font-weight:900; cursor:pointer; transition:transform .18s,box-shadow .18s; }
         .pc-submit:hover { transform:translate(-1px,-1px); box-shadow:5px 5px 0 var(--pc-ink); }
         .pc-privacy { margin:11px 0 0; color:var(--pc-muted); text-align:center; font-size:9px; line-height:1.55; }
@@ -173,7 +213,9 @@ export function PonchoCommissionInquiry() {
             <span className="pc-stamp"><Sparkles size={15} strokeWidth={2.2} /></span>
             <span>CREATOR STUDIO <span>by AIMD</span></span>
           </div>
+          <PreviewNotificationLink />
         </header>
+        <p className="pc-sandbox">Sandbox preview · saved only in this browser. No real email or push notification is sent.</p>
 
         <div className="pc-step">
           <span>COMMISSION INQUIRY</span>
@@ -185,8 +227,19 @@ export function PonchoCommissionInquiry() {
             <span className="pc-thanks-icon"><Check size={24} strokeWidth={2.4} /></span>
             <p className="pc-kicker">YOUR IDEA IS IN MOTION</p>
             <h1>Thanks for the details.</h1>
-            <p>Your {commission.toLowerCase()} inquiry preview is ready, with {attachments.length} reference {attachments.length === 1 ? "photo" : "photos"}. Nothing has been sent and no one will receive it. Your details and attachments stay in this browser.</p>
-            <button type="button" onClick={() => setSubmitted(false)}><ArrowLeft size={14} /> Review your inquiry</button>
+            <p>Your {commission.toLowerCase()} inquiry and {attachments.length} reference {attachments.length === 1 ? "photo are" : "photos are"} saved in Poncho’s demo inbox. An unread notification is ready in this sandbox only.</p>
+            <a className="pc-inbox-link" href={`${sandboxPaths.notifications}?inquiry=${encodeURIComponent(submittedId)}`}>View creator’s inquiry <ArrowRight size={14} /></a>
+            <div style={{ marginTop: 14 }}>
+              <button type="button" onClick={() => {
+                submissionId.current = "";
+                setSubmitted(false);
+                setSubmitError("");
+                setFields({ name: "", email: "", phone: "", idea: "", budget: "" });
+                attachments.forEach((item) => URL.revokeObjectURL(item.url));
+                setAttachments([]);
+                setTiming("");
+              }}>Start another inquiry</button>
+            </div>
           </section>
         ) : (
           <div className="pc-layout">
@@ -213,11 +266,15 @@ export function PonchoCommissionInquiry() {
                 <div className="pc-field-grid">
                   <div className="pc-field">
                     <label htmlFor="pc-name">Your name *</label>
-                    <input id="pc-name" name="name" placeholder="How should I address you?" required />
+                    <input id="pc-name" name="name" placeholder="How should I address you?" required maxLength={120} value={fields.name} onChange={(event) => setFields({ ...fields, name: event.target.value })} />
                   </div>
                   <div className="pc-field">
                     <label htmlFor="pc-email">Email address *</label>
-                    <input id="pc-email" name="email" type="email" placeholder="you@example.com" required />
+                    <input id="pc-email" name="email" type="email" placeholder="you@example.com" required maxLength={254} value={fields.email} onChange={(event) => setFields({ ...fields, email: event.target.value })} />
+                  </div>
+                  <div className="pc-field full">
+                    <label htmlFor="pc-phone">Phone (optional)</label>
+                    <input id="pc-phone" name="phone" type="tel" placeholder="Your phone number" maxLength={40} value={fields.phone} onChange={(event) => setFields({ ...fields, phone: event.target.value })} />
                   </div>
                 </div>
               </section>
@@ -228,11 +285,11 @@ export function PonchoCommissionInquiry() {
                 <div className="pc-field-grid">
                   <div className="pc-field full">
                     <label htmlFor="pc-idea">Tell me about your project *</label>
-                    <textarea id="pc-idea" name="idea" placeholder="I’ve been thinking about…" required />
+                    <textarea id="pc-idea" name="idea" placeholder="I’ve been thinking about…" required maxLength={5000} value={fields.idea} onChange={(event) => setFields({ ...fields, idea: event.target.value })} />
                   </div>
                   <div className="pc-field">
                     <label htmlFor="pc-budget">Budget range</label>
-                    <select id="pc-budget" name="budget" defaultValue="">
+                    <select id="pc-budget" name="budget" value={fields.budget} onChange={(event) => setFields({ ...fields, budget: event.target.value })}>
                       <option value="" disabled>Select a range</option>
                       <option>Under $500</option>
                       <option>$500–$1,000</option>
@@ -254,11 +311,11 @@ export function PonchoCommissionInquiry() {
               <section className="pc-section">
                 <div className="pc-section-head"><span className="pc-number">04</span><h2 className="pc-section-title">Add a few visual clues</h2></div>
                 <p className="pc-help">Inspiration, sketches, a photo of the placement — anything that helps tell the story.</p>
-                <input ref={fileInput} className="pc-file-input" type="file" accept="image/*" multiple onChange={addFiles} aria-label="Choose reference photos" />
+                <input ref={fileInput} className="pc-file-input" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={addFiles} aria-label="Choose reference photos" />
                 <button className="pc-upload" type="button" onClick={() => fileInput.current?.click()} disabled={attachments.length >= 4} aria-label="Add reference photos">
                   <span className="pc-upload-icon"><ImagePlus size={16} /></span>
                   <b>{attachments.length >= 4 ? "Four photos attached" : "Choose reference photos"}</b>
-                  <small>JPG, PNG or HEIC · up to 4 images</small>
+                  <small>JPG, PNG or WEBP · up to 4 images · 8 MB each</small>
                 </button>
                 {attachmentError && <p className="pc-error" role="alert">{attachmentError}</p>}
                 {attachments.length > 0 && (
@@ -274,8 +331,9 @@ export function PonchoCommissionInquiry() {
                 )}
               </section>
 
-              <button className="pc-submit" type="submit">Preview inquiry <ArrowRight size={16} strokeWidth={2} /></button>
-              <p className="pc-privacy">Local preview only — nothing is sent and no one will receive your details or attachments.</p>
+              {submitError && <p className="pc-error" role="alert">{submitError}</p>}
+              <button className="pc-submit" type="submit" disabled={submitting}>{submitting ? "Saving preview…" : "Submit preview inquiry"} <ArrowRight size={16} strokeWidth={2} /></button>
+              <p className="pc-privacy">Creates a local creator notification. Details and photos stay in this browser, not the live app. Use sample contact details for testing.</p>
             </form>
 
             <aside className="pc-aside">

@@ -123,7 +123,6 @@ import type {
   StorePaymentIntent,
   StorePaymentIntentInput,
   StoreProduct,
-  StudioInquiry,
   StudioPost,
   StudioPostInput,
   TattooBooking,
@@ -6616,83 +6615,6 @@ export function useGetNotifications<TData = Awaited<ReturnType<typeof getNotific
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetNotificationsQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getGetStudioInquiryUrl = (bookingId: number,) => {
-
-
-
-
-  return `/api/studio-inquiries/${bookingId}`
-}
-
-/**
- * @summary Get a creator's private commission inquiry
- */
-export const getStudioInquiry = async (bookingId: number, options?: Parameters<typeof customFetch>[1]): Promise<StudioInquiry> => {
-
-  return customFetch<StudioInquiry>(getGetStudioInquiryUrl(bookingId),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetStudioInquiryQueryKey = (bookingId: number,) => {
-    return [
-    `/api/studio-inquiries/${bookingId}`
-    ] as const;
-    }
-
-
-export const getGetStudioInquiryQueryOptions = <TData = Awaited<ReturnType<typeof getStudioInquiry>>, TError = ErrorType<void>>(bookingId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStudioInquiry>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetStudioInquiryQueryKey(bookingId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStudioInquiry>>> = ({ signal }) => getStudioInquiry(bookingId, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: bookingId !== null && bookingId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStudioInquiry>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type GetStudioInquiryQueryResult = NonNullable<Awaited<ReturnType<typeof getStudioInquiry>>>
-export type GetStudioInquiryQueryError = ErrorType<void>
-
-
-/**
- * @summary Get a creator's private commission inquiry
- */
-
-export function useGetStudioInquiry<TData = Awaited<ReturnType<typeof getStudioInquiry>>, TError = ErrorType<void>>(
- bookingId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStudioInquiry>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getGetStudioInquiryQueryOptions(bookingId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

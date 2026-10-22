@@ -9,13 +9,11 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
-import { usersTable } from "./users";
 
 export const tattooBookingsTable = pgTable(
   "tattoo_bookings",
   {
     id: serial("id").primaryKey(),
-    creatorUserId: integer("creator_user_id").references(() => usersTable.id, { onDelete: "set null" }),
     requestType: text("request_type").$type<"tattoo" | "painting" | "other">().notNull().default("tattoo"),
     name: text("name").notNull(),
     email: text("email").notNull(),
@@ -52,10 +50,6 @@ export const tattooBookingsTable = pgTable(
     index("tattoo_bookings_fingerprint_created_idx").on(
       table.requestFingerprint,
       table.createdAt,
-    ),
-    index("tattoo_bookings_creator_submitted_idx").on(
-      table.creatorUserId,
-      table.submittedAt,
     ),
   ],
 );

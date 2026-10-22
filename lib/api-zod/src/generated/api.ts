@@ -2207,7 +2207,7 @@ export const SendMessageResponse = zod.object({
 export const GetNotificationsResponse = zod.object({
   "notifications": zod.array(zod.object({
   "id": zod.int(),
-  "type": zod.enum(['direct_message', 'follow', 'like', 'critique', 'commission_inquiry']),
+  "type": zod.enum(['direct_message', 'follow', 'like', 'critique']),
   "actor": zod.union([zod.object({
   "id": zod.int(),
   "username": zod.string(),
@@ -2221,46 +2221,10 @@ export const GetNotificationsResponse = zod.object({
   "postDestination": zod.union([zod.object({
   "postId": zod.int()
 }),zod.null()]),
-  "commissionInquirySummary": zod.union([zod.object({
-  "clientName": zod.string(),
-  "requestType": zod.enum(['tattoo', 'painting', 'other'])
-}),zod.null()]),
-  "commissionInquiryDestination": zod.union([zod.object({
-  "bookingId": zod.int()
-}),zod.null()]),
   "createdAt": zod.coerce.date(),
   "readAt": zod.coerce.date().nullable()
 })),
   "unreadCount": zod.int()
-})
-
-
-/**
- * @summary Get a creator's private commission inquiry
- */
-export const GetStudioInquiryParams = zod.object({
-  "bookingId": zod.coerce.number().int()
-})
-
-export const GetStudioInquiryResponse = zod.object({
-  "id": zod.int(),
-  "requestType": zod.enum(['tattoo', 'painting', 'other']),
-  "name": zod.string(),
-  "email": zod.string(),
-  "phone": zod.string().nullable(),
-  "idea": zod.string(),
-  "placement": zod.string(),
-  "estimatedSize": zod.string(),
-  "preferredArtist": zod.string(),
-  "status": zod.enum(['new', 'contacted', 'scheduled', 'completed', 'declined']),
-  "references": zod.array(zod.object({
-  "id": zod.int(),
-  "url": zod.string(),
-  "originalName": zod.string(),
-  "contentType": zod.string(),
-  "sizeBytes": zod.int()
-})),
-  "submittedAt": zod.coerce.date().nullable()
 })
 
 
@@ -2273,7 +2237,7 @@ export const MarkNotificationReadParams = zod.object({
 
 export const MarkNotificationReadResponse = zod.object({
   "id": zod.int(),
-  "type": zod.enum(['direct_message', 'follow', 'like', 'critique', 'commission_inquiry']),
+  "type": zod.enum(['direct_message', 'follow', 'like', 'critique']),
   "actor": zod.union([zod.object({
   "id": zod.int(),
   "username": zod.string(),
@@ -2286,13 +2250,6 @@ export const MarkNotificationReadResponse = zod.object({
 }),zod.null()]),
   "postDestination": zod.union([zod.object({
   "postId": zod.int()
-}),zod.null()]),
-  "commissionInquirySummary": zod.union([zod.object({
-  "clientName": zod.string(),
-  "requestType": zod.enum(['tattoo', 'painting', 'other'])
-}),zod.null()]),
-  "commissionInquiryDestination": zod.union([zod.object({
-  "bookingId": zod.int()
 }),zod.null()]),
   "createdAt": zod.coerce.date(),
   "readAt": zod.coerce.date().nullable()
@@ -2648,7 +2605,6 @@ export const createTattooBookingDraftBodyPlacementMax = 160;
 
 export const createTattooBookingDraftBodyEstimatedSizeMax = 120;
 
-
 export const createTattooBookingDraftBodyWebsiteMax = 200;
 
 
@@ -2662,7 +2618,6 @@ export const CreateTattooBookingDraftBody = zod.object({
   "placement": zod.string().min(1).max(createTattooBookingDraftBodyPlacementMax),
   "estimatedSize": zod.string().min(1).max(createTattooBookingDraftBodyEstimatedSizeMax),
   "preferredArtist": zod.enum(['No preference', 'Poncho The Artist', 'Edwin', 'Ash']),
-  "creatorUserId": zod.int().min(1).optional().describe('Optional creator owner for in-app studio inquiry routing.'),
   "website": zod.string().max(createTattooBookingDraftBodyWebsiteMax).optional().describe('Honeypot field; must remain empty.')
 })
 

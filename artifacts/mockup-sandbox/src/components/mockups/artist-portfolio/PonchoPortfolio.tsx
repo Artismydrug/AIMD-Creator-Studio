@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { Aperture, ArrowLeft, ArrowUpRight, Instagram, X } from "lucide-react";
+import { Aperture, ArrowUpRight, Instagram, X } from "lucide-react";
 import "./_group.css";
 import { Linking } from "./_shared/Linking";
+import { PreviewNotificationLink } from "./_shared/PreviewNotificationLink";
+import { sandboxPaths } from "./_shared/inquiryPreviewStore";
 
 type Category = "Tattoo Work" | "Paintings";
 
@@ -54,7 +56,6 @@ const imagePath = (filename: string) => `/__mockup/images/${filename}`;
 export function PonchoPortfolio() {
   const [category, setCategory] = useState<Category>("Tattoo Work");
   const [selected, setSelected] = useState<Artwork | null>(null);
-  const [inquiryScreen, setInquiryScreen] = useState(false);
   const pieces = artwork[category];
 
   useEffect(() => {
@@ -70,42 +71,6 @@ export function PonchoPortfolio() {
     };
   }, [selected]);
 
-  if (inquiryScreen) {
-    return (
-      <main className="poncho-inquiry min-h-[100dvh]">
-        <div className="pp-inquiry-shell">
-          <button
-            className="pp-back"
-            type="button"
-            onClick={() => setInquiryScreen(false)}
-          >
-            <ArrowLeft size={16} strokeWidth={1.6} />
-            <span>Back to portfolio</span>
-          </button>
-          <div className="pp-inquiry-content">
-            <p className="pp-eyebrow">PONCHO DAVILA · COMMISSIONS</p>
-            <h1 className="pp-serif">Start a commission inquiry</h1>
-            <div className="pp-rule" />
-            <p className="pp-reserved">
-              This inquiry screen is reserved for the next preview step.
-            </p>
-            <p className="pp-small-note">
-              No request has been sent. For now, you can reach Poncho directly
-              through his booking page.
-            </p>
-            <button
-              type="button"
-              className="pp-inline-link"
-              onClick={() => Linking.openURL("https://ponchotheartist.com/booking/")}
-            >
-              Visit booking page <ArrowUpRight size={15} strokeWidth={1.6} />
-            </button>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
   return (
     <main className="poncho-portfolio min-h-[100dvh]">
       <div className="pp-page">
@@ -116,16 +81,18 @@ export function PonchoPortfolio() {
           <a className="pp-wordmark" href="https://ponchotheartist.com" target="_blank" rel="noreferrer">
             CREATOR STUDIO <span>by AIMD</span>
           </a>
+          <PreviewNotificationLink />
           <button
             className="pp-header-inquiry"
             type="button"
             aria-label="Start a Commission Inquiry"
-            onClick={() => setInquiryScreen(true)}
+            onClick={() => window.location.assign(sandboxPaths.form)}
           >
             Inquiry <ArrowUpRight size={12} strokeWidth={2.5} />
           </button>
           <span className="pp-header-caption">DISCIPLINE EATS TALENT</span>
         </header>
+        <p style={{ margin: "12px 0 0", color: "#625b67", fontSize: 10 }}>Sandbox preview · notifications stay in this browser.</p>
 
         <section className="pp-profile" aria-labelledby="pp-name">
           <img
@@ -203,7 +170,7 @@ export function PonchoPortfolio() {
           <button
             className="pp-primary"
             type="button"
-            onClick={() => setInquiryScreen(true)}
+            onClick={() => window.location.assign(sandboxPaths.form)}
           >
             Start a Commission Inquiry <ArrowUpRight size={16} strokeWidth={1.6} />
           </button>
@@ -251,7 +218,7 @@ export function PonchoPortfolio() {
         .pp-page { width:min(100% - 44px, 1120px); margin:0 auto; }
         .pp-header { min-height:74px; display:flex; align-items:center; gap:12px; border-bottom:2px solid var(--pp-ink); }
         .pp-sticker-mark { width:40px;height:40px;display:grid;place-items:center;flex:none;color:var(--pp-ink);background:#ffb08f;border:2px solid var(--pp-ink);border-radius:13px;transform:rotate(-6deg);box-shadow:3px 3px 0 var(--pp-ink); }
-        .pp-wordmark { color:var(--pp-ink); font-size:11px; font-weight:900; letter-spacing:.09em; text-decoration:none; }
+        .pp-wordmark { color:var(--pp-ink); font-size:11px; font-weight:900; letter-spacing:.09em; text-decoration:none; flex:1; min-width:0; }
         .pp-wordmark span { font-size:9px;font-weight:700;letter-spacing:.04em;color:#625d67; }
         .pp-header-inquiry { display:inline-flex; flex:none; align-items:center; justify-content:center; gap:3px; min-height:34px; padding:0 10px; border:1.5px solid var(--pp-ink); border-radius:999px; background:#df006c; color:#fffaf1; box-shadow:2px 2px 0 var(--pp-ink); font:inherit; font-size:10px; font-weight:800; cursor:pointer; transition:transform .16s,box-shadow .16s; }
         .pp-header-inquiry:hover { transform:translate(-1px,-1px); box-shadow:3px 3px 0 var(--pp-ink); }

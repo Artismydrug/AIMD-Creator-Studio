@@ -39,11 +39,6 @@ export interface TattooBookingInput {
   estimatedSize: string;
   preferredArtist: TattooBookingInputPreferredArtist;
   /**
-     * Optional creator owner for in-app studio inquiry routing.
-     * @minimum 1
-     */
-  creatorUserId?: number;
-  /**
      * Honeypot field; must remain empty.
      * @maxLength 200
      */

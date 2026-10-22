@@ -588,23 +588,9 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
       }
     }
 
-    const creatorInquiryReference = req.dbUser
-      ? await pool.query(
-          `SELECT 1
-             FROM tattoo_booking_references reference
-             JOIN tattoo_bookings booking ON booking.id = reference.booking_id
-            WHERE reference.object_path = $1
-              AND booking.creator_user_id = $2
-              AND booking.status <> 'draft'
-            LIMIT 1`,
-          [objectPath, req.dbUser.id],
-        )
-      : { rows: [] };
-    const canReadCreatorInquiryReference = creatorInquiryReference.rows.length > 0;
-
     // Enforce ACL: only objects with an explicit public-read policy are served.
     // Objects without an ACL (unrelated private uploads) are rejected.
-    let canAccess = protectedLesson || canReadCreatorInquiryReference || (req.dbUser as any)?.isAdmin === true || await objectStorageService.canAccessObjectEntity({
+    let canAccess = protectedLesson || (req.dbUser as any)?.isAdmin === true || await objectStorageService.canAccessObjectEntity({
       userId: req.dbUser ? String(req.dbUser.id) : undefined,
       objectFile,
       requestedPermission: ObjectPermission.READ,
@@ -630,7 +616,7 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
 
     res.status(response.status);
     response.headers.forEach((value, key) => res.setHeader(key, value));
-    if (protectedLesson || canReadCreatorInquiryReference) res.setHeader('Cache-Control', 'private, no-store');
+    if (protectedLesson) res.setHeader('Cache-Control', 'private, no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Disposition', 'inline');
     res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self'; media-src 'self'");
