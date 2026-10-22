@@ -100,14 +100,21 @@ test('wide gallery uses three equal columns without stretching the third image',
   }
 });
 
-test('pills filter artwork and New work preserves the selected category', () => {
+test('category pills filter work, toggle back to every work, and New work preserves the selected category', () => {
   const h = harness();
-  get(h.render(), 'creator-work-filter-painting').props.onPress();
+  const start = h.render();
+  assert.equal(get(start, 'creator-work-filter-all-work'), undefined, 'there is no All work pill');
+  const paintingTab = get(start, 'creator-work-filter-painting');
+  paintingTab.props.onPress();
   const filtered = h.render();
   assert.ok(get(filtered, 'creator-work-2'));
   assert.equal(get(filtered, 'creator-work-1'), undefined);
   get(filtered, 'creator-profile-add-work').props.onPress();
   assert.deepEqual(h.calls.add, [[null, 'Painting']]);
+  get(filtered, 'creator-work-filter-painting').props.onPress();
+  const allWork = h.render();
+  for (const id of [1, 2, 3]) assert.ok(get(allWork, `creator-work-${id}`));
+  assert.equal(get(allWork, 'creator-work-filter-painting').props.accessibilityState.selected, false);
 });
 
 test('header and bottom inquiry buttons use the existing form handler; editing and visitor controls survive', () => {
@@ -145,6 +152,25 @@ test('image-first tiles open uncropped artwork with its caption and close back t
   assert.ok(allNodes(preview).some(node => node.type === 'Text' && node.props.children.includes('Artwork 1')));
   get(preview, 'creator-artwork-close').props.onPress();
   assert.equal(get(h.render(), 'creator-artwork-preview'), undefined);
+});
+
+test('owner edit and category controls are inside the artwork options sheet, not over gallery tiles', () => {
+  const h = harness();
+  const grid = h.render();
+  assert.equal(get(grid, 'creator-work-category-1'), undefined, 'no tag button overlays artwork');
+  assert.equal(
+    allNodes(get(grid, 'creator-work-1')).some(node => node.type === 'PostOwnerActions'),
+    false,
+    'the three-dot menu does not sit on gallery artwork',
+  );
+  get(grid, 'creator-artwork-1').props.onPress();
+  const preview = h.render();
+  const ownerActions = allNodes(get(preview, 'creator-artwork-preview')).find(node => node.type === 'PostOwnerActions');
+  assert.ok(ownerActions, 'owner menu is available inside the opened artwork preview');
+  assert.equal(ownerActions.props.post.id, 1);
+  assert.equal(typeof ownerActions.props.onAssignCategory, 'function', 'category assignment remains available from the edit menu');
+  ownerActions.props.onAssignCategory();
+  assert.ok(get(h.render(), 'creator-work-category-picker'));
 });
 
 test('Poncho retains his known website without a saved URL; other members do not inherit his links', () => {
@@ -226,7 +252,12 @@ test('owners can assign and unassign existing artwork from a category', async ()
       ],
     },
   });
-  get(h.render(), 'creator-work-category-1').props.onPress();
+  const grid = h.render();
+  get(grid, 'creator-artwork-1').props.onPress();
+  const preview = h.render();
+  const ownerActions = allNodes(get(preview, 'creator-artwork-preview')).find(node => node.type === 'PostOwnerActions');
+  assert.ok(ownerActions);
+  ownerActions.props.onAssignCategory();
   const picker = h.render();
   assert.ok(get(picker, 'creator-work-category-picker'));
   get(picker, 'creator-work-category-option-21').props.onPress();

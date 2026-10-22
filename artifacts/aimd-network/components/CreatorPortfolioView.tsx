@@ -283,18 +283,12 @@ export default function CreatorPortfolioView({
     },
     media: { width: '100%', aspectRatio: 4 / 5, backgroundColor: colors.studioPaperAlt },
     featuredMedia: { aspectRatio: 4 / 3 },
-    artworkMenu: { position: 'absolute', right: 5, top: 5, borderRadius: 99, backgroundColor: colors.studioPaper },
     postCopy: { paddingHorizontal: 10, paddingVertical: 9, gap: 5 },
     caption: { color: colors.studioInk, fontFamily: 'DMSans_500Medium', fontSize: 12, lineHeight: 17 },
     tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
     tag: { color: colors.studioOrangeText, fontFamily: 'DMSans_700Bold', fontSize: 10 },
     postActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 9, paddingBottom: 8 },
     date: { color: colors.studioMuted, fontFamily: 'DMSans_400Regular', fontSize: 10 },
-    categoryAssignButton: {
-      position: 'absolute', right: 49, top: 5, width: 34, height: 34, zIndex: 2,
-      alignItems: 'center', justifyContent: 'center', borderRadius: 99,
-      borderWidth: 1.5, borderColor: colors.studioInk, backgroundColor: colors.studioPaper,
-    },
     categoryOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: colors.ink + 'BB' },
     categorySheet: {
       maxHeight: '88%', gap: 13, padding: 20,
@@ -369,7 +363,9 @@ export default function CreatorPortfolioView({
   const categoryKey = (category: CreatorPortfolioCategory) => category.id === null
     ? `legacy:${category.name.toLowerCase()}`
     : `id:${category.id}`;
-  const activeCategory = workCategories.find((category) => categoryKey(category) === selectedCategory);
+  const activeCategory = selectedCategory === 'all'
+    ? undefined
+    : workCategories.find((category) => categoryKey(category) === selectedCategory);
   const filteredPosts = !activeCategory
     ? posts
     : posts.filter((post) => activeCategory.id !== null
@@ -647,20 +643,19 @@ export default function CreatorPortfolioView({
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll} testID="creator-work-tabs">
               <View style={styles.categoryRow}>
-                {[
-                  { key: 'all', name: 'All work', id: null as number | null },
-                  ...workCategories.map((category) => ({ ...category, key: categoryKey(category) })),
-                ].map((category) => {
-                  const selected = selectedCategory === category.key;
+                {workCategories.map((category) => {
+                  const key = categoryKey(category);
+                  const selected = selectedCategory === key;
                   const testKey = category.id === null
                     ? category.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
                     : String(category.id);
                   return (
                     <Pressable
-                      key={category.key}
+                      key={key}
                       accessibilityRole="tab"
                       accessibilityState={{ selected }}
-                      onPress={() => setSelectedCategory(category.key)}
+                      accessibilityHint={selected ? 'Tap again to show every work.' : 'Show work in this category.'}
+                      onPress={() => setSelectedCategory((current) => current === key ? 'all' : key)}
                       style={[styles.category, selected && styles.categorySelected]}
                       testID={`creator-work-filter-${testKey}`}
                     >
@@ -718,31 +713,24 @@ export default function CreatorPortfolioView({
                         <Text style={styles.caption} numberOfLines={7}>{post.caption || 'A work in progress'}</Text>
                       </View>
                     )}
-                    {isOwner && onAssignWorkCategory && (
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={`Assign a category to ${post.caption || 'this work'}`}
-                        onPress={() => {
-                          setCategoryAssignmentError(null);
-                          setAssigningPostId(post.id);
-                        }}
-                        style={styles.categoryAssignButton}
-                        testID={`creator-work-category-${post.id}`}
-                      >
-                        <Feather name="tag" size={14} color={colors.studioInk} />
-                      </Pressable>
-                    )}
                     {imagePost ? (
-                      isOwner && currentUserId ? (
-                        <View style={styles.artworkMenu}><PostOwnerActions post={post} currentUserId={currentUserId} /></View>
-                      ) : null
+                      null
                     ) : (
                       <>
                         {post.caption && mediaUrl ? <View style={styles.postCopy}><Text style={styles.caption} numberOfLines={2}>{post.caption}</Text></View> : null}
                         {post.tags?.length ? <View style={[styles.tags, { paddingHorizontal: 10, paddingBottom: 8 }]}>{post.tags.slice(0, 2).map((tag) => <Text key={tag} style={styles.tag}>#{tag}</Text>)}</View> : null}
                         <View style={styles.postActions}>
                           <Text style={styles.date}>{new Date(post.createdAt).toLocaleDateString()}</Text>
-                          {isOwner && currentUserId ? <PostOwnerActions post={post} currentUserId={currentUserId} /> : null}
+                          {isOwner && currentUserId ? (
+                            <PostOwnerActions
+                              post={post}
+                              currentUserId={currentUserId}
+                              onAssignCategory={onAssignWorkCategory ? () => {
+                                setCategoryAssignmentError(null);
+                                setAssigningPostId(post.id);
+                              } : undefined}
+                            />
+                          ) : null}
                         </View>
                       </>
                     )}
@@ -775,6 +763,16 @@ export default function CreatorPortfolioView({
         <View style={styles.lightbox} accessibilityViewIsModal testID="creator-artwork-preview">
           <View style={styles.lightboxHeader}>
             <Text style={styles.lightboxTitle} numberOfLines={1}>{displayName}</Text>
+            {selectedPost && isOwner && currentUserId && (
+              <PostOwnerActions
+                post={selectedPost}
+                currentUserId={currentUserId}
+                onAssignCategory={onAssignWorkCategory ? () => {
+                  setCategoryAssignmentError(null);
+                  setAssigningPostId(selectedPost.id);
+                } : undefined}
+              />
+            )}
             <Pressable accessibilityRole="button" accessibilityLabel="Close artwork preview" onPress={() => setSelectedPost(null)} style={styles.headerAction} testID="creator-artwork-close">
               <Feather name="x" size={20} color={colors.studioInk} />
             </Pressable>

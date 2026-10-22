@@ -21,10 +21,11 @@ type Props = {
   currentUserId?: number;
   triggerColor?: string;
   onVisibilityChange?: (visible: boolean) => void;
+  onAssignCategory?: () => void;
 };
 
 /** Only the post owner sees this control; the API independently enforces ownership. */
-export default function PostOwnerActions({ post, currentUserId, triggerColor, onVisibilityChange }: Props) {
+export default function PostOwnerActions({ post, currentUserId, triggerColor, onVisibilityChange, onAssignCategory }: Props) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
@@ -135,7 +136,7 @@ export default function PostOwnerActions({ post, currentUserId, triggerColor, on
         style={s.trigger}
         accessibilityRole="button"
         accessibilityLabel="Options for your post"
-        accessibilityHint="Edit the caption or delete this post"
+        accessibilityHint={onAssignCategory ? 'Open post editing and category options' : 'Edit the caption or delete this post'}
         onPress={() => changeDialog('options')}
         testID={`post-options-${post.id}`}
       >
@@ -149,6 +150,17 @@ export default function PostOwnerActions({ post, currentUserId, triggerColor, on
             <Text style={s.title}>{dialog === 'edit' ? 'Edit caption' : dialog === 'delete' ? 'Delete this post?' : 'Your post'}</Text>
             {dialog === 'options' && (
               <>
+                {onAssignCategory && (
+                  <TouchableOpacity
+                    style={s.action}
+                    accessibilityRole="button"
+                    onPress={() => { changeDialog(null); onAssignCategory(); }}
+                    testID={`assign-post-category-${post.id}`}
+                  >
+                    <Feather name="folder" size={18} color={colors.foreground} />
+                    <Text style={s.actionText}>Change work category</Text>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity style={s.action} accessibilityRole="button" onPress={edit} testID={`edit-post-${post.id}`}>
                   <Feather name="edit-2" size={18} color={colors.foreground} />
                   <Text style={s.actionText}>Edit caption</Text>

@@ -31,4 +31,4 @@ Work categories belong to the creator, not a fixed set of disciplines. Creators 
 
 **Why:** The owner explicitly chose editable categories and work assignment so each member can organize their own practice, rather than inheriting Poncho's tattoo/painting/mural labels.
 
-**How to apply:** Keep All work as the complete gallery. A category rename must preserve its artwork assignments, and removing a category must never delete artwork or silently recreate the removed tab from old post tags.
+**How to apply:** Do not show a separate “All work” filter. With no category selected, show the full gallery; tapping a category filters it, and tapping that same category again returns to all work. Keep tag and overflow controls off gallery tiles; put owner edits and category assignment in the artwork options view. Category renames must preserve assignments, and removing a category must never delete artwork or silently recreate a tab from old post tags.
