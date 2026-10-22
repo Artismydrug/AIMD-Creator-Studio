@@ -38,6 +38,71 @@ export const UserTier = {
   pro: 'pro',
 } as const;
 
+export type InquiryCategoryId = typeof InquiryCategoryId[keyof typeof InquiryCategoryId];
+
+
+export const InquiryCategoryId = {
+  tattoo: 'tattoo',
+  painting: 'painting',
+  other: 'other',
+} as const;
+
+export type InquiryQuestionId = typeof InquiryQuestionId[keyof typeof InquiryQuestionId];
+
+
+export const InquiryQuestionId = {
+  idea: 'idea',
+  placement: 'placement',
+  estimatedSize: 'estimatedSize',
+} as const;
+
+export interface InquiryQuestion {
+  id: InquiryQuestionId;
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  label: string;
+  /**
+     * @minLength 1
+     * @maxLength 180
+     */
+  placeholder: string;
+  /**
+     * @maxItems 5
+     * @items.maxLength 40
+     */
+  suggestions: string[];
+}
+
+export interface InquiryCategory {
+  id: InquiryCategoryId;
+  enabled: boolean;
+  /**
+     * @minLength 1
+     * @maxLength 32
+     */
+  label: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  headline: string;
+  /**
+     * @minItems 3
+     * @maxItems 3
+     */
+  questions: InquiryQuestion[];
+}
+
+export interface InquiryFormConfig {
+  /**
+     * @minItems 3
+     * @maxItems 3
+     */
+  categories: InquiryCategory[];
+}
+
 export interface User {
   id: number;
   username: string;
@@ -57,6 +122,7 @@ export interface User {
   bookingOpen?: boolean;
   /** @nullable */
   portfolioUrl?: string | null;
+  inquiryFormConfig?: InquiryFormConfig | null;
   createdAt: string;
 }
 
@@ -276,6 +342,7 @@ export interface UserUpdate {
   bookingOpen?: boolean;
   /** @nullable */
   portfolioUrl?: string | null;
+  inquiryFormConfig?: InquiryFormConfig;
 }
 
 export interface PortfolioCategory {
@@ -1217,6 +1284,7 @@ export interface PublicCreatorProfile {
   /** @nullable */
   portfolioUrl?: string | null;
   portfolioCategories: PortfolioCategory[];
+  inquiryFormConfig?: InquiryFormConfig | null;
   postCount: number;
   badgesEarned: number;
   currentStreak: number;
@@ -1415,6 +1483,10 @@ export interface PostDestination {
   postId: number;
 }
 
+export interface InquiryDestination {
+  bookingId: number;
+}
+
 export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
 
 
@@ -1423,6 +1495,7 @@ export const NotificationType = {
   follow: 'follow',
   like: 'like',
   critique: 'critique',
+  commission_inquiry: 'commission_inquiry',
 } as const;
 
 export interface Notification {
@@ -1433,8 +1506,13 @@ export interface Notification {
   conversationId: number | null;
   /** @nullable */
   postId: number | null;
+  /** @nullable */
+  bookingId: number | null;
+  /** @nullable */
+  inquirySummary: string | null;
   conversationDestination: ConversationDestination | null;
   postDestination: PostDestination | null;
+  inquiryDestination: InquiryDestination | null;
   createdAt: string;
   /** @nullable */
   readAt: string | null;
@@ -1530,6 +1608,8 @@ export const TattooBookingInputRequestType = {
 } as const;
 
 export interface TattooBookingInput {
+  /** @minimum 1 */
+  recipientUserId?: number;
   requestType: TattooBookingInputRequestType;
   /**
      * @minLength 1
@@ -1587,6 +1667,22 @@ export interface TattooBookingReference {
   originalName: string;
   contentType: string;
   sizeBytes: number;
+}
+
+export type CommissionInquiryDetailsAnswers = {[key: string]: string};
+
+export interface CommissionInquiryDetails {
+  id: number;
+  category: string;
+  name: string;
+  email: string;
+  /** @nullable */
+  phone: string | null;
+  answers: CommissionInquiryDetailsAnswers;
+  questions: InquiryQuestion[];
+  /** @nullable */
+  submittedAt: string | null;
+  references: TattooBookingReference[];
 }
 
 export interface TattooBookingFinalizeInput {

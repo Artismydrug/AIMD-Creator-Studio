@@ -599,6 +599,21 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
     if (!canAccess && req.dbUser) {
       canAccess = await canInstructorAccessSubmission(req.dbUser.id, objectPath);
     }
+    // Commission reference images stay private; only the assigned creator may
+    // read them through the normal authenticated media endpoint.
+    if (!canAccess && req.dbUser) {
+      const inquiryReference = await pool.query(
+        `SELECT 1
+           FROM tattoo_booking_references r
+           JOIN tattoo_bookings b ON b.id = r.booking_id
+          WHERE r.object_path = $1
+            AND b.recipient_user_id = $2
+            AND b.status <> 'draft'
+          LIMIT 1`,
+        [objectPath, req.dbUser.id],
+      );
+      canAccess = inquiryReference.rows.length > 0;
+    }
     if (!canAccess) {
       res.status(403).json({ error: 'Forbidden' });
       return;

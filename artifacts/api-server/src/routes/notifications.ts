@@ -15,7 +15,11 @@ router.get("/notifications", async (req, res): Promise<void> => {
   const userId = req.dbUser.id;
   const result = await db.execute(sql`
     SELECT n.id, n.type, n.conversation_id AS "conversationId",
-           n.post_id AS "postId", n.created_at AS "createdAt", n.read_at AS "readAt",
+           n.post_id AS "postId", n.booking_id AS "bookingId",
+           CASE WHEN booking.id IS NULL THEN NULL
+             ELSE 'New Commission Inquiry: ' || booking.name || ' requested a ' || booking.category_label || ' project'
+           END AS "inquirySummary",
+           n.created_at AS "createdAt", n.read_at AS "readAt",
            CASE WHEN n.actor_user_id IS NULL THEN NULL ELSE json_build_object(
              'id', actor.id, 'username', actor.username, 'avatarUrl', actor.avatar_url
            ) END AS actor,
@@ -25,9 +29,13 @@ router.get("/notifications", async (req, res): Promise<void> => {
            CASE WHEN n.post_id IS NULL THEN NULL ELSE json_build_object(
              'postId', n.post_id
            ) END AS "postDestination",
+           CASE WHEN n.booking_id IS NULL THEN NULL ELSE json_build_object(
+             'bookingId', n.booking_id
+           ) END AS "inquiryDestination",
            COUNT(*) FILTER (WHERE n.read_at IS NULL) OVER ()::int AS "unreadCount"
     FROM notifications n
     LEFT JOIN users actor ON actor.id = n.actor_user_id
+    LEFT JOIN tattoo_bookings booking ON booking.id = n.booking_id
     WHERE n.recipient_user_id = ${userId}
       AND n.type NOT IN ('like', 'critique')
     ORDER BY n.created_at DESC
@@ -51,7 +59,11 @@ router.patch("/notifications/:id/read", async (req, res): Promise<void> => {
       RETURNING *
     )
     SELECT n.id, n.type, n.conversation_id AS "conversationId",
-      n.post_id AS "postId", n.created_at AS "createdAt", n.read_at AS "readAt",
+      n.post_id AS "postId", n.booking_id AS "bookingId",
+      CASE WHEN booking.id IS NULL THEN NULL
+        ELSE 'New Commission Inquiry: ' || booking.name || ' requested a ' || booking.category_label || ' project'
+      END AS "inquirySummary",
+      n.created_at AS "createdAt", n.read_at AS "readAt",
       CASE WHEN n.actor_user_id IS NULL THEN NULL ELSE json_build_object(
         'id', actor.id, 'username', actor.username, 'avatarUrl', actor.avatar_url
       ) END AS actor,
@@ -60,9 +72,13 @@ router.patch("/notifications/:id/read", async (req, res): Promise<void> => {
       ) END AS "conversationDestination",
       CASE WHEN n.post_id IS NULL THEN NULL ELSE json_build_object(
         'postId', n.post_id
-      ) END AS "postDestination"
+      ) END AS "postDestination",
+      CASE WHEN n.booking_id IS NULL THEN NULL ELSE json_build_object(
+        'bookingId', n.booking_id
+      ) END AS "inquiryDestination"
     FROM updated n
     LEFT JOIN users actor ON actor.id = n.actor_user_id
+    LEFT JOIN tattoo_bookings booking ON booking.id = n.booking_id
   `);
   if (!result.rows[0]) { res.status(404).json({ error: "Notification not found" }); return; }
   res.json(MarkNotificationReadResponse.parse(result.rows[0]));

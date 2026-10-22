@@ -1,6 +1,7 @@
 import {
   index,
   integer,
+  jsonb,
   pgTable,
   serial,
   text,
@@ -9,12 +10,17 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { usersTable } from "./users";
 
 export const tattooBookingsTable = pgTable(
   "tattoo_bookings",
   {
     id: serial("id").primaryKey(),
+    recipientUserId: integer("recipient_user_id").references(() => usersTable.id, { onDelete: "set null" }),
     requestType: text("request_type").$type<"tattoo" | "painting" | "other">().notNull().default("tattoo"),
+    categoryLabel: text("category_label").notNull().default("Tattoo"),
+    formAnswers: jsonb("form_answers").$type<Record<string, string>>().notNull().default({}),
+    formSnapshot: jsonb("form_snapshot").$type<Record<string, unknown>>().notNull().default({}),
     name: text("name").notNull(),
     email: text("email").notNull(),
     phone: text("phone"),

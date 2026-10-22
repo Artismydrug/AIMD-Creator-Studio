@@ -37,6 +37,7 @@ function notificationText(notification: Notification) {
     case 'follow': return `${actor} started following you`;
     case 'like': return `${actor} liked your post`;
     case 'critique': return `${actor} left a critique on your post`;
+    case 'commission_inquiry': return notification.inquirySummary ?? 'New commission inquiry';
     default: return `${actor} interacted with your work`;
   }
 }
@@ -62,6 +63,8 @@ export default function NotificationsScreen() {
       router.push({ pathname: '/conversation/[id]', params: { id: notification.conversationDestination.conversationId } });
     } else if (notification.postDestination?.postId) {
       router.push({ pathname: '/feed', params: { postId: notification.postDestination.postId } });
+    } else if (notification.inquiryDestination?.bookingId) {
+      router.push({ pathname: '/commission-inquiry/[id]', params: { id: String(notification.inquiryDestination.bookingId) } });
     }
   };
   const s = useMemo(() => StyleSheet.create({

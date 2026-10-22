@@ -18,6 +18,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
+import { mainHeaderTopPadding } from '@/lib/safeArea';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -200,7 +201,7 @@ export default function ProgressScreen() {
     outputRange: ['0deg', '360deg'],
   });
 
-  const topPad = Platform.OS === 'web' ? 67 : insets.top + 8;
+  const topPad = mainHeaderTopPadding(insets.top, Platform.OS === 'web');
   const unreadNotifications = notifications?.unreadCount ?? 0;
   const profileUsername = [profileSnapshot?.username, currentUser?.username]
     .find((value) => typeof value === 'string' && value.trim().length > 0);
@@ -313,7 +314,7 @@ export default function ProgressScreen() {
       position: 'relative',
     },
     content: {
-      paddingBottom: Platform.OS === 'web' ? 100 : 100,
+      paddingBottom: Math.max(insets.bottom, 16) + 100,
     },
     offlineWarning: {
       backgroundColor: colors.studioPaperAlt,

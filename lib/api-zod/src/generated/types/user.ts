@@ -5,6 +5,7 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+import type { InquiryFormConfig } from './inquiryFormConfig';
 import type { UserTier } from './userTier';
 
 export interface User {
@@ -26,5 +27,6 @@ export interface User {
   bookingOpen?: boolean;
   /** @nullable */
   portfolioUrl?: string | null;
+  inquiryFormConfig?: InquiryFormConfig | null;
   createdAt: Date;
 }

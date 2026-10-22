@@ -314,7 +314,7 @@ export default function EditProfileScreen() {
             <Text style={styles.subtitle}>Choose whether an inquiry link appears on your public studio.</Text>
             <StudioInquirySettings
               key={me.id}
-              user={{ id: me.id, portfolioUrl: me.portfolioUrl, bookingOpen: me.bookingOpen }}
+              user={{ id: me.id, portfolioUrl: me.portfolioUrl, bookingOpen: me.bookingOpen, inquiryFormConfig: me.inquiryFormConfig }}
               onSaved={() => {
                 void queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
                 void queryClient.invalidateQueries({ queryKey: getGetUserProfileQueryKey(me.id) });

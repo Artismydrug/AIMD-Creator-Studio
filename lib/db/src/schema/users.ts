@@ -1,4 +1,4 @@
-import { pgTable, serial, text, boolean, integer, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, boolean, integer, timestamp, uniqueIndex, jsonb } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -17,6 +17,7 @@ export const usersTable = pgTable("users", {
   location: text("location"),
   bookingOpen: boolean("booking_open").notNull().default(false),
   portfolioUrl: text("portfolio_url"),
+  inquiryFormConfig: jsonb("inquiry_form_config").$type<Record<string, unknown> | null>(),
   portfolioCategoriesConfigured: boolean("portfolio_categories_configured").notNull().default(false),
   // Replit Auth: links Replit OIDC sub claim to this integer-id user row
   replitId: text("replit_id").unique(),

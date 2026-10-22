@@ -36,6 +36,7 @@ import type {
   CheckoutSession,
   CheckoutSessionInput,
   CommentInput,
+  CommissionInquiryDetails,
   CommunityEvent,
   CommunityEventInput,
   ContentReport,
@@ -7827,6 +7828,83 @@ export const useUploadTattooBookingReference = <TError = ErrorType<void>,
       > => {
       return useMutation(getUploadTattooBookingReferenceMutationOptions(options));
     }
+
+export const getGetCreatorTattooBookingUrl = (bookingId: number,) => {
+
+
+
+
+  return `/api/tattoo-bookings/${bookingId}/creator`
+}
+
+/**
+ * @summary Get an inquiry assigned to the authenticated creator
+ */
+export const getCreatorTattooBooking = async (bookingId: number, options?: Parameters<typeof customFetch>[1]): Promise<CommissionInquiryDetails> => {
+
+  return customFetch<CommissionInquiryDetails>(getGetCreatorTattooBookingUrl(bookingId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCreatorTattooBookingQueryKey = (bookingId: number,) => {
+    return [
+    `/api/tattoo-bookings/${bookingId}/creator`
+    ] as const;
+    }
+
+
+export const getGetCreatorTattooBookingQueryOptions = <TData = Awaited<ReturnType<typeof getCreatorTattooBooking>>, TError = ErrorType<void>>(bookingId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreatorTattooBooking>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCreatorTattooBookingQueryKey(bookingId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCreatorTattooBooking>>> = ({ signal }) => getCreatorTattooBooking(bookingId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: bookingId !== null && bookingId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCreatorTattooBooking>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCreatorTattooBookingQueryResult = NonNullable<Awaited<ReturnType<typeof getCreatorTattooBooking>>>
+export type GetCreatorTattooBookingQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get an inquiry assigned to the authenticated creator
+ */
+
+export function useGetCreatorTattooBooking<TData = Awaited<ReturnType<typeof getCreatorTattooBooking>>, TError = ErrorType<void>>(
+ bookingId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreatorTattooBooking>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCreatorTattooBookingQueryOptions(bookingId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getSubmitTattooBookingUrl = (bookingId: number,) => {
 

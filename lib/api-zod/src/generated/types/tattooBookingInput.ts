@@ -8,6 +8,8 @@
 import type { TattooBookingInputRequestType } from './tattooBookingInputRequestType';
 
 export interface TattooBookingInput {
+  /** @minimum 1 */
+  recipientUserId?: number;
   requestType: TattooBookingInputRequestType;
   /**
      * @minLength 1

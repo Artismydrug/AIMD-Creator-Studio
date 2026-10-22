@@ -53,6 +53,7 @@ function harness({ width = 390, theme = 'light', ...overrides } = {}) {
     if (name === 'expo-image') return { Image: 'Image' };
     if (name === '@expo/vector-icons') return { Feather: 'Feather' };
     if (name === 'react-native-safe-area-context') return { useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) };
+    if (name === '@/lib/safeArea') return { mainHeaderTopPadding: (insetTop, isWeb) => isWeb ? 67 : Math.max(insetTop, 24) + 8 };
     if (name === '@workspace/api-client-react') return { getBaseUrl: () => 'https://example.test' };
     if (name === '@/hooks/useColors') return { useColors: () => palettes[theme] };
     if (name === '@/lib/studioInquiry') return { normalizeStudioLink: value => value || null };

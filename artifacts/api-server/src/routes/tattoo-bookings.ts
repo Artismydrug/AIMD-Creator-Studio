@@ -10,11 +10,12 @@ import {
   randomBytes,
   timingSafeEqual,
 } from "node:crypto";
-import { and, count, desc, eq, gte, ne } from "drizzle-orm";
+import { and, count, desc, eq, gte, ne, sql } from "drizzle-orm";
 import {
   db,
   tattooBookingReferencesTable,
   tattooBookingsTable,
+  usersTable,
 } from "@workspace/db";
 import {
   CreateTattooBookingDraftBody,
@@ -30,6 +31,7 @@ import {
   UploadTattooBookingReferenceParams,
   UploadTattooBookingReferenceResponse,
 } from "@workspace/api-zod";
+import { DEFAULT_INQUIRY_FORM_CONFIG } from "../lib/inquiryFormDefaults";
 import { requireAdmin } from "../middlewares/requireAdmin";
 import { ObjectStorageService } from "../lib/objectStorage";
 import { sanitizeChallengeMedia } from "../lib/sanitizeChallengeMedia";
@@ -37,6 +39,21 @@ import { sendTattooBookingNotification } from "../lib/tattooBookingEmail";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
+
+async function ensureCommissionInquiryNotification(
+  bookingId: number,
+  executor: Pick<typeof db, "execute"> = db,
+): Promise<void> {
+  await executor.execute(sql`
+    INSERT INTO notifications (recipient_user_id, actor_user_id, type, booking_id)
+    SELECT recipient_user_id, NULL, 'commission_inquiry', id
+      FROM tattoo_bookings
+     WHERE id = ${bookingId}
+       AND recipient_user_id IS NOT NULL
+       AND status <> 'draft'
+    ON CONFLICT (booking_id) WHERE booking_id IS NOT NULL DO NOTHING
+  `);
+}
 
 const BOOKING_TOKEN_TTL_MS = 2 * 60 * 60 * 1000;
 const BOOKING_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
@@ -232,6 +249,27 @@ router.post("/tattoo-bookings", async (req, res): Promise<void> => {
     return;
   }
 
+  const [recipient] = parsed.data.recipientUserId ? await db.select({
+    id: usersTable.id,
+    username: usersTable.username,
+    bookingOpen: usersTable.bookingOpen,
+    inquiryFormConfig: usersTable.inquiryFormConfig,
+  }).from(usersTable).where(eq(usersTable.id, parsed.data.recipientUserId)).limit(1) : [];
+  if (parsed.data.recipientUserId && (!recipient || !recipient.bookingOpen)) {
+    res.status(404).json({ error: "This creator is not accepting inquiries." });
+    return;
+  }
+  const formConfig = recipient?.inquiryFormConfig
+    ? recipient.inquiryFormConfig as unknown as typeof DEFAULT_INQUIRY_FORM_CONFIG
+    : DEFAULT_INQUIRY_FORM_CONFIG;
+  const category = formConfig.categories.find((item) =>
+    item.id === parsed.data.requestType && item.enabled,
+  );
+  if (!category) {
+    res.status(400).json({ error: "This creator is not accepting that project type." });
+    return;
+  }
+
   const fingerprint = requestFingerprint(req);
   const [recent] = await db
     .select({ value: count() })
@@ -257,14 +295,22 @@ router.post("/tattoo-bookings", async (req, res): Promise<void> => {
   const [booking] = await db
     .insert(tattooBookingsTable)
     .values({
+      recipientUserId: recipient?.id ?? null,
       requestType: parsed.data.requestType,
+      categoryLabel: category.label,
+      formAnswers: {
+        idea: parsed.data.idea.trim(),
+        placement: parsed.data.placement.trim(),
+        estimatedSize: parsed.data.estimatedSize.trim(),
+      },
+      formSnapshot: { ...category },
       name: parsed.data.name.trim(),
       email: parsed.data.email.trim().toLowerCase(),
       phone: parsed.data.phone?.trim() || null,
       idea: parsed.data.idea.trim(),
       placement: parsed.data.placement.trim(),
       estimatedSize: parsed.data.estimatedSize.trim(),
-      preferredArtist: parsed.data.preferredArtist,
+      preferredArtist: recipient?.username ?? parsed.data.preferredArtist.trim(),
       uploadTokenHash: hashToken(uploadToken),
       uploadTokenExpiresAt: expiresAt,
       requestFingerprint: fingerprint,
@@ -374,6 +420,7 @@ router.post(
     }
 
     if (booking.status !== "draft") {
+      await ensureCommissionInquiryNotification(booking.id);
       res.json(
         SubmitTattooBookingResponse.parse({
           id: booking.id,
@@ -384,20 +431,35 @@ router.post(
       return;
     }
 
-    const [submitted] = await db
-      .update(tattooBookingsTable)
-      .set({
-        status: "new",
-        submittedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
+    const submitted = await db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(tattooBookingsTable)
+        .set({
+          status: "new",
+          submittedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(and(
           eq(tattooBookingsTable.id, booking.id),
           eq(tattooBookingsTable.status, "draft"),
-        ),
-      )
-      .returning();
+        ))
+        .returning();
+      if (updated) await ensureCommissionInquiryNotification(updated.id, tx);
+      return updated;
+    });
+    if (!submitted) {
+      const current = await findBookingWithReferences(booking.id);
+      if (!current) {
+        res.status(404).json({ error: "Inquiry not found" });
+        return;
+      }
+      res.json(SubmitTattooBookingResponse.parse({
+        id: current.id,
+        status: current.status,
+        notificationStatus: current.notificationStatus,
+      }));
+      return;
+    }
 
     let notificationStatus: "sent" | "failed" = "sent";
     try {
@@ -468,6 +530,49 @@ router.get(
     );
   },
 );
+
+router.get("/tattoo-bookings/:bookingId/creator", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "private, no-store");
+  if (!req.dbUser) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const bookingId = Number(req.params.bookingId);
+  if (!Number.isSafeInteger(bookingId) || bookingId < 1) {
+    res.status(400).json({ error: "Invalid inquiry" });
+    return;
+  }
+  const [booking] = await db.select().from(tattooBookingsTable).where(and(
+    eq(tattooBookingsTable.id, bookingId),
+    eq(tattooBookingsTable.recipientUserId, req.dbUser.id),
+    ne(tattooBookingsTable.status, "draft"),
+  )).limit(1);
+  if (!booking) {
+    res.status(404).json({ error: "Inquiry not found" });
+    return;
+  }
+  const references = await db.select().from(tattooBookingReferencesTable)
+    .where(eq(tattooBookingReferencesTable.bookingId, bookingId));
+  const privateReferenceUrls = await Promise.all(references.map(async (reference) => ({
+    id: reference.id,
+    url: await objectStorageService.getWorkshopVideoPlaybackURL(reference.objectPath, 900),
+    originalName: reference.originalName,
+    contentType: reference.contentType,
+    sizeBytes: reference.sizeBytes,
+  })));
+  const snapshot = booking.formSnapshot as { questions?: unknown } | null;
+  res.json({
+    id: booking.id,
+    category: booking.categoryLabel,
+    name: booking.name,
+    email: booking.email,
+    phone: booking.phone,
+    answers: booking.formAnswers,
+    questions: Array.isArray(snapshot?.questions) ? snapshot.questions : [],
+    submittedAt: booking.submittedAt,
+    references: privateReferenceUrls,
+  });
+});
 
 router.patch(
   "/admin/tattoo-bookings/:bookingId",

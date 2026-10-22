@@ -187,9 +187,31 @@ router.patch("/users/me", async (req, res): Promise<void> => {
     }
   }
 
+  if (parsed.data.inquiryFormConfig) {
+    const categories = parsed.data.inquiryFormConfig.categories;
+    const categoryIds = categories.map((category) => category.id);
+    const validQuestionIds = ["idea", "placement", "estimatedSize"];
+    if (
+      categories.length !== 3 ||
+      new Set(categoryIds).size !== 3 ||
+      categories.some((category) =>
+        category.questions.length !== 3 ||
+        new Set(category.questions.map((question) => question.id)).size !== 3 ||
+        category.questions.some((question) => !validQuestionIds.includes(question.id))
+      )
+    ) {
+      res.status(400).json({ error: "Each inquiry category must have its three unique questions." });
+      return;
+    }
+    if (!categories.some((category) => category.enabled)) {
+      res.status(400).json({ error: "Keep at least one inquiry category enabled." });
+      return;
+    }
+  }
+
   // Explicit allowlist of self-editable profile fields (never tier/points/isAdmin)
   const updates: Record<string, unknown> = {};
-  for (const key of ["username", "avatarUrl", "bio", "discipline", "location", "bookingOpen", "portfolioUrl"] as const) {
+  for (const key of ["username", "avatarUrl", "bio", "discipline", "location", "bookingOpen", "portfolioUrl", "inquiryFormConfig"] as const) {
     if (parsed.data[key] !== undefined) updates[key] = parsed.data[key];
   }
   if (Object.keys(updates).length === 0) {
@@ -352,6 +374,7 @@ router.get("/users/:id/profile", async (req, res): Promise<void> => {
       u.discipline, u.bio, u.location,
       u.booking_open AS "bookingOpen",
       u.portfolio_url AS "portfolioUrl",
+      u.inquiry_form_config AS "inquiryFormConfig",
       u.portfolio_categories_configured AS "portfolioCategoriesConfigured",
       u.created_at AS "createdAt",
        COALESCE(

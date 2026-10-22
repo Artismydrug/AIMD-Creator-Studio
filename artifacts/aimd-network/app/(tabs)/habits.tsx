@@ -16,6 +16,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
+import { mainHeaderTopPadding } from '@/lib/safeArea';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -93,7 +94,7 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
     });
   };
 
-  const topPad = embedded ? 8 : Platform.OS === 'web' ? 67 : insets.top + 8;
+  const topPad = embedded ? 8 : mainHeaderTopPadding(insets.top, Platform.OS === 'web');
 
   const s = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },

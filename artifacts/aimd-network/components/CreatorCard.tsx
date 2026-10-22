@@ -1,11 +1,10 @@
 import React, { useMemo } from 'react';
-import { Alert, Linking, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { getBaseUrl, type DirectoryCreator } from '@workspace/api-client-react';
-import { getStudioInquiryLink } from '@/lib/studioInquiry';
 
 interface CreatorCardProps {
   creator: DirectoryCreator;
@@ -22,20 +21,13 @@ export default function CreatorCard({ creator, onOpenProfile, onMessage, messagi
   const avatarUrl = creator.avatarUrl
     ? (/^https?:\/\//i.test(creator.avatarUrl) ? creator.avatarUrl : `${getBaseUrl() ?? ''}${creator.avatarUrl}`)
     : null;
-  const inquiryLink = getStudioInquiryLink(creator);
-  const isPoncho = creator.username.replace(/^@/, '').toLowerCase() === 'ponchotheartist';
-  const inquiryAvailable = isPoncho ? !!creator.bookingOpen : !!inquiryLink;
-  const openInquiry = async () => {
-    if (isPoncho && creator.bookingOpen) {
-      router.push({
-        pathname: '/commission-inquiry',
-        params: { creatorName: creator.username },
-      });
-      return;
-    }
-    if (!inquiryLink) return;
-    try { await Linking.openURL(inquiryLink); }
-    catch { Alert.alert('Could not open inquiry link', 'Try messaging this creator instead.'); }
+  const inquiryAvailable = !!creator.bookingOpen;
+  const openInquiry = () => {
+    if (!inquiryAvailable) return;
+    router.push({
+      pathname: '/commission-inquiry',
+      params: { creatorName: creator.username, creatorId: String(creator.id) },
+    });
   };
 
   const s = useMemo(() => StyleSheet.create({
@@ -117,8 +109,8 @@ export default function CreatorCard({ creator, onOpenProfile, onMessage, messagi
           <TouchableOpacity onPress={openInquiry}
             style={{ minHeight: 44, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 5 }}
             testID={`inquire-creator-${creator.id}`}
-            accessibilityRole={isPoncho ? 'button' : 'link'}
-            accessibilityLabel={isPoncho ? 'Open Poncho The Artist inquiry form' : `Open ${creator.username}'s external inquiry link`}
+            accessibilityRole="button"
+            accessibilityLabel={`Open ${creator.username}'s inquiry form`}
             activeOpacity={0.7}>
             <Text style={[s.details, { color: colors.foreground, fontFamily: 'DMSans_700Bold' }]}>Inquire</Text>
             <Feather name="arrow-up-right" size={14} color={colors.foreground} />

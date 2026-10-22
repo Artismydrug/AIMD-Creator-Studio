@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { StudioPost } from '@workspace/api-client-react';
 import { getBaseUrl } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
+import { mainHeaderTopPadding } from '@/lib/safeArea';
 import StudioImage from '@/components/StudioImage';
 import StudioVideo from '@/components/StudioVideo';
 import AudioTrackPlayer from '@/components/AudioTrackPlayer';
@@ -97,7 +98,9 @@ export default function CreatorPortfolioView({
   const gridGap = desktopGrid ? 13 : 8;
   const columnCount = desktopGrid ? 3 : 2;
   const tileWidth = (contentWidth - gridGap * (columnCount - 1)) / columnCount;
-  const topPadding = Math.max(insets.top, topInsetFallback) + 8;
+  const topPadding = Platform.OS === 'web'
+    ? Math.max(mainHeaderTopPadding(insets.top, true), topInsetFallback + 8)
+    : mainHeaderTopPadding(insets.top, false);
   const styles = useMemo(() => StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.studioBackground },
     scroll: { alignItems: 'center', paddingBottom: Math.max(insets.bottom, 24) + 30 },

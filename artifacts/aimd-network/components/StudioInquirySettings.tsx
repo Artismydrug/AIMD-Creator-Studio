@@ -9,11 +9,13 @@ import {
   getGetCurrentUserQueryKey, getGetUserProfileQueryKey, getListDirectoryQueryKey,
   useUpdateCurrentUser,
 } from '@workspace/api-client-react';
+import type { InquiryFormConfig } from '@workspace/api-client-react';
+import { DEFAULT_INQUIRY_FORM_CONFIG } from '@/lib/inquiryFormDefaults';
 import { useColors } from '@/hooks/useColors';
 import { getStudioInquiryLink, normalizeStudioLink } from '@/lib/studioInquiry';
 
 type Props = {
-  user: { id: number; portfolioUrl?: string | null; bookingOpen?: boolean | null };
+  user: { id: number; portfolioUrl?: string | null; bookingOpen?: boolean | null; inquiryFormConfig?: InquiryFormConfig | null };
   onSaved: () => void;
 };
 
@@ -25,6 +27,7 @@ export default function StudioInquirySettings({ user, onSaved }: Props) {
   const [editing, setEditing] = useState(false);
   const [link, setLink] = useState(user.portfolioUrl ?? '');
   const [open, setOpen] = useState(!!user.bookingOpen);
+  const [formConfig, setFormConfig] = useState<InquiryFormConfig>(user.inquiryFormConfig ?? DEFAULT_INQUIRY_FORM_CONFIG);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const activeLink = getStudioInquiryLink(user);
@@ -32,6 +35,7 @@ export default function StudioInquirySettings({ user, onSaved }: Props) {
   const edit = () => {
     setLink(user.portfolioUrl ?? '');
     setOpen(!!user.bookingOpen);
+    setFormConfig(user.inquiryFormConfig ?? DEFAULT_INQUIRY_FORM_CONFIG);
     setError('');
     setEditing(true);
   };
@@ -49,8 +53,12 @@ export default function StudioInquirySettings({ user, onSaved }: Props) {
     if (lock.current) return;
     const trimmed = link.trim();
     const normalized = normalizeStudioLink(trimmed);
-    if ((trimmed && !normalized) || (open && !normalized)) {
-      setError('Add a valid https:// or http:// contact or booking URL. No passwords in links.');
+    if (trimmed && !normalized) {
+      setError('Add a valid https:// or http:// website URL.');
+      return;
+    }
+    if (!formConfig.categories.some((category) => category.enabled)) {
+      setError('Keep at least one project type enabled.');
       return;
     }
     lock.current = true;
@@ -58,7 +66,7 @@ export default function StudioInquirySettings({ user, onSaved }: Props) {
     setError('');
     try {
       const saved = await update.mutateAsync({
-        data: { portfolioUrl: normalized, bookingOpen: open },
+        data: { portfolioUrl: normalized, bookingOpen: open, inquiryFormConfig: formConfig },
       });
       client.setQueryData(getGetCurrentUserQueryKey(), saved);
       void client.invalidateQueries({ queryKey: getGetUserProfileQueryKey(user.id) });
@@ -92,13 +100,25 @@ export default function StudioInquirySettings({ user, onSaved }: Props) {
     buttonText: { color: colors.foreground, fontFamily: 'DMSans_700Bold', fontSize: 13 },
     error: { color: colors.destructive, backgroundColor: colors.card, padding: 8, borderRadius: 8,
       fontFamily: 'DMSans_500Medium', fontSize: 13, lineHeight: 19 },
+    category: { padding: 12, gap: 10, borderRadius: 16, borderWidth: 1, borderColor: colors.studioInk, backgroundColor: colors.studioPaper },
   });
+  const updateCategory = (id: InquiryFormConfig['categories'][number]['id'], patch: Partial<InquiryFormConfig['categories'][number]>) => {
+    setFormConfig((current) => ({ ...current, categories: current.categories.map((category) => category.id === id ? { ...category, ...patch } : category) }));
+  };
+  const updateQuestion = (categoryId: InquiryFormConfig['categories'][number]['id'], questionId: InquiryFormConfig['categories'][number]['questions'][number]['id'], patch: Partial<InquiryFormConfig['categories'][number]['questions'][number]>) => {
+    setFormConfig((current) => ({
+      ...current,
+      categories: current.categories.map((category) => category.id === categoryId
+        ? { ...category, questions: category.questions.map((question) => question.id === questionId ? { ...question, ...patch } : question) }
+        : category),
+    }));
+  };
   return (
     <View style={s.card} testID="studio-inquiry-card">
       <View style={s.row}>
         <Feather name="send" size={17} color={colors.ink} />
         <Text style={s.eyebrow}>YOUR INQUIRIES</Text>
-        <Text style={s.status}>{activeLink ? 'Open' : 'Off'}</Text>
+        <Text style={s.status}>{open ? 'Open' : 'Off'}</Text>
       </View>
       <Text style={s.title}>Let’s work together.</Text>
       {editing ? (
@@ -118,7 +138,67 @@ export default function StudioInquirySettings({ user, onSaved }: Props) {
             <Switch value={open} onValueChange={setOpen} disabled={saving}
               accessibilityLabel="Open for inquiries" testID="studio-inquiry-open" />
           </View>
-          <Text style={s.copy}>When on, visitors can contact you from your public studio and Creator Directory. This link also serves as your website link.</Text>
+          <Text style={s.copy}>Visitors can send a private inquiry from your studio. The website link is optional.</Text>
+          <Text style={s.label}>Project types and questions</Text>
+          {formConfig.categories.map((category) => (
+            <View key={category.id} style={s.category}>
+              <View style={s.row}>
+                <TextInput
+                  accessibilityLabel={`${category.id} project type name`}
+                  value={category.label}
+                  onChangeText={(label) => updateCategory(category.id, { label })}
+                  editable={!saving}
+                  maxLength={32}
+                  style={[s.field, { flex: 1 }]}
+                />
+                <Switch
+                  value={category.enabled}
+                  onValueChange={(enabled) => updateCategory(category.id, { enabled })}
+                  disabled={saving}
+                  accessibilityLabel={`Enable ${category.label}`}
+                />
+              </View>
+              <TextInput
+                accessibilityLabel={`${category.label} inquiry introduction`}
+                value={category.headline}
+                onChangeText={(headline) => updateCategory(category.id, { headline })}
+                editable={!saving}
+                maxLength={120}
+                style={s.field}
+              />
+              {category.questions.map((question) => (
+                <View key={question.id} style={{ gap: 6 }}>
+                  <TextInput
+                    accessibilityLabel={`${category.label} ${question.id} question`}
+                    value={question.label}
+                    onChangeText={(label) => updateQuestion(category.id, question.id, { label })}
+                    editable={!saving}
+                    maxLength={60}
+                    style={s.field}
+                  />
+                  <TextInput
+                    accessibilityLabel={`${category.label} ${question.id} prompt`}
+                    value={question.placeholder}
+                    onChangeText={(placeholder) => updateQuestion(category.id, question.id, { placeholder })}
+                    editable={!saving}
+                    maxLength={180}
+                    style={s.field}
+                  />
+                  <TextInput
+                    accessibilityLabel={`${category.label} ${question.id} suggested answers`}
+                    value={question.suggestions.join(', ')}
+                    onChangeText={(value) => updateQuestion(category.id, question.id, {
+                      suggestions: value.split(',').map((item) => item.trim()).filter(Boolean).slice(0, 5),
+                    })}
+                    editable={!saving}
+                    placeholder="Suggested answers, separated by commas"
+                    maxLength={220}
+                    style={s.field}
+                  />
+                </View>
+              ))}
+            </View>
+          ))}
           {error ? <Text style={s.error} accessibilityRole="alert">{error}</Text> : null}
           <View style={s.actions}>
             <Pressable style={s.button} onPress={save} disabled={saving}
@@ -134,9 +214,9 @@ export default function StudioInquirySettings({ user, onSaved }: Props) {
         </>
       ) : (
         <>
-          <Text style={s.copy}>{activeLink
-            ? 'Your inquiry option is live on your public studio and in Creator Directory.'
-            : 'Add a contact or booking link to let visitors reach you about work.'}</Text>
+          <Text style={s.copy}>{open
+            ? 'Visitors can send you a private inquiry from your public studio.'
+            : 'Turn on inquiries to receive project requests from your studio.'}</Text>
           <View style={s.actions}>
             <Pressable style={s.button} onPress={edit} accessibilityRole="button" testID="edit-studio-inquiries">
               <Feather name="edit-2" size={14} color={colors.foreground} />

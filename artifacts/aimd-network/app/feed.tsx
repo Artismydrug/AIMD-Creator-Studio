@@ -16,6 +16,7 @@ import {
   AccessibilityInfo,
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
+import { mainHeaderTopPadding } from '@/lib/safeArea';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -108,7 +109,7 @@ export default function FeedScreen({ embedded = false, onCommunitySectionChange 
   const [pagerHeight, setPagerHeight] = useState(0);
   const pagerViewportRef = useRef<View>(null);
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
-  const topPad = embedded ? 0 : Platform.OS === 'web' ? 67 : insets.top + 8;
+  const topPad = embedded ? 0 : mainHeaderTopPadding(insets.top, Platform.OS === 'web');
   const pageHeight = pagerHeight || Math.max(480, windowHeight - topPad - 112);
   const controlsTopInset = controlsHeight || feedControlsInset(insets.top, Platform.OS === 'web');
   const syncControlsHeight = useCallback((height: number) => {

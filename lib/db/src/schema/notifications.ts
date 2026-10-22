@@ -1,12 +1,15 @@
-import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgTable, serial, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { usersTable } from "./users";
 import { studioPostsTable } from "./studio-posts";
+import { tattooBookingsTable } from "./tattoo-bookings";
 
 export const notificationTypes = [
   "direct_message",
   "follow",
   "like",
   "critique",
+  "commission_inquiry",
 ] as const;
 
 export const notificationsTable = pgTable("notifications", {
@@ -22,8 +25,13 @@ export const notificationsTable = pgTable("notifications", {
   postId: integer("post_id").references(() => studioPostsTable.id, {
     onDelete: "cascade",
   }),
+  bookingId: integer("booking_id").references(() => tattooBookingsTable.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   readAt: timestamp("read_at", { withTimezone: true }),
-});
+}, (table) => [
+  uniqueIndex("notifications_booking_id_unique")
+    .on(table.bookingId)
+    .where(sql`booking_id IS NOT NULL`),
+]);
 
 export type Notification = typeof notificationsTable.$inferSelect;

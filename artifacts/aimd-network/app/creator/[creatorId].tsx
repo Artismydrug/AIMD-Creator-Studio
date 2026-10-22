@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import {
@@ -12,7 +12,6 @@ import {
 } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import CreatorPortfolioView from '@/components/CreatorPortfolioView';
-import { getStudioInquiryLink } from '@/lib/studioInquiry';
 
 export default function CreatorProfileScreen() {
   const colors = useColors();
@@ -94,9 +93,6 @@ export default function CreatorProfileScreen() {
     );
   }
 
-  const isPoncho = creator.username.replace(/^@/, '').toLowerCase() === 'ponchotheartist';
-  const inquiryUrl = creator.bookingOpen && !isPoncho ? getStudioInquiryLink(creator) : null;
-
   const messageCreator = () => {
     if (!me || createConversation.isPending) return;
     createConversation.mutate(
@@ -113,15 +109,10 @@ export default function CreatorProfileScreen() {
 
   const openInquiry = () => {
     if (!creator.bookingOpen) return;
-    if (isPoncho) {
-      router.push({
-        pathname: '/commission-inquiry',
-        params: { creatorName: creator.username },
-      });
-      return;
-    }
-    if (!inquiryUrl) return;
-    void Linking.openURL(inquiryUrl).catch(() => Alert.alert('Could not open inquiry link', 'Please try again.'));
+    router.push({
+      pathname: '/commission-inquiry',
+      params: { creatorName: creator.username, creatorId: String(creator.id) },
+    });
   };
 
   return (
@@ -138,7 +129,7 @@ export default function CreatorProfileScreen() {
         onBack={back}
         onMessage={messageCreator}
         messageBusy={createConversation.isPending}
-        inquiryAvailable={!!creator.bookingOpen && (isPoncho || !!inquiryUrl)}
+        inquiryAvailable={!!creator.bookingOpen}
         onInquiry={openInquiry}
       />
     </View>

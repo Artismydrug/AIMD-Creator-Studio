@@ -1481,6 +1481,26 @@ export const GetStoreOrderResponse = zod.object({
 /**
  * @summary Get the current demo user profile
  */
+export const getCurrentUserResponseInquiryFormConfigOneCategoriesItemLabelMax = 32;
+
+export const getCurrentUserResponseInquiryFormConfigOneCategoriesItemHeadlineMax = 120;
+
+export const getCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsItemLabelMax = 60;
+
+export const getCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsItemPlaceholderMax = 180;
+
+export const getCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsItemSuggestionsItemMax = 40;
+
+export const getCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsItemSuggestionsMax = 5;
+
+export const getCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsMin = 3;
+export const getCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsMax = 3;
+
+export const getCurrentUserResponseInquiryFormConfigOneCategoriesMin = 3;
+export const getCurrentUserResponseInquiryFormConfigOneCategoriesMax = 3;
+
+
+
 export const GetCurrentUserResponse = zod.object({
   "id": zod.int(),
   "username": zod.string(),
@@ -1495,6 +1515,20 @@ export const GetCurrentUserResponse = zod.object({
   "location": zod.string().nullish(),
   "bookingOpen": zod.boolean().optional(),
   "portfolioUrl": zod.string().nullish(),
+  "inquiryFormConfig": zod.union([zod.object({
+  "categories": zod.array(zod.object({
+  "id": zod.enum(['tattoo', 'painting', 'other']),
+  "enabled": zod.boolean(),
+  "label": zod.string().min(1).max(getCurrentUserResponseInquiryFormConfigOneCategoriesItemLabelMax),
+  "headline": zod.string().min(1).max(getCurrentUserResponseInquiryFormConfigOneCategoriesItemHeadlineMax),
+  "questions": zod.array(zod.object({
+  "id": zod.enum(['idea', 'placement', 'estimatedSize']),
+  "label": zod.string().min(1).max(getCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsItemLabelMax),
+  "placeholder": zod.string().min(1).max(getCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsItemPlaceholderMax),
+  "suggestions": zod.array(zod.string().max(getCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsItemSuggestionsItemMax)).max(getCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsItemSuggestionsMax)
+})).min(getCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsMin).max(getCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsMax)
+})).min(getCurrentUserResponseInquiryFormConfigOneCategoriesMin).max(getCurrentUserResponseInquiryFormConfigOneCategoriesMax)
+}),zod.null()]).optional(),
   "createdAt": zod.coerce.date()
 })
 
@@ -1511,6 +1545,24 @@ export const DeleteCurrentUserResponse = zod.void()
  */
 export const updateCurrentUserBodyBioMax = 500;
 
+export const updateCurrentUserBodyInquiryFormConfigCategoriesItemLabelMax = 32;
+
+export const updateCurrentUserBodyInquiryFormConfigCategoriesItemHeadlineMax = 120;
+
+export const updateCurrentUserBodyInquiryFormConfigCategoriesItemQuestionsItemLabelMax = 60;
+
+export const updateCurrentUserBodyInquiryFormConfigCategoriesItemQuestionsItemPlaceholderMax = 180;
+
+export const updateCurrentUserBodyInquiryFormConfigCategoriesItemQuestionsItemSuggestionsItemMax = 40;
+
+export const updateCurrentUserBodyInquiryFormConfigCategoriesItemQuestionsItemSuggestionsMax = 5;
+
+export const updateCurrentUserBodyInquiryFormConfigCategoriesItemQuestionsMin = 3;
+export const updateCurrentUserBodyInquiryFormConfigCategoriesItemQuestionsMax = 3;
+
+export const updateCurrentUserBodyInquiryFormConfigCategoriesMin = 3;
+export const updateCurrentUserBodyInquiryFormConfigCategoriesMax = 3;
+
 
 
 export const UpdateCurrentUserBody = zod.object({
@@ -1520,8 +1572,42 @@ export const UpdateCurrentUserBody = zod.object({
   "bio": zod.string().max(updateCurrentUserBodyBioMax).nullish(),
   "location": zod.string().nullish(),
   "bookingOpen": zod.boolean().optional(),
-  "portfolioUrl": zod.string().nullish()
+  "portfolioUrl": zod.string().nullish(),
+  "inquiryFormConfig": zod.object({
+  "categories": zod.array(zod.object({
+  "id": zod.enum(['tattoo', 'painting', 'other']),
+  "enabled": zod.boolean(),
+  "label": zod.string().min(1).max(updateCurrentUserBodyInquiryFormConfigCategoriesItemLabelMax),
+  "headline": zod.string().min(1).max(updateCurrentUserBodyInquiryFormConfigCategoriesItemHeadlineMax),
+  "questions": zod.array(zod.object({
+  "id": zod.enum(['idea', 'placement', 'estimatedSize']),
+  "label": zod.string().min(1).max(updateCurrentUserBodyInquiryFormConfigCategoriesItemQuestionsItemLabelMax),
+  "placeholder": zod.string().min(1).max(updateCurrentUserBodyInquiryFormConfigCategoriesItemQuestionsItemPlaceholderMax),
+  "suggestions": zod.array(zod.string().max(updateCurrentUserBodyInquiryFormConfigCategoriesItemQuestionsItemSuggestionsItemMax)).max(updateCurrentUserBodyInquiryFormConfigCategoriesItemQuestionsItemSuggestionsMax)
+})).min(updateCurrentUserBodyInquiryFormConfigCategoriesItemQuestionsMin).max(updateCurrentUserBodyInquiryFormConfigCategoriesItemQuestionsMax)
+})).min(updateCurrentUserBodyInquiryFormConfigCategoriesMin).max(updateCurrentUserBodyInquiryFormConfigCategoriesMax)
+}).optional()
 })
+
+export const updateCurrentUserResponseInquiryFormConfigOneCategoriesItemLabelMax = 32;
+
+export const updateCurrentUserResponseInquiryFormConfigOneCategoriesItemHeadlineMax = 120;
+
+export const updateCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsItemLabelMax = 60;
+
+export const updateCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsItemPlaceholderMax = 180;
+
+export const updateCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsItemSuggestionsItemMax = 40;
+
+export const updateCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsItemSuggestionsMax = 5;
+
+export const updateCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsMin = 3;
+export const updateCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsMax = 3;
+
+export const updateCurrentUserResponseInquiryFormConfigOneCategoriesMin = 3;
+export const updateCurrentUserResponseInquiryFormConfigOneCategoriesMax = 3;
+
+
 
 export const UpdateCurrentUserResponse = zod.object({
   "id": zod.int(),
@@ -1537,6 +1623,20 @@ export const UpdateCurrentUserResponse = zod.object({
   "location": zod.string().nullish(),
   "bookingOpen": zod.boolean().optional(),
   "portfolioUrl": zod.string().nullish(),
+  "inquiryFormConfig": zod.union([zod.object({
+  "categories": zod.array(zod.object({
+  "id": zod.enum(['tattoo', 'painting', 'other']),
+  "enabled": zod.boolean(),
+  "label": zod.string().min(1).max(updateCurrentUserResponseInquiryFormConfigOneCategoriesItemLabelMax),
+  "headline": zod.string().min(1).max(updateCurrentUserResponseInquiryFormConfigOneCategoriesItemHeadlineMax),
+  "questions": zod.array(zod.object({
+  "id": zod.enum(['idea', 'placement', 'estimatedSize']),
+  "label": zod.string().min(1).max(updateCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsItemLabelMax),
+  "placeholder": zod.string().min(1).max(updateCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsItemPlaceholderMax),
+  "suggestions": zod.array(zod.string().max(updateCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsItemSuggestionsItemMax)).max(updateCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsItemSuggestionsMax)
+})).min(updateCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsMin).max(updateCurrentUserResponseInquiryFormConfigOneCategoriesItemQuestionsMax)
+})).min(updateCurrentUserResponseInquiryFormConfigOneCategoriesMin).max(updateCurrentUserResponseInquiryFormConfigOneCategoriesMax)
+}),zod.null()]).optional(),
   "createdAt": zod.coerce.date()
 })
 
@@ -1903,6 +2003,26 @@ export const GetUserProfileParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
+export const getUserProfileResponseInquiryFormConfigOneCategoriesItemLabelMax = 32;
+
+export const getUserProfileResponseInquiryFormConfigOneCategoriesItemHeadlineMax = 120;
+
+export const getUserProfileResponseInquiryFormConfigOneCategoriesItemQuestionsItemLabelMax = 60;
+
+export const getUserProfileResponseInquiryFormConfigOneCategoriesItemQuestionsItemPlaceholderMax = 180;
+
+export const getUserProfileResponseInquiryFormConfigOneCategoriesItemQuestionsItemSuggestionsItemMax = 40;
+
+export const getUserProfileResponseInquiryFormConfigOneCategoriesItemQuestionsItemSuggestionsMax = 5;
+
+export const getUserProfileResponseInquiryFormConfigOneCategoriesItemQuestionsMin = 3;
+export const getUserProfileResponseInquiryFormConfigOneCategoriesItemQuestionsMax = 3;
+
+export const getUserProfileResponseInquiryFormConfigOneCategoriesMin = 3;
+export const getUserProfileResponseInquiryFormConfigOneCategoriesMax = 3;
+
+
+
 export const GetUserProfileResponse = zod.object({
   "id": zod.int(),
   "username": zod.string(),
@@ -1920,6 +2040,20 @@ export const GetUserProfileResponse = zod.object({
   "name": zod.string(),
   "position": zod.int()
 })),
+  "inquiryFormConfig": zod.union([zod.object({
+  "categories": zod.array(zod.object({
+  "id": zod.enum(['tattoo', 'painting', 'other']),
+  "enabled": zod.boolean(),
+  "label": zod.string().min(1).max(getUserProfileResponseInquiryFormConfigOneCategoriesItemLabelMax),
+  "headline": zod.string().min(1).max(getUserProfileResponseInquiryFormConfigOneCategoriesItemHeadlineMax),
+  "questions": zod.array(zod.object({
+  "id": zod.enum(['idea', 'placement', 'estimatedSize']),
+  "label": zod.string().min(1).max(getUserProfileResponseInquiryFormConfigOneCategoriesItemQuestionsItemLabelMax),
+  "placeholder": zod.string().min(1).max(getUserProfileResponseInquiryFormConfigOneCategoriesItemQuestionsItemPlaceholderMax),
+  "suggestions": zod.array(zod.string().max(getUserProfileResponseInquiryFormConfigOneCategoriesItemQuestionsItemSuggestionsItemMax)).max(getUserProfileResponseInquiryFormConfigOneCategoriesItemQuestionsItemSuggestionsMax)
+})).min(getUserProfileResponseInquiryFormConfigOneCategoriesItemQuestionsMin).max(getUserProfileResponseInquiryFormConfigOneCategoriesItemQuestionsMax)
+})).min(getUserProfileResponseInquiryFormConfigOneCategoriesMin).max(getUserProfileResponseInquiryFormConfigOneCategoriesMax)
+}),zod.null()]).optional(),
   "postCount": zod.int(),
   "badgesEarned": zod.int(),
   "currentStreak": zod.int(),
@@ -2207,7 +2341,7 @@ export const SendMessageResponse = zod.object({
 export const GetNotificationsResponse = zod.object({
   "notifications": zod.array(zod.object({
   "id": zod.int(),
-  "type": zod.enum(['direct_message', 'follow', 'like', 'critique']),
+  "type": zod.enum(['direct_message', 'follow', 'like', 'critique', 'commission_inquiry']),
   "actor": zod.union([zod.object({
   "id": zod.int(),
   "username": zod.string(),
@@ -2215,11 +2349,16 @@ export const GetNotificationsResponse = zod.object({
 }),zod.null()]),
   "conversationId": zod.int().nullable(),
   "postId": zod.int().nullable(),
+  "bookingId": zod.int().nullable(),
+  "inquirySummary": zod.string().nullable(),
   "conversationDestination": zod.union([zod.object({
   "conversationId": zod.int()
 }),zod.null()]),
   "postDestination": zod.union([zod.object({
   "postId": zod.int()
+}),zod.null()]),
+  "inquiryDestination": zod.union([zod.object({
+  "bookingId": zod.int()
 }),zod.null()]),
   "createdAt": zod.coerce.date(),
   "readAt": zod.coerce.date().nullable()
@@ -2237,7 +2376,7 @@ export const MarkNotificationReadParams = zod.object({
 
 export const MarkNotificationReadResponse = zod.object({
   "id": zod.int(),
-  "type": zod.enum(['direct_message', 'follow', 'like', 'critique']),
+  "type": zod.enum(['direct_message', 'follow', 'like', 'critique', 'commission_inquiry']),
   "actor": zod.union([zod.object({
   "id": zod.int(),
   "username": zod.string(),
@@ -2245,11 +2384,16 @@ export const MarkNotificationReadResponse = zod.object({
 }),zod.null()]),
   "conversationId": zod.int().nullable(),
   "postId": zod.int().nullable(),
+  "bookingId": zod.int().nullable(),
+  "inquirySummary": zod.string().nullable(),
   "conversationDestination": zod.union([zod.object({
   "conversationId": zod.int()
 }),zod.null()]),
   "postDestination": zod.union([zod.object({
   "postId": zod.int()
+}),zod.null()]),
+  "inquiryDestination": zod.union([zod.object({
+  "bookingId": zod.int()
 }),zod.null()]),
   "createdAt": zod.coerce.date(),
   "readAt": zod.coerce.date().nullable()
@@ -2592,6 +2736,7 @@ export const AddPostCommentResponse = zod.void()
 /**
  * @summary Start a public tattoo booking intake
  */
+
 export const createTattooBookingDraftBodyNameMax = 120;
 
 export const createTattooBookingDraftBodyEmailMax = 254;
@@ -2612,6 +2757,7 @@ export const createTattooBookingDraftBodyWebsiteMax = 200;
 
 
 export const CreateTattooBookingDraftBody = zod.object({
+  "recipientUserId": zod.int().min(1).optional(),
   "requestType": zod.enum(['tattoo', 'painting', 'other']),
   "name": zod.string().min(1).max(createTattooBookingDraftBodyNameMax),
   "email": zod.email().max(createTattooBookingDraftBodyEmailMax),
@@ -2648,6 +2794,47 @@ export const UploadTattooBookingReferenceResponse = zod.object({
   "originalName": zod.string(),
   "contentType": zod.string(),
   "sizeBytes": zod.int()
+})
+
+
+/**
+ * @summary Get an inquiry assigned to the authenticated creator
+ */
+export const GetCreatorTattooBookingParams = zod.object({
+  "bookingId": zod.coerce.number().int()
+})
+
+export const getCreatorTattooBookingResponseQuestionsItemLabelMax = 60;
+
+export const getCreatorTattooBookingResponseQuestionsItemPlaceholderMax = 180;
+
+export const getCreatorTattooBookingResponseQuestionsItemSuggestionsItemMax = 40;
+
+export const getCreatorTattooBookingResponseQuestionsItemSuggestionsMax = 5;
+
+
+
+export const GetCreatorTattooBookingResponse = zod.object({
+  "id": zod.int(),
+  "category": zod.string(),
+  "name": zod.string(),
+  "email": zod.email(),
+  "phone": zod.string().nullable(),
+  "answers": zod.record(zod.string(), zod.string()),
+  "questions": zod.array(zod.object({
+  "id": zod.enum(['idea', 'placement', 'estimatedSize']),
+  "label": zod.string().min(1).max(getCreatorTattooBookingResponseQuestionsItemLabelMax),
+  "placeholder": zod.string().min(1).max(getCreatorTattooBookingResponseQuestionsItemPlaceholderMax),
+  "suggestions": zod.array(zod.string().max(getCreatorTattooBookingResponseQuestionsItemSuggestionsItemMax)).max(getCreatorTattooBookingResponseQuestionsItemSuggestionsMax)
+})),
+  "submittedAt": zod.coerce.date().nullable(),
+  "references": zod.array(zod.object({
+  "id": zod.int(),
+  "url": zod.string(),
+  "originalName": zod.string(),
+  "contentType": zod.string(),
+  "sizeBytes": zod.int()
+}))
 })
 
 

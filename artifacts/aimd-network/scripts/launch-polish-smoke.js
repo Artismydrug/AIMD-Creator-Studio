@@ -224,7 +224,7 @@ test('workshop placeholders clearly distinguish sample artwork from unavailable 
   assert.equal((workshops.match(/Video previews and full lessons aren’t available yet\./g) || []).length, 1);
   assert.doesNotMatch(workshops, /Preview available — full access coming soon/);
   assert.doesNotMatch(workshops, /Example workshops below\. Preview videos and lesson details are coming soon\./);
-  assert.match(workshops, /embedded \? 16 : Platform\.OS === 'web' \? 67 : insets\.top \+ 8/);
+  assert.match(workshops, /embedded \? 16 : mainHeaderTopPadding\(insets\.top, Platform\.OS === 'web'\)/);
   assert.match(source('../components/WorkshopLessonPlayer.tsx'), /workshop-preview-error/);
 });
 

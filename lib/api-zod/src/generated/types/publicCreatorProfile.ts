@@ -5,6 +5,7 @@
  * Creator Studio by AIMD API
  * OpenAPI spec version: 0.2.0
  */
+import type { InquiryFormConfig } from './inquiryFormConfig';
 import type { PortfolioCategory } from './portfolioCategory';
 import type { PublicCreatorProfileRecentBadgesItem } from './publicCreatorProfileRecentBadgesItem';
 
@@ -26,6 +27,7 @@ export interface PublicCreatorProfile {
   /** @nullable */
   portfolioUrl?: string | null;
   portfolioCategories: PortfolioCategory[];
+  inquiryFormConfig?: InquiryFormConfig | null;
   postCount: number;
   badgesEarned: number;
   currentStreak: number;

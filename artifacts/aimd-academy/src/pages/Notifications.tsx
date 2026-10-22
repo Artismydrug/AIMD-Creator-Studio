@@ -27,6 +27,7 @@ function detail(notification: Notification) {
     case 'follow': return `${name} started following you`;
     case 'like': return `${name} liked your studio post`;
     case 'critique': return `${name} left a critique on your studio post`;
+    case 'commission_inquiry': return notification.inquirySummary ?? 'New commission inquiry';
   }
 }
 

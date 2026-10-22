@@ -40,6 +40,12 @@ function assertDashboardSmokeContract() {
   assertIncludes(source, 'Loading your dashboard…', 'loading copy');
   assertIncludes(source, '<StickerJamPracticeCard', 'Sticker Jam practice card');
   assertIncludes(practiceCard, 'los-feliz-flea-flyer.jpg', 'Los Feliz flyer in the home carousel');
+  assertIncludes(practiceCard, 'testID="dashboard-active-habit-slide"', 'daily habit as the first carousel slide');
+  assertIncludes(practiceCard, 'testID="dashboard-masterclass-slide"', 'masterclass as the second carousel slide');
+  assertIncludes(practiceCard, 'COMING SOON', 'masterclass availability badge');
+  if (practiceCard.indexOf('testID="dashboard-active-habit-slide"') > practiceCard.indexOf('testID="dashboard-masterclass-slide"')) {
+    throw new Error('Dashboard carousel must put Today’s Habit before the masterclass slide');
+  }
   assertIncludes(residencyCard, 'los-feliz-flea-flyer.jpg', 'Los Feliz flyer in the event listing');
   if (!fs.existsSync(flyerPath)) {
     throw new Error(`Dashboard smoke contract could not find the event flyer: ${flyerPath}`);

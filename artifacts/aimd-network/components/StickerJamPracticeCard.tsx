@@ -11,7 +11,9 @@ import {
 } from 'react-native';
 import type { ComponentProps } from 'react';
 import { useColors } from '@/hooks/useColors';
-import { useListEvents } from '@workspace/api-client-react';
+import { useListEvents, useListHabits } from '@workspace/api-client-react';
+
+const SLIDE_LABELS = ['Today’s Habit', 'Masterclass', 'Your canvas', 'Events'] as const;
 
 type Shortcut = {
   label: string;
@@ -45,6 +47,9 @@ export default function StickerJamPracticeCard({
   const [activeSlide, setActiveSlide] = useState(0);
   const carouselRef = useRef<ScrollView>(null);
   const { data: upcomingEvents } = useListEvents({ upcoming: true } as any);
+  const { data: habitResponse, isLoading: habitsLoading, isError: habitsError } = useListHabits();
+  const habits = Array.isArray(habitResponse?.habits) ? habitResponse.habits : [];
+  const activeHabit = habits.find((habit) => !habit.completedToday) ?? habits[0];
   const fleaMarketEvent = upcomingEvents?.find((event) => /los feliz flea/i.test(event.title));
   const featuredEvent = fleaMarketEvent ?? upcomingEvents?.[0];
   const showsFleaFlyer = !featuredEvent || /los feliz flea/i.test(featuredEvent.title);
@@ -188,6 +193,72 @@ export default function StickerJamPracticeCard({
       shadowRadius: 0,
       elevation: 4,
     },
+    habitFrame: {
+      height: 228,
+      width: '100%',
+      justifyContent: 'space-between',
+      padding: 17,
+      overflow: 'hidden',
+      borderRadius: 27,
+      borderWidth: 3,
+      borderColor: colors.studioInk,
+      backgroundColor: colors.studioMint,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 5, height: 6 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 4,
+    },
+    habitTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+    habitEyebrow: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 1.2 },
+    habitStatus: {
+      paddingHorizontal: 9, paddingVertical: 5, borderWidth: 1.5, borderColor: colors.studioInk,
+      borderRadius: 99, backgroundColor: colors.studioYellow,
+    },
+    habitStatusText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 9, letterSpacing: 0.7 },
+    habitName: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 25, lineHeight: 30, letterSpacing: -0.5 },
+    habitDetails: { color: colors.studioInk, fontFamily: 'DMSans_500Medium', fontSize: 13, lineHeight: 19 },
+    habitAction: {
+      minHeight: 42, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+      gap: 7, paddingHorizontal: 14, borderWidth: 2, borderColor: colors.studioInk, borderRadius: 15,
+      backgroundColor: colors.studioOrange, shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2,
+    },
+    habitActionText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 12 },
+    masterclassFrame: {
+      height: 228,
+      width: '100%',
+      justifyContent: 'space-between',
+      padding: 17,
+      overflow: 'hidden',
+      borderRadius: 27,
+      borderWidth: 3,
+      borderColor: colors.studioInk,
+      backgroundColor: colors.studioLavender,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 5, height: 6 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 4,
+    },
+    masterclassMark: {
+      width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5,
+      borderColor: colors.studioInk, borderRadius: 14, backgroundColor: colors.studioYellow,
+    },
+    masterclassBadge: {
+      paddingHorizontal: 9, paddingVertical: 5, borderWidth: 1.5, borderColor: colors.studioInk,
+      borderRadius: 99, backgroundColor: colors.studioOrange,
+    },
+    masterclassBadgeText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 9, letterSpacing: 0.7 },
+    masterclassTitle: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 25, lineHeight: 30, letterSpacing: -0.5 },
+    masterclassDetails: { color: colors.studioInk, fontFamily: 'DMSans_500Medium', fontSize: 13, lineHeight: 19 },
+    masterclassAction: {
+      minHeight: 42, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+      gap: 7, paddingHorizontal: 14, borderWidth: 2, borderColor: colors.studioInk, borderRadius: 15,
+      backgroundColor: colors.studioPaper, shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2,
+    },
+    masterclassActionText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 12 },
     eventsPosterFrame: {
       overflow: 'hidden',
       borderWidth: 1.5,
@@ -434,10 +505,68 @@ export default function StickerJamPracticeCard({
           decelerationRate="fast"
           disableIntervalMomentum
           showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={(event) => setActiveSlide(Math.round(event.nativeEvent.contentOffset.x / slideWidth))}
+          onMomentumScrollEnd={(event) => setActiveSlide(Math.max(0, Math.min(SLIDE_LABELS.length - 1, Math.round(event.nativeEvent.contentOffset.x / slideWidth))))}
           style={{ height: 228 }}
           testID="dashboard-canvas-carousel"
         >
+          <View style={{ width: slideWidth }}>
+            <TouchableOpacity
+              style={styles.habitFrame}
+              onPress={onOpenHabits}
+              accessibilityRole="button"
+              accessibilityLabel={activeHabit
+                ? `${activeHabit.completedToday ? 'View' : 'Log'} today's habit: ${activeHabit.name}`
+                : 'Set up your first daily habit'}
+              testID="dashboard-active-habit-slide"
+            >
+              <View style={styles.habitTopline}>
+                <Text style={styles.habitEyebrow}>TODAY’S HABIT</Text>
+                <View style={styles.habitStatus}>
+                  <Text style={styles.habitStatusText}>
+                    {activeHabit ? activeHabit.completedToday ? 'DONE TODAY' : 'DAILY PRACTICE' : 'GET STARTED'}
+                  </Text>
+                </View>
+              </View>
+              <View>
+                <Text style={styles.habitName} numberOfLines={2}>
+                  {activeHabit?.name ?? (habitsLoading ? 'Loading your habit…' : habitsError ? 'Your habit is unavailable' : 'Choose a habit to begin')}
+                </Text>
+                <Text style={styles.habitDetails}>
+                  {activeHabit
+                    ? `${activeHabit.category} · ${activeHabit.targetMinutes} min · ${activeHabit.currentStreak} day streak`
+                    : habitsError ? 'Open Habits to try again.' : 'Build a small creative practice, one day at a time.'}
+                </Text>
+              </View>
+              <View style={styles.habitAction}>
+                <Text style={styles.habitActionText}>
+                  {activeHabit ? activeHabit.completedToday ? 'View your habits' : 'Log today’s practice' : 'Open habits'}
+                </Text>
+                <Feather name="arrow-up-right" size={15} color={colors.studioInk} />
+              </View>
+            </TouchableOpacity>
+          </View>
+          <View style={{ width: slideWidth }}>
+            <TouchableOpacity
+              style={styles.masterclassFrame}
+              onPress={onOpenWorkshops}
+              accessibilityRole="button"
+              accessibilityLabel="Masterclasses coming soon. Explore workshops."
+              testID="dashboard-masterclass-slide"
+            >
+              <View style={styles.habitTopline}>
+                <View style={styles.masterclassMark}><Feather name="play-circle" size={20} color={colors.studioInk} /></View>
+                <View style={styles.masterclassBadge}><Text style={styles.masterclassBadgeText}>COMING SOON</Text></View>
+              </View>
+              <View>
+                <Text style={styles.masterclassTitle}>Masterclass Studio</Text>
+                <Text style={styles.masterclassDetails}>New artist-led classes are on the way. Explore workshops available now.</Text>
+              </View>
+              <View style={styles.masterclassAction}>
+                <Text style={styles.masterclassActionText}>Explore workshops</Text>
+                <Feather name="arrow-up-right" size={15} color={colors.studioInk} />
+              </View>
+            </TouchableOpacity>
+          </View>
           <View style={{ width: slideWidth }}>
             <View style={styles.canvasFrame}>
               <Image
@@ -501,14 +630,14 @@ export default function StickerJamPracticeCard({
             </TouchableOpacity>
           </View>
         </ScrollView>
-        <View style={styles.slideIndicators} accessibilityLabel={`Dashboard card ${activeSlide + 1} of 2`}>
-          {[0, 1].map((index) => (
+        <View style={styles.slideIndicators} accessibilityLabel={`Dashboard card ${activeSlide + 1} of ${SLIDE_LABELS.length}`}>
+          {SLIDE_LABELS.map((label, index) => (
             <TouchableOpacity
-              key={index}
+              key={label}
               style={styles.indicatorButton}
               onPress={() => goToSlide(index)}
               accessibilityRole="button"
-              accessibilityLabel={index === 0 ? 'Show Your canvas slide' : 'Show Events slide'}
+              accessibilityLabel={`Show ${label} slide`}
               accessibilityState={{ selected: activeSlide === index }}
               testID={`dashboard-slide-${index + 1}`}
             >

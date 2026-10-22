@@ -29,6 +29,7 @@ import {
 } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useColors } from '@/hooks/useColors';
+import { mainHeaderTopPadding } from '@/lib/safeArea';
 import { safeImpact } from '@/lib/haptics';
 import { useRouter } from 'expo-router';
 import WorkshopLessonPlayer, { TeaserVideo, type WorkshopLesson } from '@/components/WorkshopLessonPlayer';
@@ -50,7 +51,7 @@ export default function WorkshopsScreen({ embedded = false }: { embedded?: boole
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const topPad = embedded ? 16 : Platform.OS === 'web' ? 67 : insets.top + 8;
+  const topPad = embedded ? 16 : mainHeaderTopPadding(insets.top, Platform.OS === 'web');
   const scrollRef = useRef<ScrollView>(null);
   const pendingDetailsScroll = useRef(false);
   const detailsTopY = useRef<number | null>(null);

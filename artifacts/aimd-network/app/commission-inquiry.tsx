@@ -12,13 +12,17 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { Feather } from '@expo/vector-icons';
+import { useEffect } from 'react';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   createTattooBookingDraft,
   customFetch,
+  getGetUserProfileQueryKey,
   submitTattooBooking,
+  useGetUserProfile,
 } from '@workspace/api-client-react';
+import { DEFAULT_INQUIRY_FORM_CONFIG } from '@/lib/inquiryFormDefaults';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import { useColors } from '@/hooks/useColors';
 
@@ -97,11 +101,22 @@ function imageContentType(asset: ImagePicker.ImagePickerAsset) {
 export default function CommissionInquiryScreen() {
   const colors = useColors();
   const router = useRouter();
-  const params = useLocalSearchParams<{ creatorName?: string | string[] }>();
+  const params = useLocalSearchParams<{ creatorName?: string | string[]; creatorId?: string | string[] }>();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const rawCreatorName = Array.isArray(params.creatorName) ? params.creatorName[0] : params.creatorName;
+  const rawCreatorId = Array.isArray(params.creatorId) ? params.creatorId[0] : params.creatorId;
+  const recipientUserId = Number(rawCreatorId);
+  const creatorIdIsValid = Number.isInteger(recipientUserId) && recipientUserId > 0;
+  const { data: creatorProfile } = useGetUserProfile(creatorIdIsValid ? recipientUserId : 0, {
+    query: {
+      enabled: creatorIdIsValid,
+      queryKey: creatorIdIsValid ? getGetUserProfileQueryKey(recipientUserId) : [],
+    },
+  });
   const creatorName = rawCreatorName?.trim().replace(/^@/, '').slice(0, 120) || 'Creator';
+  const inquiryConfig = creatorProfile?.inquiryFormConfig ?? DEFAULT_INQUIRY_FORM_CONFIG;
+  const availableCategories = inquiryConfig.categories.filter((category) => category.enabled);
   const submitLock = useRef(false);
   const [requestType, setRequestType] = useState<ProjectType>('tattoo');
   const [name, setName] = useState('');
@@ -115,7 +130,38 @@ export default function CommissionInquiryScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<SubmittedInquiry | null>(null);
 
-  const copy = PROJECT_COPY[requestType];
+  useEffect(() => {
+    if (!availableCategories.some((category) => category.id === requestType) && availableCategories[0]) {
+      setRequestType(availableCategories[0].id);
+    }
+  }, [availableCategories, requestType]);
+  const categoryConfig = inquiryConfig.categories.find((category) => category.id === requestType) ?? inquiryConfig.categories[0];
+  const questionConfig = (id: 'idea' | 'placement' | 'estimatedSize') =>
+    categoryConfig.questions.find((question) => question.id === id)!;
+  const copy = {
+    ...PROJECT_COPY[requestType],
+    headline: categoryConfig.headline,
+    ideaLabel: questionConfig('idea').label,
+    ideaPlaceholder: questionConfig('idea').placeholder,
+    placementLabel: questionConfig('placement').label,
+    placementPlaceholder: questionConfig('placement').placeholder,
+    sizeLabel: questionConfig('estimatedSize').label,
+    sizePlaceholder: questionConfig('estimatedSize').placeholder,
+  };
+  const renderSuggestions = (id: 'idea' | 'placement' | 'estimatedSize', onPick: (value: string) => void) => {
+    const suggestions = questionConfig(id).suggestions;
+    if (!suggestions.length) return null;
+    return (
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginTop: 7 }}>
+        {suggestions.map((suggestion) => (
+          <Pressable key={suggestion} accessibilityRole="button" onPress={() => onPick(suggestion)}
+            style={{ minHeight: 32, justifyContent: 'center', paddingHorizontal: 11, borderRadius: 99, borderWidth: 1, borderColor: colors.studioInk, backgroundColor: colors.studioYellow }}>
+            <Text style={{ color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 12 }}>{suggestion}</Text>
+          </Pressable>
+        ))}
+      </View>
+    );
+  };
   const topInsetFallback = Platform.OS === 'web' && width <= 500 ? 56 : 8;
   const topPadding = Math.max(insets.top, topInsetFallback) + 8;
   const styles = StyleSheet.create({
@@ -254,6 +300,10 @@ export default function CommissionInquiryScreen() {
 
   const submit = async () => {
     if (submitLock.current || isSubmitting) return;
+    if (!creatorIdIsValid || !creatorProfile || !creatorProfile.bookingOpen) {
+      setError('This creator’s inquiry form is unavailable. Return to their studio and try again.');
+      return;
+    }
     const cleanName = name.trim();
     const cleanEmail = email.trim();
     if (!cleanName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
@@ -270,6 +320,7 @@ export default function CommissionInquiryScreen() {
     setError(null);
     try {
       const draft = await createTattooBookingDraft({
+        recipientUserId,
         requestType,
         name: cleanName,
         email: cleanEmail,
@@ -371,19 +422,20 @@ export default function CommissionInquiryScreen() {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>What are we making?</Text>
               <View style={styles.projectTypes}>
-                {PROJECT_TYPES.map((item) => {
-                  const selected = requestType === item.value;
+                {availableCategories.map((category) => {
+                  const item = PROJECT_TYPES.find((type) => type.value === category.id)!;
+                  const selected = requestType === category.id;
                   return (
                     <Pressable
-                      key={item.value}
+                      key={category.id}
                       accessibilityRole="button"
                       accessibilityState={{ selected }}
-                      onPress={() => chooseProjectType(item.value)}
+                      onPress={() => chooseProjectType(category.id)}
                       style={[styles.projectType, selected && styles.projectTypeSelected]}
-                      testID={`commission-type-${item.value}`}
+                      testID={`commission-type-${category.id}`}
                     >
                       <Feather name={item.icon} size={14} color={colors.studioInk} />
-                      <Text style={styles.projectTypeText}>{item.label}</Text>
+                      <Text style={styles.projectTypeText}>{category.label}</Text>
                     </Pressable>
                   );
                 })}
@@ -459,6 +511,7 @@ export default function CommissionInquiryScreen() {
                   textAlignVertical="top"
                   value={idea}
                 />
+                {renderSuggestions('idea', setIdea)}
               </View>
               <View style={styles.field}>
                 <Text style={styles.label}>{copy.placementLabel} *</Text>
@@ -471,6 +524,7 @@ export default function CommissionInquiryScreen() {
                   style={styles.input}
                   value={placement}
                 />
+                {renderSuggestions('placement', setPlacement)}
               </View>
               <View style={styles.field}>
                 <Text style={styles.label}>{copy.sizeLabel} *</Text>
@@ -483,6 +537,7 @@ export default function CommissionInquiryScreen() {
                   style={styles.input}
                   value={estimatedSize}
                 />
+                {renderSuggestions('estimatedSize', setEstimatedSize)}
               </View>
             </View>
 
@@ -502,7 +557,7 @@ export default function CommissionInquiryScreen() {
                 <Feather name="image" size={18} color={colors.studioOrangeText} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.referenceButtonText}>Add photos or sketches</Text>
-                  <Text style={styles.helper}>Only the AIMD studio team can see them.</Text>
+                  <Text style={styles.helper}>Private to this creator and authorized studio staff.</Text>
                 </View>
                 <Feather name="plus" size={17} color={colors.studioInk} />
               </Pressable>

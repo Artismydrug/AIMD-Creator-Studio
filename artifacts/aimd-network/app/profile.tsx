@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import {
@@ -11,7 +11,6 @@ import {
 } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import CreatorPortfolioView, { type CreatorPortfolioProfile } from '@/components/CreatorPortfolioView';
-import { getStudioInquiryLink } from '@/lib/studioInquiry';
 
 export default function ProfileScreen() {
   const colors = useColors();
@@ -79,20 +78,13 @@ export default function ProfileScreen() {
     postCount: posts?.length ?? 0,
     followingCount: studioProfile?.followingCount ?? 0,
   };
-  const isPoncho = me.username.replace(/^@/, '').toLowerCase() === 'ponchotheartist';
-  const inquiryUrl = me.bookingOpen && !isPoncho ? getStudioInquiryLink(creator) : null;
-  const inquiryAvailable = !!me.bookingOpen && (isPoncho || !!inquiryUrl);
+  const inquiryAvailable = !!me.bookingOpen;
   const onOpenInquiry = () => {
     if (!me.bookingOpen) return;
-    if (isPoncho) {
-      router.push({
-        pathname: '/commission-inquiry',
-        params: { creatorName: me.username },
-      });
-      return;
-    }
-    if (!inquiryUrl) return;
-    void Linking.openURL(inquiryUrl).catch(() => Alert.alert('Could not open inquiry link', 'Please try again.'));
+    router.push({
+      pathname: '/commission-inquiry',
+      params: { creatorName: me.username, creatorId: String(me.id) },
+    });
   };
 
   return (

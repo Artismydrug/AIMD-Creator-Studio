@@ -3,6 +3,7 @@ import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
+import { mainHeaderTopPadding } from '@/lib/safeArea';
 import { safeImpact } from '@/lib/haptics';
 import FeedScreen from '../feed';
 import EventsScreen from './events';
@@ -14,7 +15,7 @@ export default function CommunityScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [section, setSection] = useState<CommunitySection>('feed');
-  const topPad = Platform.OS === 'web' ? 67 : insets.top + 8;
+  const topPad = mainHeaderTopPadding(insets.top, Platform.OS === 'web');
 
   const s = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },

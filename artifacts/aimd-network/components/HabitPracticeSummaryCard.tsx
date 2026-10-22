@@ -56,7 +56,7 @@ export default function HabitPracticeSummaryCard({ onOpenHabits, embedded = fals
   const s = useMemo(() => StyleSheet.create({
     card: {
       marginHorizontal: embedded ? 0 : 16,
-      marginTop: embedded ? 0 : 16,
+      marginTop: embedded ? 0 : 20,
       padding: 18,
       backgroundColor: colors.studioInk,
       borderColor: colors.studioViolet,
