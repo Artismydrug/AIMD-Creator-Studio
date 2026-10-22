@@ -7,7 +7,7 @@ Your Studio is each member's work-facing profile, usable by both the owner and v
 
 **Why:** The owner wants visitors to see a creator's work and send direct inquiries without traditional social-media metrics or external social promotion, while still tracking how many creators the profile follows. Editing and account management should not clutter the portfolio.
 
-**How to apply:** The Dashboard profile image opens the owner's Your Studio. Creator Directory identities and feed-post authors open that creator's Your Studio. Keep profile editing, optional inquiry settings, membership/app settings, and account deletion in a separate Edit Profile screen. Do not expose private membership or habit data on public profiles.
+**How to apply:** The Dashboard profile image opens the owner's Your Studio. Creator Directory identities and feed-post authors open that creator's Your Studio. Label the pencil action “Edit Profile” so it is distinct from account settings. Keep profile editing, optional inquiry settings, membership/app settings, and account deletion in a separate Edit Profile screen. Do not expose private membership or habit data on public profiles.
 
 Inquiry actions belong to each member and appear on their public profile only when enabled. In the mobile app, Poncho's inquiry action opens the in-app form for Tattoo, Painting, and Other; the website booking page remains separate. Other members can keep using their own saved inquiry links. Reference images stay private and submissions notify the studio by email.
 
@@ -27,7 +27,7 @@ Use the approved artist-portfolio mockup as the visual reference for Your Studio
 
 **How to apply:** Match the reference's layout using real member data and existing inquiry actions, not its decorative copy. The owner explicitly removed “Selected Work” and “Made to stay with you”; keep the gallery focused on artwork. Keep owner editing available without exposing account settings in the public presentation; never populate member galleries with the mockup's sample artwork.
 
-For the owner-facing portfolio, keep the main surface work-first: the header's icon-only add control starts new work, the icon-only Edit Profile action remains accessible, and the works count can sit above the unified artwork grid.
+For the owner-facing portfolio, keep the main surface work-first: the header's icon-only add control starts new work, the pencil-and-text Edit Profile action remains accessible, and the works count can sit above the unified artwork grid.
 
 **Why:** The owner removed social links and follower counts and later restored Following as the only social count, keeping the portfolio focused on creative practice and direct inquiries.
 

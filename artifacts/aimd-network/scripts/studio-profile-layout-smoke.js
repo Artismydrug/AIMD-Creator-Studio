@@ -209,7 +209,9 @@ test('studio keeps specialization below the name, Following above the unified gr
   assert.ok(editIndex >= 0);
   assert.equal(flattenStyle(get(tree, 'creator-profile-owner-links').props.style).flexDirection, 'row');
   const edit = get(tree, 'edit-profile-navigation');
-  assert.equal(allNodes(edit).filter(node => node.type === 'Text').length, 0, 'Edit Profile is icon-only');
+  assert.ok(allNodes(edit).some(node =>
+    node.type === 'Text' && [].concat(node.props.children).includes('Edit Profile')));
+  assert.ok(flattenStyle(edit.props.style).minWidth >= 44, 'the labelled edit control keeps a comfortable touch target');
   edit.props.onPress();
   assert.equal(h.calls.edit, 1);
   const nodes = allNodes(tree);

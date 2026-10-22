@@ -164,7 +164,7 @@ export default function CreatorPortfolioView({
       shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2,
     },
     editProfileLink: {
-      width: 44, height: 44, paddingHorizontal: 0, justifyContent: 'center',
+      minWidth: 44, height: 44, paddingHorizontal: 12, justifyContent: 'center',
       backgroundColor: colors.studioYellow,
     },
     stats: {
@@ -286,6 +286,7 @@ export default function CreatorPortfolioView({
                     testID="edit-profile-navigation"
                   >
                     <Feather name="edit-2" size={13} color={colors.studioInk} />
+                    <Text style={styles.actionText}>Edit Profile</Text>
                   </Pressable>
                 </View>
               )}
