@@ -685,7 +685,7 @@ export default function StickerJamPracticeCard({
               testID="dashboard-events-slide"
             >
               <Image
-                source={require('../assets/images/workshop-preview.jpg')}
+              source={require('../assets/images/aimd-events-market-backdrop.jpg')}
                 style={styles.eventsBackdropImage}
                 resizeMode="cover"
                 accessible={false}

@@ -89,15 +89,33 @@ test('Habit and Workshop cards are full-bleed; Events uses an inset flyer over a
   const habitStart = card.indexOf('testID="dashboard-active-habit-slide"');
   const habitEnd = card.indexOf('</TouchableOpacity>', habitStart);
   const habitSlide = card.slice(habitStart, habitEnd);
+  const workshopStart = card.indexOf('testID="dashboard-workshop-slide"');
+  const workshopEnd = card.indexOf('</TouchableOpacity>', workshopStart);
+  const workshopSlide = card.slice(workshopStart, workshopEnd);
+  const canvasStart = card.indexOf('<View style={styles.canvasFrame}>');
+  const canvasEnd = card.indexOf('testID="dashboard-mini-habit-studio-open"', canvasStart);
+  const canvasSlide = card.slice(canvasStart, canvasEnd);
   const eventStart = card.indexOf('testID="dashboard-events-slide"');
   const eventEnd = card.indexOf('</TouchableOpacity>', eventStart);
   const eventSlide = card.slice(eventStart, eventEnd);
+  const slideArtwork = [
+    'daily-habit-workspace.jpg',
+    'workshop-preview.jpg',
+    'sticker-jam-sketchbook.jpg',
+    'aimd-events-market-backdrop.jpg',
+  ];
 
   assert.equal(fullBleedImageUses.length, 2, 'habit and workshop artwork should fill their cards');
   assert.equal(fullBleedWashes.length, 2, 'full-bleed slides should have a contrast wash');
   assert.match(habitSlide, /daily-habit-workspace\.jpg/);
   assert.doesNotMatch(habitSlide, /sticker-jam-sketchbook\.jpg/);
-  assert.ok(fs.existsSync(path.resolve(__dirname, '../assets/images/daily-habit-workspace.jpg')));
+  assert.match(workshopSlide, /workshop-preview\.jpg/);
+  assert.match(canvasSlide, /sticker-jam-sketchbook\.jpg/);
+  assert.match(eventSlide, /aimd-events-market-backdrop\.jpg/);
+  assert.equal(new Set(slideArtwork).size, slideArtwork.length, 'each carousel slide should use distinct artwork');
+  for (const image of slideArtwork) {
+    assert.ok(fs.existsSync(path.resolve(__dirname, `../assets/images/${image}`)), `${image} should be bundled locally`);
+  }
   assert.match(card, /canvasImage:\s*\{\s*width: '100%',\s*height: '100%/);
   assert.match(card, /source=\{require\('\.\.\/assets\/images\/sticker-jam-sketchbook\.jpg'\)\}[\s\S]{0,120}resizeMode="cover"/);
   assert.match(card, /source=\{require\('\.\.\/assets\/images\/workshop-preview\.jpg'\)\}[\s\S]{0,120}resizeMode="cover"/);
