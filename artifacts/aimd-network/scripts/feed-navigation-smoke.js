@@ -174,14 +174,13 @@ test('original section tabs collapse while the pager keeps its full viewport', (
   assert.deepEqual(menuItems.map(item => item.props.testID), ['feed-menu-community', 'feed-menu-creators', 'feed-menu-events']);
 });
 
-test('Your Studio work composer returns to Studio and keeps its category', () => {
+test('Your Studio work composer returns to Studio without a hidden category selection', () => {
   const profile = readFileSync(resolve(__dirname, '../app/profile.tsx'), 'utf8');
   const feed = readFileSync(resolve(__dirname, '../app/feed.tsx'), 'utf8');
   assert.match(profile, /returnTo:\s*'profile'/);
   assert.match(profile, /pathname: '\/feed'/);
-  assert.match(profile, /onAddWork=\{\(categoryId, legacyCategoryName\) => router\.push/);
-  assert.match(profile, /categoryId !== null \? \{ categoryId: String\(categoryId\) \} : \{\}/);
-  assert.match(profile, /legacyCategoryName \? \{ categoryName: legacyCategoryName \} : \{\}/);
+  assert.match(profile, /onAddWork=\{\(\) => router\.push/);
+  assert.doesNotMatch(profile, /categoryId:|categoryName:|useUpdatePortfolioCategories/);
   assert.match(feed, /returnTo\?: string/);
   assert.match(feed, /if \(isStudioComposer\) router\.replace\('\/profile'\)/);
   assert.match(feed, /setTags\(categoryName \?\?/);

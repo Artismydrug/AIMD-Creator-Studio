@@ -3,9 +3,9 @@ name: Your Studio profile policy
 description: Product decision to make Your Studio the public work portfolio and keep editing/account controls separate.
 ---
 
-Your Studio is each member's work-facing profile, usable by both the owner and visitors. Show the artist's public bio, work, follow/message actions, and an optional inquiry action. The member's own profile is the same portfolio view, not an account-settings screen.
+Your Studio is each member's work-facing profile, usable by both the owner and visitors. Show the artist's public bio, work, message action, an optional inquiry action, and the Following count only. The member's own profile is the same portfolio view, not an account-settings screen. Do not show follower counts, follow buttons, or website/social-media buttons on Studio profiles.
 
-**Why:** The owner clarified that visitors must be able to open a creator's work from the directory and feed, while editing and account management clutter the portfolio.
+**Why:** The owner wants visitors to see a creator's work and send direct inquiries without traditional social-media metrics or external social promotion, while still tracking how many creators the profile follows. Editing and account management should not clutter the portfolio.
 
 **How to apply:** The Dashboard profile image opens the owner's Your Studio. Creator Directory identities and feed-post authors open that creator's Your Studio. Keep profile editing, optional inquiry settings, membership/app settings, and account deletion in a separate Edit Profile screen. Do not expose private membership or habit data on public profiles.
 
@@ -25,22 +25,22 @@ Use the approved artist-portfolio mockup as the visual reference for Your Studio
 
 **Why:** The owner repeatedly requested the reference's gallery layout and button placement, while clarifying that it should represent each member's own work.
 
-**How to apply:** Match the reference's layout using real member data and existing inquiry actions, not its decorative copy. The owner explicitly removed “Selected Work” and “Made to stay with you”; keep the gallery focused on artwork and category controls. Keep owner editing available without exposing account settings in the public presentation; never populate member galleries with the mockup's sample artwork.
+**How to apply:** Match the reference's layout using real member data and existing inquiry actions, not its decorative copy. The owner explicitly removed “Selected Work” and “Made to stay with you”; keep the gallery focused on artwork. Keep owner editing available without exposing account settings in the public presentation; never populate member galleries with the mockup's sample artwork.
 
-For the owner-facing portfolio, keep the main surface work-first: the header's icon-only add control starts new work, website/social/Edit Profile stay on one row, and profile counts sit above category filters and artwork.
+For the owner-facing portfolio, keep the main surface work-first: the header's icon-only add control starts new work, the icon-only Edit Profile action remains accessible, and the works count can sit above the unified artwork grid.
 
-**Why:** The owner asked to make new work immediately accessible while keeping profile links together, reducing text on Edit Profile, and placing Works/Followers/Following above the category tabs.
+**Why:** The owner removed social links and follower counts and later restored Following as the only social count, keeping the portfolio focused on creative practice and direct inquiries.
 
-**How to apply:** Keep posting mapped to the currently selected work category. Keep owner links in one horizontal row, allowing horizontal scrolling only on narrow screens. Put counts above the category tabs unless the owner requests another layout.
+**How to apply:** Do not attach a hidden selected category when starting new work. Preserve owner editing, artwork previews, direct messages, inquiry actions, and safety controls.
 
-Keep the Your Studio inquiry area concise: show the in-app inquiry action without the “Let’s make it personal” headline or a second direct-booking link beneath it.
+Keep the Your Studio inquiry area concise: omit the header inquiry button and place the primary action after the portfolio grid, without the “Let’s make it personal” headline or a second direct-booking link beneath it.
 
-**Why:** The owner asked to remove the extra inquiry copy and booking link so the profile stays focused on one clear inquiry action.
+**Why:** On October 22, 2026, the owner asked visitors to see the creator's work before reaching the inquiry action.
 
-**How to apply:** Keep the primary in-app inquiry button and its existing form flow; do not add a separate booking CTA or decorative inquiry headline below it.
+**How to apply:** Keep the one primary inquiry action and its existing form flow at the end of the portfolio view; do not put a duplicate inquiry button in the profile header.
 
-Work categories belong to the creator, not a fixed set of disciplines. Creators can add, rename, remove, reorder tabs, and assign their own artwork.
+Show all uploaded work in one unified portfolio grid without category tabs, category-management drawers, or category-assignment actions.
 
-**Why:** The owner explicitly chose editable categories and work assignment so each member can organize their own practice, rather than inheriting Poncho's tattoo/painting/mural labels.
+**Why:** On October 22, 2026, the owner explicitly replaced the earlier editable-category direction with a clean, unfiltered portfolio.
 
-**How to apply:** Do not show a separate “All work” filter. With no category selected, show the full gallery; tapping a category filters it, and tapping that same category again returns to all work. Keep tag and overflow controls off gallery tiles; put owner edits and category assignment in the artwork options view. Category renames must preserve assignments, and removing a category must never delete artwork or silently recreate a tab from old post tags.
+**How to apply:** Keep stored artwork/category records intact; this is a UI simplification, not authorization to delete data. Do not recreate tabs from legacy tags or hard-coded tattoo/art disciplines. Keep owner artwork editing in the preview/options view.

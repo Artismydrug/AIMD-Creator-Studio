@@ -252,17 +252,14 @@ export default function MiniHabitStudioScreen() {
     header: {
       paddingTop: Platform.OS === 'web' ? 67 : insets.top + 8,
       paddingHorizontal: 20,
-      paddingBottom: 14,
+      paddingBottom: 4,
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
       backgroundColor: colors.background,
       zIndex: 1,
     },
     backButton: { minWidth: 44, minHeight: 44, justifyContent: 'center' },
-    headerTitle: { color: colors.foreground, fontFamily: 'DMSans_700Bold', fontSize: 20 },
     content: { padding: 20, gap: 18 },
     eyebrow: { color: colors.secondary, fontFamily: 'DMSans_700Bold', fontSize: 11, letterSpacing: 1.5 },
     title: { color: colors.foreground, fontFamily: 'DMSans_700Bold', fontSize: 30, letterSpacing: -0.6 },
@@ -545,7 +542,6 @@ export default function MiniHabitStudioScreen() {
         >
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Creator Arcade</Text>
       </View>
       <ScrollView
         style={styles.scrollViewport}

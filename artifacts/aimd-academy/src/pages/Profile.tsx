@@ -1,10 +1,10 @@
 import { useParams, Link, useLocation } from 'wouter';
 import { useState, useEffect } from 'react';
-import { useCreateConversation, useFollowUser, useGetCurrentUser, useListBadges, useUnfollowUser, useUpdateCurrentUser } from '@workspace/api-client-react';
+import { useCreateConversation, useGetCurrentUser, useListBadges, useUpdateCurrentUser } from '@workspace/api-client-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useClerk } from '@clerk/react';
 import {
-  Award, BookOpen, Briefcase, Calendar, ExternalLink,
+  Award, BookOpen, Briefcase, Calendar,
   Flame, GraduationCap, LogOut, MapPin, MessageSquare, Pencil, Shield,
   Star, Users, Zap,
 } from 'lucide-react';
@@ -281,12 +281,7 @@ function ProfileContent({ user, badges, posts, isOwnProfile }: { user: any; badg
   const tier = TIER_LABELS[user.tier] ?? TIER_LABELS['free'];
   const hasStudioReady = user.studioReadyBadge;
   const [, navigate] = useLocation();
-  const queryClient = useQueryClient();
-  const follow = useFollowUser({ mutation: { onSuccess: () => queryClient.invalidateQueries({ queryKey: ['publicProfile', user.id] }) } });
-  const unfollow = useUnfollowUser({ mutation: { onSuccess: () => queryClient.invalidateQueries({ queryKey: ['publicProfile', user.id] }) } });
   const conversation = useCreateConversation();
-  const following = Boolean(user.followedByMe);
-  const isWorking = follow.isPending || unfollow.isPending;
   const openConversation = () => conversation.mutate({ data: { participantIds: [user.id] } }, { onSuccess: ({ id }) => navigate(`/messages?conversation=${id}`) });
 
   return (
@@ -348,20 +343,6 @@ function ProfileContent({ user, badges, posts, isOwnProfile }: { user: any; badg
           <div className="flex gap-2 sm:ml-auto">
             {isOwnProfile && <EditProfileDialog user={user} />}
             {isOwnProfile && <SignOutButton />}
-            {!isOwnProfile && user.bookingOpen && (
-              <Button asChild variant="outline" className="rounded-none border-primary/40 text-primary hover:bg-primary/10 font-mono text-xs uppercase h-9">
-                <a href={`mailto:booking@artismydrug.com?subject=Booking Request — ${user.username}`}>
-                  <Briefcase className="w-3.5 h-3.5 mr-1.5" />
-                  Request Booking
-                </a>
-              </Button>
-            )}
-            {!isOwnProfile && (
-              <Button variant="outline" onClick={() => following ? unfollow.mutate({ id: user.id }) : follow.mutate({ id: user.id })} disabled={isWorking} className="rounded-none border-border text-foreground/80 hover:bg-muted font-mono text-xs uppercase h-9">
-                <Users className="w-3.5 h-3.5 mr-1.5" />
-                {isWorking ? 'Working…' : following ? 'Following' : 'Follow'}
-              </Button>
-            )}
             {!isOwnProfile && (
               <Button variant="outline" onClick={openConversation} disabled={conversation.isPending} className="rounded-none border-border text-foreground/80 hover:bg-muted font-mono text-xs uppercase h-9">
                 <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
@@ -369,7 +350,7 @@ function ProfileContent({ user, badges, posts, isOwnProfile }: { user: any; badg
               </Button>
             )}
           </div>
-          {!isOwnProfile && (follow.isError || unfollow.isError || conversation.isError) && (
+          {!isOwnProfile && conversation.isError && (
             <p className="font-mono text-[10px] text-destructive">Could not complete that action. Please try again.</p>
           )}
         </div>
@@ -379,27 +360,13 @@ function ProfileContent({ user, badges, posts, isOwnProfile }: { user: any; badg
           <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-xl line-clamp-2">{user.bio}</p>
         )}
 
-        {/* Portfolio link */}
-        {user.portfolioUrl && (
-          <a
-            href={user.portfolioUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 font-mono text-xs text-primary hover:text-primary mb-6"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-            {user.portfolioUrl.replace(/^https?:\/\//, '')}
-          </a>
-        )}
-
         {/* Stats bar */}
         <div className="flex border border-border bg-muted/40/50 mb-10 overflow-x-auto">
           <Stat icon={BookOpen}   label="Posts"    value={user.postCount   ?? 0} />
+          <Stat icon={Users}      label="Following" value={user.followingCount ?? 0} />
           <Stat icon={Award}      label="Badges"   value={badges.length} />
           <Stat icon={Flame}      label="Streak"   value={`${user.currentStreak ?? 0}d`} />
           <Stat icon={GraduationCap} label="Enrolled" value={user.workshopsEnrolled ?? 0} />
-          <Stat icon={Users} label="Followers" value={user.followerCount ?? 0} />
-          <Stat icon={Users} label="Following" value={user.followingCount ?? 0} />
         </div>
 
         {/* Badges */}
@@ -424,6 +391,17 @@ function ProfileContent({ user, badges, posts, isOwnProfile }: { user: any; badg
               {posts.map((p: any) => <PostThumb key={p.id} post={p} />)}
             </div>
           </section>
+        )}
+
+        {!isOwnProfile && user.bookingOpen && (
+          <div className="mt-8">
+            <Button asChild variant="outline" className="w-full sm:w-auto rounded-none border-primary/40 text-primary hover:bg-primary/10 font-mono text-xs uppercase h-11">
+              <a href={`mailto:booking@artismydrug.com?subject=Booking Request — ${user.username}`}>
+                <Briefcase className="w-3.5 h-3.5 mr-1.5" />
+                Request Booking
+              </a>
+            </Button>
+          </div>
         )}
 
         {/* Member since */}

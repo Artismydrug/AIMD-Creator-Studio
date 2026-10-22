@@ -29,6 +29,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import HabitCard, { HABIT_ACTION_HELP } from '@/components/HabitCard';
 import HabitPracticeSummaryCard from '@/components/HabitPracticeSummaryCard';
+import HabitChallengeCard from '@/components/HabitChallengeCard';
 
 const CATEGORIES = ['Drawing', 'Painting', 'Sculpture', 'Photography', 'Music', 'Writing', 'Other'];
 
@@ -92,7 +93,7 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
     });
   };
 
-  const topPad = embedded ? 16 : Platform.OS === 'web' ? 67 : insets.top + 8;
+  const topPad = embedded ? 8 : Platform.OS === 'web' ? 67 : insets.top + 8;
 
   const s = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
@@ -208,7 +209,7 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
       alignItems: 'center',
       gap: 11,
       paddingHorizontal: 16,
-      paddingTop: 22,
+      paddingTop: 20,
       paddingBottom: 13,
     },
     sectionMark: {
@@ -397,6 +398,7 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
             !isError && !habitsInvalid ? (
               <View style={s.milestoneWrap}>
                 <HabitPracticeSummaryCard embedded onOpenHabits={() => undefined} />
+                <HabitChallengeCard />
               </View>
             ) : null
           }

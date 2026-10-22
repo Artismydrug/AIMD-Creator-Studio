@@ -2,16 +2,13 @@ import React, { useEffect } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import { useQueryClient } from '@tanstack/react-query';
 import {
   getGetUserProfileQueryKey,
   getListStudioPostsQueryKey,
   useCreateConversation,
-  useFollowUser,
   useGetCurrentUser,
   useGetUserProfile,
   useListStudioPosts,
-  useUnfollowUser,
 } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import CreatorPortfolioView from '@/components/CreatorPortfolioView';
@@ -20,7 +17,6 @@ import { getStudioInquiryLink } from '@/lib/studioInquiry';
 export default function CreatorProfileScreen() {
   const colors = useColors();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const params = useLocalSearchParams<{ creatorId?: string | string[] }>();
   const rawId = Array.isArray(params.creatorId) ? params.creatorId[0] : params.creatorId;
   const creatorId = Number(rawId);
@@ -49,8 +45,6 @@ export default function CreatorProfileScreen() {
       queryKey: getListStudioPostsQueryKey({ userId: validCreatorId ? creatorId : undefined, limit: 100 }),
     } },
   );
-  const follow = useFollowUser();
-  const unfollow = useUnfollowUser();
   const createConversation = useCreateConversation();
 
   useEffect(() => {
@@ -103,20 +97,6 @@ export default function CreatorProfileScreen() {
   const isPoncho = creator.username.replace(/^@/, '').toLowerCase() === 'ponchotheartist';
   const inquiryUrl = creator.bookingOpen && !isPoncho ? getStudioInquiryLink(creator) : null;
 
-  const toggleFollow = () => {
-    if (!me || follow.isPending || unfollow.isPending) return;
-    const mutation = creator.followedByMe ? unfollow : follow;
-    mutation.mutate(
-      { id: creator.id },
-      {
-        onSuccess: () => {
-          void queryClient.invalidateQueries({ queryKey: getGetUserProfileQueryKey(creator.id) });
-        },
-        onError: () => Alert.alert('Could not update follow', 'Please try again.'),
-      },
-    );
-  };
-
   const messageCreator = () => {
     if (!me || createConversation.isPending) return;
     createConversation.mutate(
@@ -156,8 +136,6 @@ export default function CreatorProfileScreen() {
         isError={postsError}
         onRetry={retry}
         onBack={back}
-        onFollow={toggleFollow}
-        followBusy={follow.isPending || unfollow.isPending}
         onMessage={messageCreator}
         messageBusy={createConversation.isPending}
         inquiryAvailable={!!creator.bookingOpen && (isPoncho || !!inquiryUrl)}

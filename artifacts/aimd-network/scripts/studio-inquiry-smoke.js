@@ -55,14 +55,12 @@ test('inquiry settings are editable and creator cards link to the member portfol
   assert.match(editor, /testID="profile-basics-editor"/);
   assert.match(editor, /testID="delete-account"/);
   assert.match(studio, /inquiryAvailable/);
-  // Categories are member-owned records, not a hard-coded list of art media.
-  // Add/rename/remove, assignment and toggle behavior execute in studio-profile-layout-smoke.
-  assert.match(studio, /workCategories\.map/);
-  assert.match(studio, /post\.portfolioCategoryId === activeCategory\.id/);
-  assert.match(ownerStudio, /useUpdatePortfolioCategories/);
-  assert.match(ownerStudio, /useUpdateStudioPostCategory/);
-  assert.match(studio, /testID="creator-work-tabs"/);
-  assert.match(studio, /accessibilityRole="tab"/);
+  // The portfolio is unified; inquiry and editing stay available without
+  // category filtering or management actions.
+  assert.match(studio, /posts\.map/);
+  assert.doesNotMatch(studio, /workCategories|activeCategory|creator-work-tabs|creator-category-editor|onAssignCategory/);
+  assert.doesNotMatch(ownerStudio, /useUpdatePortfolioCategories|useUpdateStudioPostCategory/);
+  assert.match(studio, /testID="edit-profile-navigation"/);
   assert.match(studio, /testID="creator-profile-inquiry-bottom"/);
   assert.match(ownerStudio, /limit: 100/);
   assert.match(creatorStudio, /limit: 100/);

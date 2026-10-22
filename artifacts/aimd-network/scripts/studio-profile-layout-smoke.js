@@ -65,15 +65,6 @@ function harness({ width = 390, theme = 'light', ...overrides } = {}) {
     onInquiry: () => calls.inquiry++, onEdit: () => calls.edit++,
     onFollow: () => calls.follow++, onMessage: () => calls.message++,
     onAddWork: (...args) => calls.add.push(args),
-    onSaveCategories: async categories => {
-      calls.savedCategories.push(categories);
-      return categories.map((category, position) => ({
-        id: category.id ?? 100 + position,
-        name: category.name.trim(),
-        position,
-      }));
-    },
-    onAssignWorkCategory: async (postId, categoryId) => calls.assignments.push([postId, categoryId]),
     ...overrides,
   };
   return { calls, render: () => { cursor = 0; return Component(props); } };
@@ -100,43 +91,48 @@ test('wide gallery uses three equal columns without stretching the third image',
   }
 });
 
-test('category pills filter work, toggle back to every work, and New work preserves the selected category', () => {
-  const h = harness();
-  const start = h.render();
-  assert.equal(get(start, 'creator-work-filter-all-work'), undefined, 'there is no All work pill');
-  const paintingTab = get(start, 'creator-work-filter-painting');
-  paintingTab.props.onPress();
-  const filtered = h.render();
-  assert.ok(get(filtered, 'creator-work-2'));
-  assert.equal(get(filtered, 'creator-work-1'), undefined);
-  get(filtered, 'creator-profile-add-work').props.onPress();
-  assert.deepEqual(h.calls.add, [[null, 'Painting']]);
-  get(filtered, 'creator-work-filter-painting').props.onPress();
-  const allWork = h.render();
-  for (const id of [1, 2, 3]) assert.ok(get(allWork, `creator-work-${id}`));
-  assert.equal(get(allWork, 'creator-work-filter-painting').props.accessibilityState.selected, false);
+test('all artwork remains visible without category filters or management drawers', () => {
+  for (const isOwner of [true, false]) {
+    const h = harness({
+      isOwner,
+      creator: {
+        id: 16, username: 'studio-member',
+        portfolioCategories: [{ id: 21, name: 'Tattoos', position: 0 }],
+      },
+    });
+    const tree = h.render();
+    for (const id of [1, 2, 3]) assert.ok(get(tree, `creator-work-${id}`));
+    for (const id of ['creator-work-tabs', 'creator-categories-edit', 'creator-category-editor', 'creator-work-category-picker']) {
+      assert.equal(get(tree, id), undefined);
+    }
+    assert.equal(allNodes(tree).some(node => node.props?.accessibilityRole === 'tab'), false);
+    if (isOwner) {
+      get(tree, 'creator-profile-add-work').props.onPress();
+      assert.deepEqual(h.calls.add, [[]], 'new work is not assigned to a hidden category');
+    }
+  }
 });
 
-test('header and bottom inquiry buttons use the existing form handler; editing and visitor controls survive', () => {
+test('the inquiry is bottom-only; editing and visitor controls survive', () => {
   const h = harness();
   const tree = h.render();
-  get(tree, 'creator-profile-inquiry').props.onPress();
+  assert.equal(get(tree, 'creator-profile-inquiry'), undefined, 'the header has no inquiry action');
   get(tree, 'creator-profile-inquiry-bottom').props.onPress();
   get(tree, 'edit-profile-navigation').props.onPress();
-  assert.equal(h.calls.inquiry, 2);
+  assert.equal(h.calls.inquiry, 1);
   assert.equal(h.calls.edit, 1);
   assert.equal(h.calls.links.length, 0, 'primary inquiry buttons must not open the booking website');
   assert.equal(get(tree, 'creator-direct-booking'), undefined, 'the profile uses the in-app inquiry form without a second booking link');
-  get(tree, 'creator-website-link').props.onPress();
-  get(tree, 'creator-instagram-link').props.onPress();
-  assert.deepEqual(h.calls.links, ['https://example.test', 'https://www.instagram.com/ponchotheartist/']);
+  assert.equal(get(tree, 'creator-website-link'), undefined);
+  assert.equal(get(tree, 'creator-instagram-link'), undefined);
   const visitor = harness({ isOwner: false });
   const publicTree = visitor.render();
+  assert.equal(get(publicTree, 'creator-profile-inquiry'), undefined);
   assert.equal(get(publicTree, 'edit-profile-navigation'), undefined);
   assert.equal(get(publicTree, 'creator-profile-add-work'), undefined);
-  get(publicTree, 'creator-profile-follow').props.onPress();
+  assert.equal(get(publicTree, 'creator-profile-follow'), undefined);
   get(publicTree, 'creator-profile-message').props.onPress();
-  assert.equal(visitor.calls.follow, 1);
+  assert.equal(visitor.calls.follow, 0);
   assert.equal(visitor.calls.message, 1);
   const closed = harness({ inquiryAvailable: false }).render();
   assert.equal(get(closed, 'creator-profile-inquiry'), undefined);
@@ -154,7 +150,7 @@ test('image-first tiles open uncropped artwork with its caption and close back t
   assert.equal(get(h.render(), 'creator-artwork-preview'), undefined);
 });
 
-test('owner edit and category controls are inside the artwork options sheet, not over gallery tiles', () => {
+test('owner artwork edits stay in the preview without category assignment controls', () => {
   const h = harness();
   const grid = h.render();
   assert.equal(get(grid, 'creator-work-category-1'), undefined, 'no tag button overlays artwork');
@@ -168,25 +164,35 @@ test('owner edit and category controls are inside the artwork options sheet, not
   const ownerActions = allNodes(get(preview, 'creator-artwork-preview')).find(node => node.type === 'PostOwnerActions');
   assert.ok(ownerActions, 'owner menu is available inside the opened artwork preview');
   assert.equal(ownerActions.props.post.id, 1);
-  assert.equal(typeof ownerActions.props.onAssignCategory, 'function', 'category assignment remains available from the edit menu');
-  ownerActions.props.onAssignCategory();
-  assert.ok(get(h.render(), 'creator-work-category-picker'));
+  assert.equal(ownerActions.props.onAssignCategory, undefined);
+  assert.equal(get(h.render(), 'creator-work-category-picker'), undefined);
 });
 
-test('Poncho retains his known website without a saved URL; other members do not inherit his links', () => {
-  const poncho = harness({ creator: { id: 16, username: 'ponchotheartist' } });
-  get(poncho.render(), 'creator-website-link').props.onPress();
-  assert.deepEqual(poncho.calls.links, ['https://ponchotheartist.com']);
-  const member = harness({ creator: { id: 999, username: 'studio-member' } }).render();
-  assert.equal(get(member, 'creator-website-link'), undefined);
-  assert.equal(get(member, 'creator-instagram-link'), undefined);
-  assert.equal(get(member, 'creator-direct-booking'), undefined);
+test('owners and visitors see the Following count but no follower count or social links', () => {
+  for (const theme of ['light', 'dark']) {
+    for (const isOwner of [true, false]) {
+      for (const username of ['ponchotheartist', 'studio-member']) {
+        const tree = harness({ theme, isOwner, creator: {
+          id: 16, username, portfolioUrl: 'https://example.test',
+          followerCount: 452, followingCount: 123,
+        } }).render();
+        const text = allNodes(tree).filter(node => node.type === 'Text').flatMap(node => node.props.children).join(' ');
+        assert.match(text, /FOLLOWING/);
+        assert.match(text, /123/);
+        assert.doesNotMatch(text, /FOLLOWERS|452|Instagram|Website/);
+        assert.equal(allNodes(tree).some(node => node.props?.accessibilityRole === 'link'), false);
+        assert.equal(get(tree, 'creator-profile-follow'), undefined);
+      }
+    }
+  }
 });
 
-test('studio combines discipline and location, keeps owner links in one row, and places counts above artwork', () => {
-  const h = harness({ creator: { id: 16, username: 'ponchotheartist', discipline: 'Tattooing', location: 'Los Angeles' } });
+test('studio keeps specialization below the name, Following above the unified grid, and inquiry near the portfolio', () => {
+  const h = harness({ creator: { id: 16, username: 'ponchotheartist', discipline: 'Tattooing', location: 'Los Angeles', followingCount: 4 } });
   const tree = h.render();
-  assert.equal(get(tree, 'creator-profile-label').props.children[0], 'TATTOOING · Los Angeles');
+  assert.equal(get(tree, 'creator-profile-label').props.children[0], 'Tattooing · Los Angeles');
+  const heroTexts = allNodes(tree).filter(node => node.type === 'Text').flatMap(node => node.props.children);
+  assert.ok(heroTexts.indexOf('Edward ‘Poncho’ Davila') < heroTexts.indexOf('Tattooing · Los Angeles'));
   const text = allNodes(tree).filter(node => node.type === 'Text').flatMap(node => node.props.children).join(' ');
   assert.doesNotMatch(text, /SELECTED WORK|Made to stay with you\./);
   const add = get(tree, 'creator-profile-add-work');
@@ -194,74 +200,53 @@ test('studio combines discipline and location, keeps owner links in one row, and
   assert.equal(flattenStyle(add.props.style).height, 44);
   assert.equal(allNodes(add).find(node => node.type === 'Feather').props.name, 'plus');
   const headerControls = allNodes(tree).filter(node => ['creator-profile-inquiry', 'creator-profile-add-work'].includes(node.props?.testID));
-  assert.deepEqual(headerControls.map(node => node.props.testID), ['creator-profile-inquiry', 'creator-profile-add-work']);
+  assert.deepEqual(headerControls.map(node => node.props.testID), ['creator-profile-add-work']);
   add.props.onPress();
-  assert.deepEqual(h.calls.add, [[null, undefined]]);
+  assert.deepEqual(h.calls.add, [[]]);
 
   const ownerLinks = allNodes(get(tree, 'creator-profile-owner-links'));
-  const instagramIndex = ownerLinks.findIndex(node => node.props?.testID === 'creator-instagram-link');
   const editIndex = ownerLinks.findIndex(node => node.props?.testID === 'edit-profile-navigation');
-  const ownerLinksScroll = get(tree, 'creator-profile-owner-links');
-  assert.equal(ownerLinksScroll.props.horizontal, true, 'owner links stay on one horizontal row on narrow screens');
-  const websiteIndex = ownerLinks.findIndex(node => node.props?.testID === 'creator-website-link');
-  assert.ok(websiteIndex >= 0 && instagramIndex > websiteIndex && editIndex > instagramIndex, 'website, Instagram, and Edit Profile stay in order on one row');
+  assert.ok(editIndex >= 0);
+  assert.equal(flattenStyle(get(tree, 'creator-profile-owner-links').props.style).flexDirection, 'row');
   const edit = get(tree, 'edit-profile-navigation');
   assert.equal(allNodes(edit).filter(node => node.type === 'Text').length, 0, 'Edit Profile is icon-only');
   edit.props.onPress();
   assert.equal(h.calls.edit, 1);
   const nodes = allNodes(tree);
-  const tabsIndex = nodes.findIndex(node => node.props?.testID === 'creator-work-tabs');
   const statsIndex = nodes.findIndex(node => node.props?.testID === 'creator-profile-stats');
   const gridIndex = nodes.findIndex(node => node.props?.testID === 'creator-work-grid');
-  assert.ok(statsIndex < tabsIndex && tabsIndex < gridIndex, 'work, follower, and following counts sit above filters and artwork');
+  assert.ok(statsIndex < gridIndex, 'the works count sits directly above artwork');
+  const inquiryIndex = nodes.findIndex(node => node.props?.testID === 'creator-contact-block');
+  const finalWorkIndex = nodes.findIndex(node => node.props?.testID === 'creator-work-3');
+  assert.ok(statsIndex < gridIndex && gridIndex < finalWorkIndex && finalWorkIndex < inquiryIndex, 'the inquiry button follows the portfolio gallery');
+  assert.equal(get(tree, 'creator-following-stat').props.children[0].props.children[0], 4);
+  assert.equal(get(tree, 'creator-work-tabs'), undefined);
 
   const locationOnly = harness({ creator: { id: 99, username: 'member', location: 'Los Angeles' } }).render();
   assert.equal(get(locationOnly, 'creator-profile-label').props.children[0], 'Los Angeles');
 });
 
-test('owners can rename, reorder, add, and remove category tabs without deleting work', async () => {
-  const h = harness();
-  get(h.render(), 'creator-categories-edit').props.onPress();
-  const editor = h.render();
-  assert.ok(get(editor, 'creator-category-editor'));
-  get(editor, 'creator-category-name-0').props.onChangeText('Tattoo Work');
-  get(editor, 'creator-category-name-1').props.onChangeText('Painting');
-  get(editor, 'creator-category-name-2').props.onChangeText('Murals');
-  const renamed = h.render();
-  allNodes(renamed).find(node => node.props?.accessibilityLabel === 'Move Tattoo Work down').props.onPress();
-  const reordered = h.render();
-  get(reordered, 'creator-category-new-name').props.onChangeText('Digital');
-  get(h.render(), 'creator-category-add').props.onPress();
-  const withNew = h.render();
-  get(withNew, 'creator-category-remove-1').props.onPress();
-  const afterRemoval = h.render();
-  get(afterRemoval, 'creator-categories-save').props.onPress();
-  await new Promise(resolve => setImmediate(resolve));
-  assert.equal(h.calls.savedCategories.length, 1);
-  assert.deepEqual(Array.from(h.calls.savedCategories[0], ({ name }) => name), ['Painting', 'Murals', 'Digital']);
-  assert.equal(h.calls.savedCategories[0][0].legacyName, 'Painting');
-  assert.equal(get(h.render(), 'creator-category-editor'), undefined);
-  assert.ok(get(h.render(), 'creator-work-1'), 'removing a category does not delete artwork');
+test('empty, loading and failed galleries retain a usable studio layout', () => {
+  assert.equal(get(harness({ posts: [] }).render(), 'creator-work-grid'), undefined);
+  for (const overrides of [{ isLoading: true }, { isError: true }]) {
+    const tree = harness(overrides).render();
+    assert.ok(get(tree, 'creator-profile-add-work'));
+    assert.ok(get(tree, 'edit-profile-navigation'));
+    assert.equal(get(tree, 'creator-work-grid'), undefined);
+  }
 });
 
-test('owners can assign and unassign existing artwork from a category', async () => {
-  const h = harness({
-    creator: {
-      id: 16, username: 'studio-member', portfolioCategories: [
-        { id: 21, name: 'Tattoo Work', position: 0 },
-      ],
-    },
-  });
-  const grid = h.render();
-  get(grid, 'creator-artwork-1').props.onPress();
-  const preview = h.render();
-  const ownerActions = allNodes(get(preview, 'creator-artwork-preview')).find(node => node.type === 'PostOwnerActions');
-  assert.ok(ownerActions);
-  ownerActions.props.onAssignCategory();
-  const picker = h.render();
-  assert.ok(get(picker, 'creator-work-category-picker'));
-  get(picker, 'creator-work-category-option-21').props.onPress();
-  await new Promise(resolve => setImmediate(resolve));
-  assert.deepEqual(h.calls.assignments, [[1, 21]]);
-  assert.equal(get(h.render(), 'creator-work-category-picker'), undefined);
+test('feed cards have no public engagement counters or like/comment controls', () => {
+  const mobile = readFileSync(resolve(__dirname, '../components/PostCard.tsx'), 'utf8');
+  const web = readFileSync(resolve(__dirname, '../../aimd-academy/src/pages/StudioLog.tsx'), 'utf8');
+  for (const source of [mobile, web]) {
+    assert.doesNotMatch(source, /followerCount|followingCount|likeCount|commentCount|useLikeStudioPost|useCreateStudioPostComment/);
+  }
+});
+
+test('web booking action is after Studio Work, not beside the creator name', () => {
+  const source = readFileSync(resolve(__dirname, '../../aimd-academy/src/pages/Profile.tsx'), 'utf8');
+  const actions = source.slice(source.indexOf('{/* Actions */}'), source.indexOf('{/* Bio */}'));
+  assert.doesNotMatch(actions, /Request Booking/);
+  assert.ok(source.indexOf('posts.map') < source.indexOf('!isOwnProfile && user.bookingOpen'));
 });

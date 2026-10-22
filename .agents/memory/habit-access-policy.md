@@ -9,11 +9,11 @@ Habit creation and tracking are unlimited for every membership tier, including t
 
 **How to apply:** Keep habit CRUD and session logging available to free creators. Paid tiers may differentiate on other benefits, but not on the number of habits.
 
-Habits should be the first/default section, with Challenges second, and daily habit practice should take priority over featured challenges on the Dashboard.
+The mobile practice tab and its screen title are “Habits”, without a Habits/Challenges section switcher. Keep daily stats and habit cards first; place Monthly Streak and an Active Challenges card after the list at the bottom of the same scroll.
 
-**Why:** The product owner wants daily habits to be the primary focus, rather than challenges, and explicitly chose habit practice history instead of the Dashboard's featured challenge.
+**Why:** The owner wants the daily habit loop to remain primary while challenge content stays available lower down, rather than competing with the daily cards.
 
-**How to apply:** Preserve habits-first ordering and default selection when changing the shared mobile practice screen or its navigation labels.
+**How to apply:** Keep the Habits title, summaries, and daily cards above the Monthly Streak and Active Challenges cards in one scroll. Preserve existing challenge records and routes; removing a section switcher is not permission to delete challenge data.
 
 The earlier rolling-week practice graph and fire-marker presentation were approved at the time, but the owner later replaced that graph with a four-week Monthly Streak goal.
 

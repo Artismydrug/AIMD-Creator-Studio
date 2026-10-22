@@ -65,8 +65,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="challenge-habits"
         options={{
-          title: 'Habits & Challenges',
-          tabBarLabel: 'Habits & Challenges',
+          title: 'Habits',
+          tabBarLabel: 'Habits',
           tabBarIcon: ({ color, size }) => (
             <Feather name="zap" size={size} color={color} />
           ),

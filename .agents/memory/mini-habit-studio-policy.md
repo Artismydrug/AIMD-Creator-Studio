@@ -11,6 +11,12 @@ The user chose a Dashboard entry plus the 60-second Flash Sketch as the first re
 
 **How to apply:** Keep future mini-habit activities distinct from official habit check-ins and rewards unless the user explicitly expands that policy. Do not imply device-local sketches are cloud-backed or shared.
 
+Do not display a “Creator Arcade” header on the Flash Sketch activity screen; keep navigation available and focus the view on the prompt, timer, and canvas.
+
+**Why:** The owner explicitly removed that framing title to simplify the one-minute activity.
+
+**How to apply:** Preserve the back control, sketch interactions, early-finish/next actions, and local saving when refining this screen.
+
 Creator Arcade's purpose is to warm up creative thinking, spark motivation, and reduce the friction of starting, as a bridge toward long-term practice under “Discipline Eats Talent.”
 
 **Why:** The owner supplied this core philosophy for the partner deck and proposed Legend Quizzes about the daily discipline behind excellence across sports and creative practice.

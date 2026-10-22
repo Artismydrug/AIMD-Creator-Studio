@@ -1,17 +1,13 @@
 import React from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { useQueryClient } from '@tanstack/react-query';
 import { Feather } from '@expo/vector-icons';
 import {
-  type StudioPost,
   getGetUserProfileQueryKey,
   getListStudioPostsQueryKey,
   useGetCurrentUser,
   useGetUserProfile,
   useListStudioPosts,
-  useUpdatePortfolioCategories,
-  useUpdateStudioPostCategory,
 } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import CreatorPortfolioView, { type CreatorPortfolioProfile } from '@/components/CreatorPortfolioView';
@@ -20,10 +16,12 @@ import { getStudioInquiryLink } from '@/lib/studioInquiry';
 export default function ProfileScreen() {
   const colors = useColors();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { data: me, isLoading: meLoading, isError: meError, refetch: refetchMe } = useGetCurrentUser();
-  const { data: socialProfile } = useGetUserProfile(me?.id ?? 0, {
-    query: { enabled: !!me, queryKey: me ? getGetUserProfileQueryKey(me.id) : [] },
+  const { data: studioProfile } = useGetUserProfile(me?.id ?? 0, {
+    query: {
+      enabled: !!me,
+      queryKey: me ? getGetUserProfileQueryKey(me.id) : [],
+    },
   });
   const {
     data: posts,
@@ -37,8 +35,6 @@ export default function ProfileScreen() {
       queryKey: me ? getListStudioPostsQueryKey({ userId: me.id, limit: 100 }) : [],
     } },
   );
-  const updateCategories = useUpdatePortfolioCategories();
-  const updatePostCategory = useUpdateStudioPostCategory();
 
   const stateStyles = StyleSheet.create({
     screen: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, gap: 13, backgroundColor: colors.studioBackground },
@@ -80,11 +76,8 @@ export default function ProfileScreen() {
     location: me.location,
     portfolioUrl: me.portfolioUrl,
     bookingOpen: me.bookingOpen,
-    followerCount: socialProfile?.followerCount ?? 0,
-    followingCount: socialProfile?.followingCount ?? 0,
-    followedByMe: false,
-    postCount: socialProfile?.postCount ?? posts?.length ?? 0,
-    ...(socialProfile ? { portfolioCategories: socialProfile.portfolioCategories } : {}),
+    postCount: posts?.length ?? 0,
+    followingCount: studioProfile?.followingCount ?? 0,
   };
   const isPoncho = me.username.replace(/^@/, '').toLowerCase() === 'ponchotheartist';
   const inquiryUrl = me.bookingOpen && !isPoncho ? getStudioInquiryLink(creator) : null;
@@ -118,36 +111,13 @@ export default function ProfileScreen() {
           if (router.canGoBack()) router.back();
           else router.replace('/(tabs)');
         }}
-        onAddWork={(categoryId, legacyCategoryName) => router.push({
+        onAddWork={() => router.push({
           pathname: '/feed',
           params: {
             compose: '1',
             returnTo: 'profile',
-            ...(categoryId !== null ? { categoryId: String(categoryId) } : {}),
-            ...(legacyCategoryName ? { categoryName: legacyCategoryName } : {}),
           },
         })}
-        onSaveCategories={async (categories) => {
-          const saved = await updateCategories.mutateAsync({ data: { categories } });
-          await queryClient.invalidateQueries({ queryKey: getGetUserProfileQueryKey(me.id) });
-          return saved;
-        }}
-        onAssignWorkCategory={async (postId, categoryId) => {
-          await updatePostCategory.mutateAsync({
-            id: postId,
-            data: { portfolioCategoryId: categoryId },
-          });
-          queryClient.setQueriesData<StudioPost[]>(
-            { queryKey: ['/api/studio-posts'] },
-            (current) => current?.map((post) =>
-              post.id === postId ? { ...post, portfolioCategoryId: categoryId } : post,
-            ),
-          );
-          await Promise.all([
-            queryClient.invalidateQueries({ queryKey: getGetUserProfileQueryKey(me.id) }),
-            queryClient.invalidateQueries({ queryKey: getListStudioPostsQueryKey({ userId: me.id, limit: 100 }) }),
-          ]);
-        }}
         inquiryAvailable={inquiryAvailable}
         onInquiry={onOpenInquiry}
       />

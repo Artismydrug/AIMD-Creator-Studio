@@ -99,7 +99,6 @@ function PostCard({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [followedByMe, setFollowedByMe] = useState(post.followedByMe);
-  const [followerCount, setFollowerCount] = useState(post.followerCount);
   const [ownerDialogOpen, setOwnerDialogOpen] = useState(false);
   const window = useWindowDimensions();
   const [viewport, setViewport] = useState({ width: window.width, height: window.height });
@@ -159,20 +158,17 @@ function PostCard({
   const handleFollow = () => {
     const wasFollowing = followedByMe;
     setFollowedByMe(!wasFollowing);
-    setFollowerCount((count) => Math.max(0, count + (wasFollowing ? -1 : 1)));
     const mutation = wasFollowing ? unfollowMutation : followMutation;
     mutation.mutate(
       { id: post.userId },
       {
         onSuccess: (relationship) => {
           setFollowedByMe(relationship.followedByMe);
-          setFollowerCount(relationship.followerCount);
           queryClient.invalidateQueries({ queryKey: ['/api/studio-posts'] });
           onFollowChanged?.();
         },
         onError: () => {
           setFollowedByMe(wasFollowing);
-          setFollowerCount((count) => Math.max(0, count + (wasFollowing ? 1 : -1)));
         },
       },
     );
@@ -403,12 +399,6 @@ function PostCard({
       flex: 1,
       gap: 10,
     },
-    socialMeta: {
-      color: colors.mutedForeground,
-      fontFamily: 'DMSans_400Regular',
-      fontSize: 11,
-      marginTop: 1,
-    },
     followButton: {
       borderColor: colors.primary,
       borderRadius: 99,
@@ -597,7 +587,7 @@ function PostCard({
                     {post.username ?? `User #${post.userId}`}
                   </Text>
                   <Text style={[s.immersiveMeta, (isTextOnly || isPhoto) && { color: colors.mutedForeground }]}>
-                    {formatTime(post.createdAt)} · {followerCount} followers
+                    {formatTime(post.createdAt)}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -702,7 +692,6 @@ function PostCard({
               <View style={s.userInfo}>
                 <Text style={s.username}>{post.username ?? `User #${post.userId}`}</Text>
                 <Text style={s.time}>{formatTime(post.createdAt)}</Text>
-                <Text style={s.socialMeta}>{followerCount} followers · {post.followingCount} following</Text>
               </View>
             </TouchableOpacity>
             {isOwnPost && (

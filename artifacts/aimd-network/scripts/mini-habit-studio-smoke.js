@@ -57,7 +57,9 @@ test('Dashboard leads with the Sticker Jam sketch entry and keeps a 60-second Fl
   assert.match(card, /onOpenEvents/);
   assert.match(dashboard, /onOpenEvents=\{\(\) => router\.push\('\/\(tabs\)\/events'\)\}/);
   assert.match(card, /Start a sketch/);
-  assert.match(route, />Creator Arcade</);
+  assert.doesNotMatch(route, />Creator Arcade<|headerTitle/);
+  assert.match(route, /testID="mini-habit-studio-back"/);
+  assert.match(route, /<Text style=\{styles\.prompt\}>\{prompt\}<\/Text>/);
   assert.match(route, /const GAME_SECONDS = 60/);
   assert.match(route, /Math\.floor\(secondsLeft \/ 60\)/);
   assert.match(route, /PanResponder\.create/);
