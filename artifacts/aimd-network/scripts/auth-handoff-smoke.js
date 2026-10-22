@@ -19,7 +19,7 @@ function assertAuthHandoffSmokeContract() {
   assertIncludes(source, 'testID="session-preparation-screen"', 'visible preparation screen');
   assertIncludes(source, 'testID="session-preparation-retry"', 'visible retry action');
   assertIncludes(source, 'testID="session-preparation-reset"', 'user-initiated stale session reset');
-  assertIncludes(source, 'await signOut()', 'Clerk-managed secure session cleanup');
+  assertIncludes(source, 'signOut(),', 'Clerk-managed secure session cleanup');
   assertIncludes(source, 'setAuthTokenGetter(null)', 'authenticated API token getter cleanup');
   assertIncludes(source, 'queryClient.clear()', 'authenticated query cache cleanup');
   assertIncludes(source, 'setResetError(', 'visible recovery failure state');

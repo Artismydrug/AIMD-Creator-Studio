@@ -135,7 +135,7 @@ function SessionPreparationScreen({
     <View style={sessionStyles.container} testID="session-preparation-screen">
       {error ? (
         <>
-          <Text style={sessionStyles.title}>Your saved sign-in needs a refresh</Text>
+          <Text style={sessionStyles.title}>Let’s reconnect to your studio</Text>
           <Text style={sessionStyles.body}>
             We couldn’t verify this session with Creator Studio. Try again, or reset it and sign in again.
           </Text>
@@ -147,6 +147,7 @@ function SessionPreparationScreen({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Retry opening Creator Studio"
+            disabled={resettingSession}
             onPress={onRetry}
             style={({ pressed }) => [
               sessionStyles.retryButton,
@@ -292,15 +293,19 @@ function AuthSessionBridge({ children }: { children: ReactNode }) {
     if (resettingSession) return;
     setResettingSession(true);
     setResetError(null);
-    preparedToken.current = null;
-    setAuthTokenGetter(null);
-    queryClient.clear();
 
     try {
       // Clerk's signOut clears its own secure token-cache entry. Keep this
       // explicit recovery action user-initiated; do not discard valid sessions
       // automatically when a temporary API/network check fails.
-      await signOut();
+      await withTimeout(
+        signOut(),
+        TOKEN_TIMEOUT_MS * 2,
+        'Resetting the saved sign-in took too long.',
+      );
+      preparedToken.current = null;
+      setAuthTokenGetter(null);
+      queryClient.clear();
       setReadyUserId(null);
       setPreparationError(null);
     } catch (error) {

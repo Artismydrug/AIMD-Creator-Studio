@@ -24,6 +24,12 @@ Keep Clerk session tokens in its existing secure token cache; local biometric pr
 
 **How to apply:** Configure inactivity/session lifetime in managed Clerk settings when dashboard access permits. Keep biometric settings account-scoped; disabling or removing device biometrics must not silently bypass an enabled lock.
 
+Restored-session recovery must be explicit: offer a bounded retry and user-initiated Clerk sign-out, rather than automatically discarding sessions when backend verification fails.
+
+**Why:** A valid Clerk session can fail app verification because the API or database is unavailable, not because its stored token is stale. Automatic cache deletion would sign out healthy accounts without fixing the underlying outage.
+
+**How to apply:** Diagnose API verification failures separately from authentication rejection. Keep SDK-managed secure storage; clear the API token getter and account query cache together after a successful reset, and preserve retry capability if sign-out fails.
+
 The native app's inactivity rule is 30 days for a restored authentication session. Fresh credential-based sign-in starts a new inactivity period; account-only history must not immediately expire a new session.
 
 **Why:** Users asked to stay signed in across restarts and re-authenticate after 30 inactive days. A local rule cannot extend Clerk's server lifetime or override revoked sessions.
