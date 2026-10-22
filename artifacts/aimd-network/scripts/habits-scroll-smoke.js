@@ -59,6 +59,7 @@ test('the Habits-only header scrolls with the daily loop and has no section swit
   assert.match(source, /sectionHeader\s*=\s*\([\s\S]*?styles\.header/);
   assert.match(source, /accessibilityRole="header">Habits<\/Text>/);
   assert.doesNotMatch(source, /ChallengesScreen|switcher|tablist|useState|Habits &amp; Challenges/);
+  assert.match(source, /mainHeaderTopPadding\(insets\.top, Platform\.OS === 'web'\)/);
   assert.match(tabs, /name="challenge-habits"[\s\S]*?title: 'Habits',\s*tabBarLabel: 'Habits'/);
   assert.match(source, /paddingHorizontal: 16, paddingBottom: 8/);
   assert.match(habits, /topPad = embedded \? 8/);

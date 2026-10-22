@@ -45,6 +45,7 @@ function harness(kind, { failUpload = false, failPost = false, canceled = false 
         useWindowDimensions: () => ({ height: 844, width: 390 }),
       };
       if (name === '@/hooks/useColors') return { useColors: () => ({ radius: 12 }) };
+      if (name === '@/lib/safeArea') return { mainHeaderTopPadding: (insetTop, isWeb) => isWeb ? 67 : Math.max(insetTop, 24) + 8 };
       if (name === 'react-native-safe-area-context') return { useSafeAreaInsets: () => ({ top: 59, bottom: 34 }) };
       if (name === '@expo/vector-icons') return { Feather: 'Feather' };
       if (name === '@/components/FeedNavigation') return { __esModule: true, default: 'FeedNavigation', feedControlsInset: top => top + 68, updateFeedHeaderFromScroll: () => null };

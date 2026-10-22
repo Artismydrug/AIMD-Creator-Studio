@@ -3,12 +3,13 @@ import { Platform, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
+import { mainHeaderTopPadding } from '@/lib/safeArea';
 import HabitsScreen from './habits';
 
 export default function ChallengeHabitsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const topPad = Platform.OS === 'web' ? 67 : insets.top + 8;
+  const topPad = mainHeaderTopPadding(insets.top, Platform.OS === 'web');
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     header: { paddingTop: topPad, paddingHorizontal: 16, paddingBottom: 8, backgroundColor: colors.studioPaper },

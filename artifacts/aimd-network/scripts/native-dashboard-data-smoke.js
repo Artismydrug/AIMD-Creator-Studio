@@ -64,6 +64,7 @@ function render(responses = {}, overrides = {}) {
         Alert: { alert: () => {} }, Linking: {}, AccessibilityInfo: {},
       };
       if (name === '@/hooks/useColors') return { useColors: () => ({ radius: 12 }) };
+      if (name === '@/lib/safeArea') return { mainHeaderTopPadding: (insetTop, isWeb) => isWeb ? 67 : Math.max(insetTop, 24) + 8 };
       if (name === 'react-native-safe-area-context') return { useSafeAreaInsets: () => ({ top: 59, bottom: 34 }) };
       if (name === '@expo/vector-icons') return { Feather: 'Feather' };
       if (name === 'expo-haptics') return { notificationAsync: async () => {}, NotificationFeedbackType: { Success: 'success' } };

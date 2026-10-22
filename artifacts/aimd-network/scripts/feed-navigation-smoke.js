@@ -59,6 +59,7 @@ const common = {
   'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 59, bottom: 34 }) },
   '@/hooks/useColors': { useColors: () => ({ radius: 12, card: 'cream', foreground: 'ink' }) },
   '@/lib/appearance': { useAppearance: () => ({ scheme: 'light' }) },
+  '@/lib/safeArea': { mainHeaderTopPadding: (insetTop, isWeb) => isWeb ? 67 : Math.max(insetTop, 24) + 8 },
 };
 
 test('Feed keeps one stable pager while its navigation owns the restored section tabs', () => {
