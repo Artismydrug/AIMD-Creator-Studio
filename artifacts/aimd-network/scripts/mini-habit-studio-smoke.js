@@ -82,6 +82,36 @@ test('Dashboard leads with Today’s Habit and Coming Soon Workshops, while reta
   assert.doesNotMatch(route, /useSpinDailyReward|useCheckInProgress|trackEvent/);
 });
 
+test('Habit and Workshop cards are full-bleed; Events uses an inset flyer over artwork', () => {
+  const card = fs.readFileSync(path.resolve(__dirname, '../components/StickerJamPracticeCard.tsx'), 'utf8');
+  const fullBleedImageUses = card.match(/style=\{styles\.fullBleedImage\}/g) ?? [];
+  const fullBleedWashes = card.match(/style=\{styles\.fullBleedWash\}/g) ?? [];
+  const habitStart = card.indexOf('testID="dashboard-active-habit-slide"');
+  const habitEnd = card.indexOf('</TouchableOpacity>', habitStart);
+  const habitSlide = card.slice(habitStart, habitEnd);
+  const eventStart = card.indexOf('testID="dashboard-events-slide"');
+  const eventEnd = card.indexOf('</TouchableOpacity>', eventStart);
+  const eventSlide = card.slice(eventStart, eventEnd);
+
+  assert.equal(fullBleedImageUses.length, 2, 'habit and workshop artwork should fill their cards');
+  assert.equal(fullBleedWashes.length, 2, 'full-bleed slides should have a contrast wash');
+  assert.match(habitSlide, /daily-habit-workspace\.jpg/);
+  assert.doesNotMatch(habitSlide, /sticker-jam-sketchbook\.jpg/);
+  assert.ok(fs.existsSync(path.resolve(__dirname, '../assets/images/daily-habit-workspace.jpg')));
+  assert.match(card, /canvasImage:\s*\{\s*width: '100%',\s*height: '100%/);
+  assert.match(card, /source=\{require\('\.\.\/assets\/images\/sticker-jam-sketchbook\.jpg'\)\}[\s\S]{0,120}resizeMode="cover"/);
+  assert.match(card, /source=\{require\('\.\.\/assets\/images\/workshop-preview\.jpg'\)\}[\s\S]{0,120}resizeMode="cover"/);
+  assert.match(card, /eventsBackdropImage:[\s\S]*?position: 'absolute'[\s\S]*?width: '100%'[\s\S]*?height: '100%'/);
+  assert.match(card, /eventsBackdropWash:[\s\S]*?backgroundColor: 'rgba\(249, 248, 246, 0\.76\)'/);
+  assert.match(eventSlide, /style=\{styles\.eventsBackdropImage\}/);
+  assert.match(eventSlide, /eventsPosterFrame/);
+  assert.match(eventSlide, /source=\{require\('\.\.\/assets\/images\/los-feliz-flea-flyer\.jpg'\)\}[\s\S]{0,140}resizeMode="contain"/);
+  assert.match(card, /habitContentPanel:[\s\S]*?backgroundColor: 'rgba\(249, 248, 246, 0\.91\)'/);
+  assert.match(card, /workshopContentPanel:[\s\S]*?backgroundColor: 'rgba\(249, 248, 246, 0\.91\)'/);
+  assert.match(card, /eventsInfoPanel:[\s\S]*?backgroundColor: 'rgba\(249, 248, 246, 0\.94\)'/);
+  assert.doesNotMatch(card, /habitArtFrame|workshopArtFrame/);
+});
+
 test('concurrent local saves are serialized and isolated per signed-in account', async () => {
   const storage = memoryStorage();
   const store = createMiniHabitSketchbook(storage);

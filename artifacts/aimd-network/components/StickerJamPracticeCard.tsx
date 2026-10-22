@@ -54,8 +54,8 @@ export default function StickerJamPracticeCard({
   const featuredEvent = fleaMarketEvent ?? upcomingEvents?.[0];
   const showsFleaFlyer = !featuredEvent || /los feliz flea/i.test(featuredEvent.title);
   const eventTitle = featuredEvent?.title ?? 'AIMD Tattoo Bus at Los Feliz Flea';
-  const posterWidth = Math.min(118, Math.max(82, slideWidth * 0.31));
-  const posterHeight = posterWidth * (1542 / 1134);
+  const posterWidth = Math.min(110, Math.max(86, slideWidth * 0.29));
+  const posterHeight = posterWidth * (1024 / 761);
   const eventDate = featuredEvent ? new Date(featuredEvent.startsAt) : null;
   const eventDetails = featuredEvent
     ? [
@@ -193,6 +193,38 @@ export default function StickerJamPracticeCard({
       shadowRadius: 0,
       elevation: 4,
     },
+    eventsBackdropImage: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+    },
+    eventsBackdropWash: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+      pointerEvents: 'none',
+      backgroundColor: 'rgba(249, 248, 246, 0.76)',
+    },
+    fullBleedImage: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+    },
+    fullBleedWash: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+      pointerEvents: 'none',
+      backgroundColor: 'rgba(249, 248, 246, 0.42)',
+    },
     habitFrame: {
       height: 228,
       width: '100%',
@@ -210,23 +242,33 @@ export default function StickerJamPracticeCard({
       elevation: 4,
     },
     habitTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-    habitEyebrow: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 10, letterSpacing: 1.2 },
+    habitEyebrow: {
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      borderRadius: 99,
+      backgroundColor: 'rgba(249, 248, 246, 0.94)',
+      color: colors.studioInk,
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 10,
+      letterSpacing: 1.2,
+    },
+    habitContentPanel: {
+      gap: 4,
+      padding: 11,
+      borderWidth: 1.5,
+      borderColor: 'rgba(26, 23, 33, 0.5)',
+      borderRadius: 17,
+      backgroundColor: 'rgba(249, 248, 246, 0.91)',
+    },
     habitStatus: {
       paddingHorizontal: 9, paddingVertical: 5, borderWidth: 1.5, borderColor: colors.studioInk,
       borderRadius: 99, backgroundColor: colors.studioYellow,
     },
     habitStatusText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 9, letterSpacing: 0.7 },
-    habitContentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 98 },
-    habitCopy: { flex: 1, minWidth: 0, gap: 4 },
     habitName: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 21, lineHeight: 25, letterSpacing: -0.4 },
     habitDetails: { color: colors.studioInk, fontFamily: 'DMSans_500Medium', fontSize: 11, lineHeight: 15 },
-    habitArtFrame: {
-      width: 82, height: 94, overflow: 'hidden', borderWidth: 2, borderColor: colors.studioInk,
-      borderRadius: 15, backgroundColor: colors.studioPaper, transform: [{ rotate: '3deg' }],
-      shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 2 },
-      shadowOpacity: 1, shadowRadius: 0, elevation: 2,
-    },
-    habitArtImage: { width: '100%', height: '100%' },
     habitAction: {
       minHeight: 42, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
       gap: 7, paddingHorizontal: 14, borderWidth: 2, borderColor: colors.studioInk, borderRadius: 15,
@@ -259,17 +301,16 @@ export default function StickerJamPracticeCard({
       borderRadius: 99, backgroundColor: colors.studioOrange,
     },
     workshopBadgeText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 9, letterSpacing: 0.7 },
-    workshopContentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 98 },
-    workshopCopy: { flex: 1, minWidth: 0, gap: 4 },
+    workshopContentPanel: {
+      gap: 4,
+      padding: 11,
+      borderWidth: 1.5,
+      borderColor: 'rgba(26, 23, 33, 0.5)',
+      borderRadius: 17,
+      backgroundColor: 'rgba(249, 248, 246, 0.91)',
+    },
     workshopTitle: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 21, lineHeight: 25, letterSpacing: -0.4 },
     workshopDetails: { color: colors.studioInk, fontFamily: 'DMSans_500Medium', fontSize: 11, lineHeight: 15 },
-    workshopArtFrame: {
-      width: 82, height: 94, overflow: 'hidden', borderWidth: 2, borderColor: colors.studioInk,
-      borderRadius: 15, backgroundColor: colors.studioPaper, transform: [{ rotate: '-3deg' }],
-      shadowColor: colors.studioShadow, shadowOffset: { width: 2, height: 2 },
-      shadowOpacity: 1, shadowRadius: 0, elevation: 2,
-    },
-    workshopArtImage: { width: '100%', height: '100%' },
     workshopAction: {
       minHeight: 42, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
       gap: 7, paddingHorizontal: 14, borderWidth: 2, borderColor: colors.studioInk, borderRadius: 15,
@@ -279,18 +320,21 @@ export default function StickerJamPracticeCard({
     workshopActionText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 12 },
     eventsPosterFrame: {
       overflow: 'hidden',
-      borderWidth: 1.5,
+      borderWidth: 2,
       borderColor: colors.studioInk,
-      borderRadius: 12,
+      borderRadius: 15,
       backgroundColor: colors.studioPaper,
       transform: [{ rotate: '-2deg' }],
       shadowColor: colors.studioShadow,
-      shadowOffset: { width: 2, height: 2 },
+      shadowOffset: { width: 3, height: 3 },
       shadowOpacity: 1,
       shadowRadius: 0,
-      elevation: 2,
+      elevation: 3,
     },
-    eventsPosterImage: { width: '100%', height: '100%' },
+    eventsPosterImage: {
+      width: '100%',
+      height: '100%',
+    },
     eventsPosterFallback: {
       flex: 1,
       alignItems: 'center',
@@ -304,7 +348,16 @@ export default function StickerJamPracticeCard({
       justifyContent: 'space-between',
       paddingVertical: 4,
     },
-    eventsCopy: { gap: 4, minWidth: 0 },
+    eventsInfoPanel: {
+      gap: 3,
+      paddingHorizontal: 9,
+      paddingVertical: 8,
+      borderWidth: 1.25,
+      borderColor: 'rgba(26, 23, 33, 0.48)',
+      borderRadius: 15,
+      backgroundColor: 'rgba(249, 248, 246, 0.94)',
+    },
+    eventsCopy: { gap: 3, minWidth: 0 },
     eventsEyebrow: {
       fontFamily: 'DMSans_700Bold',
       color: colors.studioVioletText,
@@ -537,6 +590,13 @@ export default function StickerJamPracticeCard({
                 : 'Set up your first daily habit'}
               testID="dashboard-active-habit-slide"
             >
+              <Image
+                source={require('../assets/images/daily-habit-workspace.jpg')}
+                style={styles.fullBleedImage}
+                resizeMode="cover"
+                accessible={false}
+              />
+              <View style={styles.fullBleedWash} />
               <View style={styles.habitTopline}>
                 <Text style={styles.habitEyebrow}>TODAY’S HABIT</Text>
                 <View style={styles.habitStatus}>
@@ -545,20 +605,15 @@ export default function StickerJamPracticeCard({
                   </Text>
                 </View>
               </View>
-              <View style={styles.habitContentRow}>
-                <View style={styles.habitCopy}>
-                  <Text style={styles.habitName} numberOfLines={2}>
-                    {activeHabit?.name ?? (habitsLoading ? 'Loading your habit…' : habitsError ? 'Your habit is unavailable' : 'Choose a habit to begin')}
-                  </Text>
-                  <Text style={styles.habitDetails} numberOfLines={2}>
-                    {activeHabit
-                      ? `${activeHabit.category} · ${activeHabit.targetMinutes} min · ${activeHabit.currentStreak} day streak`
-                      : habitsError ? 'Open Habits to try again.' : 'Build a small creative practice, one day at a time.'}
-                  </Text>
-                </View>
-                <View style={styles.habitArtFrame}>
-                  <Image source={require('../assets/images/sticker-jam-sketchbook.jpg')} style={styles.habitArtImage} resizeMode="cover" accessible={false} />
-                </View>
+              <View style={styles.habitContentPanel}>
+                <Text style={styles.habitName} numberOfLines={2}>
+                  {activeHabit?.name ?? (habitsLoading ? 'Loading your habit…' : habitsError ? 'Your habit is unavailable' : 'Choose a habit to begin')}
+                </Text>
+                <Text style={styles.habitDetails} numberOfLines={2}>
+                  {activeHabit
+                    ? `${activeHabit.category} · ${activeHabit.targetMinutes} min · ${activeHabit.currentStreak} day streak`
+                    : habitsError ? 'Open Habits to try again.' : 'Build a small creative practice, one day at a time.'}
+                </Text>
               </View>
               <View style={styles.habitAction}>
                 <Text style={styles.habitActionText}>
@@ -576,18 +631,20 @@ export default function StickerJamPracticeCard({
               accessibilityLabel="Workshops coming soon. Explore available workshops."
               testID="dashboard-workshop-slide"
             >
+              <Image
+                source={require('../assets/images/workshop-preview.jpg')}
+                style={styles.fullBleedImage}
+                resizeMode="cover"
+                accessible={false}
+              />
+              <View style={styles.fullBleedWash} />
               <View style={styles.habitTopline}>
                 <View style={styles.workshopMark}><Feather name="play-circle" size={20} color={colors.studioInk} /></View>
                 <View style={styles.workshopBadge}><Text style={styles.workshopBadgeText}>COMING SOON</Text></View>
               </View>
-              <View style={styles.workshopContentRow}>
-                <View style={styles.workshopCopy}>
-                  <Text style={styles.workshopTitle}>Workshop Studio</Text>
-                  <Text style={styles.workshopDetails} numberOfLines={3}>New artist-led classes are on the way. Explore workshops available now.</Text>
-                </View>
-                <View style={styles.workshopArtFrame}>
-                  <Image source={require('../assets/images/workshop-preview.jpg')} style={styles.workshopArtImage} resizeMode="cover" accessible={false} />
-                </View>
+              <View style={styles.workshopContentPanel}>
+                <Text style={styles.workshopTitle}>Workshop Studio</Text>
+                <Text style={styles.workshopDetails} numberOfLines={3}>New artist-led classes are on the way. Explore workshops available now.</Text>
               </View>
               <View style={styles.workshopAction}>
                 <Text style={styles.workshopActionText}>Explore workshops</Text>
@@ -627,6 +684,13 @@ export default function StickerJamPracticeCard({
               accessibilityLabel={`Open events. Next: ${eventTitle}`}
               testID="dashboard-events-slide"
             >
+              <Image
+                source={require('../assets/images/workshop-preview.jpg')}
+                style={styles.eventsBackdropImage}
+                resizeMode="cover"
+                accessible={false}
+              />
+              <View style={styles.eventsBackdropWash} />
               <View style={[styles.eventsPosterFrame, { width: posterWidth, height: posterHeight }]}>
                 {showsFleaFlyer ? (
                   <Image
@@ -643,12 +707,14 @@ export default function StickerJamPracticeCard({
                 )}
               </View>
               <View style={styles.eventsBody}>
-                <View style={styles.eventsCopy}>
-                  <Text style={styles.eventsEyebrow}>{showsFleaFlyer ? 'WEEKLY RESIDENCY' : 'COMMUNITY'}</Text>
-                  <Text style={styles.eventsTitle} numberOfLines={3}>
-                    {eventTitle}
-                  </Text>
-                  <Text style={styles.eventsDetails} numberOfLines={2}>{eventDetails}</Text>
+                <View style={styles.eventsInfoPanel}>
+                  <View style={styles.eventsCopy}>
+                    <Text style={styles.eventsEyebrow}>{showsFleaFlyer ? 'WEEKLY RESIDENCY' : 'COMMUNITY'}</Text>
+                    <Text style={styles.eventsTitle} numberOfLines={3}>
+                      {eventTitle}
+                    </Text>
+                    <Text style={styles.eventsDetails} numberOfLines={2}>{eventDetails}</Text>
+                  </View>
                 </View>
                 <View style={styles.eventsCta}>
                   <Text style={styles.eventsCtaText}>Browse events</Text>
