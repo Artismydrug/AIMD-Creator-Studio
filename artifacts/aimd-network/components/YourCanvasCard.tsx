@@ -8,7 +8,7 @@ export default function YourCanvasCard({ onPress }: { onPress: () => void }) {
   const styles = StyleSheet.create({
     card: {
       marginHorizontal: 18,
-      marginTop: 4,
+      marginTop: 24,
       marginBottom: 24,
       minHeight: 148,
       flexDirection: 'row',

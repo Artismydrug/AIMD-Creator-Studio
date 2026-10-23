@@ -44,6 +44,7 @@ test('installed iOS build number comes from native metadata, never a hardcoded T
   assert(profile.includes('Constants.platform?.ios?.buildNumber'));
   assert(profile.includes('testID="installed-build-info"'));
   assert(profile.includes('Development preview'));
+  assert(profile.includes("paddingTop: mainHeaderTopPadding(insets.top, Platform.OS === 'web')"));
 });
 
 test('export verification checks packaged artwork bytes and missing manifest assets', () => {

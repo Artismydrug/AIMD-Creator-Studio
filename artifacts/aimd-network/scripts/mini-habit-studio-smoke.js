@@ -76,6 +76,7 @@ test('Dashboard leads with Today’s Habit and Coming Soon Workshops, while reta
   assert.match(card, /Start a sketch/);
   const canvasShortcut = fs.readFileSync(path.resolve(__dirname, '../components/YourCanvasCard.tsx'), 'utf8');
   assert.match(canvasShortcut, /testID="dashboard-your-canvas-card"/);
+  assert.match(canvasShortcut, /marginTop: 24/);
   assert.match(canvasShortcut, /Your Canvas/);
   assert.match(canvasShortcut, /Start Flash Sketch/);
   assert.doesNotMatch(route, />Creator Arcade<|headerTitle/);
