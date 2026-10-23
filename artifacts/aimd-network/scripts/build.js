@@ -171,12 +171,8 @@ function getExpoPublicReplId() {
 }
 
 async function startMetro(expoPublicDomain, expoPublicReplId) {
-  const isRunning = await checkMetroHealth();
-  if (isRunning) {
-    console.log('Metro already running');
-    return;
-  }
-
+  // Never reuse a preview/previous build process: its transform cache and
+  // public configuration may not belong to the release being packaged.
   metroPort = await chooseMetroPort();
   console.log('Starting Metro...');
   console.log(`Using Metro port ${metroPort}`);
@@ -210,6 +206,7 @@ async function startMetro(expoPublicDomain, expoPublicReplId) {
       'start',
       '--no-dev',
       '--minify',
+      '--clear',
       '--localhost',
       '--port',
       String(metroPort),

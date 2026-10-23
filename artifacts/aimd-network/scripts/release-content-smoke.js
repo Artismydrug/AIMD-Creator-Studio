@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { createHash } = require('node:crypto');
+const { assertNativeUiBundle } = require('./native-release-contract');
 
 const projectRoot = path.resolve(__dirname, '..');
 const iconPath = './assets/images/aimd-ivory-ink-icon.png';
@@ -35,6 +36,7 @@ function assertBuiltReleaseContent(manifests, timestamp) {
     assert.equal(iconUrl.protocol, 'https:');
     assert(!['localhost', '127.0.0.1'].includes(iconUrl.hostname), 'Manifest icon must not point to the build machine.');
     const bundle = fs.readFileSync(path.join(projectRoot, 'static-build', timestamp, '_expo/static/js', platform, 'bundle.js'), 'utf8');
+    assertNativeUiBundle(bundle, platform);
     assert(bundle.includes('workshops-coming-soon'), `${platform} bundle is missing the four workshop previews.`);
     assert(bundle.includes('Could not confirm delivery'), `${platform} bundle is missing the message-draft safeguards.`);
   }

@@ -27,6 +27,8 @@
     "smoke:launch-polish": "node --test scripts/launch-polish-smoke.js",
     "smoke:metro-config": "node --test scripts/metro-config-smoke.js",
     "smoke:release-content": "node scripts/release-content-smoke.js",
+    "smoke:native-release-content": "node --test scripts/native-release-contract-smoke.js",
+    "verify:native-export": "node scripts/native-release-contract.js",
     "check:release": "node scripts/check-release.js",
     "serve": "node server/serve.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"

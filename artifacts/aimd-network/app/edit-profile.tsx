@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import Constants from 'expo-constants';
 import { Feather } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import { useAuth } from '@clerk/expo';
@@ -341,6 +342,14 @@ export default function EditProfileScreen() {
               <Text style={styles.rowText}>Notification settings</Text>
               <Feather name="chevron-right" size={18} color={colors.studioMuted} />
             </Pressable>
+            <Text style={styles.finePrint} testID="installed-build-info">
+              Version {Constants.expoConfig?.version ?? 'unknown'}
+              {Constants.platform?.ios?.buildNumber
+                ? ` · Build ${Constants.platform.ios.buildNumber}`
+                : Platform.OS === 'web' || Constants.appOwnership === 'expo'
+                  ? ' · Development preview'
+                  : ' · Build unavailable'}
+            </Text>
           </View>
 
           <View style={styles.card}>

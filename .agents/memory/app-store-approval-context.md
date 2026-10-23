@@ -18,3 +18,9 @@ A successful source check or JavaScript export does not prove that the latest UI
 **Why:** The approved icon was correct in the workspace, but TestFlight showed older artwork; the tester recording also lacked workshop preview cards present in current source.
 
 **How to apply:** Distinguish the available TestFlight build from the installed build, especially when an Update button is visible. Verify exported manifests and bundle content, then require a fresh native upload and device checks before declaring the release candidate ready.
+
+Treat a mismatch involving several retired UI features as a release-identity problem before changing the live design.
+
+**Why:** Repeated tester recordings have shown older native UI despite passing workspace checks. A web/backend republish is not evidence that an installed TestFlight binary changed.
+
+**How to apply:** Compare the installed native build number and expected feature markers with the freshly exported bundle, then verify the next native upload through TestFlight Update. Avoid uninstalling to refresh; creators may have device-local sketches.
