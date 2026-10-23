@@ -10,6 +10,7 @@ const requiredMarkers = [
   'dashboard-workshop-slide',
   'dashboard-mini-habit-studio-open',
   'dashboard-events-slide',
+  'dashboard-your-canvas-card',
   'creator-work-grid',
   'creator-following-stat',
   'edit-profile-navigation',

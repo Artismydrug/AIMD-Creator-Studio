@@ -27,6 +27,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import MonthlyMemberDrops from '@/components/MonthlyMemberDrops';
 import HabitPracticeSummaryCard from '@/components/HabitPracticeSummaryCard';
 import StickerJamPracticeCard from '@/components/StickerJamPracticeCard';
+import YourCanvasCard from '@/components/YourCanvasCard';
 import {
   useGetProgress,
   getGetProgressQueryKey,
@@ -946,6 +947,8 @@ export default function ProgressScreen() {
           <MonthlyMemberDrops compact />
 
           <HabitPracticeSummaryCard onOpenHabits={() => router.push('/(tabs)/challenge-habits')} />
+
+          <YourCanvasCard onPress={() => router.push('/mini-habit-studio')} />
 
         </ScrollView>
       )}

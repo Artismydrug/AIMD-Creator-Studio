@@ -13,7 +13,7 @@ import type { ComponentProps } from 'react';
 import { useColors } from '@/hooks/useColors';
 import { useListEvents, useListHabits } from '@workspace/api-client-react';
 
-const SLIDE_LABELS = ['Today’s Habit', 'Workshops', 'Your canvas', 'Events'] as const;
+const SLIDE_LABELS = ['Today’s Habit', 'Workshops', 'Your Canvas', 'Events'] as const;
 
 type Shortcut = {
   label: string;
@@ -662,7 +662,7 @@ export default function StickerJamPracticeCard({
                 accessibilityLabel="An artist sketching in a colorful sketchbook"
               />
               <View style={styles.canvasLabel}>
-                <Text style={styles.canvasLabelText}>Your canvas</Text>
+                 <Text style={styles.canvasLabelText}>Your Canvas</Text>
               </View>
               <TouchableOpacity
                 style={styles.startButton}

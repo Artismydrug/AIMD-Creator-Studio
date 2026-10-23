@@ -47,7 +47,7 @@
 - [Monitoring privacy](monitoring-privacy.md) — measure pseudonymous devices/sessions, not personal profiles; private creative content is outside launch analytics scope.
 - [Startup service isolation](startup-service-isolation.md) — optional notification failures warn without blocking core navigation; sign-in and content access remain fail-closed.
 - [Native Web API compatibility](native-web-api-compatibility.md) — browser/Node globals can hide missing React Native polyfill methods; test the actual native implementation.
-- [Creator Arcade policy](mini-habit-studio-policy.md) — renamed from Mini Habit Studio; first activity is local-only Flash Sketch, separate from points, habit completion, and streaks.
+- [Your Canvas activities](mini-habit-studio-policy.md) — creative warm-ups stay separate from official points and streaks; visual sketches remain device-local.
 - [Metro multi-artifact startup](metro-multi-artifact-startup.md) — healthy Expo dependencies do not rule out watcher timeouts caused by unrelated sibling artifacts.
 - [Sticker Jam visual direction](design-exploration-isolation.md) — approved app-wide; preserve each route’s content and interactions while applying the shared design system.
 - [Your Studio profile policy](poncho-portfolio.md) — public work profiles for owners and visitors; keep profile editing, inquiry controls, and account settings separate.

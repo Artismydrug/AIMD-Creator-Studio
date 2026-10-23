@@ -232,7 +232,7 @@ test('high-traffic cards keep short summaries while preserving action and storag
   const stickerJam = source('../components/StickerJamPracticeCard.tsx');
   assert.match(stickerJam, /Make a little/);
   assert.match(stickerJam, /TODAY’S PRACTICE/);
-  assert.match(stickerJam, /Your canvas/);
+  assert.match(stickerJam, /Your Canvas/);
   assert.match(stickerJam, /Start a sketch/);
   for (const shortcut of ['habits', 'feed', 'workshops']) {
     assert.match(stickerJam, new RegExp(`dashboard-shortcut-${shortcut}`));

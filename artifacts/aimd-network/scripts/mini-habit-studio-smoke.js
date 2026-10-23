@@ -52,11 +52,16 @@ test('Dashboard leads with Today’s Habit and Coming Soon Workshops, while reta
   const route = fs.readFileSync(path.resolve(__dirname, '../app/mini-habit-studio.tsx'), 'utf8');
   const habitsIndex = dashboard.indexOf('<HabitPracticeSummaryCard');
   const studioIndex = dashboard.indexOf('<StickerJamPracticeCard');
+  const habitsSummaryIndex = dashboard.indexOf('<HabitPracticeSummaryCard onOpenHabits');
+  const canvasShortcutIndex = dashboard.indexOf('<YourCanvasCard');
   assert.ok(studioIndex >= 0 && habitsIndex > studioIndex);
+  assert.ok(canvasShortcutIndex > habitsSummaryIndex, 'Your Canvas shortcut is at the bottom of the dashboard');
+  assert.match(dashboard, /<YourCanvasCard onPress=\{\(\) => router\.push\('\/mini-habit-studio'\)\}/);
   assert.match(dashboard, /router\.push\('\/mini-habit-studio'\)/);
   assert.match(card, /TODAY’S PRACTICE/);
   assert.doesNotMatch(card, /CREATOR ARCADE/);
   assert.match(card, /testID="dashboard-canvas-carousel"/);
+  assert.match(card, /Your Canvas/);
   assert.match(card, /pagingEnabled/);
   assert.match(card, /testID="dashboard-active-habit-slide"/);
   assert.match(card, /testID="dashboard-workshop-slide"/);
@@ -69,6 +74,10 @@ test('Dashboard leads with Today’s Habit and Coming Soon Workshops, while reta
   assert.match(card, /onOpenEvents/);
   assert.match(dashboard, /onOpenEvents=\{\(\) => router\.push\('\/\(tabs\)\/events'\)\}/);
   assert.match(card, /Start a sketch/);
+  const canvasShortcut = fs.readFileSync(path.resolve(__dirname, '../components/YourCanvasCard.tsx'), 'utf8');
+  assert.match(canvasShortcut, /testID="dashboard-your-canvas-card"/);
+  assert.match(canvasShortcut, /Your Canvas/);
+  assert.match(canvasShortcut, /Start Flash Sketch/);
   assert.doesNotMatch(route, />Creator Arcade<|headerTitle/);
   assert.match(route, /testID="mini-habit-studio-back"/);
   assert.match(route, /<Text style=\{styles\.prompt\}>\{prompt\}<\/Text>/);

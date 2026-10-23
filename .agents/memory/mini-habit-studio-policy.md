@@ -3,15 +3,15 @@ name: Creator Arcade policy
 description: Creator Arcade naming and local-only scope for the first creative minigame.
 ---
 
-Use “Creator Arcade” for the app’s short creative activities. This supersedes the earlier “Mini Habit Studio” name.
+Use “Your Canvas” as the user-facing name for the app’s short creative activities and Flash Sketch entry point. “Creator Arcade” is no longer user-facing; internal route names may remain unchanged.
 
 The user expanded Creator Arcade to include one-minute Visual Art, Music, Fashion, Poetry, and Movement challenges. Saved visual sketches stay on-device and account-isolated; the other challenge selections are round-only. None award points, complete habits, or change streaks.
 
-**Why:** The user explicitly broadened the creative challenge scope while keeping these activities separate from official habit progress and rewards.
+**Why:** The user renamed the Dashboard entry to “Your Canvas” and broadened the creative challenge scope while keeping activities separate from official habit progress and rewards.
 
-**How to apply:** Keep mini-challenges separate from official habit check-ins, points, and streaks unless the user explicitly expands that policy. Do not imply sketches are cloud-backed or shared. Music currently uses a visual beat grid with haptic taps, not audio playback; Movement is self-directed, with no camera or activity tracking.
+**How to apply:** Use “Your Canvas” in navigation and cards. Keep mini-challenges separate from official habit check-ins, points, and streaks unless the user explicitly expands that policy. Do not imply sketches are cloud-backed or shared. Music currently uses a visual beat grid with haptic taps, not audio playback; Movement is self-directed, with no camera or activity tracking.
 
-Do not display a “Creator Arcade” header on the Flash Sketch activity screen; keep navigation available and focus the view on the prompt, timer, and canvas.
+Do not add a “Creator Arcade” header to the Flash Sketch activity screen; keep navigation available and focus the view on the prompt, timer, and canvas.
 
 **Why:** The owner explicitly removed that framing title to simplify the one-minute activity.
 
