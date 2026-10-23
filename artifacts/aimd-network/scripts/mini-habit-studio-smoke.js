@@ -23,6 +23,11 @@ const {
   MAX_MINI_HABIT_SKETCHES,
   MINI_HABIT_SKETCHBOOK_FULL,
 } = loadTypeScript('../lib/miniHabitSketchbook.ts');
+const {
+  CREATIVE_MEDIUMS,
+  CREATIVE_MEDIUM_CONFIG,
+  nextCreativePrompt,
+} = loadTypeScript('../lib/creativeMicroChallenges.ts');
 
 function memoryStorage() {
   const values = new Map();
@@ -79,7 +84,45 @@ test('Dashboard leads with Today’s Habit and Coming Soon Workshops, while reta
   assert.match(route, /testID="mini-habit-sketch-next"/);
   assert.match(route, /Move to the next sketch idea/);
   assert.match(route, /Next sketch idea/);
+  assert.match(route, /scrollEnabled=\{!isDrawing\}/);
+  assert.match(route, /onPanResponderTerminationRequest: \(\) => false/);
+  assert.match(route, /onShouldBlockNativeResponder: \(\) => true/);
+  assert.match(route, /pointerEvents="none"/);
+  assert.match(route, /touchAction: 'none'/);
+  assert.match(route, /status === 'playing' \|\| saving/);
+  assert.ok(
+    route.indexOf('testID="mini-habit-sketch-start"') < route.indexOf('testID="mini-habit-sketch-canvas"'),
+    'Start is reachable before the drawing canvas is positioned for the locked session',
+  );
   assert.doesNotMatch(route, /useSpinDailyReward|useCheckInProgress|trackEvent/);
+});
+
+test('one-minute creative challenges include visual art, music, fashion, poetry, and movement prompts', () => {
+  assert.deepEqual(CREATIVE_MEDIUMS, ['visual', 'music', 'fashion', 'poetry', 'movement']);
+  for (const medium of CREATIVE_MEDIUMS) {
+    const config = CREATIVE_MEDIUM_CONFIG[medium];
+    assert.ok(config.label.length > 0, `${medium} has a visible selector label`);
+    assert.ok(config.title.length > 0, `${medium} has a challenge title`);
+    assert.ok(config.prompts.length >= 2, `${medium} has a prompt rotation`);
+    assert.notEqual(nextCreativePrompt(medium, config.prompts[0]), config.prompts[0], `${medium} can advance to another prompt`);
+  }
+});
+
+test('each non-drawing challenge has a playable, goal-based interaction', () => {
+  const screen = fs.readFileSync(path.resolve(__dirname, '../app/mini-habit-studio.tsx'), 'utf8');
+  const games = fs.readFileSync(path.resolve(__dirname, '../components/CreativeMicroChallenge.tsx'), 'utf8');
+  assert.match(screen, /medium=\{medium as NonVisualMedium\}/);
+  assert.match(games, /testID=\{`micro-challenge-\$\{medium\}-active`\}/);
+  for (const medium of ['music', 'fashion', 'poetry', 'movement']) {
+    assert.ok(games.includes(`testID="micro-challenge-${medium}-finish"`), `${medium} has an explicit completion action`);
+  }
+  assert.match(games, /beatCount < 3/);
+  assert.match(games, /palette\.length !== 3/);
+  assert.match(games, /poemWords\.length !== 3/);
+  assert.match(games, /movesDone\.length === MOVEMENT_SEQUENCE\.length/);
+  assert.match(games, /No camera or activity tracking/);
+  assert.match(games, /completionReason === 'timeout' \? 'Time’s up' : 'Challenge complete'/);
+  assert.match(screen, /Creative warm-ups are for practice and do not change points or habit streaks/);
 });
 
 test('Habit and Workshop cards are full-bleed; Events uses an inset flyer over artwork', () => {
