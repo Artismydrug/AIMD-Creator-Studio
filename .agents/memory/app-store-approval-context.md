@@ -24,3 +24,9 @@ Treat a mismatch involving several retired UI features as a release-identity pro
 **Why:** Repeated tester recordings have shown older native UI despite passing workspace checks. A web/backend republish is not evidence that an installed TestFlight binary changed.
 
 **How to apply:** Compare the installed native build number and expected feature markers with the freshly exported bundle, then verify the next native upload through TestFlight Update. Avoid uninstalling to refresh; creators may have device-local sketches.
+
+Match release validation to the artifact format generated in the current run. A fresh static Expo Go build does not refresh a separate native Expo export.
+
+**Why:** A preview build contained the current UI while a leftover native export still lacked current Dashboard markers. Validating the wrong output gave a misleading stale-build result.
+
+**How to apply:** Establish output freshness and format before inspecting bundles. Treat a successful preview export as preview evidence only, not proof of the signed App Store binary or the installed TestFlight version.
