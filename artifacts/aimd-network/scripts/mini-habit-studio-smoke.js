@@ -94,14 +94,19 @@ test('Dashboard leads with Today’s Habit and Coming Soon Workshops, while reta
   assert.match(route, /testID="mini-habit-sketch-next"/);
   assert.match(route, /Move to the next sketch idea/);
   assert.match(route, /Next sketch idea/);
-  assert.match(route, /scrollEnabled=\{!isDrawing\}/);
+  assert.match(route, /testID="mini-habit-sketch-focus-workspace"/);
+  assert.ok(
+    route.indexOf('{isDrawing ? (') < route.indexOf('testID="mini-habit-challenge-scroll"'),
+    'an active sketch uses a fixed workspace instead of the surrounding ScrollView',
+  );
+  assert.doesNotMatch(route, /scrollEnabled=\{!isDrawing\}/);
   assert.match(route, /onPanResponderTerminationRequest: \(\) => false/);
   assert.match(route, /onShouldBlockNativeResponder: \(\) => true/);
   assert.match(route, /pointerEvents="none"/);
   assert.match(route, /touchAction: 'none'/);
   assert.match(route, /status === 'playing' \|\| saving/);
   assert.ok(
-    route.indexOf('testID="mini-habit-sketch-start"') < route.indexOf('testID="mini-habit-sketch-canvas"'),
+    route.indexOf('testID="mini-habit-sketch-start"') < route.indexOf('{medium === \'visual\' ? sketchCanvas'),
     'Start is reachable before the drawing canvas is positioned for the locked session',
   );
   assert.doesNotMatch(route, /useSpinDailyReward|useCheckInProgress|trackEvent/);

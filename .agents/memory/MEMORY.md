@@ -17,6 +17,7 @@
 - [Stripe catalog mirror refresh](stripe-catalog-sync.md) — metadata-only Stripe edits may need per-entity mirror refresh beyond incremental backfill.
 - [Drizzle SQL array parameters](drizzle-array-parameters.md) — bind PostgreSQL arrays with a typed ARRAY expression, not direct JavaScript-array interpolation.
 - [React Native feed paging](react-native-web-pager-sizing.md) — keep viewport-sized pages stable; inner writing should scroll only when it overflows.
+- [Native drawing gesture isolation](native-drawing-gesture-isolation.md) — move active sketching out of scroll containers; disabling a parent ScrollView may not stop iPhone gesture handoff.
 - [Clerk iPad OAuth callbacks](clerk-ipad-oauth-callbacks.md) — native SSO must use the app scheme explicitly and surface incomplete OAuth states instead of failing silently.
 - [SMS consent authority](sms-consent-authority.md) — local records stay pending; only the server-side AIMD SMS/HQ adapter may send confirmations or confirm consent.
 - [SMS signup placement](sms-signup-placement.md) — keep text-list signup only on the public homepage, without a standalone route or navigation entry.

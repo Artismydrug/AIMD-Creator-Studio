@@ -245,6 +245,15 @@ export default function MiniHabitStudioScreen() {
     container: { flex: 1, backgroundColor: colors.background },
     scrollViewport: { flex: 1, overflow: 'hidden' },
     scroll: { flexGrow: 1, paddingBottom: insets.bottom + 28 },
+    focusWorkspace: {
+      flex: 1,
+      paddingHorizontal: 20,
+      paddingTop: 12,
+      paddingBottom: Math.max(insets.bottom, 16),
+      gap: 14,
+      justifyContent: 'center',
+    },
+    focusCanvasSlot: { flex: 1, minHeight: canvasSize, alignItems: 'center', justifyContent: 'center' },
     header: {
       paddingTop: Platform.OS === 'web' ? 67 : insets.top + 8,
       paddingHorizontal: 20,
@@ -591,6 +600,74 @@ export default function MiniHabitStudioScreen() {
       ? completionReason === 'early' ? 'Finished early' : 'Time is up'
       : 'Ready when you are';
 
+  const sketchCanvas = (
+    <View
+      style={styles.canvas}
+      {...panResponder.panHandlers}
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel={status === 'playing' ? 'Sketching canvas. Draw with one finger.' : 'Sketch canvas'}
+      testID="mini-habit-sketch-canvas"
+    >
+      <Svg
+        width="100%"
+        height="100%"
+        viewBox={`0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`}
+        pointerEvents="none"
+      >
+        <Path d={`M0 0 H${VIEWBOX_SIZE} V${VIEWBOX_SIZE} H0 Z`} fill={colors.card} />
+        {allPaths.map((path, index) => (
+          <Path
+            key={`current-${index}`}
+            d={path}
+            fill="none"
+            stroke={colors.foreground}
+            strokeWidth={4}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        ))}
+      </Svg>
+      {status !== 'playing' && allPaths.length === 0 && (
+        <View style={styles.canvasHint} pointerEvents="none">
+          <Feather name={status === 'complete' ? 'check-circle' : 'edit-3'} size={24} color={colors.mutedForeground} />
+          <Text style={styles.canvasHintText}>
+            {status === 'complete' ? 'Your minute is complete.' : 'Your sketch will appear here.'}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+
+  const sketchToolbar = (
+    <View style={styles.toolbar}>
+      <Text style={[styles.note, styles.toolbarNote]}>Draw directly on the canvas.</Text>
+      <View style={styles.toolbarActions}>
+        <TouchableOpacity
+          style={styles.toolButton}
+          onPress={undoStroke}
+          disabled={strokes.length === 0}
+          accessibilityRole="button"
+          accessibilityLabel="Undo last mark"
+          testID="mini-habit-sketch-undo"
+        >
+          <Feather name="corner-up-left" size={15} color={strokes.length ? colors.foreground : colors.mutedForeground} />
+          <Text style={[styles.toolButtonText, !strokes.length && { color: colors.mutedForeground }]}>Undo</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={() => finishSketch(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Finish this sketch early"
+          testID="mini-habit-sketch-done"
+        >
+          <Feather name="check" size={15} color={colors.ink} />
+          <Text style={styles.primaryButtonText}>Done</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
     <View style={styles.container} testID="mini-habit-studio-screen">
       <View style={styles.header}>
@@ -604,16 +681,35 @@ export default function MiniHabitStudioScreen() {
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </TouchableOpacity>
       </View>
-      <ScrollView
-        style={styles.scrollViewport}
-        contentContainerStyle={styles.scroll}
-        scrollEnabled={!isDrawing}
-        bounces={!isDrawing}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        testID="mini-habit-challenge-scroll"
-      >
-        <View style={styles.content}>
+      {isDrawing ? (
+        <View style={styles.focusWorkspace} testID="mini-habit-sketch-focus-workspace">
+          <View style={styles.promptCard}>
+            <Text style={styles.promptLabel}>YOUR PROMPT</Text>
+            <Text style={styles.prompt}>{prompt}</Text>
+          </View>
+          <View style={styles.timerRow}>
+            <Text style={styles.timerLabel}>{timerLabel}</Text>
+            <Text
+              style={styles.timer}
+              accessibilityRole="timer"
+              accessibilityLabel={`${secondsLeft} seconds remaining`}
+              testID="mini-habit-sketch-timer"
+            >
+              {timerText}
+            </Text>
+          </View>
+          <View style={styles.focusCanvasSlot}>{sketchCanvas}</View>
+          {sketchToolbar}
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.scrollViewport}
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          testID="mini-habit-challenge-scroll"
+        >
+          <View style={styles.content}>
           <Text style={styles.eyebrow}>A ONE-MINUTE CREATIVE BREAK</Text>
           <Text style={styles.title}>{modeConfig.title}</Text>
           <Text style={styles.description}>{modeConfig.description}</Text>
@@ -684,74 +780,7 @@ export default function MiniHabitStudioScreen() {
             </TouchableOpacity>
           ) : null}
 
-          {medium === 'visual' ? (
-            <>
-              <View
-                style={styles.canvas}
-                {...panResponder.panHandlers}
-                accessible
-                accessibilityRole="image"
-                accessibilityLabel={status === 'playing' ? 'Sketching canvas. Draw with one finger.' : 'Sketch canvas'}
-                testID="mini-habit-sketch-canvas"
-              >
-                <Svg
-                  width="100%"
-                  height="100%"
-                  viewBox={`0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`}
-                  pointerEvents="none"
-                >
-                  <Path d={`M0 0 H${VIEWBOX_SIZE} V${VIEWBOX_SIZE} H0 Z`} fill={colors.card} />
-                  {allPaths.map((path, index) => (
-                    <Path
-                      key={`current-${index}`}
-                      d={path}
-                      fill="none"
-                      stroke={colors.foreground}
-                      strokeWidth={4}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  ))}
-                </Svg>
-                {status !== 'playing' && allPaths.length === 0 && (
-                  <View style={styles.canvasHint} pointerEvents="none">
-                    <Feather name={status === 'complete' ? 'check-circle' : 'edit-3'} size={24} color={colors.mutedForeground} />
-                    <Text style={styles.canvasHintText}>
-                      {status === 'complete' ? 'Your minute is complete.' : 'Your sketch will appear here.'}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              {status === 'playing' ? (
-                <View style={styles.toolbar}>
-                  <Text style={[styles.note, styles.toolbarNote]}>Draw directly on the canvas.</Text>
-                  <View style={styles.toolbarActions}>
-                    <TouchableOpacity
-                      style={styles.toolButton}
-                      onPress={undoStroke}
-                      disabled={strokes.length === 0}
-                      accessibilityRole="button"
-                      accessibilityLabel="Undo last mark"
-                      testID="mini-habit-sketch-undo"
-                    >
-                      <Feather name="corner-up-left" size={15} color={strokes.length ? colors.foreground : colors.mutedForeground} />
-                      <Text style={[styles.toolButtonText, !strokes.length && { color: colors.mutedForeground }]}>Undo</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.primaryButton}
-                      onPress={() => finishSketch(true)}
-                      accessibilityRole="button"
-                      accessibilityLabel="Finish this sketch early"
-                      testID="mini-habit-sketch-done"
-                    >
-                      <Feather name="check" size={15} color={colors.ink} />
-                      <Text style={styles.primaryButtonText}>Done</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : null}
-            </>
-          ) : (
+          {medium === 'visual' ? sketchCanvas : (
             <CreativeMicroChallenge
               medium={medium as NonVisualMedium}
               status={status}
@@ -761,9 +790,7 @@ export default function MiniHabitStudioScreen() {
             />
           )}
 
-          {status === 'playing' ? (
-            null
-          ) : medium === 'visual' && savedCurrentSketch ? (
+          {medium === 'visual' && savedCurrentSketch ? (
             <View style={styles.savedBlock}>
               <View style={styles.savedMessage}>
                 <Feather name="check-circle" size={17} color={colors.primary} />
@@ -875,8 +902,9 @@ export default function MiniHabitStudioScreen() {
               </View>
             )}
           </View> : null}
-        </View>
-      </ScrollView>
+          </View>
+        </ScrollView>
+      )}
     </View>
   );
 }
