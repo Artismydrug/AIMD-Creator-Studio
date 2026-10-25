@@ -11,7 +11,7 @@ function normalizeUsPhone(value: string): string | null {
   return /^[2-9]\d{2}[2-9]\d{6}$/.test(national) ? `+1${national}` : null;
 }
 
-export function TextClubSignup() {
+export function TextClubSignup({ scrollReady = true }: { scrollReady?: boolean }) {
   const sectionRef = useRef<HTMLElement>(null);
   const source = useMemo(
     () => new URLSearchParams(window.location.search).get('source')?.slice(0, 80) || 'general',
@@ -29,22 +29,26 @@ export function TextClubSignup() {
   });
 
   useEffect(() => {
+    if (!scrollReady) return;
+    let frame = 0;
     const scrollToSignup = () => {
       if (window.location.hash !== '#aimd-text-list') return;
 
-      // The homepage is rendered client-side, so the browser may process the
-      // URL fragment before this section exists in the document.
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-          sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
+      // Wait for both the client render and the asynchronous gallery above
+      // this section. Otherwise its arriving content displaces the target.
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        sectionRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' });
       });
     };
 
     scrollToSignup();
     window.addEventListener('hashchange', scrollToSignup);
-    return () => window.removeEventListener('hashchange', scrollToSignup);
-  }, []);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('hashchange', scrollToSignup);
+    };
+  }, [scrollReady]);
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();

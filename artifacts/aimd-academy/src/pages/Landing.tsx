@@ -150,8 +150,7 @@ async function fetchShowcasePosts(): Promise<ShowcasePost[]> {
   return posts.filter((p) => p.imageUrl && (!p.mediaType || p.mediaType === 'image')).slice(0, 8);
 }
 
-function ArtShowcase() {
-  const { data: posts = [] } = useQuery({ queryKey: ['landing', 'showcase'], queryFn: fetchShowcasePosts });
+function ArtShowcase({ posts }: { posts: ShowcasePost[] }) {
   const [selected, setSelected] = useState<ShowcasePost | null>(null);
 
   if (posts.length === 0) return null;
@@ -248,6 +247,11 @@ function ArtShowcase() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Landing() {
+  const { data: showcasePosts = [], isPending: showcasePending } = useQuery({
+    queryKey: ['landing', 'showcase'],
+    queryFn: fetchShowcasePosts,
+  });
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <MarketingNav />
@@ -330,9 +334,9 @@ export default function Landing() {
       <CreatorJourney />
 
       {/* Community art showcase with lightbox */}
-      <ArtShowcase />
+      <ArtShowcase posts={showcasePosts} />
 
-      <TextClubSignup />
+      <TextClubSignup scrollReady={!showcasePending} />
 
       <MarketingFooter />
     </div>

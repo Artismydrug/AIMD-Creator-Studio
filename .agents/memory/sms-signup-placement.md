@@ -7,4 +7,10 @@ Keep the public AIMD text-list form embedded directly on the homepage. Do not re
 
 **Why:** The user explicitly prefers a low-friction homepage signup rather than sending visitors to another page or implying that an account is required.
 
-**How to apply:** Keep the form as a homepage section. Future campaign and QR URLs should target the homepage while preserving the `source` query parameter. Because the section is client-rendered, handle the signup fragment after React mounts; native anchor scrolling can run before the target exists.
+**How to apply:** Keep the form as a homepage section. Future campaign and QR URLs should target the homepage while preserving the `source` query parameter.
+
+Homepage deep links must wait for asynchronous content above the target to settle, not merely for the target to mount.
+
+**Why:** The artwork gallery initially has no height, then expands when its request finishes. An earlier scroll lands at the gallery instead of the signup form once that content arrives.
+
+**How to apply:** Coordinate the final anchor jump with gallery readiness and use immediate scrolling for direct signup links. A mount-only or smooth-scroll fix is insufficient.
