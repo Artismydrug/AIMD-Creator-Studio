@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'wouter';
 import { ArrowRight, Check, MessageSquareText } from 'lucide-react';
 import { useCreateSmsSubscription } from '@workspace/api-client-react';
@@ -12,6 +12,7 @@ function normalizeUsPhone(value: string): string | null {
 }
 
 export function TextClubSignup() {
+  const sectionRef = useRef<HTMLElement>(null);
   const source = useMemo(
     () => new URLSearchParams(window.location.search).get('source')?.slice(0, 80) || 'general',
     [],
@@ -26,6 +27,24 @@ export function TextClubSignup() {
       retry: false,
     },
   });
+
+  useEffect(() => {
+    const scrollToSignup = () => {
+      if (window.location.hash !== '#aimd-text-list') return;
+
+      // The homepage is rendered client-side, so the browser may process the
+      // URL fragment before this section exists in the document.
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+    };
+
+    scrollToSignup();
+    window.addEventListener('hashchange', scrollToSignup);
+    return () => window.removeEventListener('hashchange', scrollToSignup);
+  }, []);
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -64,7 +83,7 @@ export function TextClubSignup() {
   };
 
   return (
-    <section id="aimd-text-list" aria-labelledby="text-club-title" className="scroll-mt-24 border-b border-border bg-[#171514] px-6 py-20 text-[#f5eee2]">
+    <section ref={sectionRef} id="aimd-text-list" aria-labelledby="text-club-title" className="scroll-mt-24 border-b border-border bg-[#171514] px-6 py-20 text-[#f5eee2]">
       <div className="container mx-auto grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
         <div>
           <p className="mb-5 font-mono text-[11px] uppercase tracking-[0.25em] text-[#e9a319]">Direct from AIMD</p>

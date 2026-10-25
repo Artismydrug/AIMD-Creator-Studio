@@ -7,4 +7,4 @@ Keep the public AIMD text-list form embedded directly on the homepage. Do not re
 
 **Why:** The user explicitly prefers a low-friction homepage signup rather than sending visitors to another page or implying that an account is required.
 
-**How to apply:** Keep the form as a homepage section. Future campaign and QR URLs should target the homepage while preserving the `source` query parameter.
+**How to apply:** Keep the form as a homepage section. Future campaign and QR URLs should target the homepage while preserving the `source` query parameter. Because the section is client-rendered, handle the signup fragment after React mounts; native anchor scrolling can run before the target exists.
