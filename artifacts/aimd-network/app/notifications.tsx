@@ -65,6 +65,8 @@ export default function NotificationsScreen() {
       router.push({ pathname: '/feed', params: { postId: notification.postDestination.postId } });
     } else if (notification.inquiryDestination?.bookingId) {
       router.push({ pathname: '/commission-inquiry/[id]', params: { id: String(notification.inquiryDestination.bookingId) } });
+    } else if (notification.type === 'follow' && notification.actor?.id) {
+      router.push({ pathname: '/creator/[creatorId]', params: { creatorId: String(notification.actor.id) } });
     }
   };
   const s = useMemo(() => StyleSheet.create({

@@ -7,11 +7,21 @@ import {
   Alert,
   Linking,
   Platform,
+  Switch,
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { customFetch, useDeleteHabit, useLogHabitSession } from '@workspace/api-client-react';
+import {
+  customFetch,
+  getListHabitLogsQueryKey,
+  getListStudioPostsQueryKey,
+  useCreateStudioPost,
+  useDeleteHabit,
+  useLogHabitSession,
+  type HabitLog,
+  type StudioPost,
+} from '@workspace/api-client-react';
 import { trackEvent } from '@/lib/telemetry';
 import type { Habit } from '@workspace/api-client-react';
 import * as ImagePicker from 'expo-image-picker';
@@ -20,6 +30,7 @@ import HabitReminderControl from '@/components/HabitReminderControl';
 import { removeHabitReminder } from '@/lib/habitReminders';
 import { useQueryClient } from '@tanstack/react-query';
 import { getGetPracticeMilestonesQueryKey, getGetDashboardSummaryQueryKey, getGetCurrentUserQueryKey } from '@workspace/api-client-react';
+import { uploadStudioMedia } from '@/lib/studioMedia';
 
 interface HabitCardProps {
   habit: Habit;
@@ -34,7 +45,7 @@ export const HABIT_ACTION_HELP =
 export default function HabitCard({ habit, onLogged, onDeleted, stickerJam = false }: HabitCardProps) {
   const queryClient = useQueryClient();
   const colors = useColors();
-  const { userId } = useAuth();
+  const { userId, getToken } = useAuth();
   const categoryColors: Record<string, string> = {
     drawing: colors.cyan,
     painting: colors.primary,
@@ -45,19 +56,71 @@ export default function HabitCard({ habit, onLogged, onDeleted, stickerJam = fal
   };
   const catColor = categoryColors[habit.category?.toLowerCase() ?? ''] ?? colors.mutedForeground;
   const [localDone, setLocalDone] = React.useState(habit.completedToday ?? false);
-  const [proof, setProof] = React.useState<{ url: string; mediaType: 'image' | 'video' } | null>(null);
+  const [proof, setProof] = React.useState<{
+    url: string;
+    mediaType: 'image' | 'video';
+    asset: ImagePicker.ImagePickerAsset;
+  } | null>(null);
   const [uploadingProof, setUploadingProof] = React.useState(false);
+  const [shareToFeed, setShareToFeed] = React.useState(false);
+  const [sharingToFeed, setSharingToFeed] = React.useState(false);
+
+  const publishMutation = useCreateStudioPost();
+  const shareHabitCheckIn = async (minutesSpent: number) => {
+    if (!proof?.asset) return;
+    setSharingToFeed(true);
+    try {
+      const asset = proof.asset;
+      const objectPath = await uploadStudioMedia({
+        uri: asset.uri,
+        contentType: asset.mimeType ?? (proof.mediaType === 'video' ? 'video/mp4' : 'image/jpeg'),
+        fileName: asset.fileName ?? `habit-${habit.id}-proof`,
+        fileSize: asset.fileSize ?? undefined,
+        width: asset.width,
+        height: asset.height,
+        duration: asset.duration,
+        mediaType: proof.mediaType,
+      }, getToken, () => undefined);
+
+      const post = await publishMutation.mutateAsync({
+        data: {
+          imageUrl: `/api/storage${objectPath}`,
+          mediaType: proof.mediaType,
+          caption: `Practice check-in: ${habit.name} · ${minutesSpent} min`,
+          tags: ['habit-check-in', habit.category],
+        },
+      });
+      queryClient.setQueryData<StudioPost[]>(
+        getListStudioPostsQueryKey({ followingOnly: 'false' }),
+        (current = []) => current.some((item) => item.id === post.id) ? current : [post, ...current],
+      );
+      void queryClient.invalidateQueries({ queryKey: getListStudioPostsQueryKey() });
+      Alert.alert('Shared to Community', 'Your practice proof is now in the Community Feed. Your habit log remains in your private history.');
+    } catch (error) {
+      Alert.alert(
+        'Habit saved privately',
+        `Your check-in is in Habit History, but it could not be shared: ${error instanceof Error ? error.message : 'Please try again.'}`,
+      );
+    } finally {
+      setSharingToFeed(false);
+    }
+  };
 
   const logMutation = useLogHabitSession({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (savedLog) => {
         trackEvent('habit_logged');
         void queryClient.invalidateQueries({ queryKey: getGetPracticeMilestonesQueryKey() });
         void queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
         void queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
+        queryClient.setQueryData<HabitLog[]>(
+          getListHabitLogsQueryKey({ habitId: habit.id, days: 3650 }),
+          (current = []) => current.some((log) => log.id === savedLog.id) ? current : [savedLog, ...current],
+        );
         setLocalDone(true);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         onLogged?.();
+        if (shareToFeed) void shareHabitCheckIn(savedLog.minutesSpent);
       },
     },
   });
@@ -94,7 +157,7 @@ export default function HabitCard({ habit, onLogged, onDeleted, stickerJam = fal
         headers: { 'Content-Type': contentType, 'X-AIMD-UPLOAD-PURPOSE': 'habit_proof' },
         body: bytes,
       });
-      setProof({ url: `/api/storage${uploaded.objectPath}`, mediaType });
+      setProof({ url: `/api/storage${uploaded.objectPath}`, mediaType, asset });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {
       Alert.alert('Could not upload proof', 'Try a smaller image or video, then try again.');
@@ -363,6 +426,30 @@ export default function HabitCard({ habit, onLogged, onDeleted, stickerJam = fal
       fontSize: 11,
       color: colors.mutedForeground,
     },
+    shareRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      marginTop: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      borderRadius: 13,
+      borderWidth: 1,
+      borderColor: colors.studioInk,
+      backgroundColor: colors.studioPaper,
+    },
+    shareCopy: { flex: 1, gap: 2 },
+    shareTitle: {
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 12,
+      color: colors.studioInk,
+    },
+    shareHint: {
+      fontFamily: 'DMSans_400Regular',
+      fontSize: 10,
+      lineHeight: 14,
+      color: colors.studioMuted,
+    },
   }), [colors]);
 
   return (
@@ -414,6 +501,27 @@ export default function HabitCard({ habit, onLogged, onDeleted, stickerJam = fal
                 <Text style={s.proofText}>Photos</Text>
               </TouchableOpacity>
             </View>
+            <View style={s.shareRow}>
+              <View style={s.shareCopy}>
+                <Text style={s.shareTitle}>Share to Community Feed</Text>
+                <Text style={s.shareHint}>
+                  {sharingToFeed
+                    ? 'Sharing your proof…'
+                    : shareToFeed
+                    ? 'A public copy of your proof will be posted.'
+                    : 'Off by default. Your check-in stays private.'}
+                </Text>
+              </View>
+              <Switch
+                value={shareToFeed}
+                onValueChange={setShareToFeed}
+                disabled={uploadingProof || logMutation.isPending || sharingToFeed}
+                trackColor={{ false: colors.border, true: colors.studioMint }}
+                thumbColor={shareToFeed ? colors.studioInk : colors.mutedForeground}
+                accessibilityLabel="Share to Community Feed"
+                testID={`habit-share-to-feed-${habit.id}`}
+              />
+            </View>
           </View>
         )}
         <HabitReminderControl habitId={habit.id} habitName={habit.name} />
@@ -437,7 +545,7 @@ export default function HabitCard({ habit, onLogged, onDeleted, stickerJam = fal
               backgroundColor: localDone ? (stickerJam ? colors.studioMint : colors.primary) : stickerJam ? colors.studioYellow : 'transparent',
             }]}
             onPress={handleLog}
-            disabled={localDone || logMutation.isPending}
+            disabled={localDone || logMutation.isPending || sharingToFeed}
             accessibilityRole="button"
             accessibilityLabel={localDone ? `${habit.name} practice completed today` : `Log today's practice for ${habit.name}`}
             testID={`log-habit-${habit.id}`}

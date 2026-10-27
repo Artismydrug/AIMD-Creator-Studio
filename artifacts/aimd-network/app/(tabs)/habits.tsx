@@ -22,12 +22,13 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import {
   getGetPracticeMilestonesQueryKey,
+  getListHabitLogsQueryOptions,
   getListHabitLogsQueryKey,
   useListHabits,
   useCreateHabit,
   useGetDashboardSummary,
 } from '@workspace/api-client-react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 import HabitCard, { HABIT_ACTION_HELP } from '@/components/HabitCard';
 import HabitPracticeSummaryCard from '@/components/HabitPracticeSummaryCard';
 import HabitChallengeCard from '@/components/HabitChallengeCard';
@@ -45,12 +46,36 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
   const [category, setCategory] = useState('Drawing');
   const [targetMinutes, setTargetMinutes] = useState('30');
   const [refreshing, setRefreshing] = useState(false);
+  const [activePanel, setActivePanel] = useState<'practice' | 'history'>('practice');
   const queryClient = useQueryClient();
 
   const { data: habitsResponse, isLoading, isError, refetch } = useListHabits();
   const { data: summary, refetch: refetchSummary } = useGetDashboardSummary();
    const habitsInvalid = habitsResponse != null && !Array.isArray(habitsResponse.habits);
    const habits = Array.isArray(habitsResponse?.habits) ? habitsResponse.habits.filter(habit => habit != null && typeof habit.id === 'number') : [];
+  const historyQueries = useQueries({
+    queries: habits.map((habit) => getListHabitLogsQueryOptions(
+      { habitId: habit.id, days: 3650 },
+      {
+        query: {
+          queryKey: getListHabitLogsQueryKey({ habitId: habit.id, days: 3650 }),
+          enabled: activePanel === 'history',
+        },
+      },
+    )),
+  });
+  const habitNames = new Map(habits.map((habit) => [habit.id, habit.name]));
+  const historyRows = useMemo(
+    () => historyQueries
+      .flatMap((query) => (query.data ?? []).map((log) => ({
+        log,
+        habitName: habitNames.get(log.habitId) ?? 'Habit',
+      })))
+      .sort((a, b) => Date.parse(b.log.createdAt) - Date.parse(a.log.createdAt)),
+    [historyQueries, habits],
+  );
+  const historyLoading = activePanel === 'history' && historyQueries.some((query) => query.isLoading);
+  const historyError = activePanel === 'history' && historyQueries.some((query) => query.isError);
   const createMutation = useCreateHabit({
     mutation: {
       onSuccess: () => {
@@ -68,7 +93,12 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([refetch(), refetchSummary(), queryClient.invalidateQueries({ queryKey: getGetPracticeMilestonesQueryKey() })]);
+       await Promise.all([
+         refetch(),
+         refetchSummary(),
+         queryClient.invalidateQueries({ queryKey: getGetPracticeMilestonesQueryKey() }),
+         queryClient.invalidateQueries({ queryKey: getListHabitLogsQueryKey() }),
+       ]);
     } finally {
       setRefreshing(false);
     }
@@ -240,6 +270,70 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
       fontSize: 11,
       color: colors.studioMuted,
     },
+    panelSwitch: {
+      flexDirection: 'row',
+      marginHorizontal: 16,
+      marginTop: 14,
+      padding: 4,
+      borderRadius: 15,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      backgroundColor: colors.studioPaperAlt,
+      gap: 4,
+    },
+    panelTab: {
+      minHeight: 40,
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 7,
+      borderRadius: 11,
+    },
+    panelTabActive: {
+      backgroundColor: colors.studioYellow,
+      borderWidth: 1,
+      borderColor: colors.studioInk,
+    },
+    panelTabText: {
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 12,
+      color: colors.studioMuted,
+    },
+    panelTabTextActive: { color: colors.studioInk },
+    historyList: { paddingHorizontal: 16, gap: 10, paddingBottom: 16 },
+    historyCard: {
+      padding: 14,
+      borderRadius: 17,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      backgroundColor: colors.studioPaper,
+      shadowColor: colors.studioShadow,
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 1,
+      shadowRadius: 0,
+      elevation: 2,
+    },
+    historyTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+    historyHabit: {
+      flex: 1,
+      fontFamily: 'DMSans_700Bold',
+      fontSize: 15,
+      color: colors.studioInk,
+    },
+    privateTag: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 8,
+      backgroundColor: colors.studioMint,
+      borderWidth: 1,
+      borderColor: colors.studioInk,
+    },
+    privateTagText: { fontFamily: 'DMSans_700Bold', fontSize: 8, color: colors.studioInk, letterSpacing: 0.5 },
+    historyDate: { fontFamily: 'DMSans_500Medium', fontSize: 11, color: colors.studioMuted, marginTop: 5 },
+    historyBottom: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 },
+    historyMinutes: { fontFamily: 'DMSans_700Bold', fontSize: 13, color: colors.studioInk },
+    historyStatus: { fontFamily: 'DMSans_500Medium', fontSize: 11, color: colors.studioMuted },
     todaySticker: {
       paddingHorizontal: 10,
       paddingVertical: 6,
@@ -360,7 +454,39 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
                   </View>
                 </View>
               </View>
-              {!isError && !habitsInvalid && habits.length > 0 ? <View>
+              <View style={s.panelSwitch} accessibilityRole="tablist" testID="habit-view-switch">
+                <TouchableOpacity
+                  style={[s.panelTab, activePanel === 'practice' && s.panelTabActive]}
+                  onPress={() => setActivePanel('practice')}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: activePanel === 'practice' }}
+                  testID="habit-view-practice"
+                >
+                  <Feather name="check-circle" size={15} color={activePanel === 'practice' ? colors.studioInk : colors.studioMuted} />
+                  <Text style={[s.panelTabText, activePanel === 'practice' && s.panelTabTextActive]}>Practice</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[s.panelTab, activePanel === 'history' && s.panelTabActive]}
+                  onPress={() => setActivePanel('history')}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: activePanel === 'history' }}
+                  testID="habit-view-history"
+                >
+                  <Feather name="clock" size={15} color={activePanel === 'history' ? colors.studioInk : colors.studioMuted} />
+                  <Text style={[s.panelTabText, activePanel === 'history' && s.panelTabTextActive]}>History</Text>
+                </TouchableOpacity>
+              </View>
+              {activePanel === 'history' ? (
+                <View style={s.sectionHeader} testID="habit-history-header">
+                  <View style={s.sectionMark}>
+                    <Feather name="archive" size={17} color={colors.ink} />
+                  </View>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Text style={s.sectionTitle} accessibilityRole="header">Habit History</Text>
+                    <Text style={s.sectionHint}>Your private check-ins, newest first.</Text>
+                  </View>
+                </View>
+              ) : !isError && !habitsInvalid && habits.length > 0 ? (
                 <View style={s.sectionHeader} testID="today-habit-header">
                   <View style={s.sectionMark}>
                     <Feather name="check-circle" size={17} color={colors.ink} />
@@ -371,7 +497,7 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
                   </View>
                   <View style={s.todaySticker}><Text style={s.todayStickerText}>TODAY</Text></View>
                 </View>
-              </View> : null}
+              ) : null}
             </View>
           }
           ListEmptyComponent={
@@ -387,6 +513,48 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
                   <Text style={s.retryText}>Retry</Text>
                 </TouchableOpacity>
               </View>
+            ) : activePanel === 'history' && historyLoading ? (
+              <View style={s.centered} testID="habit-history-loading">
+                <ActivityIndicator color={colors.primary} size="large" />
+                <Text style={s.emptyText}>Loading your check-ins…</Text>
+              </View>
+            ) : activePanel === 'history' && historyError ? (
+              <View style={s.centered}>
+                <Feather name="wifi-off" size={40} color={colors.mutedForeground} />
+                <Text style={s.emptyTitle}>Could not load habit history</Text>
+                <TouchableOpacity
+                  style={s.retryBtn}
+                  onPress={() => void queryClient.invalidateQueries({ queryKey: getListHabitLogsQueryKey() })}
+                  accessibilityRole="button"
+                >
+                  <Text style={s.retryText}>Retry</Text>
+                </TouchableOpacity>
+              </View>
+            ) : activePanel === 'history' && historyRows.length > 0 ? (
+              <View style={s.historyList} testID="habit-history-list">
+                {historyRows.map(({ log, habitName }) => (
+                  <View style={s.historyCard} key={log.id} testID={`habit-history-entry-${log.id}`}>
+                    <View style={s.historyTop}>
+                      <Text style={s.historyHabit} numberOfLines={2}>{habitName}</Text>
+                      <View style={s.privateTag}><Text style={s.privateTagText}>PRIVATE</Text></View>
+                    </View>
+                    <Text style={s.historyDate}>
+                      {new Date(log.createdAt).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                    </Text>
+                    <View style={s.historyBottom}>
+                      <Feather name="clock" size={13} color={colors.studioOrangeText} />
+                      <Text style={s.historyMinutes}>{log.minutesSpent} min</Text>
+                      <Text style={s.historyStatus}>{log.completed ? '· Goal complete' : '· Practice logged'}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : activePanel === 'history' ? (
+              <View style={s.centered} testID="habit-history-empty">
+                <Feather name="clock" size={42} color={colors.mutedForeground} />
+                <Text style={s.emptyTitle}>No habit logs yet</Text>
+                <Text style={s.emptyText}>Complete a check-in and it will appear here.</Text>
+              </View>
             ) : (
               <View style={s.centered}>
                 <Feather name="activity" size={48} color={colors.muted} />
@@ -396,7 +564,7 @@ export default function HabitsScreen({ embedded = false, scrollHeader }: {
             )
           }
           ListFooterComponent={
-            !isError && !habitsInvalid ? (
+            activePanel === 'practice' && !isError && !habitsInvalid ? (
               <View style={s.milestoneWrap}>
                 <HabitPracticeSummaryCard embedded onOpenHabits={() => undefined} />
                 <HabitChallengeCard />
