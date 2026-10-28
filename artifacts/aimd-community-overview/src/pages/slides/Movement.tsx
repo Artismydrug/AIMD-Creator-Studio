@@ -7,37 +7,27 @@ export default function Movement() {
         <img src={`${base}aimd-logo-transparent.png`} crossOrigin="anonymous" alt="Original white AIMD logo with transparent background" className="absolute left-[6vw] top-[8vh] w-[23vw] object-contain" />
         <div className="absolute left-[6vw] top-[35vh] w-[27vw]">
           <h2 className="text-[2.6vw]">Rooted in Los Angeles</h2>
-          <p className="text-[2vw] leading-[1.3] mt-[1.8vh]">Founded by Edward “Poncho” Davila.</p>
-          <p className="text-[2vw] leading-[1.3] mt-[1.8vh]">Live art, community &amp; collaborative pop-ups.</p>
-          <div className="grid grid-cols-2 gap-[1.2vw] mt-[1.8vh] pt-[1.5vh] deck-rule">
-            <div>
-              <p className="font-display font-bold text-[2.8vw] leading-none text-[#fffaf2]">48.6K</p>
-              <p className="deck-label mt-[0.6vh]"><span className="block">@ponchotheartist</span><span className="block">followers</span></p>
-            </div>
-            <div>
-              <p className="font-display font-bold text-[2.8vw] leading-none text-[#fffaf2]">6,195</p>
-              <p className="deck-label mt-[0.6vh]"><span className="block">@artismydrug</span><span className="block">followers</span></p>
-            </div>
-          </div>
-          <p className="text-[1.5vw] leading-[1.2] text-muted mt-[1vh]">Instagram · Oct 18, 2026. Audiences may overlap; not unique reach.</p>
+          <p className="text-[2vw] leading-[1.3] mt-[1.8vh]">Founded by creator Edward “Poncho” Davila.</p>
+          <p className="text-[2vw] leading-[1.3] mt-[1.8vh]">Built through tattooing, murals &amp; community art.</p>
+          <p className="text-[2vw] leading-[1.3] mt-[2.5vh] deck-rule pt-[2vh]">Los Angeles roots. A creative community without borders.</p>
         </div>
       </div>
       <div className="absolute left-[44vw] right-[6vw] top-[8vh] bottom-[8vh]">
-        <h2 className="text-[4.5vw]">The independent creator opportunity</h2>
-        <p className="text-[2vw] leading-[1.4] mt-[3vh]">Habits, learning &amp; community connect daily practice with real-world opportunity.</p>
+        <h2 className="text-[4.5vw]">Creators deserve room to grow</h2>
+        <p className="text-[2vw] leading-[1.4] mt-[3vh]">Practice, learning &amp; community can open new paths.</p>
         <div className="grid grid-cols-2 gap-[2.4vw] mt-[5vh] pt-[3vh] deck-rule">
           <div>
             <p className="font-display font-bold text-[6.5vw] leading-none text-accent">$37B</p>
-            <p className="deck-label mt-[2vh]">U.S. creator advertising spend in 2025.</p>
+            <p className="deck-label mt-[2vh]">U.S. creator ad spend in 2025.</p>
             <a className="deck-label text-muted underline block mt-[3vh]" href="https://www.iab.com/news/digital-ad-revenue-climbs-to-nearly-300b-as-iab-celebrates-30-year-anniversary/" target="_blank" rel="noopener noreferrer">IAB + PwC · April 2026</a>
           </div>
           <div>
             <p className="font-display font-bold text-[6.5vw] leading-none text-accent">40%+</p>
-            <p className="deck-label mt-[2vh]">Work alone; 40% depend on unpaid help.</p>
+            <p className="deck-label mt-[2vh]">Creators rely on unpaid help.</p>
             <a className="deck-label text-muted underline block mt-[3vh]" href="https://creativeclass.com/reports/The-Creator-Revolution.pdf" target="_blank" rel="noopener noreferrer">Creative Class · 20-country survey · December 2024</a>
           </div>
         </div>
-        <p className="deck-label text-muted mt-[3vh]">These industry measures use different scopes; the IAB figure is U.S. creator advertising, not the total creator economy. Neither represents AIMD results.</p>
+        <p className="deck-label text-muted mt-[3vh]">Industry research, not AIMD results. The studies measure different things.</p>
       </div>
     </div>
   );

@@ -49,6 +49,14 @@ AIMD is looking for instructors with 5+ years of experience in their specific me
 
 **How to apply:** Use the 5+ year requirement in recruitment messaging without limiting instructors to visual art or implying an existing audience-size requirement.
 
+## General creator audience
+
+The overall Creator Studio pitch should speak to creators across disciplines, including chefs, athletes, musicians, painters, dancers, actors, and other makers.
+
+**Why:** The owner wants one deck they can share broadly, with creators in different fields able to see themselves in the app.
+
+**How to apply:** Use inclusive examples throughout creator journeys and outreach. Do not frame the product as only for painters or tattoo artists, and distinguish the broad audience from specific prompt types currently supported in the app.
+
 ## Mission and access
 
 Creator Studio’s mission is to bridge raw artistic talent and sustainable professional independence through daily practice, worldwide creator connection, and a physical/digital ecosystem. The long-term vision is lasting support beyond one-off events; sponsorships and endorsements are intended to reduce financial barriers.
