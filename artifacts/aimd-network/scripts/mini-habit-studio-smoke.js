@@ -28,6 +28,11 @@ const {
   CREATIVE_MEDIUM_CONFIG,
   nextCreativePrompt,
 } = loadTypeScript('../lib/creativeMicroChallenges.ts');
+const {
+  BEAT_STEP_COUNT,
+  BEAT_STEP_INTERVAL_MS,
+  beatVoiceForStep,
+} = loadTypeScript('../lib/beatPatternAudio.ts');
 
 function memoryStorage() {
   const values = new Map();
@@ -132,12 +137,29 @@ test('each non-drawing challenge has a playable, goal-based interaction', () => 
     assert.ok(games.includes(`testID="micro-challenge-${medium}-finish"`), `${medium} has an explicit completion action`);
   }
   assert.match(games, /beatCount < 3/);
+  assert.match(games, /useAudioPlayer\(require\('\.\.\/assets\/audio\/kick\.wav'\)\)/);
+  assert.match(games, /setAudioModeAsync\(\{[\s\S]*playsInSilentMode: true/);
+  assert.match(games, /testID="micro-challenge-music-play"/);
+  assert.match(games, /Tap a step to hear it/);
+  assert.doesNotMatch(games, /visual 8-step beat pattern with haptic taps/);
   assert.match(games, /palette\.length !== 3/);
   assert.match(games, /poemWords\.length !== 3/);
   assert.match(games, /movesDone\.length === MOVEMENT_SEQUENCE\.length/);
   assert.match(games, /No camera or activity tracking/);
   assert.match(games, /completionReason === 'timeout' \? 'Time’s up' : 'Challenge complete'/);
   assert.match(screen, /Creative warm-ups are for practice and do not change points or habit streaks/);
+});
+
+test('Beat Builder maps steps to a local drum kit and uses a steady eighth-note tempo', () => {
+  assert.equal(BEAT_STEP_COUNT, 8);
+  assert.deepEqual(
+    Array.from({ length: BEAT_STEP_COUNT }, (_, index) => beatVoiceForStep(index)),
+    ['kick', 'hat', 'snare', 'hat', 'kick', 'hat', 'snare', 'hat'],
+  );
+  assert.equal(BEAT_STEP_INTERVAL_MS, 273);
+  for (const file of ['kick.wav', 'snare.wav', 'hat.wav']) {
+    assert.ok(fs.existsSync(path.resolve(__dirname, `../assets/audio/${file}`)), `${file} is bundled locally`);
+  }
 });
 
 test('Habit and Workshop cards are full-bleed; Events uses an inset flyer over artwork', () => {

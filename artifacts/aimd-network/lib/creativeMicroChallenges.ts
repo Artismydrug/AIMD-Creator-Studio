@@ -33,7 +33,7 @@ export const CREATIVE_MEDIUM_CONFIG: Record<CreativeMedium, CreativeMediumConfig
   music: {
     label: 'Music',
     title: 'Beat Builder',
-    description: 'Make a tiny rhythm idea. Tap at least three steps to shape your loop.',
+    description: 'Build an 8-step rhythm. Hear each drum as you tap, then play your loop.',
     icon: 'music',
     nextLabel: 'Next beat idea',
     prompts: [

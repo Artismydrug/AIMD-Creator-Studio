@@ -1,8 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useColors } from '@/hooks/useColors';
+import {
+  BEAT_STEP_COUNT,
+  BEAT_STEP_INTERVAL_MS,
+  beatVoiceForStep,
+  beatVoiceLabel,
+} from '@/lib/beatPatternAudio';
 import {
   CREATIVE_MEDIUM_CONFIG,
   FASHION_PALETTE,
@@ -32,16 +39,30 @@ export default function CreativeMicroChallenge({
   onComplete: () => void;
 }) {
   const colors = useColors();
-  const [beatSteps, setBeatSteps] = useState<boolean[]>(() => Array(8).fill(false));
+  const [beatSteps, setBeatSteps] = useState<boolean[]>(() => Array(BEAT_STEP_COUNT).fill(false));
   const [silhouette, setSilhouette] = useState<string | null>(null);
   const [palette, setPalette] = useState<string[]>([]);
   const [poemWords, setPoemWords] = useState<string[]>([]);
   const [movesDone, setMovesDone] = useState<string[]>([]);
+  const [audioModeReady, setAudioModeReady] = useState(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
+  const [isBeatPlaying, setIsBeatPlaying] = useState(false);
+  const [activeBeatStep, setActiveBeatStep] = useState<number | null>(null);
+  const kickPlayer = useAudioPlayer(require('../assets/audio/kick.wav'));
+  const snarePlayer = useAudioPlayer(require('../assets/audio/snare.wav'));
+  const hatPlayer = useAudioPlayer(require('../assets/audio/hat.wav'));
+  const kickStatus = useAudioPlayerStatus(kickPlayer);
+  const snareStatus = useAudioPlayerStatus(snarePlayer);
+  const hatStatus = useAudioPlayerStatus(hatPlayer);
+  const playbackRef = useRef(false);
+  const playbackRunRef = useRef(0);
+  const playbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const config = CREATIVE_MEDIUM_CONFIG[medium];
   const beatCount = beatSteps.filter(Boolean).length;
+  const audioReady = audioModeReady && kickStatus.isLoaded && snareStatus.isLoaded && hatStatus.isLoaded;
 
   useEffect(() => {
-    setBeatSteps(Array(8).fill(false));
+    setBeatSteps(Array(BEAT_STEP_COUNT).fill(false));
     setSilhouette(null);
     setPalette([]);
     setPoemWords([]);
@@ -89,7 +110,24 @@ export default function CreativeMicroChallenge({
       justifyContent: 'center',
     },
     beatPadOn: { backgroundColor: colors.studioOrange, transform: [{ translateY: -2 }] },
+    beatPadPlaying: { borderColor: colors.primary, borderWidth: 3, transform: [{ scale: 1.06 }] },
     beatNumber: { color: colors.foreground, fontFamily: 'DMSans_700Bold', fontSize: 12 },
+    beatControls: { flexDirection: 'row', gap: 8 },
+    beatControlButton: {
+      flex: 1,
+      minHeight: 44,
+      borderRadius: 14,
+      borderWidth: 1.5,
+      borderColor: colors.studioInk,
+      backgroundColor: colors.studioYellow,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'row',
+      gap: 7,
+    },
+    beatControlDisabled: { opacity: 0.48 },
+    beatControlText: { color: colors.ink, fontFamily: 'DMSans_700Bold', fontSize: 12 },
+    beatLegend: { color: colors.mutedForeground, fontFamily: 'DMSans_500Medium', fontSize: 11, lineHeight: 16 },
     optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     option: {
       minHeight: 42,
@@ -158,10 +196,99 @@ export default function CreativeMicroChallenge({
     hint: { color: colors.mutedForeground, fontFamily: 'DMSans_400Regular', fontSize: 11, lineHeight: 16 },
   }), [colors]);
 
-  const toggleBeat = useCallback((index: number) => {
-    feedback();
-    setBeatSteps((current) => current.map((step, stepIndex) => stepIndex === index ? !step : step));
+  const cancelBeatPlayback = useCallback(() => {
+    playbackRef.current = false;
+    playbackRunRef.current += 1;
+    if (playbackTimerRef.current) clearTimeout(playbackTimerRef.current);
+    playbackTimerRef.current = null;
   }, []);
+
+  const stopBeatPlayback = useCallback(() => {
+    cancelBeatPlayback();
+    setIsBeatPlaying(false);
+    setActiveBeatStep(null);
+  }, [cancelBeatPlayback]);
+
+  useEffect(() => {
+    if (medium !== 'music' || status !== 'playing') {
+      setAudioModeReady(false);
+      stopBeatPlayback();
+      return;
+    }
+
+    let active = true;
+    cancelBeatPlayback();
+    setIsBeatPlaying(false);
+    setActiveBeatStep(null);
+    setAudioModeReady(false);
+    setAudioError(null);
+    void setAudioModeAsync({
+      playsInSilentMode: true,
+      interruptionMode: 'duckOthers',
+      shouldRouteThroughEarpiece: false,
+    })
+      .then(() => {
+        if (active) setAudioModeReady(true);
+      })
+      .catch(() => {
+        if (active) setAudioError('Sound could not start. Check your device volume and try again.');
+      });
+
+    return () => {
+      active = false;
+      cancelBeatPlayback();
+    };
+  }, [cancelBeatPlayback, medium, roundId, status, stopBeatPlayback]);
+
+  const playDrumHit = useCallback((index: number) => {
+    const voice = beatVoiceForStep(index);
+    const player = voice === 'kick' ? kickPlayer : voice === 'snare' ? snarePlayer : hatPlayer;
+    if (!player.isLoaded) {
+      setAudioError('Drum sounds are still loading. Try again in a moment.');
+      return;
+    }
+    player.volume = 0.82;
+    void player.seekTo(0)
+      .then(() => player.play())
+      .catch(() => setAudioError('Sound could not start. Check your device volume and try again.'));
+  }, [hatPlayer, kickPlayer, snarePlayer]);
+
+  const playBeatPreview = useCallback(() => {
+    if (!audioReady) {
+      setAudioError('Preparing the drum sounds…');
+      return;
+    }
+    if (beatCount === 0) {
+      setAudioError('Tap a step first to add a sound.');
+      return;
+    }
+
+    setAudioError(null);
+    cancelBeatPlayback();
+    const runId = playbackRunRef.current;
+    playbackRef.current = true;
+    setIsBeatPlaying(true);
+    let stepIndex = 0;
+    const playNextStep = () => {
+      if (!playbackRef.current || playbackRunRef.current !== runId) return;
+      setActiveBeatStep(stepIndex);
+      if (beatSteps[stepIndex]) playDrumHit(stepIndex);
+      if (stepIndex === BEAT_STEP_COUNT - 1) {
+        playbackTimerRef.current = setTimeout(stopBeatPlayback, BEAT_STEP_INTERVAL_MS);
+        return;
+      }
+      stepIndex += 1;
+      playbackTimerRef.current = setTimeout(playNextStep, BEAT_STEP_INTERVAL_MS);
+    };
+    playNextStep();
+  }, [audioReady, beatCount, beatSteps, cancelBeatPlayback, playDrumHit, stopBeatPlayback]);
+
+  const toggleBeat = useCallback((index: number) => {
+    if (!audioReady || isBeatPlaying) return;
+    feedback();
+    if (!beatSteps[index]) playDrumHit(index);
+    setBeatSteps((current) => current.map((step, stepIndex) => stepIndex === index ? !step : step));
+  }, [audioReady, beatSteps, isBeatPlaying, playDrumHit]);
 
   const togglePaletteColor = useCallback((id: string) => {
     feedback();
@@ -208,7 +335,7 @@ export default function CreativeMicroChallenge({
           <Text style={styles.heading}>{config.title}</Text>
         </View>
         <Text style={styles.body}>{config.description}</Text>
-        {medium === 'music' ? <Text style={styles.hint}>Build a visual 8-step beat pattern with haptic taps—no microphone needed.</Text> : null}
+        {medium === 'music' ? <Text style={styles.hint}>No microphone needed. Use the built-in kick, snare, and hi-hat sounds.</Text> : null}
         {medium === 'movement' ? <Text style={styles.hint}>Choose a comfortable seated or standing option. Skip any movement that doesn’t feel right.</Text> : null}
       </View>
     );
@@ -235,24 +362,50 @@ export default function CreativeMicroChallenge({
               <Pressable
                 key={index}
                 onPress={() => toggleBeat(index)}
+                disabled={!audioReady || isBeatPlaying}
                 accessibilityRole="button"
-                accessibilityLabel={`Beat ${index + 1}${on ? ', on' : ', off'}`}
-                accessibilityState={{ selected: on }}
-                style={[styles.beatPad, on && styles.beatPadOn]}
+                accessibilityLabel={`Step ${index + 1}, ${beatVoiceLabel(beatVoiceForStep(index))}, ${on ? 'on' : 'off'}`}
+                accessibilityState={{ selected: on, disabled: !audioReady || isBeatPlaying }}
+                style={[
+                  styles.beatPad,
+                  on && styles.beatPadOn,
+                  activeBeatStep === index && styles.beatPadPlaying,
+                  (!audioReady || isBeatPlaying) && { opacity: 0.68 },
+                ]}
                 testID={`micro-challenge-beat-${index + 1}`}
               >
                 <Text style={styles.beatNumber}>{on ? '●' : index + 1}</Text>
               </Pressable>
             ))}
           </View>
-          <Text style={styles.hint}>Turn on at least three steps to complete your loop.</Text>
+          <Text style={styles.beatLegend}>1 & 5 kick · 3 & 7 snare · other steps hi-hat</Text>
+          <Text style={styles.hint}>
+            {audioError ?? (audioReady
+              ? 'Tap a step to hear it. Play the loop to preview your rhythm.'
+              : 'Preparing the drum sounds…')}
+          </Text>
+          <View style={styles.beatControls}>
+            <Pressable
+              disabled={!isBeatPlaying && (!audioReady || beatCount === 0)}
+              onPress={isBeatPlaying ? stopBeatPlayback : playBeatPreview}
+              accessibilityRole="button"
+              accessibilityLabel={isBeatPlaying ? 'Stop beat preview' : 'Play beat preview'}
+              accessibilityState={{ disabled: !isBeatPlaying && (!audioReady || beatCount === 0) }}
+              style={[styles.beatControlButton, !isBeatPlaying && (!audioReady || beatCount === 0) && styles.beatControlDisabled]}
+              testID="micro-challenge-music-play"
+            >
+              <Feather name={isBeatPlaying ? 'square' : 'play'} size={15} color={colors.ink} />
+              <Text style={styles.beatControlText}>{isBeatPlaying ? 'Stop preview' : 'Play beat'}</Text>
+            </Pressable>
+          </View>
+          <Text style={styles.hint}>Turn on at least three steps to lock in your loop.</Text>
           <Pressable
-            disabled={beatCount < 3}
+            disabled={beatCount < 3 || isBeatPlaying}
             onPress={onComplete}
             accessibilityRole="button"
             accessibilityLabel="Finish the beat challenge"
-            accessibilityState={{ disabled: beatCount < 3 }}
-            style={[styles.finishButton, beatCount < 3 && { opacity: 0.5 }]}
+            accessibilityState={{ disabled: beatCount < 3 || isBeatPlaying }}
+            style={[styles.finishButton, (beatCount < 3 || isBeatPlaying) && { opacity: 0.5 }]}
             testID="micro-challenge-music-finish"
           >
             <Feather name="check" size={16} color={colors.ink} />
