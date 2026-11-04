@@ -19,6 +19,7 @@
       "bundleIdentifier": "app.replit.creatorstudiobyaimd"
     },
     "android": {
+      "package": "com.artismydrug.creatorstudio",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/aimd-adaptive-foreground.png",
         "backgroundImage": "./assets/images/aimd-adaptive-background.png",
