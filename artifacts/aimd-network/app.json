@@ -20,6 +20,7 @@
     },
     "android": {
       "package": "com.artismydrug.creatorstudio",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/aimd-adaptive-foreground.png",
         "backgroundImage": "./assets/images/aimd-adaptive-background.png",
