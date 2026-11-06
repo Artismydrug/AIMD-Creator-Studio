@@ -153,3 +153,16 @@ test('only the optional notification lifecycle is isolated from the main navigat
   assert.match(fallback, /Retry notifications/);
   assert.match(fallback, /onPress: resetError/);
 });
+
+test('Android Expo Go skips unsupported remote notification startup', () => {
+  const capabilities = readFileSync(resolve(__dirname, '../lib/notificationCapabilities.ts'), 'utf8');
+  const lifecycle = readFileSync(resolve(__dirname, '../components/NotificationLifecycle.tsx'), 'utf8');
+  const reminders = readFileSync(resolve(__dirname, '../lib/habitReminders.ts'), 'utf8');
+  const push = readFileSync(resolve(__dirname, '../lib/pushNotifications.ts'), 'utf8');
+  assert.match(capabilities, /Platform\.OS === 'android' && Constants\.executionEnvironment === 'storeClient'/);
+  assert.equal((lifecycle.match(/!nativeNotifications \|\| isAndroidExpoGo \|\| !userId/g) ?? []).length, 2);
+  assert.match(reminders, /const notificationsAvailable = native && !isAndroidExpoGo/);
+  assert.match(reminders, /if \(notificationsAvailable\) \{\s*Notifications\.setNotificationHandler/);
+  assert.match(push, /if \(!nativeNotifications \|\| isAndroidExpoGo\) return/);
+  assert.match(push, /Remote push alerts are unavailable in the Android Expo Go preview/);
+});

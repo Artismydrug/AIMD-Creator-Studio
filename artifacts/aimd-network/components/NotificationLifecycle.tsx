@@ -4,6 +4,7 @@ import { useAuth } from '@clerk/expo';
 import { useRouter } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import { getGetCurrentUserQueryKey, useGetCurrentUser } from '@workspace/api-client-react';
+import { isAndroidExpoGo } from '@/lib/notificationCapabilities';
 import { nativeNotifications, syncPushDevice } from '@/lib/pushNotifications';
 
 export default function NotificationLifecycle() {
@@ -11,7 +12,7 @@ export default function NotificationLifecycle() {
   const router = useRouter();
   const { data: me } = useGetCurrentUser({ query: { queryKey: getGetCurrentUserQueryKey(), enabled: !!userId } });
   useEffect(() => {
-    if (!nativeNotifications || !userId) return;
+    if (!nativeNotifications || isAndroidExpoGo || !userId) return;
     let cancelled = false;
     const sync = () => {
       if (!cancelled) void syncPushDevice(userId).catch(() => {
@@ -25,7 +26,7 @@ export default function NotificationLifecycle() {
   }, [userId]);
 
   useEffect(() => {
-    if (!nativeNotifications || !userId || !me) return;
+    if (!nativeNotifications || isAndroidExpoGo || !userId || !me) return;
     const open = (response: Notifications.NotificationResponse) => {
       const data = response.notification.request.content.data;
       // A notification left over from a different signed-in account must not

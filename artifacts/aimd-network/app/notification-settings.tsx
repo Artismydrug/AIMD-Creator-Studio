@@ -11,6 +11,7 @@ import {
   useUpdateNotificationPreferences,
 } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
+import { isAndroidExpoGo } from '@/lib/notificationCapabilities';
 import { getHabitRemindersEnabled, setHabitRemindersEnabled } from '@/lib/habitReminders';
 import { enablePushDevice, nativeNotifications, pushProjectId, unregisterPushDevice } from '@/lib/pushNotifications';
 
@@ -100,15 +101,16 @@ export default function NotificationSettingsScreen() {
           <View style={[s.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[s.section, { color: colors.foreground }]}>Phone push alerts</Text>
             <Text style={[s.hint, { color: colors.mutedForeground }]}>Off until you choose to enable them. Push preferences apply to your account; each phone also needs permission.</Text>
+            {isAndroidExpoGo && <Text style={[s.hint, { color: colors.mutedForeground }]}>Remote phone alerts aren’t available in Expo Go. Your in-app inbox still works.</Text>}
             {preferences.isLoading ? <ActivityIndicator color={colors.primary} /> : preferences.isError ? (
               <Pressable onPress={() => { void preferences.refetch(); }} style={s.link} accessibilityRole="button">
                 <Text style={[s.linkText, { color: colors.primary }]}>Couldn’t load preferences. Tap to retry.</Text>
               </Pressable>
             ) : <>
               {switchRow('Direct messages', 'A private alert when another creator messages you.', preferences.data?.directMessages ?? false,
-                (value) => { void changePush('directMessages', value); })}
+                (value) => { void changePush('directMessages', value); }, isAndroidExpoGo)}
               {switchRow('New followers', 'An alert when a creator follows your profile.', preferences.data?.newFollowers ?? false,
-                (value) => { void changePush('newFollowers', value); })}
+                (value) => { void changePush('newFollowers', value); }, isAndroidExpoGo)}
             </>}
             {nativeNotifications && !pushProjectId() && <Text style={[s.hint, { color: colors.mutedForeground }]}>Phone push delivery still needs to be connected for this build. Habit reminders are available now.</Text>}
             <Text style={[s.hint, { color: colors.mutedForeground }]}>Your in-app inbox stays available when push is off. Event and workshop announcements aren’t connected to push alerts yet.</Text>

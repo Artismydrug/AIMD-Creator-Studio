@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import { isAndroidExpoGo, supportsRemotePushNotifications } from './notificationCapabilities';
 import {
   getNotificationPreferences,
   registerNotificationDevice,
@@ -31,6 +32,9 @@ async function loadBinding(): Promise<Binding | null> {
 export async function enablePushDevice(owner: string, askPermission: boolean): Promise<boolean> {
   assertAccount(owner);
   if (!nativeNotifications) throw new Error('Phone push alerts are available in the installed iOS or Android app.');
+  if (!supportsRemotePushNotifications) {
+    throw new Error('Remote push alerts are unavailable in the Android Expo Go preview. The in-app inbox still works.');
+  }
   let permission = await Notifications.getPermissionsAsync();
   if (!permission.granted && !askPermission) return false;
   const projectId = pushProjectId();
@@ -73,7 +77,7 @@ export async function unregisterPushDevice(owner: string) {
 }
 
 export async function syncPushDevice(owner: string) {
-  if (!nativeNotifications) return;
+  if (!nativeNotifications || isAndroidExpoGo) return;
   assertAccount(owner);
   const preferences = await getNotificationPreferences();
   const binding = await loadBinding();

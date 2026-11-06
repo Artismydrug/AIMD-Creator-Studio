@@ -20,3 +20,9 @@ Mocked Expo booking tests must intercept the API host as well as the Expo previe
 **Why:** A browser test intercepted a draft response but missed its subsequent private-reference request on the API origin, producing an invalid-token response and an inconclusive retry test. A context-wide, any-host handler with explicit preflight handling isolated the flow correctly.
 
 **How to apply:** Install interception before opening the page, verify a mock-response marker, keep counters outside the browser page, and abort unhandled writes under the tested endpoint family. Do not mistake a partially mocked authorization failure for a product defect.
+
+Android Expo Go on SDK 53+ does not support remote push notifications. Preview startup must not register remote push listeners or initialize unsupported notification flows.
+
+**Why:** An Android Expo Go preview raised a fatal `expo-notifications` error before the app opened because notification APIs were initialized during startup.
+
+**How to apply:** Detect Android Expo Go using `Constants.executionEnvironment === 'storeClient'`; skip remote push initialization and guard any notification setup that blocks preview startup. Keep the production/dev-build notification path intact, and test push delivery in an installed build.

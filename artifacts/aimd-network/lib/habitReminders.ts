@@ -1,11 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import { isAndroidExpoGo } from './notificationCapabilities';
 import { customFetch } from '@workspace/api-client-react';
 import { createReminderEngine, REMINDER_PREFIX, reminderKey, type HabitReminder, type ReminderInput } from './habitReminderEngine';
 export type { HabitReminder } from './habitReminderEngine';
 
 const native = Platform.OS === 'ios' || Platform.OS === 'android';
+const notificationsAvailable = native && !isAndroidExpoGo;
 let account: string | null = null;
 let pending: Promise<unknown> = Promise.resolve();
 function serialized<T>(fn: () => Promise<T>): Promise<T> {
@@ -13,7 +15,7 @@ function serialized<T>(fn: () => Promise<T>): Promise<T> {
   pending = result.catch(() => undefined);
   return result;
 }
-if (native) {
+if (notificationsAvailable) {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false,
@@ -23,8 +25,13 @@ if (native) {
 const engine = createReminderEngine({
   read: (key) => AsyncStorage.getItem(key),
   write: (key, value) => AsyncStorage.setItem(key, value),
-  cancel: (id) => Notifications.cancelScheduledNotificationAsync(id),
+  cancel: (id) => notificationsAvailable
+    ? Notifications.cancelScheduledNotificationAsync(id)
+    : Promise.resolve(),
   schedule: async (id, reminder) => {
+    if (!notificationsAvailable) {
+      throw new Error('Habit alerts are unavailable in the Android Expo Go preview. Use an installed Android build.');
+    }
     const requests = await Notifications.getAllScheduledNotificationsAsync();
     if (!requests.some((r) => r.identifier === id) && requests.length >= 60) {
       throw new Error('This device has too many scheduled alerts. Turn off another reminder first.');
@@ -41,7 +48,7 @@ const engine = createReminderEngine({
   },
 });
 async function channel() {
-  if (Platform.OS === 'android') await Notifications.setNotificationChannelAsync('habit-reminders', {
+  if (Platform.OS === 'android' && notificationsAvailable) await Notifications.setNotificationChannelAsync('habit-reminders', {
     name: 'Daily habit reminders', importance: Notifications.AndroidImportance.DEFAULT,
   });
 }
@@ -58,6 +65,9 @@ export function setHabitRemindersEnabled(owner: string, enabled: boolean) {
     assertAccount(owner);
     const saved = await engine.load(owner);
     if (enabled && saved.length) {
+      if (!notificationsAvailable) {
+        throw new Error('Habit alerts are unavailable in the Android Expo Go preview. Use an installed Android build.');
+      }
       await channel();
       let permission = await Notifications.getPermissionsAsync();
       if (!permission.granted) permission = await Notifications.requestPermissionsAsync({
@@ -74,11 +84,15 @@ export function setHabitRemindersEnabled(owner: string, enabled: boolean) {
           await engine.save(owner, reminder.habitId, reminder);
         }
       } else {
-        for (const reminder of saved) await Notifications.cancelScheduledNotificationAsync(reminder.notificationId);
+        if (notificationsAvailable) {
+          for (const reminder of saved) await Notifications.cancelScheduledNotificationAsync(reminder.notificationId);
+        }
       }
     } catch (error) {
       await AsyncStorage.setItem(enabledKey(owner), 'false');
-      for (const reminder of saved) await Notifications.cancelScheduledNotificationAsync(reminder.notificationId);
+      if (notificationsAvailable) {
+        for (const reminder of saved) await Notifications.cancelScheduledNotificationAsync(reminder.notificationId);
+      }
       throw error;
     }
   });
@@ -86,6 +100,9 @@ export function setHabitRemindersEnabled(owner: string, enabled: boolean) {
 export function saveHabitReminder(owner: string, habitId: number, _habitName: string, input: ReminderInput) {
   return serialized(async () => {
     assertAccount(owner);
+    if (!notificationsAvailable) {
+      throw new Error('Habit alerts are unavailable in the Android Expo Go preview. Use an installed Android build.');
+    }
     if (!(await getHabitRemindersEnabled(owner))) {
       throw new Error('Habit alerts are paused. Turn them on in Profile → Notification settings first.');
     }
@@ -106,7 +123,7 @@ export function removeHabitReminder(owner: string, habitId: number) {
 export function setHabitReminderAccount(owner: string | null) {
   // Change the guard synchronously, even when another operation is awaiting permission.
   account = owner;
-  if (!native) return Promise.resolve();
+  if (!notificationsAvailable) return Promise.resolve();
   return serialized(async () => {
     if (account !== owner) return;
     const requests = await Notifications.getAllScheduledNotificationsAsync();
@@ -151,7 +168,7 @@ export function setHabitReminderAccount(owner: string | null) {
 export function clearHabitReminders(owner: string) {
   return serialized(async () => {
     try {
-      if (native) for (const request of await Notifications.getAllScheduledNotificationsAsync()) {
+      if (notificationsAvailable) for (const request of await Notifications.getAllScheduledNotificationsAsync()) {
         if (request.identifier.startsWith(`${REMINDER_PREFIX}${encodeURIComponent(owner)}:`)) {
           await Notifications.cancelScheduledNotificationAsync(request.identifier);
         }
