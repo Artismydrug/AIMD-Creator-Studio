@@ -7,6 +7,8 @@
  */
 
 export interface WorkshopLessonPlayback {
-  playbackUrl: string;
+  streamUrl: string;
+  streamToken: string;
+  watermarkLabel: string;
   expiresAt: Date;
 }

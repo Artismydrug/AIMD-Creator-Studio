@@ -3,6 +3,7 @@ import { trackEvent } from '@/lib/telemetry';
 import {
   ActivityIndicator,
   AppState,
+  Animated,
   Alert,
   Modal,
   Platform,
@@ -13,9 +14,10 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { VideoView, useVideoPlayer } from 'expo-video';
+import { useAuth } from '@clerk/expo';
 import { useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getBaseUrl, useCreateWorkshopLessonPlayback } from '@workspace/api-client-react';
+import { getBaseUrl, useCreateWorkshopLessonPlayback, useCreateWorkshopLessonWebPlayback } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import LessonReflectionForm from '@/components/LessonReflectionForm';
 import InstructorAttribution from '@/components/InstructorAttribution';
@@ -63,8 +65,14 @@ export function resolveMediaUrl(url: string): string {
 
 type Resume = { time: number; playing: boolean } | null;
 
-function NativeVideo({ uri, resume, onFail, onPlay }: { uri: string; resume?: React.MutableRefObject<Resume>; onFail?: (time: number) => void; onPlay?: () => void }) {
-  const player = useVideoPlayer(null, (p) => { p.loop = false; });
+function NativeVideo({ uri, headers, resume, onFail, onPlay }: {
+  uri: string;
+  headers?: Record<string, string>;
+  resume?: React.MutableRefObject<Resume>;
+  onFail?: (time: number) => void;
+  onPlay?: () => void;
+}) {
+  const player = useVideoPlayer(null, (p) => { p.loop = false; p.timeUpdateEventInterval = 1; });
   const onPlayRef = useRef(onPlay);
   onPlayRef.current = onPlay;
   const onFailRef = useRef(onFail);
@@ -84,6 +92,12 @@ function NativeVideo({ uri, resume, onFail, onPlay }: { uri: string; resume?: Re
     return () => subscription.remove();
   }, [player]);
   useEffect(() => {
+    const subscription = player.addListener('timeUpdate', ({ currentTime }) => {
+      if (resume) resume.current = { time: currentTime, playing: player.playing };
+    });
+    return () => subscription.remove();
+  }, [player, resume]);
+  useEffect(() => {
     const saved = resume?.current ?? null;
     const sub = player.addListener('statusChange', ({ status }) => {
       if (status === 'error') onFailRef.current?.(player.currentTime);
@@ -94,10 +108,11 @@ function NativeVideo({ uri, resume, onFail, onPlay }: { uri: string; resume?: Re
       }
     });
     let cancelled = false;
-    player.replaceAsync(uri).catch(() => { if (!cancelled) onFailRef.current?.(0); });
+    player.replaceAsync(headers ? { uri, headers, contentType: 'progressive' } : uri)
+      .catch(() => { if (!cancelled) onFailRef.current?.(0); });
     return () => { cancelled = true; sub.remove(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [player, uri, resume]);
+  }, [player, uri, headers, resume]);
   return <VideoView player={player} style={styles.video} contentFit="contain" nativeControls testID="workshop-lesson-video" />;
 }
 
@@ -130,18 +145,50 @@ export function TeaserVideo({ uri }: { uri: string }) {
     : <NativeVideo key={`${uri}:${attempt}`} uri={full} onPlay={recordView} onFail={() => setFailed(true)} />;
 }
 
-/** Requests a protected 15-minute signed URL and renews it before expiry, preserving position. */
+function ViewerWatermark({ label }: { label: string }) {
+  const drift = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const animation = Animated.loop(Animated.sequence([
+      Animated.timing(drift, { toValue: 1, duration: 18_000, useNativeDriver: true }),
+      Animated.timing(drift, { toValue: 0, duration: 18_000, useNativeDriver: true }),
+    ]));
+    animation.start();
+    return () => animation.stop();
+  }, [drift]);
+
+  const translateX = drift.interpolate({ inputRange: [0, 1], outputRange: [-38, 38] });
+  const translateY = drift.interpolate({ inputRange: [0, 1], outputRange: [24, -24] });
+  return (
+    <View pointerEvents="none" style={styles.watermarkLayer} testID="workshop-viewer-watermark">
+      <Animated.View style={[styles.watermarkChip, { transform: [{ translateX }, { translateY }, { rotate: '-8deg' }] }]}>
+        <Text numberOfLines={1} style={styles.watermarkText}>{label}</Text>
+      </Animated.View>
+    </View>
+  );
+}
+
+/** Renews five-minute playback credentials and keeps the viewer watermark on screen. */
 function ProtectedLesson({ workshopId, moduleId, onGate }: { workshopId: number; moduleId: number; onGate: () => void }) {
   const colors = useColors();
   const create = useCreateWorkshopLessonPlayback();
+  const createWeb = useCreateWorkshopLessonWebPlayback();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const mutateRef = useRef(create.mutateAsync);
   mutateRef.current = create.mutateAsync;
+  const webMutateRef = useRef(createWeb.mutateAsync);
+  webMutateRef.current = createWeb.mutateAsync;
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
+  const authStateRef = useRef({ isLoaded, isSignedIn });
+  authStateRef.current = { isLoaded, isSignedIn };
   const gateRef = useRef(onGate);
   gateRef.current = onGate;
   const webRef = useRef<HTMLVideoElement | null>(null);
   const resume = useRef<Resume>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const [streamHeaders, setStreamHeaders] = useState<Record<string, string> | null>(null);
+  const [watermarkLabel, setWatermarkLabel] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -151,16 +198,50 @@ function ProtectedLesson({ workshopId, moduleId, onGate }: { workshopId: number;
     }
     if (!renewing) { setLoading(true); setError(null); }
     try {
-      const res = await mutateRef.current({ id: workshopId, moduleId });
-      setUrl(res.playbackUrl); setExpiresAt(res.expiresAt); setError(null);
+      if (!authStateRef.current.isLoaded || !authStateRef.current.isSignedIn) {
+        const unauthenticated = new Error('Sign in again to continue this lesson.') as Error & { status: number };
+        unauthenticated.status = 401;
+        throw unauthenticated;
+      }
+      if (Platform.OS === 'web') {
+        const res = await webMutateRef.current({ id: workshopId, moduleId });
+        setUrl(res.playbackUrl);
+        setStreamHeaders(null);
+        setWatermarkLabel(res.watermarkLabel);
+        setExpiresAt(res.expiresAt);
+      } else {
+        const res = await mutateRef.current({ id: workshopId, moduleId });
+        const sessionToken = await getTokenRef.current();
+        if (!sessionToken) {
+          const unauthenticated = new Error('Sign in again to continue this lesson.') as Error & { status: number };
+          unauthenticated.status = 401;
+          throw unauthenticated;
+        }
+        setUrl(res.streamUrl);
+        setStreamHeaders({
+          Authorization: `Bearer ${sessionToken}`,
+          'X-AIMD-Playback-Token': res.streamToken,
+        });
+        setWatermarkLabel(res.watermarkLabel);
+        setExpiresAt(res.expiresAt);
+      }
+      setError(null);
     } catch (e: any) {
       if ([401, 402, 403].includes(e?.status)) gateRef.current();
       setError('Could not start this lesson. Check your connection and workshop access, then retry.');
-      if (renewing) setUrl(null);
+      if (renewing) { setUrl(null); setStreamHeaders(null); }
     } finally { setLoading(false); }
   }, [workshopId, moduleId]);
 
   useEffect(() => { setUrl(null); void load(false); }, [load]);
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      setUrl(null);
+      setStreamHeaders(null);
+      setWatermarkLabel('');
+      setError('Sign in again to continue this lesson.');
+    }
+  }, [isLoaded, isSignedIn]);
   useEffect(() => {
     if (!expiresAt) return;
     const wait = Math.max(5000, new Date(expiresAt).getTime() - Date.now() - 60_000);
@@ -182,18 +263,40 @@ function ProtectedLesson({ workshopId, moduleId, onGate }: { workshopId: number;
   if (loading || !url) return <ActivityIndicator color={colors.primary} />;
   if (Platform.OS === 'web') {
     return (
-      <video
-        ref={webRef} src={url} controls playsInline
-        onError={() => { if (webRef.current) resume.current = { time: webRef.current.currentTime, playing: false }; setUrl(null); setError('The video could not be played. The link may have expired.'); }}
-        onLoadedMetadata={() => {
-          const r = resume.current; const v = webRef.current;
-          if (r && v) { v.currentTime = r.time; if (r.playing) void v.play().catch(() => undefined); resume.current = null; }
-        }}
-        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-      />
+      <View style={styles.protectedVideoFrame}>
+        <video
+          ref={webRef} src={url} controls playsInline
+          onError={() => {
+            if (webRef.current) resume.current = { time: webRef.current.currentTime, playing: false };
+            setUrl(null); setWatermarkLabel(''); setError('The video could not be played. The link may have expired.');
+          }}
+          onLoadedMetadata={() => {
+            const r = resume.current; const v = webRef.current;
+            if (r && v) { v.currentTime = r.time; if (r.playing) void v.play().catch(() => undefined); resume.current = null; }
+          }}
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+        />
+        {!!watermarkLabel && <ViewerWatermark label={watermarkLabel} />}
+      </View>
     );
   }
-  return <NativeVideo uri={url} resume={resume} onFail={(t) => { resume.current = { time: t, playing: false }; setUrl(null); setError('The video could not be played. The link may have expired.'); }} />;
+  if (!streamHeaders) return <ActivityIndicator color={colors.primary} />;
+  return (
+    <View style={styles.protectedVideoFrame}>
+      <NativeVideo
+        key={streamHeaders['X-AIMD-Playback-Token']}
+        uri={resolveMediaUrl(url)}
+        headers={streamHeaders}
+        resume={resume}
+        onFail={(t) => {
+          resume.current = { time: t, playing: false };
+          setUrl(null); setStreamHeaders(null); setWatermarkLabel('');
+          setError('The playback session expired or the video could not be played. Retry to reconnect.');
+        }}
+      />
+      {!!watermarkLabel && <ViewerWatermark label={watermarkLabel} />}
+    </View>
+  );
 }
 
 export default function WorkshopLessonPlayer({
@@ -467,4 +570,27 @@ export default function WorkshopLessonPlayer({
 
 const styles = StyleSheet.create({
   video: { width: '100%', height: '100%' },
+  protectedVideoFrame: { width: '100%', height: '100%', position: 'relative' },
+  watermarkLayer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  watermarkChip: {
+    maxWidth: '92%',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: 'rgba(20, 16, 26, 0.26)',
+  },
+  watermarkText: {
+    color: 'rgba(255, 255, 255, 0.52)',
+    fontFamily: 'DMSans_700Bold',
+    fontSize: 11,
+    letterSpacing: 0.5,
+  },
 });

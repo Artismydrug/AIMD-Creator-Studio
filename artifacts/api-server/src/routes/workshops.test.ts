@@ -252,10 +252,63 @@ describe("public previews and verified lesson access", () => {
     expect((await request(appFor(freeUser)).post(url)).status).toBe(403);
     const member = await request(appFor(academyUser)).post(url);
     expect(member.status).toBe(200);
-    expect(member.body.playbackUrl).toBe("https://example.test/temporary-private-playback");
+    expect(member.body).toMatchObject({
+      streamUrl: `/api/workshops/${academyWorkshopId}/modules/${firstModuleId}/stream`,
+      watermarkLabel: `@${academyUser.username} · ID ${academyUser.id}`,
+    });
+    expect(member.body.streamToken).toEqual(expect.any(String));
+    expect(member.body.playbackUrl).toBeUndefined();
     expect(new Date(member.body.expiresAt).getTime()).toBeGreaterThan(Date.now());
     expect(member.headers["cache-control"]).toContain("no-store");
     expect((await request(appFor(academyUser)).post(`/api/workshops/${freeWorkshopId}/modules/${firstModuleId}/playback`)).status).toBe(404);
+  });
+
+  it("streams native byte ranges only with a matching active user and unexpired lesson token", async () => {
+    const playback = await request(appFor(academyUser))
+      .post(`/api/workshops/${academyWorkshopId}/modules/${firstModuleId}/playback`);
+    const streamUrl = playback.body.streamUrl;
+    const getFile = vi.spyOn(ObjectStorageService.prototype, "getObjectEntityFile").mockResolvedValue({} as any);
+    const download = vi.spyOn(ObjectStorageService.prototype, "downloadObject").mockResolvedValue(new Response("video-data", {
+      status: 206,
+      headers: {
+        "Content-Type": "video/mp4",
+        "Content-Length": "10",
+        "Content-Range": "bytes 0-9/100",
+        "Accept-Ranges": "bytes",
+      },
+    }) as any);
+    try {
+      expect((await request(appFor(null)).get(streamUrl)
+        .set("X-AIMD-Playback-Token", playback.body.streamToken)).status).toBe(401);
+      expect((await request(appFor(freeUser)).get(streamUrl)
+        .set("X-AIMD-Playback-Token", playback.body.streamToken)).status).toBe(401);
+      expect((await request(appFor(academyUser)).get(streamUrl)).status).toBe(401);
+
+      const response = await request(appFor(academyUser)).get(streamUrl)
+        .set("X-AIMD-Playback-Token", playback.body.streamToken)
+        .set("Range", "bytes=0-9");
+      expect(response.status).toBe(206);
+      expect(response.body.toString()).toBe("video-data");
+      expect(response.headers["cache-control"]).toContain("no-store");
+      expect(response.headers["content-range"]).toBe("bytes 0-9/100");
+      expect(download).toHaveBeenCalledWith(expect.anything(), 0, "bytes=0-9");
+    } finally {
+      getFile.mockRestore();
+      download.mockRestore();
+    }
+  });
+
+  it("issues short-lived signed browser playback only after the same access gate", async () => {
+    const path = `/api/workshops/${academyWorkshopId}/modules/${firstModuleId}/playback/web`;
+    expect((await request(appFor(null)).post(path)).status).toBe(401);
+    expect((await request(appFor(freeUser)).post(path)).status).toBe(403);
+    const member = await request(appFor(academyUser)).post(path);
+    expect(member.status).toBe(200);
+    expect(member.body.playbackUrl).toBe("https://example.test/temporary-private-playback");
+    expect(member.body.watermarkLabel).toBe(`@${academyUser.username} · ID ${academyUser.id}`);
+    expect(member.body.streamToken).toBeUndefined();
+    expect(new Date(member.body.expiresAt).getTime()).toBeGreaterThan(Date.now());
+    expect(ObjectStorageService.prototype.getWorkshopVideoPlaybackURL).toHaveBeenCalledWith(fullMediaPath, 300);
   });
 
   it("cancellation removes lesson access even after subscriber self-enrollment", async () => {
@@ -301,6 +354,9 @@ describe("public previews and verified lesson access", () => {
       const res = await request(appFor(freeUser)).get(`/api/storage${fullMediaPath}`);
       expect(res.status).toBe(403);
       expect(res.body.error).toBe("lesson_access_required");
+      const entitled = await request(appFor(academyUser)).get(`/api/storage${fullMediaPath}`);
+      expect(entitled.status).toBe(403);
+      expect(entitled.body.error).toBe("lesson_stream_required");
     } finally { getFile.mockRestore(); }
   });
 

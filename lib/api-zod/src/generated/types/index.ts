@@ -221,6 +221,7 @@ export * from './workshopDetail';
 export * from './workshopDetailAccessStatus';
 export * from './workshopDetailTier';
 export * from './workshopLessonPlayback';
+export * from './workshopLessonWebPlayback';
 export * from './workshopModule';
 export * from './workshopModuleDetail';
 export * from './workshopModuleInput';

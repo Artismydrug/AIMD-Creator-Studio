@@ -546,7 +546,7 @@ export const EnrollInWorkshopResponse = zod.object({
 
 
 /**
- * @summary Verify active subscription or participant enrollment and issue expiring private lesson playback
+ * @summary Verify lesson access and issue a short-lived session-bound playback token
  */
 export const CreateWorkshopLessonPlaybackParams = zod.object({
   "id": zod.coerce.number().int(),
@@ -554,9 +554,41 @@ export const CreateWorkshopLessonPlaybackParams = zod.object({
 })
 
 export const CreateWorkshopLessonPlaybackResponse = zod.object({
-  "playbackUrl": zod.string(),
+  "streamUrl": zod.string(),
+  "streamToken": zod.string(),
+  "watermarkLabel": zod.string(),
   "expiresAt": zod.coerce.date()
 })
+
+
+/**
+ * @summary Verify lesson access and issue a short-lived private browser playback URL
+ */
+export const CreateWorkshopLessonWebPlaybackParams = zod.object({
+  "id": zod.coerce.number().int(),
+  "moduleId": zod.coerce.number().int()
+})
+
+export const CreateWorkshopLessonWebPlaybackResponse = zod.object({
+  "playbackUrl": zod.string(),
+  "watermarkLabel": zod.string(),
+  "expiresAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Stream lesson bytes after validating the active user session and playback token
+ */
+export const StreamWorkshopLessonParams = zod.object({
+  "id": zod.coerce.number().int(),
+  "moduleId": zod.coerce.number().int()
+})
+
+export const StreamWorkshopLessonHeader = zod.object({
+  "X-AIMD-Playback-Token": zod.string()
+})
+
+export const StreamWorkshopLessonResponse = zod.unknown()
 
 
 /**

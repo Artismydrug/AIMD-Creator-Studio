@@ -141,6 +141,7 @@ import type {
   Workshop,
   WorkshopDetail,
   WorkshopLessonPlayback,
+  WorkshopLessonWebPlayback,
   WorkshopModuleDetail,
   WorkshopModuleInput,
   WorkshopModuleUpdateInput,
@@ -1936,7 +1937,7 @@ export const getCreateWorkshopLessonPlaybackUrl = (id: number,
 }
 
 /**
- * @summary Verify active subscription or participant enrollment and issue expiring private lesson playback
+ * @summary Verify lesson access and issue a short-lived session-bound playback token
  */
 export const createWorkshopLessonPlayback = async (id: number,
     moduleId: number, options?: Parameters<typeof customFetch>[1]): Promise<WorkshopLessonPlayback> => {
@@ -1986,7 +1987,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateWorkshopLessonPlaybackMutationError = ErrorType<void>
 
     /**
- * @summary Verify active subscription or participant enrollment and issue expiring private lesson playback
+ * @summary Verify lesson access and issue a short-lived session-bound playback token
  */
 export const useCreateWorkshopLessonPlayback = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWorkshopLessonPlayback>>, TError,{id: number;moduleId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -1998,6 +1999,161 @@ export const useCreateWorkshopLessonPlayback = <TError = ErrorType<void>,
       > => {
       return useMutation(getCreateWorkshopLessonPlaybackMutationOptions(options));
     }
+
+export const getCreateWorkshopLessonWebPlaybackUrl = (id: number,
+    moduleId: number,) => {
+
+
+
+
+  return `/api/workshops/${id}/modules/${moduleId}/playback/web`
+}
+
+/**
+ * @summary Verify lesson access and issue a short-lived private browser playback URL
+ */
+export const createWorkshopLessonWebPlayback = async (id: number,
+    moduleId: number, options?: Parameters<typeof customFetch>[1]): Promise<WorkshopLessonWebPlayback> => {
+
+  return customFetch<WorkshopLessonWebPlayback>(getCreateWorkshopLessonWebPlaybackUrl(id,moduleId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateWorkshopLessonWebPlaybackMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWorkshopLessonWebPlayback>>, TError,{id: number;moduleId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createWorkshopLessonWebPlayback>>, TError,{id: number;moduleId: number}, TContext> => {
+
+const mutationKey = ['createWorkshopLessonWebPlayback'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createWorkshopLessonWebPlayback>>, {id: number;moduleId: number}> = (props) => {
+          const {id,moduleId} = props ?? {};
+
+          return  createWorkshopLessonWebPlayback(id,moduleId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateWorkshopLessonWebPlaybackMutationResult = NonNullable<Awaited<ReturnType<typeof createWorkshopLessonWebPlayback>>>
+
+    export type CreateWorkshopLessonWebPlaybackMutationError = ErrorType<void>
+
+    /**
+ * @summary Verify lesson access and issue a short-lived private browser playback URL
+ */
+export const useCreateWorkshopLessonWebPlayback = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWorkshopLessonWebPlayback>>, TError,{id: number;moduleId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createWorkshopLessonWebPlayback>>,
+        TError,
+        {id: number;moduleId: number},
+        TContext
+      > => {
+      return useMutation(getCreateWorkshopLessonWebPlaybackMutationOptions(options));
+    }
+
+export const getStreamWorkshopLessonUrl = (id: number,
+    moduleId: number,) => {
+
+
+
+
+  return `/api/workshops/${id}/modules/${moduleId}/stream`
+}
+
+/**
+ * @summary Stream lesson bytes after validating the active user session and playback token
+ */
+export const streamWorkshopLesson = async (id: number,
+    moduleId: number, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getStreamWorkshopLessonUrl(id,moduleId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getStreamWorkshopLessonQueryKey = (id: number,
+    moduleId: number,) => {
+    return [
+    `/api/workshops/${id}/modules/${moduleId}/stream`
+    ] as const;
+    }
+
+
+export const getStreamWorkshopLessonQueryOptions = <TData = Awaited<ReturnType<typeof streamWorkshopLesson>>, TError = ErrorType<void>>(id: number,
+    moduleId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamWorkshopLesson>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getStreamWorkshopLessonQueryKey(id,moduleId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof streamWorkshopLesson>>> = ({ signal }) => streamWorkshopLesson(id,moduleId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && moduleId !== null && moduleId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof streamWorkshopLesson>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type StreamWorkshopLessonQueryResult = NonNullable<Awaited<ReturnType<typeof streamWorkshopLesson>>>
+export type StreamWorkshopLessonQueryError = ErrorType<void>
+
+
+/**
+ * @summary Stream lesson bytes after validating the active user session and playback token
+ */
+
+export function useStreamWorkshopLesson<TData = Awaited<ReturnType<typeof streamWorkshopLesson>>, TError = ErrorType<void>>(
+ id: number,
+    moduleId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamWorkshopLesson>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getStreamWorkshopLessonQueryOptions(id,moduleId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getRequestWorkshopVideoUploadUrl = (workshopId: number,) => {
 

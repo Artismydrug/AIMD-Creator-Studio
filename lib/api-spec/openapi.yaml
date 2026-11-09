@@ -538,7 +538,7 @@ paths:
     post:
       operationId: createWorkshopLessonPlayback
       tags: [workshops]
-      summary: Verify active subscription or participant enrollment and issue expiring private lesson playback
+      summary: Verify lesson access and issue a short-lived session-bound playback token
       parameters:
         - name: id
           in: path
@@ -559,6 +559,73 @@ paths:
                 $ref: "#/components/schemas/WorkshopLessonPlayback"
         "403":
           description: Active Dedicated Artist membership or workshop participant enrollment required
+  /workshops/{id}/modules/{moduleId}/playback/web:
+    post:
+      operationId: createWorkshopLessonWebPlayback
+      tags: [workshops]
+      summary: Verify lesson access and issue a short-lived private browser playback URL
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: moduleId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Private browser playback URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkshopLessonWebPlayback"
+        "403":
+          description: Active Dedicated Artist membership or workshop participant enrollment required
+  /workshops/{id}/modules/{moduleId}/stream:
+    get:
+      operationId: streamWorkshopLesson
+      tags: [workshops]
+      summary: Stream lesson bytes after validating the active user session and playback token
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: moduleId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: X-AIMD-Playback-Token
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Private lesson video
+          content:
+            video/mp4:
+              schema:
+                type: string
+                format: binary
+        "206":
+          description: Requested byte range of the private lesson video
+          content:
+            video/mp4:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: Active session or valid playback token required
+        "403":
+          description: Lesson access required
+        "416":
+          description: Requested byte range is not satisfiable
 
   /instructor/workshops/{workshopId}/videos/request-upload:
     post:
@@ -5086,9 +5153,25 @@ components:
 
     WorkshopLessonPlayback:
       type: object
-      required: [playbackUrl, expiresAt]
+      required: [streamUrl, streamToken, watermarkLabel, expiresAt]
+      properties:
+        streamUrl:
+          type: string
+        streamToken:
+          type: string
+        watermarkLabel:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+
+    WorkshopLessonWebPlayback:
+      type: object
+      required: [playbackUrl, watermarkLabel, expiresAt]
       properties:
         playbackUrl:
+          type: string
+        watermarkLabel:
           type: string
         expiresAt:
           type: string

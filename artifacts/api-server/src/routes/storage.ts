@@ -587,6 +587,13 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
         res.status(404).json({ error: "Lesson not found" }); return;
       }
     }
+    // Full lesson files are only served through the per-request authenticated
+    // playback endpoint. A paid account cannot bypass the short-lived
+    // user/lesson token by opening a stored object URL directly.
+    if (protectedLesson) {
+      res.status(403).json({ error: "lesson_stream_required" });
+      return;
+    }
 
     // Enforce ACL: only objects with an explicit public-read policy are served.
     // Objects without an ACL (unrelated private uploads) are rejected.

@@ -2014,7 +2014,15 @@ export interface WorkshopModuleDetail {
 }
 
 export interface WorkshopLessonPlayback {
+  streamUrl: string;
+  streamToken: string;
+  watermarkLabel: string;
+  expiresAt: string;
+}
+
+export interface WorkshopLessonWebPlayback {
   playbackUrl: string;
+  watermarkLabel: string;
   expiresAt: string;
 }
 
