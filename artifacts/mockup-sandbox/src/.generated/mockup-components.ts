@@ -4,6 +4,7 @@ export const modules: ModuleMap = {
   "./components/mockups/artist-portfolio/CreatorInquiryNotifications.tsx": () => import("../components/mockups/artist-portfolio/CreatorInquiryNotifications.tsx"),
   "./components/mockups/artist-portfolio/PonchoCommissionInquiry.tsx": () => import("../components/mockups/artist-portfolio/PonchoCommissionInquiry.tsx"),
   "./components/mockups/artist-portfolio/PonchoPortfolio.tsx": () => import("../components/mockups/artist-portfolio/PonchoPortfolio.tsx"),
+  "./components/mockups/creator-arcade/FlashChallenge.tsx": () => import("../components/mockups/creator-arcade/FlashChallenge.tsx"),
   "./components/mockups/canvas-board-art/DailyCanvas.tsx": () => import("../components/mockups/canvas-board-art/DailyCanvas.tsx"),
   "./components/mockups/canvas-board-art/FormeStudio.tsx": () => import("../components/mockups/canvas-board-art/FormeStudio.tsx"),
   "./components/mockups/canvas-board-art/MidnightGallery.tsx": () => import("../components/mockups/canvas-board-art/MidnightGallery.tsx"),
@@ -17,6 +18,5 @@ export const modules: ModuleMap = {
   "./components/mockups/canvas-board-art/StreakOrbit.tsx": () => import("../components/mockups/canvas-board-art/StreakOrbit.tsx"),
   "./components/mockups/canvas-board-art/StudioFrequency.tsx": () => import("../components/mockups/canvas-board-art/StudioFrequency.tsx"),
   "./components/mockups/canvas-board-art/WorkshopAtelier.tsx": () => import("../components/mockups/canvas-board-art/WorkshopAtelier.tsx"),
-  "./components/mockups/canvas-board-art/WorkshopBadges.tsx": () => import("../components/mockups/canvas-board-art/WorkshopBadges.tsx"),
-  "./components/mockups/creator-arcade/FlashChallenge.tsx": () => import("../components/mockups/creator-arcade/FlashChallenge.tsx")
+  "./components/mockups/canvas-board-art/WorkshopBadges.tsx": () => import("../components/mockups/canvas-board-art/WorkshopBadges.tsx")
 };
