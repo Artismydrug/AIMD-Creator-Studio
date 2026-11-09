@@ -204,9 +204,12 @@ test('Habit and Workshop cards are full-bleed; Events uses an inset flyer over a
   assert.match(eventSlide, /style=\{styles\.eventsBackdropImage\}/);
   assert.match(eventSlide, /eventsPosterFrame/);
   assert.match(eventSlide, /source=\{require\('\.\.\/assets\/images\/los-feliz-flea-flyer\.jpg'\)\}[\s\S]{0,140}resizeMode="contain"/);
-  assert.match(card, /habitContentPanel:[\s\S]*?backgroundColor: 'rgba\(249, 248, 246, 0\.91\)'/);
-  assert.match(card, /workshopContentPanel:[\s\S]*?backgroundColor: 'rgba\(249, 248, 246, 0\.91\)'/);
-  assert.match(card, /eventsInfoPanel:[\s\S]*?backgroundColor: 'rgba\(249, 248, 246, 0\.94\)'/);
+  assert.match(card, /habitContentPanel:[\s\S]*?backgroundColor: 'rgba\(255, 251, 243, 0\.97\)'/);
+  assert.match(card, /workshopContentPanel:[\s\S]*?backgroundColor: 'rgba\(255, 251, 243, 0\.97\)'/);
+  assert.match(card, /eventsInfoPanel:[\s\S]*?backgroundColor: 'rgba\(255, 251, 243, 0\.97\)'/);
+  assert.match(card, /habitName: \{ color: colors\.studioPhotoInk/);
+  assert.match(card, /workshopTitle: \{ color: colors\.studioPhotoInk/);
+  assert.match(card, /eventsTitle: \{[\s\S]*?color: colors\.studioPhotoInk/);
   assert.doesNotMatch(card, /habitArtFrame|workshopArtFrame/);
 });
 

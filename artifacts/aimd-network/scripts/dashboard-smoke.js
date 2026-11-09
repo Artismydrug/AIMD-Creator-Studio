@@ -9,6 +9,7 @@ const dashboardPath = path.resolve(
   'index.tsx',
 );
 const practiceCardPath = path.resolve(__dirname, '..', 'components', 'StickerJamPracticeCard.tsx');
+const colorsPath = path.resolve(__dirname, '..', 'constants', 'colors.ts');
 const residencyCardPath = path.resolve(__dirname, '..', 'components', 'TattooBusResidencyCard.tsx');
 const flyerPath = path.resolve(__dirname, '..', 'assets', 'images', 'los-feliz-flea-flyer.jpg');
 
@@ -30,6 +31,7 @@ function assertIncludes(source, value, description) {
 function assertDashboardSmokeContract() {
   const source = readDashboardSource();
   const practiceCard = fs.readFileSync(practiceCardPath, 'utf8');
+  const colors = fs.readFileSync(colorsPath, 'utf8');
   const residencyCard = fs.readFileSync(residencyCardPath, 'utf8');
   const loadingState = source.indexOf('testID="dashboard-loading-state"');
   const loadedState = source.indexOf('testID="dashboard-loaded-state"');
@@ -44,6 +46,10 @@ function assertDashboardSmokeContract() {
   assertIncludes(practiceCard, 'testID="dashboard-workshop-slide"', 'workshops as the second carousel slide');
   assertIncludes(practiceCard, 'COMING SOON', 'workshop availability badge');
   assertIncludes(practiceCard, 'workshop-preview.jpg', 'workshop preview art card');
+  assertIncludes(colors, "studioPhotoInk: '#21162C'", 'theme-stable dark carousel caption text');
+  assertIncludes(colors, "studioPhotoPaper: '#FFFBF3'", 'theme-stable light carousel caption surface');
+  assertIncludes(practiceCard, 'color: colors.studioPhotoInk', 'high-contrast carousel caption text');
+  assertIncludes(practiceCard, 'backgroundColor: colors.studioPhotoPaper', 'high-contrast carousel caption surface');
   if (practiceCard.indexOf('testID="dashboard-active-habit-slide"') > practiceCard.indexOf('testID="dashboard-workshop-slide"')) {
     throw new Error('Dashboard carousel must put Today’s Habit before the Workshops slide');
   }

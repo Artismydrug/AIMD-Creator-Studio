@@ -45,6 +45,11 @@ const warmCanvas = {
   studioMint: '#B9E7DA',
   studioInquiry: '#DF006C',
   studioInquiryForeground: '#FFFAF1',
+  // Carousel captions sit on deliberately light image washes in both themes.
+  // Keep their foreground and paper surface stable so dark mode cannot invert
+  // the caption to pale text on a pale overlay.
+  studioPhotoInk: '#21162C',
+  studioPhotoPaper: '#FFFBF3',
   studioMuted: '#776A7D',
   studioShadow: '#21162C',
 };

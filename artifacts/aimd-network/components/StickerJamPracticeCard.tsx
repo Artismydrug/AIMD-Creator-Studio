@@ -248,8 +248,8 @@ export default function StickerJamPracticeCard({
       borderWidth: 1.5,
       borderColor: colors.studioInk,
       borderRadius: 99,
-      backgroundColor: 'rgba(249, 248, 246, 0.94)',
-      color: colors.studioInk,
+      backgroundColor: colors.studioPhotoPaper,
+      color: colors.studioPhotoInk,
       fontFamily: 'DMSans_700Bold',
       fontSize: 10,
       letterSpacing: 1.2,
@@ -258,24 +258,24 @@ export default function StickerJamPracticeCard({
       gap: 4,
       padding: 11,
       borderWidth: 1.5,
-      borderColor: 'rgba(26, 23, 33, 0.5)',
+      borderColor: 'rgba(33, 22, 44, 0.72)',
       borderRadius: 17,
-      backgroundColor: 'rgba(249, 248, 246, 0.91)',
+      backgroundColor: 'rgba(255, 251, 243, 0.97)',
     },
     habitStatus: {
       paddingHorizontal: 9, paddingVertical: 5, borderWidth: 1.5, borderColor: colors.studioInk,
       borderRadius: 99, backgroundColor: colors.studioYellow,
     },
-    habitStatusText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 9, letterSpacing: 0.7 },
-    habitName: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 21, lineHeight: 25, letterSpacing: -0.4 },
-    habitDetails: { color: colors.studioInk, fontFamily: 'DMSans_500Medium', fontSize: 11, lineHeight: 15 },
+    habitStatusText: { color: colors.studioPhotoInk, fontFamily: 'DMSans_700Bold', fontSize: 9, letterSpacing: 0.7 },
+    habitName: { color: colors.studioPhotoInk, fontFamily: 'DMSans_700Bold', fontSize: 21, lineHeight: 25, letterSpacing: -0.4 },
+    habitDetails: { color: colors.studioPhotoInk, fontFamily: 'DMSans_500Medium', fontSize: 11, lineHeight: 15 },
     habitAction: {
       minHeight: 42, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
       gap: 7, paddingHorizontal: 14, borderWidth: 2, borderColor: colors.studioInk, borderRadius: 15,
       backgroundColor: colors.studioOrange, shadowColor: colors.studioShadow,
       shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2,
     },
-    habitActionText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 12 },
+    habitActionText: { color: colors.studioPhotoInk, fontFamily: 'DMSans_700Bold', fontSize: 12 },
     workshopFrame: {
       height: 228,
       width: '100%',
@@ -300,24 +300,24 @@ export default function StickerJamPracticeCard({
       paddingHorizontal: 9, paddingVertical: 5, borderWidth: 1.5, borderColor: colors.studioInk,
       borderRadius: 99, backgroundColor: colors.studioOrange,
     },
-    workshopBadgeText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 9, letterSpacing: 0.7 },
+    workshopBadgeText: { color: colors.studioPhotoInk, fontFamily: 'DMSans_700Bold', fontSize: 9, letterSpacing: 0.7 },
     workshopContentPanel: {
       gap: 4,
       padding: 11,
       borderWidth: 1.5,
-      borderColor: 'rgba(26, 23, 33, 0.5)',
+      borderColor: 'rgba(33, 22, 44, 0.72)',
       borderRadius: 17,
-      backgroundColor: 'rgba(249, 248, 246, 0.91)',
+      backgroundColor: 'rgba(255, 251, 243, 0.97)',
     },
-    workshopTitle: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 21, lineHeight: 25, letterSpacing: -0.4 },
-    workshopDetails: { color: colors.studioInk, fontFamily: 'DMSans_500Medium', fontSize: 11, lineHeight: 15 },
+    workshopTitle: { color: colors.studioPhotoInk, fontFamily: 'DMSans_700Bold', fontSize: 21, lineHeight: 25, letterSpacing: -0.4 },
+    workshopDetails: { color: colors.studioPhotoInk, fontFamily: 'DMSans_500Medium', fontSize: 11, lineHeight: 15 },
     workshopAction: {
       minHeight: 42, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
       gap: 7, paddingHorizontal: 14, borderWidth: 2, borderColor: colors.studioInk, borderRadius: 15,
-      backgroundColor: colors.studioPaper, shadowColor: colors.studioShadow,
+      backgroundColor: colors.studioPhotoPaper, shadowColor: colors.studioShadow,
       shadowOffset: { width: 2, height: 2 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2,
     },
-    workshopActionText: { color: colors.studioInk, fontFamily: 'DMSans_700Bold', fontSize: 12 },
+    workshopActionText: { color: colors.studioPhotoInk, fontFamily: 'DMSans_700Bold', fontSize: 12 },
     eventsPosterFrame: {
       overflow: 'hidden',
       borderWidth: 2,
@@ -353,27 +353,27 @@ export default function StickerJamPracticeCard({
       paddingHorizontal: 9,
       paddingVertical: 8,
       borderWidth: 1.25,
-      borderColor: 'rgba(26, 23, 33, 0.48)',
+      borderColor: 'rgba(33, 22, 44, 0.72)',
       borderRadius: 15,
-      backgroundColor: 'rgba(249, 248, 246, 0.94)',
+      backgroundColor: 'rgba(255, 251, 243, 0.97)',
     },
     eventsCopy: { gap: 3, minWidth: 0 },
     eventsEyebrow: {
       fontFamily: 'DMSans_700Bold',
-      color: colors.studioVioletText,
+      color: colors.studioPhotoInk,
       fontSize: 8,
       letterSpacing: 1.1,
     },
     eventsTitle: {
       fontFamily: 'DMSans_700Bold',
-      color: colors.studioInk,
+      color: colors.studioPhotoInk,
       fontSize: 17,
       lineHeight: 20,
       letterSpacing: -0.25,
     },
     eventsDetails: {
       fontFamily: 'DMSans_500Medium',
-      color: colors.studioMuted,
+      color: colors.studioPhotoInk,
       fontSize: 10,
       lineHeight: 14,
     },
@@ -397,7 +397,7 @@ export default function StickerJamPracticeCard({
     },
     eventsCtaText: {
       fontFamily: 'DMSans_700Bold',
-      color: colors.studioInk,
+      color: colors.studioPhotoInk,
       fontSize: 11,
     },
     slideIndicators: {
@@ -448,7 +448,7 @@ export default function StickerJamPracticeCard({
     },
     canvasLabelText: {
       fontFamily: 'DMSans_700Bold',
-      color: colors.studioInk,
+      color: colors.studioPhotoInk,
       fontSize: 9,
       letterSpacing: 1,
       textTransform: 'uppercase',
@@ -475,7 +475,7 @@ export default function StickerJamPracticeCard({
     },
     startButtonText: {
       fontFamily: 'DMSans_700Bold',
-      color: colors.studioInk,
+      color: colors.studioPhotoInk,
       fontSize: 13,
     },
     toolsHeader: {
@@ -619,7 +619,7 @@ export default function StickerJamPracticeCard({
                 <Text style={styles.habitActionText}>
                   {activeHabit ? activeHabit.completedToday ? 'View your habits' : 'Log today’s practice' : 'Open habits'}
                 </Text>
-                <Feather name="arrow-up-right" size={15} color={colors.studioInk} />
+                <Feather name="arrow-up-right" size={15} color={colors.studioPhotoInk} />
               </View>
             </TouchableOpacity>
           </View>
@@ -639,7 +639,7 @@ export default function StickerJamPracticeCard({
               />
               <View style={styles.fullBleedWash} />
               <View style={styles.habitTopline}>
-                <View style={styles.workshopMark}><Feather name="play-circle" size={20} color={colors.studioInk} /></View>
+                <View style={styles.workshopMark}><Feather name="play-circle" size={20} color={colors.studioPhotoInk} /></View>
                 <View style={styles.workshopBadge}><Text style={styles.workshopBadgeText}>COMING SOON</Text></View>
               </View>
               <View style={styles.workshopContentPanel}>
@@ -648,7 +648,7 @@ export default function StickerJamPracticeCard({
               </View>
               <View style={styles.workshopAction}>
                 <Text style={styles.workshopActionText}>Explore workshops</Text>
-                <Feather name="arrow-up-right" size={15} color={colors.studioInk} />
+                <Feather name="arrow-up-right" size={15} color={colors.studioPhotoInk} />
               </View>
             </TouchableOpacity>
           </View>
@@ -672,7 +672,7 @@ export default function StickerJamPracticeCard({
                 testID="dashboard-mini-habit-studio-open"
               >
                 <Text style={styles.startButtonText}>Start a sketch</Text>
-                <Feather name="arrow-up-right" size={16} color={colors.studioInk} />
+                <Feather name="arrow-up-right" size={16} color={colors.studioPhotoInk} />
               </TouchableOpacity>
             </View>
           </View>
@@ -702,7 +702,7 @@ export default function StickerJamPracticeCard({
                   />
                 ) : (
                   <View style={styles.eventsPosterFallback}>
-                    <Feather name="calendar" size={28} color={colors.studioInk} />
+                    <Feather name="calendar" size={28} color={colors.studioPhotoInk} />
                   </View>
                 )}
               </View>
@@ -718,7 +718,7 @@ export default function StickerJamPracticeCard({
                 </View>
                 <View style={styles.eventsCta}>
                   <Text style={styles.eventsCtaText}>Browse events</Text>
-                  <Feather name="arrow-right" size={14} color={colors.studioInk} />
+                  <Feather name="arrow-right" size={14} color={colors.studioPhotoInk} />
                 </View>
               </View>
             </TouchableOpacity>
